@@ -1,0 +1,81 @@
+{
+  "id": "command-palette-and-keyboard",
+  "title": "Command Palettes & Keyboard-First UX",
+  "lane": "uiux",
+  "type": "pattern",
+  "order": 55,
+  "summary": "Reducing time-to-action for power users through Cmd-K interfaces and keyboard shortcuts.",
+  "problem": "Clicking through nested menus to trigger AI actions breaks flow state. Power users abandon tools that force them to use the mouse for repetitive tasks.",
+  "forces": [
+    "Users want to stay in flow state while coding or writing.",
+    "GUI menus are discoverable but slow.",
+    "Keyboard shortcuts are fast but hard to discover and memorize."
+  ],
+  "solution": "Implement a universally accessible Command Palette (Cmd/Ctrl + K) that acts as a fuzzy-searchable index of all AI actions. Pair this with extensive keyboard shortcuts for power users.",
+  "tradeoffs": [
+    "Command palettes require good fuzzy search to be effective.",
+    "They are hidden by default, requiring onboarding for discoverability."
+  ],
+  "body": "## First principles\nSpeed is a feature. When a tool matches the speed of thought, users achieve flow state. Moving the hand from the keyboard to the mouse introduces friction. **Keyboard-first design minimizes the gap between intention and action.**\n\n## The Cmd-K paradigm\nThe Command Palette has become the universal 'do anything' interface. It solves the discoverability vs. speed tradeoff. A user hits Cmd-K, types 'sum...', and hits Enter to summarize a document. The UI shows the specific keyboard shortcut next to the action, teaching the user to be even faster next time.\n\n## Design for flow\nAI tools should sit in the background until summoned. A global shortcut to summon an AI chat (like Raycast), or inline generation triggered by a hotkey (like GitHub Copilot), ensures the AI is always exactly one keystroke away.",
+  "tags": [
+    "keyboard",
+    "command-palette",
+    "speed",
+    "power-user"
+  ],
+  "analogy": "A command palette is like the spotlight search on your computer: instead of digging through folders to find an app, you just type its name and it appears instantly.",
+  "diagram": "flowchart LR\n  Int[Intention: Summarize] --> Cmd[Press Cmd-K]\n  Cmd --> Type[Type 'sum']\n  Type --> Act[Select Action + Learn Shortcut]\n  Act --> Flow[Return to Flow]",
+  "examples": [
+    {
+      "product": "Raycast",
+      "what": "The entire product is built around a lightning-fast, keyboard-driven command palette.",
+      "source": "https://www.raycast.com/",
+      "verified": true
+    },
+    {
+      "product": "Linear",
+      "what": "Famed for its Cmd-K menu that allows users to perform any action without touching the mouse.",
+      "source": "https://linear.app/"
+    }
+  ],
+  "drills": [
+    {
+      "q": "How does a Command Palette solve the 'discoverability vs speed' tradeoff?",
+      "a": "It allows fast keyboard execution (speed) while providing a searchable list of all commands (discoverability)."
+    },
+    {
+      "q": "How do you teach power-users faster shortcuts?",
+      "a": "By displaying the direct keyboard shortcut right-aligned next to the action inside the Command Palette."
+    }
+  ],
+  "teachItBack": "Don't make power users click through menus. Give them a Cmd-K command palette where they can fuzzy search every AI capability instantly. It keeps their hands on the keyboard, preserves their flow state, and organically teaches them faster shortcuts.",
+  "sources": [
+    {
+      "title": "Command palettes are the new standard",
+      "url": "https://www.nngroup.com/articles/command-palettes/",
+      "verified": false
+    }
+  ],
+  "related": [
+    "onboarding-and-progressive-disclosure"
+  ],
+  "glossary": [
+    {
+      "term": "Command Palette",
+      "definition": "A searchable, keyboard-driven menu that provides access to an application's commands and features."
+    }
+  ],
+  "quiz": [
+    {
+      "q": "Why is minimizing mouse usage important for power users?",
+      "choices": [
+        "Mice are prone to breaking",
+        "Moving from keyboard to mouse and back breaks cognitive flow and physical rhythm",
+        "Keyboard events are easier to track in analytics",
+        "It saves battery life"
+      ],
+      "answer": 1,
+      "explanation": "The physical act of switching input devices introduces latency and breaks the 'speed of thought' flow state."
+    }
+  ]
+}

@@ -1,0 +1,81 @@
+{
+  "id": "streaming-responses",
+  "title": "Streaming Responses",
+  "lane": "uiux",
+  "type": "pattern",
+  "order": 15,
+  "summary": "Stream tokens as they are generated to drastically cut perceived latency and keep the user engaged.",
+  "problem": "LLMs can take several seconds to generate a full response. Waiting 5 seconds for a block of text feels broken and causes users to abandon the task.",
+  "forces": [
+    "Users expect immediate feedback, ideally under 400ms.",
+    "Full LLM generation takes seconds.",
+    "Reading takes time, so if text appears as it's generated, the user reads while the model computes."
+  ],
+  "solution": "Use Server-Sent Events (SSE) or WebSockets to stream tokens to the UI as soon as the model predicts them. The time-to-first-token (TTFT) drops to milliseconds, making the system feel instant.",
+  "tradeoffs": [
+    "Increases UI complexity (handling partial markdown, auto-scrolling).",
+    "May require intermediate states if the AI must think or use tools before streaming text."
+  ],
+  "body": "## First principles\nHuman perception of time is non-linear. A 3-second wait with a spinner feels like an eternity. A 3-second generation where text streams in feels like a fast typist. **Streaming turns wait time into reading time.**\n\n## Why it feels faster\nBy minimizing Time-To-First-Token (TTFT), you provide immediate visual feedback. The user starts consuming the information while the rest is being generated. This masks the total latency of the request and keeps the user's attention anchored on the content.\n\n## Implementation notes\nStreaming requires parsing partial content\u2014like unclosed markdown tags or code blocks\u2014gracefully. UI must auto-scroll intelligently, pausing if the user scrolls up to read.",
+  "tags": [
+    "streaming",
+    "latency",
+    "ttft",
+    "performance"
+  ],
+  "analogy": "It's like a fast-talking friend who starts answering your question immediately while they're still figuring out the end of the sentence, rather than sitting in silence for a minute before delivering a prepared speech.",
+  "diagram": "sequenceDiagram\n  participant U as User\n  participant S as Server\n  U->>S: Request\n  S-->>U: Token 1 (200ms)\n  U->>U: Starts reading\n  S-->>U: Token 2\n  S-->>U: Token N",
+  "examples": [
+    {
+      "product": "Vercel AI SDK",
+      "what": "Provides built-in React hooks (useChat) that handle token streaming and partial state automatically.",
+      "source": "https://sdk.vercel.ai/docs",
+      "verified": true
+    },
+    {
+      "product": "ChatGPT",
+      "what": "Streams text character-by-character, drastically reducing perceived latency.",
+      "source": "https://chatgpt.com/"
+    }
+  ],
+  "drills": [
+    {
+      "q": "What metric is most improved by streaming?",
+      "a": "Time-To-First-Token (TTFT)."
+    },
+    {
+      "q": "Why does streaming improve perceived latency?",
+      "a": "It allows the user to start reading and processing information while the model is still computing the rest."
+    }
+  ],
+  "teachItBack": "Instead of making the user wait 5 seconds for a complete answer, you stream the text token by token. The first word appears in milliseconds, and the user reads along as the AI generates. It transforms a frustrating wait into an engaging, dynamic experience.",
+  "sources": [
+    {
+      "title": "Response Times: The 3 Important Limits",
+      "url": "https://www.nngroup.com/articles/response-times-3-important-limits/",
+      "verified": true
+    }
+  ],
+  "related": [
+    "latency-masking"
+  ],
+  "glossary": [
+    {
+      "term": "TTFT",
+      "definition": "Time To First Token; the duration from the user's request to the appearance of the very first character of the AI's response."
+    }
+  ],
+  "quiz": [
+    {
+      "q": "What is the primary UX benefit of token streaming?",
+      "choices": [
+        "It reduces server costs",
+        "It improves grammar",
+        "It cuts perceived latency by providing immediate feedback",
+        "It ensures the answer is more accurate"
+      ],
+      "answer": 2,
+      "explanation": "Streaming gives the illusion of speed by giving the user something to read immediately, masking the total generation time."
+    }
+  ]
+}

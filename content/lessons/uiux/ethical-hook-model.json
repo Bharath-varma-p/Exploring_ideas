@@ -1,0 +1,70 @@
+{
+  "id": "ethical-hook-model",
+  "title": "The Ethical Hook Model",
+  "lane": "uiux",
+  "type": "concept",
+  "order": 45,
+  "summary": "Applying Nir Eyal's Hook model (Trigger \u2192 Action \u2192 Variable Reward \u2192 Investment) responsibly, ensuring delight without sliding into dark patterns.",
+  "body": "## First principles\nGreat products build habits. Nir Eyal's Hook Model explains how: a **Trigger** prompts an **Action**, which yields a **Variable Reward**, leading the user to make an **Investment** in the platform. In AI, this loop is incredibly powerful, but it must be wielded ethically.\n\n## The Hook in AI\n- **Trigger:** A daily digest notification, or simply the need to write an email.\n- **Action:** Typing a short prompt.\n- **Variable Reward:** The AI generates a surprisingly insightful, creative, or delightful response. The variability (you never know exactly how good the AI's answer will be) is psychologically engaging.\n- **Investment:** The user saves the prompt, upvotes the response, or adds context to their profile, making the next loop better.\n\n## The Regret Test\nHow do we separate a delightful habit from a manipulative dark pattern? Use Eyal's **Regret Test**: 'If the user knew everything the designer knows about how the product works, would they still use it, or would they regret the time spent?' Ethical AI tools empower the user to achieve their goals; manipulative tools hijack attention to maximize time-on-site.",
+  "tags": [
+    "psychology",
+    "habit",
+    "ethics",
+    "dark-patterns"
+  ],
+  "analogy": "Ethical habit-building is like a great gym routine\u2014it's designed to keep you coming back because it genuinely improves your life. Dark patterns are like a slot machine\u2014designed to keep you pulling the lever regardless of the outcome.",
+  "diagram": "flowchart circular\n  T[Trigger: Task to do] --> A[Action: Write prompt]\n  A --> V[Variable Reward: AI generates insight]\n  V --> I[Investment: Save/Upvote]\n  I --> T",
+  "examples": [
+    {
+      "product": "Nir Eyal's Hook Model",
+      "what": "The foundational psychological framework for building habit-forming products.",
+      "source": "https://www.nirandfar.com/how-to-manufacture-desire/",
+      "verified": true
+    }
+  ],
+  "drills": [
+    {
+      "q": "What are the four steps of the Hook Model?",
+      "a": "Trigger, Action, Variable Reward, Investment."
+    },
+    {
+      "q": "What makes the reward 'variable' in LLMs?",
+      "a": "Because LLMs are non-deterministic, the exact phrasing, creativity, and depth of the answer changes every time, creating novelty."
+    }
+  ],
+  "teachItBack": "To make a product sticky, you need a trigger that leads to a simple action, followed by a rewarding surprise, and finishing with an investment that improves the next cycle. But to do it ethically, apply the Regret Test: ensure the user actually benefits from the habit, rather than just being distracted by a dark pattern.",
+  "sources": [
+    {
+      "title": "How to Manufacture Desire (Nir Eyal)",
+      "url": "https://www.nirandfar.com/how-to-manufacture-desire/",
+      "verified": true
+    }
+  ],
+  "related": [
+    "microinteractions",
+    "feedback-and-steering"
+  ],
+  "glossary": [
+    {
+      "term": "Variable Reward",
+      "definition": "A psychological concept where the unpredictability of a reward increases anticipation and engagement."
+    },
+    {
+      "term": "Dark Pattern",
+      "definition": "A UI designed to trick or manipulate users into doing things they might not want to do."
+    }
+  ],
+  "quiz": [
+    {
+      "q": "How do you pass the 'Regret Test'?",
+      "choices": [
+        "By hiding the terms of service",
+        "If a fully informed user would not regret the time/money they spent on the product",
+        "By ensuring the user spends at least 1 hour a day in the app",
+        "By making it difficult to delete an account"
+      ],
+      "answer": 1,
+      "explanation": "Ethical design respects user agency. If they understand the system and still value the interaction, the habit is beneficial, not manipulative."
+    }
+  ]
+}

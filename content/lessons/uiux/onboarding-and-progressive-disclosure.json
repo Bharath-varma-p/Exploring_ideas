@@ -1,0 +1,69 @@
+{
+  "id": "onboarding-and-progressive-disclosure",
+  "title": "Onboarding & Progressive Disclosure",
+  "lane": "uiux",
+  "type": "concept",
+  "order": 40,
+  "summary": "Teaching capability without overwhelming the user through empty states, first-run experiences, and gradually revealing complexity.",
+  "body": "## First principles\nModern AI tools have massive, open-ended capabilities. If you show a new user every feature, setting, and plugin on day one, they will bounce due to cognitive overload. **Progressive disclosure** defers advanced features until the user actually needs them.\n\n## The first-run experience\nAn empty state shouldn't be empty. It should be a guided invitation. Use starter prompts, brief product tours, or a single 'magic' button that guarantees a successful first interaction (the 'Aha!' moment).\n\n## Gradually revealing depth\nStart with a simple chat interface. Once the user masters basic queries, introduce inline editing. Later, reveal advanced settings like temperature tuning or custom system prompts. You teach the user how to drive the car before you show them how to rebuild the engine.",
+  "tags": [
+    "onboarding",
+    "progressive-disclosure",
+    "cognitive-load",
+    "empty-states"
+  ],
+  "analogy": "It's like a video game tutorial. You start in a safe room with just a 'jump' button. Only after you master jumping do the doors open to reveal enemies and complex combos.",
+  "diagram": "flowchart LR\n  D1[Day 1: Starter Prompts] --> D2[Day 3: Edit & Regenerate]\n  D2 --> D5[Day 10: Custom Personas]\n  D5 --> D30[Day 30: API & Integrations]",
+  "examples": [
+    {
+      "product": "Superhuman",
+      "what": "Famed for an intense, curated onboarding that ensures users master keyboard shortcuts before being left on their own.",
+      "source": "https://superhuman.com/"
+    },
+    {
+      "product": "Claude",
+      "what": "Keeps the main UI clean, hiding advanced features like 'Projects' and 'Artifacts' until the user opts in or naturally discovers them.",
+      "source": "https://claude.ai/"
+    }
+  ],
+  "drills": [
+    {
+      "q": "What is the danger of a literal 'empty state' in an AI app?",
+      "a": "It provides no affordances, leaving the user with a blank canvas problem and no idea how to start."
+    },
+    {
+      "q": "Define progressive disclosure.",
+      "a": "An interaction design technique that sequences information and actions across several screens, reducing cognitive load by showing only what is necessary at that moment."
+    }
+  ],
+  "teachItBack": "Don't overwhelm new users with settings. Use the empty state to provide guaranteed successful starter prompts. Once they get the 'aha' moment, slowly reveal advanced features over time. This progressive disclosure keeps cognitive load low while teaching the system's true power.",
+  "sources": [
+    {
+      "title": "Apple HIG - Onboarding",
+      "url": "https://developer.apple.com/design/human-interface-guidelines",
+      "verified": true
+    }
+  ],
+  "related": [
+    "conversational-ux"
+  ],
+  "glossary": [
+    {
+      "term": "Progressive Disclosure",
+      "definition": "A UI strategy of hiding advanced features until the user specifically requests or needs them."
+    }
+  ],
+  "quiz": [
+    {
+      "q": "What is the primary goal of the 'first-run experience'?",
+      "choices": [
+        "To collect payment information",
+        "To force the user to read the manual",
+        "To get the user to a successful 'Aha!' moment as quickly as possible",
+        "To configure advanced settings"
+      ],
+      "answer": 2,
+      "explanation": "A successful first interaction proves the value of the product and motivates the user to keep learning."
+    }
+  ]
+}

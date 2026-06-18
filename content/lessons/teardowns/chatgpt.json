@@ -1,0 +1,131 @@
+{
+  "id": "chatgpt",
+  "title": "ChatGPT — Memory, Canvas, Voice, and Tools",
+  "lane": "teardowns",
+  "type": "teardown",
+  "order": 60,
+  "product": "ChatGPT",
+  "tags": [
+    "openai",
+    "memory",
+    "canvas",
+    "voice",
+    "tools"
+  ],
+  "summary": "ChatGPT layers persistent memory, project-like Canvas workspaces, voice conversations, and tools into one assistant that can personalize, collaborate, and act.",
+  "contextSignals": [
+    "Current chat messages",
+    "Saved memories and memory sources",
+    "Relevant past chats when enabled",
+    "Custom instructions",
+    "Files in library when available",
+    "Connected Gmail context when enabled and available",
+    "Highlighted Canvas sections and full project content",
+    "Voice audio, transcripts, and in some modes video or screen context",
+    "Tool outputs such as browsing, code execution, or app connectors"
+  ],
+  "patterns": [
+    "memory-long-term",
+    "tool-use",
+    "routing",
+    "planner-executor",
+    "guardrails",
+    "reflection"
+  ],
+  "uxMoves": [
+    "voice",
+    "streaming",
+    "latency-masking",
+    "trust-and-transparency",
+    "side-by-side-workspace",
+    "progressive-disclosure"
+  ],
+  "analogy": "A personal assistant with a notepad, a drafting table, a phone call, and a toolbox — all in the same room.",
+  "diagram": "flowchart TD\n  U[User request] --> M{Need personalization?}\n  M -->|yes| MEM[Saved memories, past chats, files, connected apps]\n  M -->|no| C[Current chat]\n  MEM --> R[Context selection]\n  C --> R\n  R --> D{Best surface?}\n  D --> A[Chat answer]\n  D --> V[Voice conversation]\n  D --> CAN[Canvas document/code workspace]\n  D --> T[Tool or agent action]\n  T --> O[Observation/result]\n  O --> R\n  CAN --> E[User direct edits and highlights]\n  E --> R",
+  "body": "## What it is\nChatGPT is no longer just a chat transcript. It is a container for multiple interaction modes: memory for personalization, Canvas for writing and coding projects, voice for spoken dialogue, and tools for actions beyond text.\n\nThe product lesson is surface routing. Some tasks should stay in chat. Some need a side-by-side editable workspace. Some are faster by voice. Some require tool calls or connected apps. The assistant feels broad because it can choose the interaction shape as well as the answer.\n\n## Context signals it uses\nOpenAI's memory help says saved memories are details ChatGPT can use in future responses, and that users can view, delete, or turn them off. The same help page describes memory sources, including saved memories, past chats, custom instructions, and for some users files or Gmail if connected.\n\nCanvas adds project context. The Canvas help page says users can highlight specific sections so ChatGPT knows what to focus on, and that ChatGPT can give inline feedback with the entire project in mind. Voice adds turn-taking, audio, transcription, and retention considerations.\n\n## Patterns under the hood\nMemory-long-term is the obvious pattern. It personalizes future answers, but it must be paired with transparency and user controls. Tool-use and routing decide whether to answer directly, open Canvas, use a connected app, browse, run code, or continue a voice session.\n\nReflection shows up in Canvas workflows: review code, suggest edits, fix bugs, adjust length, restore versions, and iterate. Guardrails matter because the assistant can reference personal context and interact with web previews or connected services.\n\n## UX & engagement moves\nMemory reduces repetition. Canvas reduces chat-scroll friction by making work editable and versioned. Voice reduces input friction and makes the assistant feel present. Each move increases engagement by matching the modality to the job.\n\nThe trust move is control. Users can manage memories, see memory sources in some experiences, highlight exactly what Canvas should modify, and confirm risky web-preview communications. Personalization is only delightful if users understand and can change what the system remembers.\n\n## What to steal (lessons)\nBuild multiple surfaces for different task shapes. Do not force code review, long-form drafting, voice dialogue, and personal reminders into the same chat box. Route to the right surface.\n\nAlso make personalization inspectable. If the system remembers, show what it remembers, where it came from, and how to remove it. Memory without controls feels creepy; memory with controls feels helpful.",
+  "examples": [
+    {
+      "product": "ChatGPT Memory",
+      "what": "Uses saved memories and relevant past context to personalize responses, with controls to view, delete, or disable memory.",
+      "source": "https://help.openai.com/en/articles/8590148-memory-faq"
+    },
+    {
+      "product": "ChatGPT Canvas",
+      "what": "Provides a side-by-side workspace where users can edit directly, highlight sections, request inline feedback, review code, and restore versions.",
+      "source": "https://help.openai.com/en/articles/9930697-what-is-the-canvas-feature-in-chatgpt-and-how-do-i-use-it"
+    }
+  ],
+  "drills": [
+    {
+      "q": "What makes memory a UX risk as well as a feature?",
+      "a": "Personal context can feel invasive unless users can see, edit, delete, and disable it."
+    },
+    {
+      "q": "Why does Canvas belong outside the normal chat stream?",
+      "a": "Writing and coding projects need stable editable state, targeted selections, and versioning, not only messages."
+    }
+  ],
+  "teachItBack": "ChatGPT is a multi-surface assistant. Memory personalizes, Canvas supports durable editing, voice lowers input friction, and tools let the system act. The design lesson is to route each task to the surface that makes control and context clearest.",
+  "sources": [
+    {
+      "title": "OpenAI Help — Memory FAQ",
+      "url": "https://help.openai.com/en/articles/8590148-memory-faq",
+      "verified": true
+    },
+    {
+      "title": "OpenAI — Memory and new controls for ChatGPT",
+      "url": "https://openai.com/index/memory-and-new-controls-for-chatgpt/",
+      "verified": true
+    },
+    {
+      "title": "OpenAI Help — Canvas in ChatGPT",
+      "url": "https://help.openai.com/en/articles/9930697-what-is-the-canvas-feature-in-chatgpt-and-how-do-i-use-it",
+      "verified": true
+    },
+    {
+      "title": "OpenAI — Introducing canvas",
+      "url": "https://openai.com/index/introducing-canvas/",
+      "verified": true
+    },
+    {
+      "title": "OpenAI Help — Voice mode FAQ",
+      "url": "https://help.openai.com/en/articles/8400625-voice-mode-faq",
+      "verified": true
+    },
+    {
+      "title": "OpenAI — New tools for building agents",
+      "url": "https://openai.com/index/new-tools-for-building-agents/",
+      "verified": true
+    }
+  ],
+  "related": [
+    "memory-long-term",
+    "tool-use",
+    "routing",
+    "guardrails",
+    "trust-and-transparency"
+  ],
+  "glossary": [
+    {
+      "term": "Saved memory",
+      "definition": "A user-specific detail ChatGPT may use in future conversations when memory is enabled."
+    },
+    {
+      "term": "Canvas",
+      "definition": "A ChatGPT workspace for drafting, editing, reviewing, and iterating on writing or code outside the linear chat transcript."
+    }
+  ],
+  "quiz": [
+    {
+      "q": "What is the safest way to make AI memory feel useful?",
+      "choices": [
+        "Hide all remembered details",
+        "Provide user controls and source visibility",
+        "Never personalize anything",
+        "Use memory in every response"
+      ],
+      "answer": 1,
+      "explanation": "Memory becomes trustworthy when users can inspect and manage what is remembered and how it is used."
+    }
+  ]
+}

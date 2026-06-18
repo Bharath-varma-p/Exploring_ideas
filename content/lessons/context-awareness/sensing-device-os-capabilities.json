@@ -1,0 +1,115 @@
+{
+  "id": "sensing-device-os-capabilities",
+  "title": "Sensing Device and OS Capabilities",
+  "lane": "context-awareness",
+  "type": "concept",
+  "order": 45,
+  "tags": [
+    "device",
+    "os",
+    "capabilities",
+    "permissions"
+  ],
+  "summary": "A platform-aware agent checks device class, OS, sensors, input modes, network, battery, and permission surfaces before it plans an action.",
+  "analogy": "Capabilities are the tools in the room. A chef cooks differently in a full kitchen, a campfire, or an airplane galley.",
+  "body": "## First principles\nActions need affordances. A plan that says “listen for the wake word” fails if the device has no microphone permission. A plan that says “read the active window” fails if the OS blocks accessibility access. A plan that says “upload screenshots to the cloud” may be wrong on low battery, poor network, or sensitive screens.\n\nThe first-principles question is: what can this device and OS actually do right now?\n\n## Plain definition\nDevice and OS capability sensing means detecting the hardware, software, APIs, input/output modes, sensors, network, battery, and permission state available to the agent.\n\nThe kitchen analogy helps: the recipe changes based on the tools. A full kitchen supports a complex meal; a campfire requires simpler steps.\n\n## Capability checklist\nBefore acting, check:\n\n- **Device class**: desktop, phone, tablet, watch, car, headset, server.\n- **OS and version**: API differences and security rules.\n- **Host app**: browser extension, native app, embedded widget, background service.\n- **Modalities**: keyboard, mouse, touch, voice, camera, haptic, notification.\n- **Sensors**: location, health, motion, screen, microphone, camera.\n- **Resource state**: battery, network, CPU, storage.\n- **Permission state**: granted, denied, promptable, managed by admin.\n\n## Mental model\nThe diagram builds a capability map from device, OS, sensors, network, battery, and permissions. The planner uses that map to pick the best path. If a path is unavailable, it degrades rather than pretending.\n\n## Real examples\nAndroid AccessibilityService requires explicit user enablement in settings and can be configured for event types and window-content access. That is a platform capability and permission gate.\n\nWHOOP Coach depends on wearable data streams and user-shared behaviors. If sleep or journal data is missing, the coaching context changes.\n\nMicrosoft UI Automation exists on Windows desktop, not as a universal web API. A cross-platform agent must branch by platform.\n\n## Drills\nDesign “summarize what is on my screen” for desktop, mobile, and watch. Which capability is missing on the watch? Which permission is sensitive on desktop?\n\nYou have network offline but local OCR available. What should the agent do? Prefer on-device analysis or ask to retry cloud reasoning later.\n\n## Teach-it-back\nDevice and OS sensing tells an agent what tools are available in the current environment. It includes hardware, APIs, input modes, sensors, network, battery, and permission state. A platform-aware agent plans from this map and degrades gracefully when a capability is missing.",
+  "diagram": "flowchart TD\n  DEVICE[Device class] --> CAPMAP[Capability map]\n  OS[OS and APIs] --> CAPMAP\n  SENSOR[Sensors] --> CAPMAP\n  NET[Network and battery] --> CAPMAP\n  PERM[Permission state] --> CAPMAP\n  CAPMAP --> PLAN[Action plan]\n  PLAN --> DEG[Use best path or degrade]",
+  "examples": [
+    {
+      "product": "Android AccessibilityService",
+      "what": "The OS permission model controls whether a service can receive UI events and query window content.",
+      "source": "https://developer.android.com/reference/android/accessibilityservice/AccessibilityService"
+    },
+    {
+      "product": "WHOOP Coach",
+      "what": "Its coaching depends on wearable/device data streams such as sleep, strain, recovery, stress, and journal behaviors being available.",
+      "source": "https://www.whoop.com/us/en/thelocker/whoop-unveils-the-new-whoop-coach-powered-by-openai/"
+    },
+    {
+      "product": "Microsoft UI Automation",
+      "what": "Windows exposes a desktop automation/accessibility framework that differs from browser DOM or mobile accessibility services.",
+      "source": "https://learn.microsoft.com/en-us/windows/win32/winauto/uiauto-uiautomationoverview"
+    }
+  ],
+  "drills": [
+    {
+      "q": "Why should an agent check battery and network?",
+      "a": "They affect whether cloud calls, screenshots, uploads, location, or long-running tasks are appropriate."
+    },
+    {
+      "q": "What is a permission surface?",
+      "a": "The set of platform-controlled approvals required to access sensors, files, screen content, microphone, location, health data, or UI control."
+    },
+    {
+      "q": "Give one modality adaptation.",
+      "a": "On a phone, prefer touch-friendly steps and short notifications; on desktop, use keyboard shortcuts or window-level automation if allowed."
+    }
+  ],
+  "teachItBack": "Device and OS capability sensing prevents impossible or rude actions. The agent builds a capability map from hardware, OS APIs, sensors, network, battery, and permission state. Then it chooses the best available path or degrades gracefully.",
+  "sources": [
+    {
+      "title": "Android Developers — AccessibilityService",
+      "url": "https://developer.android.com/reference/android/accessibilityservice/AccessibilityService",
+      "verified": true
+    },
+    {
+      "title": "WHOOP — WHOOP Coach powered by OpenAI",
+      "url": "https://www.whoop.com/us/en/thelocker/whoop-unveils-the-new-whoop-coach-powered-by-openai/",
+      "verified": true
+    },
+    {
+      "title": "Microsoft Learn — UI Automation Overview",
+      "url": "https://learn.microsoft.com/en-us/windows/win32/winauto/uiauto-uiautomationoverview",
+      "verified": true
+    },
+    {
+      "title": "Apple Developer Documentation — Accessibility",
+      "url": "https://developer.apple.com/documentation/accessibility",
+      "verified": true
+    }
+  ],
+  "related": [
+    "what-is-platform-awareness",
+    "permissions-and-consent",
+    "context-vs-platform",
+    "deciding-where-to-go"
+  ],
+  "glossary": [
+    {
+      "term": "Device capability",
+      "definition": "A hardware or software feature available on the current device, such as camera, microphone, GPS, health sensors, clipboard, or screen capture."
+    },
+    {
+      "term": "Permission surface",
+      "definition": "The set of user or OS approvals needed before a capability can be used."
+    },
+    {
+      "term": "Modality",
+      "definition": "The input/output mode: touch, mouse, keyboard, voice, haptics, camera, or screen."
+    }
+  ],
+  "quiz": [
+    {
+      "q": "What should an agent do before planning “take a screenshot and analyze it”?",
+      "choices": [
+        "Assume screenshots always work",
+        "Check platform support, permission, privacy, and whether screenshot is necessary",
+        "Delete user history",
+        "Ignore battery and network"
+      ],
+      "answer": 1,
+      "explanation": "Screen capture is capability- and permission-dependent and may expose sensitive data."
+    },
+    {
+      "q": "Which is a capability signal?",
+      "choices": [
+        "The user’s favorite color only",
+        "Battery level and network connectivity",
+        "The lesson title",
+        "A model benchmark score"
+      ],
+      "answer": 1,
+      "explanation": "Battery and network affect what the device can reasonably do now."
+    }
+  ]
+}

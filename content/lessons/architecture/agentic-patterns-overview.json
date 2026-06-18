@@ -1,0 +1,47 @@
+{
+  "id": "agentic-patterns-overview",
+  "title": "Agentic Patterns — The Landscape",
+  "lane": "architecture",
+  "type": "concept",
+  "order": 10,
+  "tags": ["overview", "workflows", "agents", "foundational"],
+  "summary": "A map of how LLM systems are built: predictable workflows on one end, autonomous agents on the other — and how to choose where on that spectrum your problem belongs.",
+  "analogy": "A railway vs. a taxi. A workflow is a train on fixed tracks: reliable, predictable, you know every stop. An agent is a taxi: it decides its own route to your destination — flexible, but you trust the driver's judgment.",
+  "body": "## First principles\nEvery LLM system answers one question: **who decides what happens next — you or the model?** When *you* hard-code the sequence of steps, you have a **workflow**. When the *model* decides its own steps, tools, and stopping point at runtime, you have an **agent**. Everything in this lane is a point on that spectrum.\n\nThe reason this matters: autonomy buys flexibility but spends reliability. A fixed workflow is easy to test, cheap, and debuggable. An agent handles open-ended tasks you couldn't script in advance, but it's slower, costlier, and can fail in surprising ways. Most production systems are workflows; true agents are reserved for genuinely open problems.\n\n## Plain definition\n- **Workflow** = LLM calls orchestrated through **predefined code paths** (prompt chaining, routing, parallelization).\n- **Agent** = the LLM **dynamically directs its own process**, choosing tools and looping until it decides it's done.\n\nAnthropic draws exactly this line in *Building effective agents*, and recommends starting with the simplest thing that works.\n\n## Mental model\nThe diagram shows the decision: start simple, add autonomy only when a fixed path can't express the task.\n\n## The pattern families in this lane\n- **Structured workflows**: prompt chaining, routing, tool use, RAG.\n- **Agentic loops**: ReAct, planner-executor, reflection, evaluator-optimizer.\n- **Coordination**: multi-agent orchestration.\n- **Memory**: short-term and long-term.\n- **Safety**: guardrails, human-in-the-loop.\n\n## How to choose\n1. Can you write the steps down in advance? → **workflow**.\n2. Does the input vary so much you must classify it first? → **routing**.\n3. Does it need fresh/private facts? → **RAG** or **tool use**.\n4. Is the task open-ended with unknown depth? → **agent loop**, but bound it with budgets, guardrails, and a human gate for risky actions.\n\n## Watch out for\nDon't reach for a multi-agent swarm when a three-step chain would do. Complexity is a cost you pay on every request and every 3am page.",
+  "diagram": "flowchart TD\n  S([Task]) --> Q1{Steps known\\nin advance?}\n  Q1 -- yes --> W[Workflow:\\nchain / route / RAG]\n  Q1 -- no --> Q2{Open-ended,\\nvariable depth?}\n  Q2 -- yes --> A[Agent loop:\\nReAct / planner-executor]\n  Q2 -- no --> W\n  A --> G[Add guardrails\\n+ budgets + HITL]\n  W --> Done([Ship the simplest\\nthing that works])\n  G --> Done",
+  "examples": [
+    { "product": "GitHub Copilot", "what": "Inline autocomplete is essentially a tight single-step workflow; Copilot's agent mode adds a tool-using loop for multi-file edits — the same product spanning the spectrum.", "source": "https://github.blog/news-insights/product-news/github-copilot-the-agent-awakens/" },
+    { "product": "Perplexity", "what": "A productized RAG/tool-use workflow: classify the query, search the web, then generate a cited answer — predictable steps, not an open-ended agent.", "source": "https://www.perplexity.ai/hub/blog" }
+  ],
+  "drills": [
+    { "q": "What single question separates a workflow from an agent?", "a": "Who decides the next step at runtime — your code (workflow) or the model itself (agent)." },
+    { "q": "Why not always use the most autonomous agent?", "a": "Autonomy trades reliability, latency, and cost for flexibility; most tasks are better served by a simpler, testable workflow." },
+    { "q": "Give a signal that you actually need an agent loop.", "a": "The task is open-ended with unknown depth — you cannot enumerate the steps in advance (e.g., 'debug this failing repo')." }
+  ],
+  "teachItBack": "LLM systems live on a spectrum from fixed workflows, where your code picks every step, to autonomous agents, where the model picks its own steps and stops when it decides it's done. Autonomy adds flexibility but costs reliability, latency, and money, so you start with the simplest workflow that works and only add autonomy when a fixed path can't express the task. The rest of this lane is just specific patterns at different points on that spectrum.",
+  "sources": [
+    { "title": "Anthropic — Building effective agents", "url": "https://www.anthropic.com/engineering/building-effective-agents", "verified": true },
+    { "title": "Chip Huyen — Agents", "url": "https://huyenchip.com/2025/01/07/agents.html", "verified": true },
+    { "title": "Lilian Weng — LLM Powered Autonomous Agents", "url": "https://lilianweng.github.io/posts/2023-06-23-agent/", "verified": true }
+  ],
+  "related": ["prompt-chaining", "routing", "react", "planner-executor", "multi-agent-orchestration"],
+  "glossary": [
+    { "term": "Workflow", "definition": "An LLM system where predefined code orchestrates the steps and tool calls." },
+    { "term": "Agent", "definition": "An LLM system where the model dynamically chooses its own steps, tools, and stopping point at runtime." },
+    { "term": "Autonomy spectrum", "definition": "The continuum from fully scripted workflows to fully self-directing agents along which every LLM system can be placed." }
+  ],
+  "quiz": [
+    {
+      "q": "In Anthropic's terminology, what distinguishes an 'agent' from a 'workflow'?",
+      "choices": ["Agents use bigger models", "Agents dynamically direct their own process; workflows follow predefined code paths", "Workflows can't call tools", "Agents never hallucinate"],
+      "answer": 1,
+      "explanation": "The defining line is who controls the steps at runtime — the model (agent) or your code (workflow)."
+    },
+    {
+      "q": "What is the recommended default when designing an LLM system?",
+      "choices": ["Start with a multi-agent swarm", "Start with the simplest workflow that works and add autonomy only as needed", "Always use ReAct", "Avoid tools entirely"],
+      "answer": 1,
+      "explanation": "Complexity is a recurring cost; begin simple and escalate to agentic autonomy only when the task demands it."
+    }
+  ]
+}

@@ -1,0 +1,7 @@
+[
+  { "term": "Agent", "definition": "An LLM-driven system that pursues a goal by looping: observe, decide, act with tools, and repeat — rather than answering in a single shot." },
+  { "term": "Context window", "definition": "The bounded amount of text (tokens) a model can attend to at once. Everything the agent 'knows' in the moment must fit here." },
+  { "term": "Token", "definition": "The unit of text an LLM reads and generates — roughly 3–4 characters of English. Cost and context limits are measured in tokens." },
+  { "term": "Tool / Function calling", "definition": "Giving a model a menu of callable functions (with typed arguments) so it can take real actions like search, run code, or hit an API." },
+  { "term": "Latency", "definition": "The delay between a user action and the system's response. The single biggest felt-quality factor in agentic UX." }
+]

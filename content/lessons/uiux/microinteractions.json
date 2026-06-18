@@ -1,0 +1,70 @@
+{
+  "id": "microinteractions",
+  "title": "Microinteractions",
+  "lane": "uiux",
+  "type": "concept",
+  "order": 25,
+  "summary": "Tiny, functional feedback loops (trigger \u2192 rules \u2192 feedback \u2192 loops) that signal quality, status, and life in the product.",
+  "body": "## First principles\nA microinteraction is a single task-based engagement with a device or app. They are the details that turn a functional product into a delightful one. In AI, they reassure the user during moments of uncertainty.\n\n## The four parts\nEvery microinteraction has four parts: a **Trigger** (user clicks a button), **Rules** (what happens next), **Feedback** (a subtle haptic or visual change), and **Loops/Modes** (what happens when the condition changes).\n\n## Signaling life and quality\nWhen a user copies a generated code block, a tiny checkmark animation confirms the action. It's a fraction of a second, but it builds trust. These small details compound to make the AI feel responsive, polished, and capable.",
+  "tags": [
+    "microinteractions",
+    "feedback",
+    "delight",
+    "psychology"
+  ],
+  "analogy": "Microinteractions are like the reassuring 'click' when you close a car door perfectly\u2014it\u2019s a tiny detail, but it subconsciously signals high build quality.",
+  "diagram": "flowchart LR\n  T[Trigger] --> R[Rules]\n  R --> F[Feedback]\n  F --> L[Loops/Modes]",
+  "examples": [
+    {
+      "product": "Arc Browser",
+      "what": "Subtle haptics and visual spring animations when organizing tabs signal direct manipulation.",
+      "source": "https://arc.net/"
+    },
+    {
+      "product": "Growth.Design",
+      "what": "Highlights how psychological triggers map to subtle UI feedback to build habit and trust.",
+      "source": "https://growth.design/",
+      "verified": true
+    }
+  ],
+  "drills": [
+    {
+      "q": "What are the four components of a microinteraction?",
+      "a": "Trigger, Rules, Feedback, Loops/Modes."
+    },
+    {
+      "q": "Why add a checkmark animation when copying code?",
+      "a": "To provide immediate visual confirmation, preventing the user from wondering if the action succeeded."
+    }
+  ],
+  "teachItBack": "Microinteractions are the tiny moments of feedback\u2014like a button changing to a checkmark when clicked. They consist of a trigger, rules, feedback, and loops. In AI interfaces, they provide constant, subtle reassurance that the system is responding perfectly to user actions.",
+  "sources": [
+    {
+      "title": "Microinteractions: Designing with Details",
+      "url": "https://www.nngroup.com/articles/microinteractions/",
+      "verified": false
+    }
+  ],
+  "related": [
+    "motion-and-animation"
+  ],
+  "glossary": [
+    {
+      "term": "Microinteraction",
+      "definition": "A contained product moment that revolves around a single use case, providing feedback or communicating status."
+    }
+  ],
+  "quiz": [
+    {
+      "q": "Which of the following is a classic microinteraction?",
+      "choices": [
+        "Reading a 500-word article",
+        "A 'Copy' icon turning into a green checkmark for 2 seconds",
+        "Streaming text from an LLM",
+        "Logging into an account via OAuth"
+      ],
+      "answer": 1,
+      "explanation": "The copy icon changing state is a single, task-based engagement that provides immediate, subtle feedback."
+    }
+  ]
+}

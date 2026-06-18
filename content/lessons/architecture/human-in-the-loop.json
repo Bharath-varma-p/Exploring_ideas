@@ -1,0 +1,63 @@
+{
+  "id": "human-in-the-loop",
+  "title": "Human-in-the-Loop",
+  "lane": "architecture",
+  "type": "pattern",
+  "order": 75,
+  "tags": ["safety", "approval", "oversight", "escalation", "control"],
+  "summary": "Insert a human checkpoint before an agent takes a risky or irreversible action — approval gates, confirmations, and escalation — so a person stays in control where mistakes are costly.",
+  "analogy": "A surgical 'time-out' before an operation, or a launch officer who must turn the second key. The system is ready to act, but it pauses for a human to confirm — because some actions you can't take back.",
+  "problem": "Autonomous agents act probabilistically and can be wrong or manipulated. For high-stakes, irreversible, or low-confidence actions — sending money, deleting data, emailing customers — fully automatic execution risks real, unrecoverable harm.",
+  "forces": [
+    "Autonomy is fast and scalable, but some mistakes are catastrophic or irreversible.",
+    "Humans add accountability and judgment machines lack, but also latency.",
+    "Too many approvals cause fatigue and rubber-stamping; too few are dangerous.",
+    "You must decide which actions warrant a human and which don't.",
+    "Trust and regulation often require a human accountable for the decision."
+  ],
+  "solution": "Add explicit human checkpoints at high-risk points: the agent pauses and requests approval (or edits) before executing, escalates when confidence is low or stakes are high, and proceeds only on a human signal. Reserve gates for actions that are risky, irreversible, or uncertain.",
+  "tradeoffs": [
+    "Human review adds latency and limits throughput — it doesn't scale like full automation.",
+    "Approval fatigue leads to rubber-stamping, eroding the safeguard.",
+    "Defining the right risk threshold is hard; misjudge it and you either over-gate or under-protect.",
+    "Requires UI/workflow to surface the decision clearly to the human."
+  ],
+  "body": "## First principles\nAgents are probabilistic and occasionally wrong — and the cost of a mistake is **not uniform**. Recommending a bad article is cheap; wiring $50,000 to the wrong account is catastrophic and **irreversible**. Pure autonomy treats all actions the same. The rational response is to **match oversight to stakes**: let the agent run freely on low-risk actions, but require a human to confirm the high-risk ones.\n\nHuman-in-the-loop (HITL) is that principle made concrete. It keeps a person at the **decision point where it matters**, providing judgment, accountability, and a last line of defense that no amount of model improvement fully replaces.\n\n## Plain definition\nHuman-in-the-loop = the agent **pauses for explicit human approval, editing, or escalation** before performing certain actions, and proceeds only on the human's signal.\n\n## Patterns (mental model)\n- **Approval gate**: agent proposes an action; a human approves/rejects/edits before it executes.\n- **Confirmation**: a lightweight 'are you sure?' for moderate-risk actions.\n- **Escalation**: when confidence is low or a case is out of policy, hand off to a human.\n- **Human-on-the-loop**: human monitors and can interrupt, rather than approving each step.\n\nThe diagram shows the agent routing by risk: auto-execute low risk, gate high risk.\n\n## Which actions to gate\nUse a risk filter: **irreversibility**, **magnitude of harm**, and **model confidence**. Send (emails/payments), delete, deploy, and anything customer-facing are common gate points; read-only or easily-undone actions usually aren't.\n\n## Real examples\n- **GitHub Copilot agent / coding agents**: propose code changes or terminal commands that a developer reviews and approves before they run.\n- **LangGraph interrupts**: a built-in mechanism to pause a graph and wait for human input/approval before continuing.\n- **Customer-support agents**: auto-handle routine tickets but escalate refunds above a threshold or angry customers to a human.\n\n## When to use it\n- Actions are **irreversible, high-impact, or low-confidence**.\n- **Regulation/trust** requires a human accountable for the decision.\n- Early deployment of a new agent (gate first, loosen as trust grows).\n\n## Watch out for\n- **Approval fatigue**: gate only what matters, or humans rubber-stamp everything.\n- **Latency vs. safety**: HITL trades throughput for control — apply it surgically.\n- Pair with **guardrails**: deterministic checks handle the routine; humans handle the consequential edge.",
+  "diagram": "flowchart TD\n  A[Agent proposes action] --> R{Risk filter:\\nirreversible? high-impact?\\nlow confidence?}\n  R -- low risk --> X[Auto-execute]\n  R -- high risk --> G[Pause: request\\nhuman approval/edit]\n  G --> D{Human decision}\n  D -- approve --> X\n  D -- reject/edit --> A\n  X --> O([Action done])",
+  "examples": [
+    { "product": "GitHub Copilot", "what": "Agent-proposed edits and terminal commands are surfaced for the developer to review, edit, and approve before they execute.", "source": "https://github.blog/news-insights/product-news/github-copilot-the-agent-awakens/" },
+    { "product": "LangGraph", "what": "Provides interrupt/human-in-the-loop primitives to pause a workflow and wait for human approval or input before resuming.", "source": "https://langchain-ai.github.io/langgraph/concepts/human_in_the_loop/" }
+  ],
+  "drills": [
+    { "q": "What criteria decide whether an action needs a human gate?", "a": "Irreversibility, magnitude of potential harm, and the model's confidence — high-stakes, irreversible, or low-confidence actions get gated; cheap, reversible ones don't." },
+    { "q": "What is approval fatigue and why is it dangerous?", "a": "When humans must approve too many actions they start rubber-stamping without real review, which silently erases the safeguard the gate was meant to provide." },
+    { "q": "How do guardrails and human-in-the-loop complement each other?", "a": "Guardrails are deterministic checks that handle routine validation automatically; human-in-the-loop adds human judgment for the consequential, irreversible edge cases." }
+  ],
+  "teachItBack": "Human-in-the-loop keeps a person at the decision point for risky actions by pausing the agent for approval, confirmation, or escalation before it acts. You gate based on irreversibility, potential harm, and model confidence, letting cheap reversible actions run automatically while sending payments, deletions, or low-confidence cases to a human. The trade-off is latency and the danger of approval fatigue, so you apply it surgically and pair it with guardrails that handle the routine checks.",
+  "sources": [
+    { "title": "LangGraph — Human-in-the-loop", "url": "https://langchain-ai.github.io/langgraph/concepts/human_in_the_loop/", "verified": false },
+    { "title": "Anthropic — Building effective agents", "url": "https://www.anthropic.com/engineering/building-effective-agents", "verified": true },
+    { "title": "Chip Huyen — Agents", "url": "https://huyenchip.com/2025/01/07/agents.html", "verified": true }
+  ],
+  "related": ["guardrails", "tool-use", "planner-executor", "agentic-patterns-overview"],
+  "glossary": [
+    { "term": "Human-in-the-loop", "definition": "A pattern where an agent pauses for human approval, editing, or escalation before taking certain actions." },
+    { "term": "Approval gate", "definition": "A checkpoint where a proposed action waits for explicit human approval before executing." },
+    { "term": "Escalation", "definition": "Handing a case off to a human when confidence is low, stakes are high, or it falls outside policy." },
+    { "term": "Approval fatigue", "definition": "Degraded oversight when humans face so many approvals they rubber-stamp them without real review." }
+  ],
+  "quiz": [
+    {
+      "q": "Which factor most strongly argues for a human-in-the-loop gate on an action?",
+      "choices": ["The action is read-only", "The action is irreversible and high-impact", "The model is fast", "The action is cheap to undo"],
+      "answer": 1,
+      "explanation": "Irreversible, high-impact actions are exactly where human judgment and accountability are most warranted."
+    },
+    {
+      "q": "What is the main risk of gating too many actions for human approval?",
+      "choices": ["Lower model accuracy", "Approval fatigue, where humans rubber-stamp without real review", "Higher token cost only", "The agent stops using tools"],
+      "answer": 1,
+      "explanation": "Too many approvals cause fatigue and rubber-stamping, which undermines the safeguard."
+    }
+  ]
+}

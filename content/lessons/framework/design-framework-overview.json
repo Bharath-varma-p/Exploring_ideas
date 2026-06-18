@@ -1,0 +1,47 @@
+{
+  "id": "design-framework-overview",
+  "title": "The Agentic System-Design Framework",
+  "lane": "framework",
+  "type": "framework",
+  "order": 10,
+  "tags": ["framework", "system-design", "method", "interview", "foundational"],
+  "summary": "A repeatable six-step method — Requirements → Constraints & Budgets → High-Level Design → Deep Dives → Trade-offs → Review — adapted from classic system-design interviews to designing AI agents.",
+  "analogy": "An architect doesn't start by pouring concrete. They ask what the building is for, survey the land and budget, sketch the floor plan, then detail the load-bearing walls. System design is the same discipline pointed at software.",
+  "body": "## First principles\nEvery system-design interview question (Hello Interview, Grokking, the System Design Primer) is really one question: **given fuzzy requirements and hard constraints, can you propose a structure that works, and reason about its trade-offs?** The structure matters more than any single 'right' answer.\n\nThe trap is jumping straight to boxes-and-arrows before you know what you're building or what limits you. A framework forces you to *earn* the architecture: requirements justify the design, constraints size it, and trade-offs defend it.\n\n## Plain definition\nA system-design framework is a fixed **sequence of questions** you walk through, in order, so you never skip a step under pressure. It turns an open-ended 'design X' into a checklist.\n\n## The six steps (classic → agentic)\nClassic interviews use roughly: clarify requirements → estimate scale → high-level design → deep dive → trade-offs → wrap up. Agents add new concerns, so each step grows:\n\n1. **Requirements** — functional (what actions) + non-functional (latency, safety, autonomy). *Agentic add: what can it sense, how autonomous, what's the success metric.*\n2. **Constraints & Budgets** — back-of-envelope numbers. *Agentic add: latency budget tied to human perception, cost-per-task, token/context limits, on-device vs cloud.*\n3. **High-Level Design** — the block diagram. *Agentic add: Sensors → Context Engine → Planner → Tools → Guardrails → Memory → UI.*\n4. **Deep Dives** — zoom into the risky component. *Agentic add: the sensing→grounding pipeline, the planner/policy, the eval harness.*\n5. **Trade-offs** — name what you gave up. *Agentic add: autonomy vs safety, on-device vs capability, latency vs quality.*\n6. **Review** — does the design meet every requirement? Walk a request end-to-end. *Agentic add: failure-mode and eval review.*\n\n## Why agents need the extra concerns\nA web service fails by being slow or down. An **agent** fails by *doing the wrong thing confidently* — clicking the wrong button, leaking a screen, looping forever. So the framework bolts on four agent-specific lenses everywhere: **context/sensing, tools/actions, evals, and guardrails**.\n\n## How to use this lane\nThe next five lessons walk each step in depth, then two **blueprint** lessons apply the whole method to design a context- and platform-aware desktop assistant. Learn the method once; reuse it on any agent.",
+  "diagram": "flowchart LR\n  R[1. Requirements] --> C[2. Constraints & Budgets]\n  C --> H[3. High-Level Design]\n  H --> D[4. Deep Dives]\n  D --> T[5. Trade-offs]\n  T --> V[6. Review]\n  V -. iterate .-> R\n  subgraph Agentic lenses applied at every step\n    L1[Context / Sensing]\n    L2[Tools / Actions]\n    L3[Evals]\n    L4[Guardrails]\n  end",
+  "examples": [
+    { "product": "Hello Interview", "what": "Teaches the 'in a hurry' delivery framework: requirements, core entities, API, high-level design, deep dives — the backbone we adapt for agents.", "source": "https://www.hellointerview.com/learn/system-design/in-a-hurry/introduction" },
+    { "product": "Anthropic 'Building effective agents'", "what": "Argues you should start simple and only add agentic complexity (loops, tools, autonomy) when requirements justify it — the trade-off mindset this framework enforces.", "source": "https://www.anthropic.com/engineering/building-effective-agents" }
+  ],
+  "drills": [
+    { "q": "Why walk the steps in order instead of jumping to the architecture diagram?", "a": "Because requirements justify the design and constraints size it. Drawing boxes first means you can't defend why they exist or whether they fit the budget." },
+    { "q": "What four agent-specific lenses does this framework add to the classic method?", "a": "Context/sensing, tools/actions, evals, and guardrails — applied at every step, because agents fail by acting wrongly, not just by being slow." },
+    { "q": "How does an agent's failure mode differ from a typical web service's?", "a": "A service fails by being slow or unavailable; an agent fails by confidently doing the wrong thing — wrong action, privacy leak, or infinite loop." }
+  ],
+  "teachItBack": "Agentic system design is the classic six-step method — requirements, constraints, high-level design, deep dives, trade-offs, review — with four extra lenses for sensing, tools, evals, and guardrails. You walk the steps in order so requirements justify the architecture and budgets size it. The payoff is that you can defend every box and name what you traded away.",
+  "sources": [
+    { "title": "Hello Interview — System Design in a Hurry", "url": "https://www.hellointerview.com/learn/system-design/in-a-hurry/introduction", "verified": true },
+    { "title": "The System Design Primer (GitHub)", "url": "https://github.com/donnemartin/system-design-primer", "verified": true },
+    { "title": "Anthropic — Building effective agents", "url": "https://www.anthropic.com/engineering/building-effective-agents", "verified": true }
+  ],
+  "related": ["step-1-requirements", "step-2-constraints-and-budgets", "step-3-high-level-design", "blueprint-cursor-context-agent", "agentic-patterns-overview"],
+  "glossary": [
+    { "term": "System-design framework", "definition": "A fixed ordered sequence of questions (requirements → constraints → design → deep dive → trade-offs → review) used to structure an open-ended design problem." },
+    { "term": "Non-functional requirement", "definition": "A quality constraint on the system — latency, cost, safety, privacy, autonomy — as opposed to a feature it performs." },
+    { "term": "Agentic lens", "definition": "An agent-specific concern (sensing, tools, evals, guardrails) layered onto each classic design step." }
+  ],
+  "quiz": [
+    {
+      "q": "In this framework, what must come before drawing the high-level architecture?",
+      "choices": ["Choosing a database", "Requirements plus constraints/budgets", "Writing the eval harness", "Picking the LLM"],
+      "answer": 1,
+      "explanation": "Requirements justify the design and constraints size it, so both precede the block diagram."
+    },
+    {
+      "q": "Which set of concerns does the agentic framework add on top of the classic method?",
+      "choices": ["Sharding, caching, replication, CDN", "Context/sensing, tools, evals, guardrails", "OAuth, TLS, rate limits, logging", "Microservices, queues, brokers, schedulers"],
+      "answer": 1,
+      "explanation": "Agents fail by acting wrongly, so sensing, tools, evals, and guardrails become first-class lenses."
+    }
+  ]
+}

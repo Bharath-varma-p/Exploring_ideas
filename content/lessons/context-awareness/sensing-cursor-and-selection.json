@@ -1,0 +1,110 @@
+{
+  "id": "sensing-cursor-and-selection",
+  "title": "Sensing Cursor and Selection",
+  "lane": "context-awareness",
+  "type": "concept",
+  "order": 25,
+  "tags": [
+    "cursor",
+    "selection",
+    "intent",
+    "ui-signals"
+  ],
+  "summary": "Mouse position, hover target, caret, and highlighted text are high-signal clues because they reveal what the user is attending to right now.",
+  "analogy": "The cursor is a flashlight beam on the interface: wherever it points, attention and possible intent become brighter.",
+  "body": "## First principles\nHuman attention leaves traces in the interface. We point, hover, click, drag, select, and place the text caret. These traces are cheap, immediate clues about intent.\n\nThe problem for an agent is grounding. “Fix this,” “summarize that,” or “click there” are incomplete without knowing what “this,” “that,” and “there” refer to. Cursor and selection sensing convert vague references into candidate targets.\n\n## Plain definition\nCursor sensing reads the pointer location and, when possible, the UI element under it. Selection sensing reads highlighted text, selected files, active objects, or a text caret range.\n\nThe flashlight analogy works because a cursor narrows the search space. It does not prove intent, but it says where to look first.\n\n## Signal hierarchy\nA useful priority order is:\n\n1. **Explicit selection** — highlighted text or selected object.\n2. **Focused control** — active input, active file, active cell.\n3. **Recent pointer action** — click, drag, hover, or cursor movement.\n4. **Current pointer location** — useful but weaker if stale.\n5. **Nearby screen content** — labels and containers around the target.\n\nThis prevents overreacting to a cursor that was simply left in the corner.\n\n## Mental model\nThe diagram shows two streams. Pointer coordinates go through hit testing to find a hover target. Selected text and caret state become intent clues. The agent fuses them before choosing the next action.\n\n## Real examples\nAnthropic computer use makes cursor grounding concrete: a model may inspect a screen, move the cursor, click a button, and type. To do that well, it must connect a desired action to a coordinate or UI target.\n\nWindows UI Automation and Apple accessibility APIs improve on raw pixels by exposing control roles, names, bounding boxes, and actions. That means “button under cursor” can become “Submit button with press action,” not just “blue rectangle at x=412.”\n\n## Drills\nA user says “translate this” while the cursor is over an image caption but text is selected in the paragraph above. Which signal wins? Usually the selected text, unless the user explicitly mentions the image.\n\nA user says “what is this button?” while hovering over a toolbar icon. What extra context should the agent fetch? The accessible name, tooltip, nearby labels, and app/window title.\n\n## Teach-it-back\nCursor and selection are intent signals because they show where the user’s attention is. Selection is usually stronger than hover because it is deliberate. A robust agent uses hit testing and accessibility metadata to turn coordinates into real UI targets.",
+  "diagram": "flowchart LR\n  M[Mouse position] --> H[Hit test]\n  H --> TARGET[Hover target]\n  SEL[Selected text] --> INTENT[Intent clue]\n  CARET[Text caret] --> INTENT\n  TARGET --> FUSE[Fuse signals]\n  INTENT --> FUSE\n  FUSE --> NEXT[Next best action]",
+  "examples": [
+    {
+      "product": "Anthropic computer use",
+      "what": "The model can move a cursor and click buttons, so cursor coordinates and target identification become part of grounding an action.",
+      "source": "https://www.anthropic.com/news/3-5-models-and-computer-use"
+    },
+    {
+      "product": "Microsoft UI Automation",
+      "what": "Windows UI Automation can expose bounding rectangles, control types, and patterns, helping map a cursor coordinate to a semantic UI element.",
+      "source": "https://learn.microsoft.com/en-us/windows/win32/winauto/uiauto-uiautomationoverview"
+    },
+    {
+      "product": "Apple Accessibility",
+      "what": "macOS accessibility clients can inspect roles, titles, children, and actions for interface elements instead of relying only on raw mouse coordinates.",
+      "source": "https://developer.apple.com/library/archive/documentation/Accessibility/Conceptual/AccessibilityMacOSX/index.html"
+    }
+  ],
+  "drills": [
+    {
+      "q": "Why is selected text usually stronger evidence than the full page text?",
+      "a": "Selection is an active user signal: the user deliberately marked that span as relevant."
+    },
+    {
+      "q": "What is hit testing?",
+      "a": "Mapping a screen coordinate, such as the cursor position, to the UI element under that point."
+    },
+    {
+      "q": "Name one failure mode of cursor sensing.",
+      "a": "The cursor may be parked somewhere unrelated, so combine it with recency, focus, selection, and user wording."
+    }
+  ],
+  "teachItBack": "Cursor and selection signals are attention signals. The cursor points at possible targets; selection marks the exact text or object the user cares about. Use them as strong hints, but fuse them with focus, recency, and the user’s words before acting.",
+  "sources": [
+    {
+      "title": "Anthropic — Claude 3.5 models and computer use",
+      "url": "https://www.anthropic.com/news/3-5-models-and-computer-use",
+      "verified": true
+    },
+    {
+      "title": "Microsoft Learn — UI Automation Overview",
+      "url": "https://learn.microsoft.com/en-us/windows/win32/winauto/uiauto-uiautomationoverview",
+      "verified": true
+    },
+    {
+      "title": "Apple — Accessibility Programming Guide for OS X",
+      "url": "https://developer.apple.com/library/archive/documentation/Accessibility/Conceptual/AccessibilityMacOSX/index.html",
+      "verified": true
+    }
+  ],
+  "related": [
+    "what-is-context-awareness",
+    "sensing-screen-and-app-state",
+    "deciding-where-to-go",
+    "accessibility-apis-as-sensing"
+  ],
+  "glossary": [
+    {
+      "term": "Cursor sensing",
+      "definition": "Reading pointer position and possibly the UI element underneath it."
+    },
+    {
+      "term": "Selection signal",
+      "definition": "Highlighted text, selected objects, or active caret range that indicate the user’s current focus."
+    },
+    {
+      "term": "Hit test",
+      "definition": "A lookup that maps coordinates to a UI element or bounding box."
+    }
+  ],
+  "quiz": [
+    {
+      "q": "A user says “explain this” while a paragraph is highlighted. What should the agent privilege?",
+      "choices": [
+        "The whole website",
+        "The highlighted paragraph",
+        "The oldest browser tab",
+        "The battery percentage"
+      ],
+      "answer": 1,
+      "explanation": "Selection is the clearest local intent signal."
+    },
+    {
+      "q": "Why should cursor position not be used alone?",
+      "choices": [
+        "It is always encrypted",
+        "It can be stale, accidental, or unrelated to the task",
+        "It cannot be represented as coordinates",
+        "It replaces permissions"
+      ],
+      "answer": 1,
+      "explanation": "The pointer may be parked; combine it with selection, focus, and user request."
+    }
+  ]
+}

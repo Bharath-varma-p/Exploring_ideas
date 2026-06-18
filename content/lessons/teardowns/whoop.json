@@ -1,0 +1,119 @@
+{
+  "id": "whoop",
+  "title": "WHOOP — Biometric Context as Coaching",
+  "lane": "teardowns",
+  "type": "teardown",
+  "order": 10,
+  "product": "WHOOP",
+  "tags": [
+    "wearables",
+    "health",
+    "biometrics",
+    "coaching",
+    "openai"
+  ],
+  "summary": "WHOOP turns continuous biometric signals — recovery, strain, sleep, HRV, stress, and journal behaviors — into a conversational AI coach that can explain what is happening and suggest what to do next.",
+  "contextSignals": [
+    "Recovery score and trend",
+    "Sleep duration, sleep need, and sleep quality",
+    "Heart-rate variability (HRV) and resting heart rate",
+    "Daily strain and training load",
+    "Stress and health metrics",
+    "Goals and planned events entered by the member",
+    "WHOOP Journal behaviors such as diet, medication, alcohol, travel, hydration, and other logged routines",
+    "Comparisons to similar members when available"
+  ],
+  "patterns": [
+    "rag",
+    "tool-use",
+    "memory-long-term",
+    "routing",
+    "guardrails",
+    "reflection"
+  ],
+  "uxMoves": [
+    "trust-and-transparency",
+    "latency-masking",
+    "personalization",
+    "progressive-disclosure",
+    "daily-ritual"
+  ],
+  "analogy": "A coach who has watched your sleep, training, stress, and habits for months — not a generic chatbot reading a fitness article.",
+  "diagram": "flowchart LR\n  A[Wearable sensors: HRV, sleep, strain, stress] --> B[WHOOP algorithms and member history]\n  C[Goals and Journal behaviors] --> B\n  B --> D{What changed or what is the user asking?}\n  D --> E[Retrieve relevant biometric trends and performance science]\n  E --> F[GPT-4 powered WHOOP Coach]\n  F --> G[Explain why: recovery, readiness, sleep debt]\n  F --> H[Recommend action: train, rest, hydrate, adjust sleep]\n  G --> I[Member behavior next day]\n  H --> I\n  I --> A",
+  "body": "## What it is\nWHOOP is a wearable performance platform. The teardown-worthy move is WHOOP Coach: a GPT-4-powered conversational coach that sits on top of a member's biometric history, goals, WHOOP algorithms, and performance science. WHOOP says Coach identifies patterns and connections in Recovery, Strain, Sleep, Health, and Stress data, then produces individualized responses in seconds. Press coverage from Wareable described the feature as a ChatGPT-style coach that can summarize recent sleep, strain, and recovery performance, answer follow-ups, and link users back into relevant WHOOP app screens.\n\nThat matters because the product does not ask the model to be a generic fitness expert. It gives the model a dense context layer: your actual sleep, HRV, strain, stress, and logged behaviors. The AI experience feels useful because it can answer questions like \"why am I so tired?\" with personal evidence rather than generic advice.\n\n## Context signals it uses\nThe core signals are biometric and behavioral: Recovery, Strain, Sleep, Health, Stress, HRV, goals, and WHOOP Journal entries. WHOOP says members can track 140+ custom behaviors, from diet to medication, and use those to uncover effects on physiological metrics. That turns the Journal into a causal-hypothesis surface: \"When I drink alcohol, travel, or change bedtime, what happens to recovery?\"\n\nThe richest signal is not any one metric; it is the relationship between them. Sleep debt changes recovery. Strain changes sleep need. HRV and resting heart rate change the interpretation of readiness. A coach can be proactive because it sees the before-and-after pattern across days, not only a static dashboard.\n\n## Patterns under the hood\nWHOOP Coach is a strong example of RAG over personal data. The retrieval layer is the member's biometrics, journal entries, goals, and performance-science explanations. Tool-use shows up as domain calculations: sleep need, strain, recovery, comparison cohorts, and membership support. Long-term memory is implicit in the historical wearable record.\n\nThe product also needs routing and guardrails. Some questions are coaching questions, some are education questions, and some are support questions. Health-adjacent advice should be bounded: explain patterns, recommend behavior changes, and avoid pretending to diagnose disease.\n\n## UX & engagement moves\nWHOOP already has a daily ritual: wake up, check recovery, decide how hard to push. Coach makes that ritual conversational. Instead of forcing users to interpret charts, it lets them ask natural questions and receive a clear, personalized explanation.\n\nThe trust move is specificity. A useful answer should name the signal it used: \"your HRV is below baseline,\" \"sleep was short,\" or \"strain has been high for three days.\" Latency masking also matters: WHOOP emphasizes answers within seconds, so the AI feels like an always-available coach rather than a report generator.\n\n## What to steal (lessons)\nDo not bolt a chatbot onto a dashboard. Build a context contract first: what signals are reliable, what they mean, and how they combine. Then let the AI translate those signals into action.\n\nMake the recommendation explainable. The best engagement loop is not \"AI says rest\"; it is \"AI says rest because sleep debt rose, HRV dropped, and yesterday's strain was high.\" Finally, create a journal or feedback loop so the user can add missing context and the system improves over time.",
+  "examples": [
+    {
+      "product": "WHOOP Coach",
+      "what": "Uses member goals, biometric data, WHOOP algorithms, performance science, and GPT-4 to answer health and fitness questions with individualized guidance.",
+      "source": "https://www.whoop.com/us/en/press-center/whoop-unveils-the-new-whoop-coach-powered-by-openai/"
+    },
+    {
+      "product": "OpenAI customer story",
+      "what": "Frames WHOOP as an LLM-powered health solution built around personalized member data rather than generic answers.",
+      "source": "https://openai.com/index/whoop/"
+    },
+    {
+      "product": "Wareable hands-on coverage",
+      "what": "Reported that WHOOP Coach can summarize recent sleep, strain, and recovery performance, answer follow-up questions, and direct users to relevant app screens.",
+      "source": "https://www.wareable.com/wearable-tech/whoop-launches-gpt-4-ai-coach"
+    }
+  ],
+  "drills": [
+    {
+      "q": "What makes WHOOP Coach feel more contextual than a normal fitness chatbot?",
+      "a": "It can ground answers in the member's actual recovery, sleep, HRV, strain, stress, goals, and logged behaviors."
+    },
+    {
+      "q": "What should a health-adjacent AI product explain before recommending action?",
+      "a": "The signals it used, the pattern it detected, the confidence or limits of the interpretation, and the concrete next step."
+    }
+  ],
+  "teachItBack": "WHOOP Coach works because the AI is wrapped around a rich biometric context layer. It does not just answer fitness questions; it interprets sleep, recovery, HRV, strain, stress, and habits together. The lesson is to make context visible, then translate it into a specific behavior change.",
+  "sources": [
+    {
+      "title": "WHOOP Unveils the New WHOOP Coach Powered by OpenAI",
+      "url": "https://www.whoop.com/us/en/press-center/whoop-unveils-the-new-whoop-coach-powered-by-openai/",
+      "verified": true
+    },
+    {
+      "title": "OpenAI — Delivering LLM-powered health solutions",
+      "url": "https://openai.com/index/whoop/",
+      "verified": true
+    },
+    {
+      "title": "Wareable — Whoop launches GPT-4 AI coach",
+      "url": "https://www.wareable.com/wearable-tech/whoop-launches-gpt-4-ai-coach",
+      "verified": true
+    }
+  ],
+  "related": [
+    "rag",
+    "tool-use",
+    "memory-long-term",
+    "guardrails",
+    "trust-and-transparency"
+  ],
+  "glossary": [
+    {
+      "term": "Recovery",
+      "definition": "A WHOOP readiness signal that summarizes how prepared the body appears to be for strain, informed by physiological metrics such as HRV and resting heart rate."
+    },
+    {
+      "term": "Biometric context",
+      "definition": "Continuous physiological data used as input for personalization, explanations, and recommendations."
+    }
+  ],
+  "quiz": [
+    {
+      "q": "What is the key product lesson from WHOOP Coach?",
+      "choices": [
+        "Use AI as a generic content generator",
+        "Ground coaching in live and historical biometric signals",
+        "Hide the reasons behind recommendations",
+        "Remove user-entered context"
+      ],
+      "answer": 1,
+      "explanation": "WHOOP Coach is powerful because it uses real member data — sleep, recovery, HRV, strain, stress, goals, and behaviors — as context for coaching."
+    }
+  ]
+}

@@ -1,0 +1,47 @@
+{
+  "id": "step-3-high-level-design",
+  "title": "Step 3 — High-Level Design",
+  "lane": "framework",
+  "type": "framework",
+  "order": 40,
+  "tags": ["framework", "architecture", "reference-architecture", "block-diagram"],
+  "summary": "The reference architecture for a context- and platform-aware agent: Sensors → Context Engine → Planner/Policy → Tool/Action layer → Guardrails → Memory → UI. One diagram you can adapt to almost any agent.",
+  "analogy": "Like the human nervous system: senses gather signals, the brain builds a picture and decides, muscles act, and reflexes (guardrails) stop you from touching the hot stove. Each agent component maps to one of these roles.",
+  "body": "## First principles\nOnce you have requirements and budgets, the high-level design is about **naming the boxes and the arrows between them** — the data flow from perceiving the world to acting on it. A good reference architecture is reusable: the same seven blocks describe a customer-support bot or a screen-aware desktop assistant; only the implementations change.\n\nThe core loop of *any* agent is **perceive → decide → act**, wrapped with memory and safety. Our reference architecture just expands that loop into named, swappable components.\n\n## The seven blocks\n1. **Sensors** — gather raw signals about the user and environment. For a desktop agent: cursor position, selection/hover, active app (accessibility tree), screen (screenshot + OCR), recent history, OS capabilities.\n2. **Context Engine (Context Builder)** — normalize, rank, and compress those signals into a compact, model-ready context. This is where 'too much raw data' becomes 'the few facts that matter now.'\n3. **Planner / Policy** — the decision-maker. Given the context and the goal, decide *what to do*: which tool, which UI target, what search query. May be a single LLM call, a ReAct loop, or a planner-executor.\n4. **Tool / Action layer** — the hands. Typed tools the planner can invoke: search, click(target), type(text), open(app), call an API. Each tool has a schema and a permission.\n5. **Guardrails** — the safety reflex wrapping the action layer: validate the proposed action, check permissions, require confirmation for risky/irreversible ops, redact sensitive data.\n6. **Memory** — short-term (this session's context) and long-term (user preferences, past actions, learned shortcuts). Feeds the context engine and personalizes the planner.\n7. **UI** — how the agent surfaces suggestions and asks for confirmation: cursor-anchored hints, a side panel, streaming text. This is where UX patterns (microinteractions, motion, streaming) live.\n\n## How a request flows\nSensors fire → Context Engine builds a ranked context → Planner decides an action + target + query → Guardrails check it → Tool layer executes (or UI asks the user first) → result and action are written to Memory → UI renders the outcome. Then the loop repeats on the next signal.\n\n## Where to put the model(s)\nYou rarely use one model everywhere. A tiny on-device model can rank context and gate privacy; a larger cloud model does the hard planning. The architecture lets you slot different models into the Context Engine vs the Planner based on the latency/cost/privacy budgets from Step 2.\n\n## Map it to the budgets\n- Sensors + Context Engine must fit the ≤150ms sensing budget → cheap, often on-device.\n- Planner is the expensive hop → the ~600ms model call.\n- Guardrails + Tools are cheap but safety-critical → fast checks, human-in-the-loop on risk.\n\n## Watch out for\n- **Skipping the Context Engine**: dumping raw sensors into the planner blows the token budget and the latency budget.\n- **Guardrails as an afterthought**: bolt them around the action layer from day one.\n- **No memory**: without it the agent re-asks and never learns the user's patterns.",
+  "diagram": "flowchart TD\n  subgraph Perceive\n    SEN[Sensors\\ncursor · selection · a11y tree · screenshot+OCR · history · OS caps]\n    CE[Context Engine\\nnormalize · rank · compress]\n    SEN --> CE\n  end\n  subgraph Decide\n    PL[Planner / Policy\\nwhat tool · which target · what query]\n    MEM[(Memory\\nshort + long term)]\n    CE --> PL\n    MEM <--> PL\n    MEM <--> CE\n  end\n  subgraph Act\n    GR{{Guardrails\\nvalidate · permit · confirm · redact}}\n    TL[Tool / Action layer\\nsearch · click · type · open · API]\n    PL --> GR --> TL\n  end\n  TL --> UI[UI\\ncursor hints · side panel · streaming]\n  UI -->|user confirm / feedback| GR\n  TL -->|result| MEM\n  UI -.next signal.-> SEN",
+  "examples": [
+    { "product": "OpenAI Operator (CUA)", "what": "Maps cleanly onto this: it senses the browser (screenshots), a model plans the next action, an action layer clicks/types, and guardrails pause for user confirmation on sensitive steps.", "source": "https://openai.com/index/computer-using-agent/" },
+    { "product": "Chip Huyen — 'Agents'", "what": "Describes agents as a planner plus tools plus memory operating in an environment — the same perceive-decide-act decomposition this reference architecture formalizes.", "source": "https://huyenchip.com/2025/01/07/agents.html" }
+  ],
+  "drills": [
+    { "q": "What are the seven blocks of the reference architecture, in data-flow order?", "a": "Sensors → Context Engine → Planner/Policy → Guardrails → Tool/Action layer → (writes to) Memory → UI, with Memory feeding back into Context Engine and Planner." },
+    { "q": "Why is the Context Engine a separate block instead of feeding sensors straight to the planner?", "a": "Raw sensor data is too large and noisy; the Context Engine normalizes, ranks, and compresses it to fit the token and latency budgets and to surface only what matters now." },
+    { "q": "Where do guardrails sit and why there?", "a": "Wrapped around the Tool/Action layer, between the planner's decision and real execution, so every proposed action is validated, permission-checked, and (if risky) confirmed before it touches the world." }
+  ],
+  "teachItBack": "The reference architecture is seven blocks expanding the perceive-decide-act loop: Sensors gather signals, the Context Engine compresses them, the Planner decides the action/target/query, Guardrails check it, the Tool layer executes, Memory records and personalizes, and the UI surfaces it. A request flows straight through these blocks and the loop repeats on the next signal. You slot different models and budgets into each block, keeping sensing cheap and the planner as the expensive hop.",
+  "sources": [
+    { "title": "Chip Huyen — Agents", "url": "https://huyenchip.com/2025/01/07/agents.html", "verified": true },
+    { "title": "Anthropic — Building effective agents", "url": "https://www.anthropic.com/engineering/building-effective-agents", "verified": true },
+    { "title": "OpenAI — Computer-Using Agent (Operator)", "url": "https://openai.com/index/computer-using-agent/", "verified": true }
+  ],
+  "related": ["design-framework-overview", "step-2-constraints-and-budgets", "step-4-deep-dive-context-pipeline", "agentic-patterns-overview", "react", "blueprint-cursor-context-agent"],
+  "glossary": [
+    { "term": "Reference architecture", "definition": "A reusable block-and-arrow template (here: Sensors → Context Engine → Planner → Guardrails → Tools → Memory → UI) adaptable across many agents." },
+    { "term": "Context Engine", "definition": "The component that normalizes, ranks, and compresses raw sensor signals into compact, model-ready context." },
+    { "term": "Planner / Policy", "definition": "The decision-making component that maps context + goal to an action, a target, and any query parameters." }
+  ],
+  "quiz": [
+    {
+      "q": "In the reference architecture, what is the Context Engine's job?",
+      "choices": ["Execute the chosen action", "Normalize, rank, and compress raw sensor signals into model-ready context", "Store long-term user preferences", "Render the UI"],
+      "answer": 1,
+      "explanation": "The Context Engine turns noisy, oversized sensor data into the few compact facts that matter for the current decision."
+    },
+    {
+      "q": "Which placement of guardrails is correct?",
+      "choices": ["Before the sensors capture anything", "Wrapped around the tool/action layer, after the planner decides", "Only inside long-term memory", "As a post-hoc log reviewed weekly"],
+      "answer": 1,
+      "explanation": "Guardrails must validate and gate the action between the planner's decision and real execution."
+    }
+  ]
+}

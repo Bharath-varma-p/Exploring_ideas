@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="An interactive, content-driven curriculum for context-aware and platform-aware agentic AI system design: patterns, real product teardowns, a design framework, quizzes and flashcards." />
+  <meta name="color-scheme" content="dark light" />
+  <title>Agentic Design Academy — Context & Platform-Aware AI</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%236d5efc'/%3E%3Ctext x='50' y='71' font-size='62' text-anchor='middle' fill='white' font-family='system-ui'%3E◆%3C/text%3E%3C/svg%3E" />
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <a class="skip" href="#view">Skip to content</a>
+
+  <header class="topbar">
+    <button id="menu-toggle" class="icon-btn only-mobile" aria-label="Open menu">☰</button>
+    <a class="brand" href="#/">
+      <span class="brand-mark">◆</span>
+      <span class="brand-name">Agentic Design <span class="brand-acc">Academy</span></span>
+    </a>
+    <div class="topbar-spacer"></div>
+    <button id="search-trigger" class="search-trigger" aria-label="Search (Cmd/Ctrl+K)">
+      <span class="mag">⌕</span><span class="st-label">Search</span><kbd class="st-kbd">⌘K</kbd>
+    </button>
+    <div id="progress-ring" class="progress-ring" aria-label="Learning progress">
+      <svg viewBox="0 0 36 36" width="34" height="34">
+        <circle class="ring-bg" cx="18" cy="18" r="15" />
+        <circle class="ring-fill" cx="18" cy="18" r="15" transform="rotate(-90 18 18)" />
+      </svg>
+      <span class="ring-text">0%</span>
+    </div>
+    <button id="theme-toggle" class="icon-btn" aria-label="Toggle theme" title="Toggle light/dark">◐</button>
+  </header>
+
+  <div class="shell">
+    <aside class="sidebar" aria-label="Curriculum navigation">
+      <nav id="sidenav" class="sidenav"></nav>
+      <div class="side-foot">Built by 5 AI subagents · <a href="#/about">extend it →</a></div>
+    </aside>
+    <div id="scrim" class="scrim"></div>
+
+    <main id="view" class="main" tabindex="-1"></main>
+  </div>
+
+  <!-- Command palette -->
+  <div id="palette" class="palette" role="dialog" aria-modal="true" aria-label="Search">
+    <div class="palette-box">
+      <div class="palette-input-row">
+        <span class="mag">⌕</span>
+        <input id="palette-input" type="text" placeholder="Search patterns, teardowns, terms…" autocomplete="off" spellcheck="false" />
+        <kbd>esc</kbd>
+      </div>
+      <div id="palette-results" class="palette-results"></div>
+      <div class="palette-foot"><span>↑↓ navigate</span><span>↵ open</span><span>esc close</span></div>
+    </div>
+  </div>
+
+  <script src="lib/marked.min.js"></script>
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>

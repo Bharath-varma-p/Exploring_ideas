@@ -1,0 +1,62 @@
+{
+  "id": "rag",
+  "title": "RAG — Retrieval-Augmented Generation",
+  "lane": "architecture",
+  "type": "pattern",
+  "order": 35,
+  "tags": ["retrieval", "embeddings", "grounding", "knowledge", "foundational"],
+  "summary": "Before answering, fetch relevant documents from a knowledge source and stuff them into the prompt — so the model answers from real, current, private facts instead of its frozen training memory.",
+  "analogy": "An open-book exam. Instead of forcing a student to recall everything from memory, you let them look up the exact page first, then write the answer. The lookup is what keeps the answer honest and current.",
+  "problem": "A model only knows what was in its training data: it's frozen in time, blind to your private documents, and prone to confidently inventing facts (hallucination) when asked about things it never saw.",
+  "forces": [
+    "Knowledge changes after training; the model can't know it.",
+    "Private/internal data was never in training and can't be.",
+    "Retrieved context costs tokens and adds latency.",
+    "Retrieval quality caps answer quality — garbage in, garbage out.",
+    "Chunking and embedding choices change what gets found."
+  ],
+  "solution": "Index your knowledge as embedding vectors in a store. At query time, embed the question, retrieve the most similar chunks, and inject them into the prompt as context. The model then generates an answer grounded in those retrieved passages, ideally with citations.",
+  "tradeoffs": [
+    "Answers are only as good as retrieval — poor chunking or embeddings surface irrelevant context.",
+    "Extra latency and token cost for the retrieval + larger prompt.",
+    "Stale or wrong documents in the index produce confidently wrong, 'grounded-looking' answers.",
+    "Long retrieved context can bury the key passage ('lost in the middle')."
+  ],
+  "body": "## First principles\nTwo hard limits of a raw LLM: its knowledge is **frozen** at training time, and it has **no access** to your private data. When asked beyond its knowledge it doesn't say 'I don't know' — it **hallucinates**. You could retrain it on new data, but that's slow and expensive and you'd do it constantly.\n\nRAG's insight (Lewis et al., 2020): **separate knowledge from the model**. Keep facts in an external, updatable store and *retrieve* the relevant bits at query time, handing them to the model as context. Now updating knowledge means updating a database, not retraining a model.\n\n## Plain definition\nRAG = **Retrieve → Augment → Generate**. Embed and index your documents; at query time find the most relevant chunks by similarity; put them in the prompt; let the model generate an answer grounded in them.\n\n## The pipeline (mental model)\n1. **Index (offline)**: split docs into **chunks**, convert each to an **embedding** vector, store in a vector DB.\n2. **Retrieve**: embed the query, find nearest-neighbor chunks.\n3. **Augment**: insert those chunks into the prompt.\n4. **Generate**: model answers from the provided context, with citations.\n\n## Real examples\n- **Perplexity**: retrieves live web results and generates a cited answer — RAG over the open web.\n- **Notion AI / enterprise 'chat with your docs'**: index a company's wiki so the model answers from internal knowledge.\n- **GitHub Copilot** uses repository context retrieval to ground code suggestions in your actual codebase.\n\n## When to use it\n- Questions need **fresh, private, or domain-specific** facts.\n- You need **citations / provenance**.\n- Hallucination on factual queries is unacceptable.\n\n## Watch out for\n- **Retrieval is the bottleneck**: tune chunk size, overlap, and embedding model.\n- **Lost in the middle**: rerank so the best passage isn't buried.\n- **Stale index**: re-index when source data changes, or you'll serve confident-but-outdated answers.",
+  "diagram": "flowchart LR\n  subgraph Offline[Index time]\n    D[Documents] --> CH[Chunk] --> EMB[Embed] --> VS[(Vector store)]\n  end\n  Q([Query]) --> QE[Embed query] --> RET[Retrieve\\ntop-k chunks]\n  VS --> RET\n  RET --> AUG[Augment prompt\\nwith context]\n  AUG --> GEN[Generate\\ngrounded answer]\n  GEN --> A([Answer + citations])",
+  "examples": [
+    { "product": "Perplexity", "what": "Retrieves live web pages for each query and generates a synthesized, cited answer — RAG productized over the open internet.", "source": "https://www.perplexity.ai/hub/blog" },
+    { "product": "Notion AI", "what": "Indexes a workspace's pages so 'Q&A' answers questions grounded in the team's own documents rather than the model's training data.", "source": "https://www.notion.com/help/notion-ai" }
+  ],
+  "drills": [
+    { "q": "What three stages give RAG its name?", "a": "Retrieve relevant chunks, Augment the prompt with them, Generate an answer grounded in that context." },
+    { "q": "Why does RAG reduce hallucination on factual questions?", "a": "The model answers from real retrieved passages provided in-context instead of relying on its frozen, possibly-wrong internal memory." },
+    { "q": "Why is retrieval quality the ceiling on RAG answer quality?", "a": "If the retrieved chunks are irrelevant or wrong, the model has nothing good to ground on — garbage context yields garbage (or hallucinated) answers." }
+  ],
+  "teachItBack": "RAG keeps your knowledge in an external store and fetches the relevant pieces at query time, so the model answers from real, current, private facts instead of its frozen training memory. The pipeline is retrieve the most similar chunks, augment the prompt with them, then generate a grounded, ideally cited answer. Its quality is capped by retrieval, so chunking, embeddings, and keeping the index fresh are what make or break it.",
+  "sources": [
+    { "title": "Retrieval-Augmented Generation (Lewis et al., 2020)", "url": "https://arxiv.org/abs/2005.11401", "verified": true },
+    { "title": "Anthropic — Building effective agents", "url": "https://www.anthropic.com/engineering/building-effective-agents", "verified": true }
+  ],
+  "related": ["tool-use", "memory-long-term", "react", "guardrails"],
+  "glossary": [
+    { "term": "RAG", "definition": "Retrieval-Augmented Generation: fetching relevant documents and injecting them into the prompt so the model answers from external knowledge." },
+    { "term": "Embedding", "definition": "A numeric vector representation of text whose distance encodes semantic similarity, used to find relevant chunks." },
+    { "term": "Chunking", "definition": "Splitting documents into smaller passages so retrieval can return focused, relevant context." },
+    { "term": "Vector store", "definition": "A database that indexes embeddings for fast nearest-neighbor similarity search." }
+  ],
+  "quiz": [
+    {
+      "q": "What problem does RAG primarily solve?",
+      "choices": ["Slow training", "The model's knowledge is frozen and it can't see private/fresh data", "Models being too small", "Lack of tools"],
+      "answer": 1,
+      "explanation": "RAG injects external, current, or private documents so the model isn't limited to frozen training knowledge."
+    },
+    {
+      "q": "In RAG, what most directly limits the quality of the final answer?",
+      "choices": ["The model's temperature", "The quality and relevance of the retrieved chunks", "The font of the documents", "The number of GPUs"],
+      "answer": 1,
+      "explanation": "RAG answers are grounded in retrieved context, so poor retrieval caps answer quality."
+    }
+  ]
+}
