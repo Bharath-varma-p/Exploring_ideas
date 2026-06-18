@@ -1,0 +1,70 @@
+{
+  "id": "fdy-transports",
+  "title": "Transports",
+  "lane": "foundry-mcp",
+  "type": "concept",
+  "order": 105,
+  "summary": "The current standard MCP transports are stdio and Streamable HTTP. stdio launches a local server subprocess and exchanges newline-delimited JSON-RPC over stdin and stdout.",
+  "tags": [
+    "transport",
+    "stdio",
+    "http"
+  ],
+  "analogy": "stdio is a direct field telephone between two people in the same room. Streamable HTTP is a dispatch center reachable over the network, able to handle many callers.",
+  "diagram": "graph TD\nMessages[JSON RPC messages]\nMessages --> Stdio[stdio local subprocess]\nMessages --> Http[Streamable HTTP remote endpoint]\nHttp --> Post[POST client messages]\nHttp --> Get[GET optional server stream]\nHttp --> Sse[Optional SSE events]\nOld[HTTP plus SSE old transport] --> Deprecated[Deprecated path]",
+  "body": "## First principles\n\nFirst principles: a protocol needs a way to move messages, but the message semantics should not depend on whether bytes travel through pipes or HTTP. MCP separates the JSON-RPC data layer from transports so the same operations can run locally or remotely.\n\n## Definition\n\nThe current standard MCP transports are stdio and Streamable HTTP. stdio launches a local server subprocess and exchanges newline-delimited JSON-RPC over stdin and stdout. Streamable HTTP uses a single MCP endpoint with HTTP POST and optional GET plus Server-Sent Events for streaming. The older HTTP plus SSE transport from protocol version 2024-11-05 is deprecated and replaced by Streamable HTTP.\n\n## How it fits together\n\nUse stdio for local tools such as filesystem or developer utilities where the host starts the server process. Use Streamable HTTP for remote services, multi-client servers, and standard HTTP auth. Remember the name: Streamable HTTP, not simply SSE. SSE is optional streaming inside that transport.\n\n## Worked example\n\n```json\n{\n  \"method\": \"POST\",\n  \"url\": \"https://example.com/mcp\",\n  \"headers\": {\n    \"Accept\": \"application/json, text/event-stream\",\n    \"Content-Type\": \"application/json\",\n    \"MCP-Protocol-Version\": \"2025-11-25\"\n  },\n  \"body\": {\n    \"jsonrpc\": \"2.0\",\n    \"id\": 1,\n    \"method\": \"tools/list\"\n  }\n}\n```\n\n*Streamable HTTP request headers concept*",
+  "drills": [
+    {
+      "q": "Which transport is common for local subprocess servers?",
+      "a": "stdio."
+    },
+    {
+      "q": "What is the current remote standard transport called?",
+      "a": "Streamable HTTP."
+    },
+    {
+      "q": "Is HTTP plus SSE the current name?",
+      "a": "No. The older HTTP plus SSE transport is deprecated; Streamable HTTP replaced it."
+    }
+  ],
+  "teachItBack": "MCP transport is how JSON-RPC messages move. stdio is for local subprocesses; Streamable HTTP is for remote or multi-client servers. The old HTTP plus SSE transport is legacy, while SSE remains an optional streaming mechanism inside Streamable HTTP.",
+  "glossary": [
+    {
+      "term": "stdio",
+      "definition": "Transport where the client launches a local server and exchanges messages over stdin and stdout."
+    },
+    {
+      "term": "Streamable HTTP",
+      "definition": "Current HTTP transport using POST and optional SSE streams on a single MCP endpoint."
+    },
+    {
+      "term": "HTTP plus SSE",
+      "definition": "Older deprecated transport from protocol version 2024-11-05."
+    }
+  ],
+  "sources": [
+    {
+      "title": "MCP Transports",
+      "url": "https://modelcontextprotocol.io/specification/2025-11-25/basic/transports.md",
+      "verified": true
+    },
+    {
+      "title": "MCP Architecture overview",
+      "url": "https://modelcontextprotocol.io/docs/learn/architecture.md",
+      "verified": true
+    }
+  ],
+  "quiz": [
+    {
+      "q": "Which MCP server primitive is model-controlled?",
+      "choices": [
+        "Tools",
+        "Resources",
+        "Prompts",
+        "Roots"
+      ],
+      "answer": 0,
+      "explanation": "Tools are designed so the model can discover and invoke them, subject to host consent and policy."
+    }
+  ]
+}

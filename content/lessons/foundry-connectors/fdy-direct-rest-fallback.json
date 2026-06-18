@@ -1,0 +1,67 @@
+{
+  "id": "fdy-direct-rest-fallback",
+  "title": "Direct REST Fallback with MI Tokens",
+  "lane": "foundry-connectors",
+  "type": "concept",
+  "order": 310,
+  "summary": "Azure DevOps REST APIs accept OAuth bearer tokens for many operations.",
+  "tags": [
+    "rest",
+    "fallback",
+    "managed-identity"
+  ],
+  "analogy": "If the fancy radio is unavailable, use the secure field phone. The auth badge and permission model stay the same; only the transport changes.",
+  "diagram": "sequenceDiagram\n    participant App as Python app\n    participant Entra as Entra token issuer\n    participant REST as ADO REST API\n    App->>Entra: get token for ADO\n    App->>REST: POST WIQL with bearer token\n    REST-->>App: IDs and links",
+  "body": "## First principles\n\nFirst principles: a connector should degrade safely. If MCP auth or environment support is not ready, the same managed identity can call Azure DevOps REST APIs directly with bearer tokens, preserving the no secret requirement.\n\n## Definition\n\nAzure DevOps REST APIs accept OAuth bearer tokens for many operations. A managed identity can acquire an ADO scoped token, then call endpoints such as _apis/wit/wiql for queries or _apis/wit/workitems/$Task for creation, provided the identity has ADO permissions.\n\n## How it fits together\n\nUse direct REST fallback for demonstrations or production gaps only when you can still enforce approvals, logging, and least privilege. Do not fall back to a PAT just because it is convenient.\n\n## Worked example\n\n```python\n# pip install azure-identity requests\n# Set values before running on Azure with managed identity.\nimport requests\nfrom azure.identity import DefaultAzureCredential\n\nORG = 'contoso'\nPROJECT = 'SpaceElevator'\nSCOPE = '499b84ac-1321-427f-aa17-267ca6975798/.default'\n\ncredential = DefaultAzureCredential(exclude_interactive_browser_credential=True)\ntoken = credential.get_token(SCOPE).token\n\nurl = f'https://dev.azure.com/{ORG}/{PROJECT}/_apis/wit/wiql?api-version=7.1'\nquery = {\n    'query': \"SELECT [System.Id], [System.Title] FROM WorkItems WHERE [System.WorkItemType] = 'Bug' AND [System.State] <> 'Closed'\"\n}\nresponse = requests.post(url, json=query, headers={'Authorization': f'Bearer {token}'}, timeout=30)\nresponse.raise_for_status()\nprint(response.json().get('workItems', []))\n```\n\n*Runnable WIQL REST call with managed identity token*",
+  "drills": [
+    {
+      "q": "What stays the same between MCP and REST fallback?",
+      "a": "Managed identity token acquisition and Azure DevOps permissions."
+    },
+    {
+      "q": "What must not be used as the recommended fallback?",
+      "a": "A PAT or secret."
+    },
+    {
+      "q": "Which REST endpoint runs WIQL?",
+      "a": "_apis/wit/wiql."
+    }
+  ],
+  "teachItBack": "Direct REST is the safety net when MCP support is incomplete. It still uses Entra tokens and ADO permissions. The fallback should keep the same approval and audit discipline as MCP.",
+  "glossary": [
+    {
+      "term": "REST API",
+      "definition": "HTTP interface for Azure DevOps resources."
+    },
+    {
+      "term": "Fallback",
+      "definition": "Alternate implementation path used when the preferred connector is unavailable."
+    },
+    {
+      "term": "Opaque token",
+      "definition": "Token treated as an authorization artifact and not decoded by the app."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Microsoft Learn: Use service principals and managed identities",
+      "url": "https://learn.microsoft.com/en-us/azure/devops/integrate/get-started/authentication/service-principal-managed-identity?view=azure-devops",
+      "verified": true
+    },
+    {
+      "title": "Microsoft Learn REST: Query by WIQL",
+      "url": "https://learn.microsoft.com/en-us/rest/api/azure/devops/wit/wiql/query-by-wiql?view=azure-devops-rest-7.1",
+      "verified": true
+    },
+    {
+      "title": "Microsoft Learn REST: Create work item",
+      "url": "https://learn.microsoft.com/en-us/rest/api/azure/devops/wit/work-items/create?view=azure-devops-rest-7.1",
+      "verified": true
+    },
+    {
+      "title": "Microsoft Learn: Authentication methods for Azure DevOps",
+      "url": "https://learn.microsoft.com/en-us/azure/devops/integrate/get-started/authentication/authentication-guidance?view=azure-devops",
+      "verified": true
+    }
+  ]
+}

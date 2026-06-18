@@ -1,0 +1,78 @@
+{
+  "id": "fdy-versions-lifecycle-migration",
+  "title": "Version pinning, auto-update, and retirement",
+  "lane": "foundry-models",
+  "type": "concept",
+  "order": 108,
+  "summary": "Foundry lifecycle stages include Preview, Generally Available, Legacy, Deprecated, and Retired. Azure OpenAI deployment version policies include OnceNewDefaultVersionAvailable, OnceCurrentVersionExpired, and NoAutoUpgrade where supported.",
+  "tags": [
+    "versions",
+    "retirement",
+    "migration"
+  ],
+  "analogy": "A model version is a textbook edition. Pinning means teaching from edition 3; retirement means edition 3 leaves the bookstore and you must migrate to edition 4.",
+  "diagram": "flowchart LR\n  Preview --> GA\n  GA --> Legacy\n  Legacy --> Deprecated\n  Deprecated --> Retired\n  Old[old deployment] --> New[test replacement]\n  New --> Cutover[planned cutover]",
+  "body": "## First principles\n\nModels are living software. A deployment that works today can drift through updates or stop at retirement unless you choose version policy and migration strategy deliberately.\n\n## Definition\n\nFoundry lifecycle stages include Preview, Generally Available, Legacy, Deprecated, and Retired. Azure OpenAI deployment version policies include OnceNewDefaultVersionAvailable, OnceCurrentVersionExpired, and NoAutoUpgrade where supported. Pinning a specific model version improves repeatability, but retirement still requires migration. Retired models no longer serve inference and docs describe 410 Gone.\n\n## How it fits together\n\nFor production, pin versions or use conservative upgrade policy, track retirement schedules, deploy replacement versions in parallel, test quality and latency, then cut over application configuration or alias use. For experiments, auto-update to default can be acceptable.\n\n## Worked example\n\n```bash\naz login --identity\n\naz cognitiveservices account deployment show   --resource-group \"<resource-group>\"   --name \"<foundry-or-openai-account-name>\"   --deployment-name \"<deployment-name>\"   --query \"{model:properties.model, versionUpgradeOption:properties.versionUpgradeOption, state:properties.provisioningState}\"\n\n# Microsoft Learn notes Azure CLI can read versionUpgradeOption; update support may require ARM or other supported tooling.\n```\n\n*Read model version and version upgrade option.*",
+  "drills": [
+    {
+      "q": "Why pin a model version?",
+      "a": "To preserve behavior while you validate future versions."
+    },
+    {
+      "q": "What happens at retirement?",
+      "a": "The model no longer serves; requests can return 410 Gone."
+    },
+    {
+      "q": "What is the safest migration pattern?",
+      "a": "Deploy a replacement in parallel, test it, then cut over intentionally."
+    }
+  ],
+  "teachItBack": "Version policy is production hygiene. I choose whether to pin or auto-update, then track retirement. Migration is a planned parallel deployment and cutover, not an emergency.",
+  "glossary": [
+    {
+      "term": "Preview",
+      "definition": "Experimental lifecycle stage."
+    },
+    {
+      "term": "GA",
+      "definition": "Generally Available production stage."
+    },
+    {
+      "term": "Deprecated",
+      "definition": "Restricted stage before retirement."
+    },
+    {
+      "term": "Retired",
+      "definition": "No longer serving inference."
+    },
+    {
+      "term": "Version upgrade option",
+      "definition": "Policy controlling supported automatic version updates."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Foundry Models lifecycle and support policy",
+      "url": "https://learn.microsoft.com/en-us/azure/foundry/openai/concepts/model-retirements",
+      "verified": true
+    },
+    {
+      "title": "Working with Azure OpenAI model updates",
+      "url": "https://learn.microsoft.com/en-us/azure/foundry/openai/how-to/working-with-models",
+      "verified": true
+    }
+  ],
+  "quiz": [
+    {
+      "q": "Which deployment type keeps inference processing within a US or EU zone?",
+      "choices": [
+        "Data Zone Standard",
+        "Global Standard",
+        "Regional Provisioned in any region",
+        "DeveloperTier"
+      ],
+      "answer": 0,
+      "explanation": "Data Zone deployment types restrict processing to the Microsoft-defined US or EU zone."
+    }
+  ]
+}

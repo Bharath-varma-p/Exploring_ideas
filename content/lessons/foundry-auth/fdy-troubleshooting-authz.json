@@ -1,0 +1,66 @@
+{
+  "id": "fdy-troubleshooting-authz",
+  "title": "Troubleshooting 401 and 403",
+  "lane": "foundry-auth",
+  "type": "concept",
+  "order": 114,
+  "summary": "Troubleshooting is the disciplined process of isolating authentication from authorization, then checking audience, tenant, identity, scope, role, and propagation delay.",
+  "tags": [
+    "troubleshooting",
+    "401",
+    "403"
+  ],
+  "analogy": "Debug it like range safety: verify weapon, shooter, lane, target, and authorization card in order. Do not change five things at once.",
+  "diagram": "flowchart TD\n  Fail[Request failed] --> Code{Status}\n  Code -->|401| TokenCheck[Check token audience expiry tenant]\n  Code -->|403| RoleCheck[Check role scope principal propagation]\n  RoleCheck --> UAMI[Check user assigned client id]\n  TokenCheck --> Retry[Acquire fresh token]",
+  "body": "## First principles\n\nMost access failures are deterministic. The system is telling you which invariant broke: no acceptable token, wrong audience, expired token, no role, wrong scope, role not propagated, or wrong managed identity selected.\n\n## Definition\n\nTroubleshooting is the disciplined process of isolating authentication from authorization, then checking audience, tenant, identity, scope, role, and propagation delay. User-assigned identity failures often come from using the wrong or missing client_id.\n\n## How it fits together\n\nChecklist: 1 401 means token problem; verify scope and expiry. 2 403 means permission problem; verify role and scope. 3 Check principal ID matches the MI you granted. 4 For user-assigned MI, set client_id. 5 Wait for RBAC propagation and retry.\n\n## Worked example\n\n```python\nimport base64\nimport json\nimport os\nfrom datetime import datetime, timezone\nfrom azure.identity import DefaultAzureCredential\n\nscope = os.getenv(\"AZURE_TOKEN_SCOPE\", \"https://cognitiveservices.azure.com/.default\")\ncredential = DefaultAzureCredential(exclude_environment_credential=True)\ntoken = credential.get_token(scope)\n\npayload = token.token.split(\".\")[1]\npayload += \"=\" * (-len(payload) % 4)\nclaims = json.loads(base64.urlsafe_b64decode(payload))\n\nprint(\"requested_scope\", scope)\nprint(\"audience\", claims.get(\"aud\"))\nprint(\"tenant\", claims.get(\"tid\"))\nprint(\"expires_utc\", datetime.fromtimestamp(token.expires_on, timezone.utc).isoformat())\n```\n\n*Print token audience and expiry for a requested scope.*",
+  "drills": [
+    {
+      "q": "A user-assigned MI has access but code still fails. First setting to check?",
+      "a": "client_id / AZURE_CLIENT_ID selection."
+    },
+    {
+      "q": "Role was assigned seconds ago and 403 persists. Possible cause?",
+      "a": "RBAC propagation delay."
+    },
+    {
+      "q": "A Foundry call uses a management.azure.com token and gets 401. Why?",
+      "a": "Wrong audience for the data-plane endpoint."
+    }
+  ],
+  "teachItBack": "Troubleshooting auth is a sequence, not a guess. I separate 401 from 403, then verify audience, tenant, selected identity, role, scope, and propagation. For user-assigned MI, wrong client ID is a common root cause.",
+  "glossary": [
+    {
+      "term": "Propagation delay",
+      "definition": "Time before a new role assignment is enforced everywhere."
+    },
+    {
+      "term": "Wrong audience",
+      "definition": "Token minted for a different API than the one called."
+    },
+    {
+      "term": "Selected identity",
+      "definition": "The particular MI used when multiple identities are available."
+    },
+    {
+      "term": "Fresh token",
+      "definition": "Newly acquired access token after role or scope changes."
+    }
+  ],
+  "sources": [
+    {
+      "title": "az role assignment create",
+      "url": "https://learn.microsoft.com/en-us/cli/azure/role/assignment?view=azure-cli-latest#az-role-assignment-create",
+      "verified": true
+    },
+    {
+      "title": "Credential chains in Azure Identity for Python",
+      "url": "https://learn.microsoft.com/en-us/azure/developer/python/sdk/authentication/credential-chains",
+      "verified": true
+    },
+    {
+      "title": "Azure Identity client library for Python",
+      "url": "https://learn.microsoft.com/en-us/python/api/overview/azure/identity-readme?view=azure-python",
+      "verified": true
+    }
+  ]
+}

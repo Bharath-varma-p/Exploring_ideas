@@ -1,0 +1,68 @@
+{
+  "id": "fdy-errors-retries-filters-timeouts",
+  "title": "Errors, Rate Limits, Content Filters, and Timeouts",
+  "lane": "foundry-models",
+  "type": "concept",
+  "order": 212,
+  "summary": "complete, embed, and get model info raise azure.core.exceptions.HttpResponseError for non-success status codes. 429 means rate limiting or quota pressure and should use retry with exponential backoff.",
+  "tags": [
+    "errors",
+    "retries",
+    "429",
+    "content-filter"
+  ],
+  "analogy": "Calling a model is like calling air traffic control. Sometimes the channel is busy, your badge is invalid, or the requested route is blocked. Good pilots retry politely, log the reason, and never pretend clearance was granted.",
+  "diagram": "flowchart TD\n  Call[Inference call] --> OK[Success]\n  Call --> Err[HttpResponseError]\n  Err --> Rate[429 rate limit]\n  Err --> Auth[401 or 403 auth]\n  Err --> Filter[Content filter]\n  Rate --> Backoff[Retry with backoff]\n  Auth --> FixRole[Check managed identity role]\n  Filter --> Safe[Return safe fallback]",
+  "body": "## First principles\n\nRemote calls fail for ordinary reasons: auth, quota, overload, safety filters, network slowness, and malformed requests. Production inference code must treat failure as a normal branch, not an exception to reality.\n\n## Definition\n\ncomplete, embed, and get_model_info raise azure.core.exceptions.HttpResponseError for non-success status codes. 429 means rate limiting or quota pressure and should use retry with exponential backoff. Content filtering can stop or alter responses depending on service behavior. Timeouts should bound waiting.\n\n## How it fits together\n\nCatch HttpResponseError, branch on status_code, and keep retries limited. Respect Retry-After when present. For safety-filtered output, surface a safe fallback. For timeouts, retry idempotent requests or return a controlled error to the caller.\n\n## Worked example\n\n```python\nimport os\nimport random\nimport time\nfrom azure.core.exceptions import HttpResponseError, ServiceRequestError, ServiceResponseError\nfrom azure.identity import DefaultAzureCredential\nfrom azure.ai.inference import ChatCompletionsClient\nfrom azure.ai.inference.models import UserMessage\n\nclient = ChatCompletionsClient(\n    endpoint=os.environ[\"AZURE_AI_CHAT_ENDPOINT\"],\n    credential=DefaultAzureCredential(),\n    connection_timeout=10,\n    read_timeout=60,\n)\n\ndef complete_with_retry(prompt: str, attempts: int = 4) -> str:\n    for attempt in range(attempts):\n        try:\n            response = client.complete(\n                model=os.getenv(\"AZURE_AI_MODEL_DEPLOYMENT_NAME\"),\n                messages=[UserMessage(prompt)],\n                max_tokens=120,\n            )\n            return response.choices[0].message.content\n        except HttpResponseError as exc:\n            if exc.status_code == 429 and attempt < attempts - 1:\n                retry_after = exc.response.headers.get(\"Retry-After\") if exc.response else None\n                delay = float(retry_after) if retry_after else (2 ** attempt) + random.random()\n                time.sleep(delay)\n                continue\n            if \"content\" in str(exc).lower() and \"filter\" in str(exc).lower():\n                return \"The request or response was blocked by the content filter. Please rephrase safely.\"\n            raise\n        except (ServiceRequestError, ServiceResponseError) as exc:\n            if attempt == attempts - 1:\n                raise\n            time.sleep((2 ** attempt) + random.random())\n\nprint(complete_with_retry(\"Explain retry backoff in one sentence.\"))\n```\n\n*Retry 429s with backoff and handle content-filter style failures.*",
+  "drills": [
+    {
+      "q": "Which exception type should you catch for non-success HTTP responses?",
+      "a": "HttpResponseError."
+    },
+    {
+      "q": "What should you do on 429?",
+      "a": "Retry with bounded exponential backoff and respect Retry-After when present."
+    },
+    {
+      "q": "What is the safe behavior for content filter blocks?",
+      "a": "Do not force output; return a safe fallback or ask for a safer rephrase."
+    }
+  ],
+  "teachItBack": "Failures are part of inference engineering. Catch HttpResponseError, handle 429s politely, and bound network waits. Safety filters and auth errors need explicit user-safe branches, not blind retries.",
+  "glossary": [
+    {
+      "term": "HttpResponseError",
+      "definition": "Azure Core exception for non-success HTTP status responses."
+    },
+    {
+      "term": "429",
+      "definition": "HTTP status commonly used for rate limiting."
+    },
+    {
+      "term": "backoff",
+      "definition": "Retry delay strategy that waits longer after repeated failures."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Azure AI Inference client library for Python",
+      "url": "https://learn.microsoft.com/en-us/python/api/overview/azure/ai-inference-readme?view=azure-python-preview",
+      "verified": true
+    },
+    {
+      "title": "ChatCompletionsClient class",
+      "url": "https://learn.microsoft.com/en-us/python/api/azure-ai-inference/azure.ai.inference.chatcompletionsclient?view=azure-python-preview",
+      "verified": true
+    },
+    {
+      "title": "Azure OpenAI content filtering",
+      "url": "https://learn.microsoft.com/en-us/azure/ai-services/openai/concepts/content-filter",
+      "verified": true
+    },
+    {
+      "title": "Azure OpenAI quota and limits",
+      "url": "https://learn.microsoft.com/en-us/azure/ai-services/openai/quotas-limits",
+      "verified": true
+    }
+  ]
+}

@@ -1,0 +1,62 @@
+{
+  "id": "fdy-read-only-safety",
+  "title": "Read Only Safety and Query Limits",
+  "lane": "foundry-connectors",
+  "type": "concept",
+  "order": 212,
+  "summary": "Use read-only mode and tool allow-lists. Prefer KQL query statements over management or control commands. Allow harmless .",
+  "tags": [
+    "safety",
+    "limits",
+    "governance"
+  ],
+  "analogy": "A read-only rifle range still has range rules: aim downrange, limit rounds, identify target, and stop when ordered.",
+  "diagram": "flowchart TD\n  Policy[Safety policy] --> Identity[Least privilege MI]\n  Policy --> Tools[Allowed Kusto tools]\n  Policy --> KQL[Read only KQL]\n  Policy --> Limits[Rows and timeout]\n  Policy --> Audit[Tool call logs]",
+  "body": "## First principles\n\nAn analytics agent can still cause harm without writing data: expensive scans, sensitive data exposure, or accidental control commands can create operational and compliance incidents.\n\n## Definition\n\nUse read-only mode and tool allow-lists. Prefer KQL query statements over management or control commands. Allow harmless .show metadata commands for discovery, but block destructive or permission-changing commands unless a human-admin workflow explicitly owns them. Cap result size with take or top, use time filters, and configure query timeouts.\n\n## How it fits together\n\nSafety stack: least-privilege identity, narrow MCP tools, approval for risky calls, KQL linting for time windows and row caps, server-side timeout, and audit logging.\n\n## Worked example\n\n```kql\nAppTraces\n| where Timestamp between (ago(24h) .. now())\n| where SeverityLevel >= 3\n| project Timestamp, OperationName, Message, SeverityLevel\n| take 100\n```\n\n*Safer query pattern with time window and row cap.*",
+  "drills": [
+    {
+      "q": "Why add take 100?",
+      "a": "To cap returned rows and reduce accidental data exposure or oversized responses."
+    },
+    {
+      "q": "Are all dot commands safe?",
+      "a": "No. .show metadata commands are generally read-oriented, but many management commands can change state or permissions."
+    },
+    {
+      "q": "What should happen before a high-risk tool call?",
+      "a": "Human approval and audit logging."
+    }
+  ],
+  "teachItBack": "Read-only is more than not writing rows. I also limit scope, time, rows, and tools. The safest Kusto agent uses least privilege, approval, timeouts, and logs.",
+  "glossary": [
+    {
+      "term": "Control command",
+      "definition": "A Kusto command that manages metadata, security, ingestion, or other service state."
+    },
+    {
+      "term": "Timeout",
+      "definition": "Maximum duration allowed for a query before cancellation."
+    },
+    {
+      "term": "Row cap",
+      "definition": "A limit on how many rows a query returns."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Kusto Query Language overview",
+      "url": "https://learn.microsoft.com/en-us/kusto/query/?view=azure-data-explorer&preserve-view=true",
+      "verified": true
+    },
+    {
+      "title": "Manage database security roles",
+      "url": "https://learn.microsoft.com/en-us/kusto/management/manage-database-security-roles?view=azure-data-explorer&preserve-view=true",
+      "verified": true
+    },
+    {
+      "title": "Azure MCP Server README",
+      "url": "https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/README.md",
+      "verified": true
+    }
+  ]
+}

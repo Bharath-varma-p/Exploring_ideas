@@ -1,0 +1,75 @@
+{
+  "id": "fdy-mcp-connector-pattern",
+  "title": "MCP Connector Pattern for Incidents",
+  "lane": "foundry-connectors",
+  "type": "concept",
+  "order": 104,
+  "summary": "An incident MCP connector is a server that exposes incident-management capabilities as MCP tools.",
+  "tags": [
+    "mcp",
+    "tools",
+    "connector"
+  ],
+  "analogy": "MCP is a universal adapter. The agent speaks MCP; the server translates to the incident backend; the backend remains protected behind identity, policy, and audit.",
+  "diagram": "sequenceDiagram\nparticipant User\nparticipant Agent\nparticipant MCP\nparticipant IncidentSystem\nUser->>Agent: Show Sev2 incidents for payments\nAgent->>MCP: tools call query incidents\nMCP->>IncidentSystem: Authorized backend request\nIncidentSystem-->>MCP: Incident results\nMCP-->>Agent: Structured tool result\nAgent-->>User: Summary and next steps",
+  "body": "## First principles\n\nFirst principles: an LLM cannot safely act on an incident system by guessing URLs or database queries. It needs a contract. MCP provides that contract: the server advertises tools and schemas, the client asks to call one, and the host can require approval.\n\n## Definition\n\nAn incident MCP connector is a server that exposes incident-management capabilities as MCP tools. Representative tools include query_incidents, get_incident, create_incident, update_incident, add_discussion, acknowledge_incident, and get_on_call. This tool surface is representative, not a verified public IcM API.\n\n## How it fits together\n\nSeparate three layers: the Foundry agent decides intent, the MCP protocol carries structured calls, and the incident connector enforces backend permissions. The model does not receive raw credentials and does not bypass the connector.\n\n## Worked example\n\n```python\n# Representative MCP tool definitions. Not an official IcM schema.\nincident_tools = [\n    {\n        \"name\": \"query_incidents\",\n        \"description\": \"Find incidents by service, severity, status, or time range.\",\n        \"inputSchema\": {\n            \"type\": \"object\",\n            \"properties\": {\n                \"service\": {\"type\": \"string\"},\n                \"severity\": {\"type\": \"string\"},\n                \"status\": {\"type\": \"string\"},\n            },\n        },\n    },\n    {\n        \"name\": \"acknowledge_incident\",\n        \"description\": \"Mark an incident as acknowledged by the current authorized identity.\",\n        \"inputSchema\": {\"type\": \"object\", \"required\": [\"incident_id\"]},\n    },\n]\nprint([tool[\"name\"] for tool in incident_tools])\n```\n\n*Representative incident MCP tool catalog*",
+  "drills": [
+    {
+      "q": "What does MCP add between an agent and incident system?",
+      "a": "A structured, discoverable, auditable tool contract."
+    },
+    {
+      "q": "Are the listed IcM tool names official?",
+      "a": "No. They are representative of a likely incident-management connector surface."
+    },
+    {
+      "q": "Where should backend-specific rules live?",
+      "a": "Inside the MCP server and the incident system authorization layer, not in prompt text alone."
+    }
+  ],
+  "teachItBack": "An incident MCP connector exposes safe incident operations as tools. Foundry can attach that server so the agent selects tools from schemas instead of guessing APIs. The tool names here are representative because no public official IcM MCP server was verified.",
+  "glossary": [
+    {
+      "term": "MCP server",
+      "definition": "A service that exposes resources, prompts, or tools to MCP clients."
+    },
+    {
+      "term": "Tool schema",
+      "definition": "JSON Schema describing the arguments a tool accepts."
+    },
+    {
+      "term": "Connector",
+      "definition": "An adapter that translates a standard interface into backend-specific calls."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Model Context Protocol Specification",
+      "url": "https://modelcontextprotocol.io/specification/2025-06-18",
+      "verified": false
+    },
+    {
+      "title": "Model Context Protocol: Tools",
+      "url": "https://modelcontextprotocol.io/specification/2025-06-18/server/tools",
+      "verified": false
+    },
+    {
+      "title": "Microsoft Learn: Connect to MCP Server Endpoints for agents",
+      "url": "https://learn.microsoft.com/en-us/azure/foundry/agents/how-to/tools/model-context-protocol",
+      "verified": false
+    }
+  ],
+  "quiz": [
+    {
+      "q": "Which MCP primitive should represent an action like acknowledge_incident?",
+      "choices": [
+        "Tool",
+        "Resource only",
+        "Static image",
+        "Model deployment"
+      ],
+      "answer": 0,
+      "explanation": "State-changing operations are explicit MCP tools with schemas and approval controls."
+    }
+  ]
+}

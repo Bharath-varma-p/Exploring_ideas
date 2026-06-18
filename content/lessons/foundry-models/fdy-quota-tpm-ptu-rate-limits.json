@@ -1,0 +1,80 @@
+{
+  "id": "fdy-quota-tpm-ptu-rate-limits",
+  "title": "Capacity, quota, TPM, PTU, and rate limits",
+  "lane": "foundry-models",
+  "type": "concept",
+  "order": 107,
+  "summary": "Quota is allocated by subscription and commonly by model, region, deployment type, or newer shared pools depending on model rollout. Pay-as-you-go deployments allocate Tokens per Minute to deployments; Requests per Minute is also enforced.",
+  "tags": [
+    "quota",
+    "tpm",
+    "ptu",
+    "rate-limits"
+  ],
+  "analogy": "Quota is your water tank. TPM is the pipe flow rate. PTU is a reserved pipe. A 429 is the valve saying the flow is too high.",
+  "diagram": "flowchart TD\n  Subscription[subscription quota] --> Pool[model region deployment type pool]\n  Pool --> A[deployment A TPM]\n  Pool --> B[deployment B TPM]\n  PTU[PTU reservation] --> Predictable[predictable throughput]\n  A --> Limit[429 if exceeded]",
+  "body": "## First principles\n\nAI capacity is finite. Azure turns capacity into quota allocations and rate limits so one deployment cannot consume unlimited shared infrastructure.\n\n## Definition\n\nQuota is allocated by subscription and commonly by model, region, deployment type, or newer shared pools depending on model rollout. Pay-as-you-go deployments allocate Tokens per Minute to deployments; Requests per Minute is also enforced. Provisioned deployments use PTUs to reserve throughput. Runtime throttling commonly appears as HTTP 429 when token or request limits are exceeded.\n\n## How it fits together\n\nBefore deployment, check quota for model, region, version, and deployment type. Allocate only needed TPM. If exhausted, reduce allocation elsewhere, choose another region or deployment type, or request quota. For production, monitor remaining request and token headers and implement retries in the inference layer.\n\n## Worked example\n\n```bash\naz login --identity\n\naz cognitiveservices account deployment show   --resource-group \"<resource-group>\"   --name \"<foundry-or-openai-account-name>\"   --deployment-name \"<deployment-name>\"   --query \"{sku:sku, rateLimits:properties.rateLimits, model:properties.model}\"\n\n# If quota is exhausted, request more quota or reallocate from another deployment.\n# Microsoft Learn links the quota request form: https://aka.ms/oai/stuquotarequest\n```\n\n*Inspect SKU and rate-limit data for a deployment.*",
+  "drills": [
+    {
+      "q": "What is TPM?",
+      "a": "Tokens per minute, used for quota and rate-limit allocation."
+    },
+    {
+      "q": "What is PTU?",
+      "a": "Provisioned Throughput Unit, reserved model processing capacity."
+    },
+    {
+      "q": "What usually causes 429?",
+      "a": "A request or token rate limit was exceeded."
+    }
+  ],
+  "teachItBack": "Quota is planned before deployment and felt during runtime. TPM controls pay-as-you-go throughput, while PTUs reserve capacity. Rate limits are deployment-level guardrails that require monitoring and retries.",
+  "glossary": [
+    {
+      "term": "TPM",
+      "definition": "Tokens per minute."
+    },
+    {
+      "term": "RPM",
+      "definition": "Requests per minute."
+    },
+    {
+      "term": "PTU",
+      "definition": "Provisioned Throughput Unit."
+    },
+    {
+      "term": "429",
+      "definition": "HTTP Too Many Requests throttling response."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Manage Azure OpenAI quota",
+      "url": "https://learn.microsoft.com/en-us/azure/foundry-classic/openai/how-to/quota",
+      "verified": true
+    },
+    {
+      "title": "Microsoft Foundry Models quotas and limits",
+      "url": "https://learn.microsoft.com/en-us/azure/foundry/foundry-models/quotas-limits",
+      "verified": true
+    },
+    {
+      "title": "Understanding deployment types in Microsoft Foundry Models",
+      "url": "https://learn.microsoft.com/en-us/azure/foundry/foundry-models/concepts/deployment-types",
+      "verified": true
+    }
+  ],
+  "quiz": [
+    {
+      "q": "What cost shape fits managed compute?",
+      "choices": [
+        "VM size times instance count times hours",
+        "Only output tokens",
+        "No cost while deployed",
+        "A fixed free quota forever"
+      ],
+      "answer": 0,
+      "explanation": "Managed compute bills by compute resources over time."
+    }
+  ]
+}

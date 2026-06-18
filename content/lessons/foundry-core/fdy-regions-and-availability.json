@@ -1,0 +1,57 @@
+{
+  "id": "fdy-regions-and-availability",
+  "title": "Regions And Availability",
+  "lane": "foundry-core",
+  "type": "concept",
+  "order": 109,
+  "summary": "A region is the Azure geography location where a Foundry project and related resources are hosted. Foundry project support, specific models, Agent Service, Content Safety, quotas, and dependent services can vary by region.",
+  "tags": [
+    "regions",
+    "availability",
+    "planning"
+  ],
+  "analogy": "Choosing a region is like choosing an airfield: the runway may exist, but the aircraft, fuel, mechanics, and legal clearance for your mission may not all be available there.",
+  "diagram": "graph TD\nCandidate[Candidate region] --> ProjectSupport[Foundry project support]\nCandidate --> ModelSupport[Required model support]\nCandidate --> Quota[Available quota]\nCandidate --> Dependencies[Dependent services support]\nCandidate --> Compliance[Data residency and sovereign needs]\nAllClear[All yes] --> Deploy[Create resources]",
+  "body": "## First principles\n\nFirst principles: cloud AI is physical. Models run on capacity in real datacenters, laws may restrict where data can be processed, and not every feature exists in every region at the same time. Region choice is an architecture decision, not a dropdown afterthought.\n\n## Definition\n\nA region is the Azure geography location where a Foundry project and related resources are hosted. Foundry project support, specific models, Agent Service, Content Safety, quotas, and dependent services can vary by region.\n\n## How it fits together\n\nBefore production, verify four things for the same subscription and tenant: the project region, model availability, quota, and dependent service availability. The docs explicitly warn that region support is a snapshot and feature-specific pages must be checked for current support.\n\n## Worked example\n\n```bash\n# This command lists Azure locations visible to your subscription.\n# Then use the official Foundry region docs and portal quota page for feature checks.\naz account list-locations --query \"[].{name:name,displayName:displayName}\" -o table\n\nprintf '%s\n'   'Confirm Foundry project support in the target region.'   'Confirm model and deployment type availability.'   'Confirm quota in Operate then Quota in the Foundry portal.'   'Confirm dependent services such as Content Safety or Agent Service.'\n```\n\n*Region readiness checklist*",
+  "drills": [
+    {
+      "q": "Why can the same model fail in one region but work in another?",
+      "a": "Model availability and quota are regional and can differ by deployment type."
+    },
+    {
+      "q": "What should be checked before production rollout?",
+      "a": "Project support, model support, quota, dependent services, and compliance requirements."
+    },
+    {
+      "q": "Are docs the only source to validate availability?",
+      "a": "No. Also validate in the portal for the same subscription and tenant."
+    }
+  ],
+  "teachItBack": "Region matters because AI capacity, features, quotas, and compliance are regional. Do not choose East US or West Europe blindly; verify the exact model, service, quota, and dependencies. Teach it as airfield selection for a mission.",
+  "glossary": [
+    {
+      "term": "Region",
+      "definition": "Azure datacenter geography where resources are hosted."
+    },
+    {
+      "term": "Regional quota",
+      "definition": "Usage capacity assigned per subscription, region, model, or deployment type."
+    },
+    {
+      "term": "Sovereign cloud",
+      "definition": "Cloud environment such as Azure Government with separate availability and compliance boundaries."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Microsoft Learn: Feature availability across cloud regions",
+      "url": "https://learn.microsoft.com/en-us/azure/foundry/reference/region-support",
+      "verified": true
+    },
+    {
+      "title": "Microsoft Learn: Azure OpenAI in Microsoft Foundry Models quotas and limits",
+      "url": "https://learn.microsoft.com/en-us/azure/foundry/openai/quotas-limits",
+      "verified": true
+    }
+  ]
+}

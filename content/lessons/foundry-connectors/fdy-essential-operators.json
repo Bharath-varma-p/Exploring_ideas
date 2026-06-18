@@ -1,0 +1,69 @@
+{
+  "id": "fdy-essential-operators",
+  "title": "Essential KQL Operators",
+  "lane": "foundry-connectors",
+  "type": "concept",
+  "order": 205,
+  "summary": "The practical starter set is where to filter rows, project to select columns, summarize and count to aggregate, top to rank, extend to compute new columns, join to combine tables, take to cap results, and order by to sort.",
+  "tags": [
+    "where",
+    "summarize",
+    "join"
+  ],
+  "analogy": "These operators are field tools in a go-bag: flashlight, map, counter, calculator, and radio. You can solve many incidents before needing specialized gear.",
+  "body": "## First principles\n\nMost operational questions boil down to seven verbs: filter, select, count, rank, calculate, combine, and sample. A beginner does not need every KQL feature to be useful on day one.\n\n## Definition\n\nThe practical starter set is where to filter rows, project to select columns, summarize and count to aggregate, top to rank, extend to compute new columns, join to combine tables, take to cap results, and order by to sort. Management commands beginning with a dot, such as .show, inspect metadata rather than regular table rows.\n\n## How it fits together\n\nMemorize the intent, not just syntax: where narrows, project shapes, extend enriches, summarize compresses, top ranks, join relates, take protects.\n\n## Worked example\n\n```kql\nAppRequests\n| where Timestamp > ago(1d)\n| extend IsFailure = Success == false\n| summarize Requests = count(), Failures = countif(IsFailure), P95 = percentile(DurationMs, 95) by OperationName\n| project OperationName, Requests, Failures, FailureRate = todouble(Failures) / Requests, P95\n| top 10 by FailureRate desc\n```\n\n*Operator sampler for a service health question.*",
+  "drills": [
+    {
+      "q": "Which operator creates a new calculated column?",
+      "a": "extend."
+    },
+    {
+      "q": "Which operator chooses output columns?",
+      "a": "project."
+    },
+    {
+      "q": "Which operator combines rows from two tables?",
+      "a": "join."
+    }
+  ],
+  "teachItBack": "My starter KQL vocabulary is where, project, extend, summarize, count, top, join, take, and order by. Each operator has a simple job in the pipeline. I combine them to turn raw telemetry into a small answer table.",
+  "glossary": [
+    {
+      "term": "where",
+      "definition": "Filters rows by a Boolean predicate."
+    },
+    {
+      "term": "project",
+      "definition": "Selects, renames, or computes output columns."
+    },
+    {
+      "term": "join",
+      "definition": "Combines two tabular inputs by matching keys."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Kusto Query Language overview",
+      "url": "https://learn.microsoft.com/en-us/kusto/query/?view=azure-data-explorer&preserve-view=true",
+      "verified": true
+    },
+    {
+      "title": "where operator",
+      "url": "https://learn.microsoft.com/en-us/kusto/query/where-operator?view=azure-data-explorer&preserve-view=true",
+      "verified": true
+    }
+  ],
+  "quiz": [
+    {
+      "q": "Which official MCP server should be primary for Azure Data Explorer Kusto tools?",
+      "choices": [
+        "Azure MCP Server in microsoft/mcp",
+        "A random copied FastMCP gist",
+        "A database connection string embedded in the prompt",
+        "A browser-only dashboard"
+      ],
+      "answer": 0,
+      "explanation": "The maintained official Azure MCP Server includes a Kusto area for ADX tools."
+    }
+  ]
+}

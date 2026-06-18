@@ -1,0 +1,68 @@
+{
+  "id": "fdy-cost-mental-model",
+  "title": "Cost mental model",
+  "lane": "foundry-models",
+  "type": "concept",
+  "order": 111,
+  "summary": "Standard, Global Standard, Data Zone Standard, and serverless-style deployments commonly use pay-per-token or usage billing. Provisioned deployment types charge for reserved PTU capacity.",
+  "tags": [
+    "cost",
+    "billing",
+    "paygo",
+    "ptu",
+    "compute-hours"
+  ],
+  "analogy": "Pay-per-token is paying per taxi ride. PTU is a monthly reserved lane. Managed compute is leasing the vehicle by the hour.",
+  "diagram": "flowchart TD\n  Workload[workload] --> Bursty[bursty]\n  Workload --> Steady[steady high volume]\n  Workload --> Custom[custom host]\n  Bursty --> Tokens[per token]\n  Steady --> PTUCost[reserved PTU]\n  Custom --> Compute[compute hours]",
+  "body": "## First principles\n\nCost follows the scarce thing you consume or reserve: tokens, throughput, or machines. A good deployment plan chooses the cost shape before optimizing exact prices.\n\n## Definition\n\nStandard, Global Standard, Data Zone Standard, and serverless-style deployments commonly use pay-per-token or usage billing. Provisioned deployment types charge for reserved PTU capacity. Managed compute charges for VM resources and time, so idle endpoints can still cost money. Exact prices change; the durable mental model is per-token versus reserved throughput versus compute-hours.\n\n## How it fits together\n\nUse pay-as-you-go for prototypes and bursty traffic, provisioned for steady high-throughput workloads needing lower latency variance, and managed compute when host control or model support requires it. Watch overallocated TPM, unused PTUs, and idle managed compute.\n\n## Worked example\n\n```python\ndef choose_cost_model(traffic_pattern, needs_reserved_latency, needs_custom_host):\n    # No prices are embedded; this only selects the billing shape to evaluate.\n    if needs_custom_host:\n        return \"managed compute: VM size * instance count * hours\"\n    if needs_reserved_latency or traffic_pattern == \"steady_high_volume\":\n        return \"provisioned: required PTUs * reservation duration\"\n    return \"standard or serverless: input and output usage such as tokens\"\n\nprint(choose_cost_model(\"bursty\", False, False))\n```\n\n*Small helper to choose the first cost bucket to estimate.*",
+  "drills": [
+    {
+      "q": "What cost shape fits Global Standard?",
+      "a": "Pay-per-token usage billing."
+    },
+    {
+      "q": "What cost shape fits provisioned deployments?",
+      "a": "Reserved PTU capacity."
+    },
+    {
+      "q": "What cost shape fits managed compute?",
+      "a": "VM resource size, instance count, and running hours."
+    }
+  ],
+  "teachItBack": "Cost is a shape before it is a number. Pay-as-you-go follows usage, provisioned follows reserved capacity, and managed compute follows running machines. I pick the shape that matches workload and compliance needs.",
+  "glossary": [
+    {
+      "term": "Pay-per-token",
+      "definition": "Usage billing tied to inputs and outputs such as tokens."
+    },
+    {
+      "term": "Reserved capacity",
+      "definition": "Capacity paid for ahead of use."
+    },
+    {
+      "term": "Compute-hour",
+      "definition": "Billing based on machine resources over time."
+    },
+    {
+      "term": "Idle cost",
+      "definition": "Cost incurred when resources run with little traffic."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Understanding deployment types in Microsoft Foundry Models",
+      "url": "https://learn.microsoft.com/en-us/azure/foundry/foundry-models/concepts/deployment-types",
+      "verified": true
+    },
+    {
+      "title": "Deploy models as serverless API deployments",
+      "url": "https://learn.microsoft.com/en-us/azure/foundry-classic/how-to/deploy-models-serverless",
+      "verified": true
+    },
+    {
+      "title": "Deploy models with managed compute",
+      "url": "https://learn.microsoft.com/en-us/azure/foundry-classic/how-to/deploy-models-managed",
+      "verified": true
+    }
+  ]
+}

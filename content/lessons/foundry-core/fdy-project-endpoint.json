@@ -1,0 +1,75 @@
+{
+  "id": "fdy-project-endpoint",
+  "title": "Project Endpoint as Address",
+  "lane": "foundry-core",
+  "type": "concept",
+  "order": 203,
+  "summary": "The current docs show a Foundry project endpoint in the form https://your-ai-services-account-name.services.ai.azure.com/api/projects/your-project-name.",
+  "tags": [
+    "endpoint",
+    "configuration",
+    "12-factor"
+  ],
+  "analogy": "The endpoint is the GPS coordinate for one project. If the credential is your badge, the endpoint is the building and room number where the badge should be presented.",
+  "diagram": "flowchart LR\nEnv[FOUNDRY_PROJECT_ENDPOINT] --> Client[AIProjectClient]\nClient --> Account[AI services account]\nAccount --> Project[Project path]",
+  "body": "## First principles\n\nEvery network client needs a destination. In Foundry, the destination is not a vague account name; it is a project-scoped URL. That URL lets the SDK route calls to the correct project boundary.\n\n## Definition\n\nThe current docs show a Foundry project endpoint in the form https://your-ai-services-account-name.services.ai.azure.com/api/projects/your-project-name. Store it in FOUNDRY_PROJECT_ENDPOINT and read it from the environment rather than hard-coding it.\n\n## How it fits together\n\nOne endpoint maps one client to one Foundry project. Change the environment variable to target another project without changing code.\n\n## Worked example\n\n```python\nimport os\nfrom urllib.parse import urlparse\n\nendpoint = os.environ.get(\"FOUNDRY_PROJECT_ENDPOINT\", \"\")\nparsed = urlparse(endpoint)\n\nif parsed.scheme != \"https\" or \"/api/projects/\" not in parsed.path:\n    raise SystemExit(\"Set FOUNDRY_PROJECT_ENDPOINT to your Foundry project URL\")\n\nprint(\"Endpoint looks project scoped\")\nprint(parsed.netloc)\nprint(parsed.path)\n```\n\n*Validate endpoint shape before creating the client.*",
+  "drills": [
+    {
+      "q": "Why not put the endpoint literal in code?",
+      "a": "Environment configuration lets the same code run in dev, test, and production without edits."
+    },
+    {
+      "q": "What does the /api/projects segment communicate?",
+      "a": "The URL is project scoped, not just account scoped."
+    },
+    {
+      "q": "What changes when you switch projects?",
+      "a": "Usually only the endpoint environment variable changes."
+    }
+  ],
+  "teachItBack": "Teach it back as: The endpoint is the address of the Foundry project I want to operate on. I keep it in FOUNDRY_PROJECT_ENDPOINT so configuration stays outside code. AIProjectClient uses that address for every operation group under the client.",
+  "glossary": [
+    {
+      "term": "endpoint",
+      "definition": "The HTTPS URL a client uses as the base destination for service calls."
+    },
+    {
+      "term": "12-factor config",
+      "definition": "The practice of storing deployment-specific configuration in the environment, not in source code."
+    },
+    {
+      "term": "project scoped",
+      "definition": "Targeting a specific Foundry project path rather than an entire tenant or account."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Azure AI Projects client library for Python",
+      "url": "https://learn.microsoft.com/en-us/python/api/overview/azure/ai-projects-readme?view=azure-python",
+      "verified": true
+    },
+    {
+      "title": "AIProjectClient class reference",
+      "url": "https://learn.microsoft.com/en-us/python/api/azure-ai-projects/azure.ai.projects.aiprojectclient?view=azure-python",
+      "verified": true
+    },
+    {
+      "title": "Usage patterns with the Azure libraries for Python",
+      "url": "https://learn.microsoft.com/en-us/azure/developer/python/sdk/azure-sdk-library-usage-patterns",
+      "verified": true
+    }
+  ],
+  "quiz": [
+    {
+      "q": "Where should a lesson store FOUNDRY_PROJECT_ENDPOINT?",
+      "choices": [
+        "In an environment variable",
+        "In a committed Python string",
+        "In a notebook output cell",
+        "In a committed secret field"
+      ],
+      "answer": 0,
+      "explanation": "12-factor configuration keeps project-specific endpoints outside source code."
+    }
+  ]
+}

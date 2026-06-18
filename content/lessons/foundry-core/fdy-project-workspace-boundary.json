@@ -1,0 +1,75 @@
+{
+  "id": "fdy-project-workspace-boundary",
+  "title": "Project Workspace Boundary",
+  "lane": "foundry-core",
+  "type": "concept",
+  "order": 106,
+  "summary": "A Foundry project is the development workspace inside a Foundry resource where a team organizes AI app work such as agents, evaluations, files, connections, and project-scoped assets.",
+  "tags": [
+    "project",
+    "workspace",
+    "assets"
+  ],
+  "analogy": "A project is a mission folder with a locked workbench: the mission has its own documents, tests, agents, and build artifacts, but it still follows base security rules.",
+  "diagram": "graph TD\nProject[Project] --> Agents[Agents]\nProject --> Evaluations[Evaluations]\nProject --> Files[Files]\nProject --> Connections[Project connections]\nProject --> Traces[Project metrics and traces]\nFoundry[Foundry resource] --> Project",
+  "body": "## First principles\n\nFirst principles: builders need a safe sandbox where the assets for one app do not blur into another. A project draws that line around files, agents, evaluations, and related artifacts, while inheriting or reusing higher-level governance from the Foundry resource.\n\n## Definition\n\nA Foundry project is the development workspace inside a Foundry resource where a team organizes AI app work such as agents, evaluations, files, connections, and project-scoped assets.\n\n## How it fits together\n\nUse separate projects for separate apps, teams, environments, or blast radii. A project should answer: what are we building, who can touch it, and which assets belong together?\n\n## Worked example\n\n```python\n# pip install azure-identity azure-mgmt-cognitiveservices\nfrom azure.identity import DefaultAzureCredential\nfrom azure.mgmt.cognitiveservices import CognitiveServicesManagementClient\n\nsubscription_id = \"<subscription-id>\"\nresource_group = \"<resource-group>\"\nfoundry_resource = \"<foundry-resource-name>\"\n\nclient = CognitiveServicesManagementClient(DefaultAzureCredential(), subscription_id)\nfor project in client.projects.list(resource_group, foundry_resource):\n    print({\"name\": project.name, \"location\": project.location, \"id\": project.id})\n```\n\n*List projects under a Foundry resource*",
+  "drills": [
+    {
+      "q": "What belongs in a project?",
+      "a": "Assets for a specific AI app or team, such as agents, files, evaluations, and connections."
+    },
+    {
+      "q": "What should be separated into different projects?",
+      "a": "Different apps, teams, environments, or work with different access boundaries."
+    },
+    {
+      "q": "Does a project replace Azure RBAC?",
+      "a": "No. It is a scope where RBAC and project-level access can be applied."
+    }
+  ],
+  "teachItBack": "A project is the builder workspace inside a Foundry resource. It keeps app assets together and helps isolate teams or environments. Explain it as the place where development happens under governance inherited from the resource.",
+  "glossary": [
+    {
+      "term": "Project assets",
+      "definition": "Files, agents, evaluations, and artifacts scoped to a project."
+    },
+    {
+      "term": "Development boundary",
+      "definition": "A workspace boundary that separates one team's build assets from another's."
+    },
+    {
+      "term": "Project managed identity",
+      "definition": "Managed identity associated with a project for secure Azure access and automation."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Microsoft Learn: Microsoft Foundry architecture",
+      "url": "https://learn.microsoft.com/en-us/azure/foundry/concepts/architecture",
+      "verified": true
+    },
+    {
+      "title": "Microsoft Learn: Create a project",
+      "url": "https://learn.microsoft.com/en-us/azure/foundry/how-to/create-projects",
+      "verified": true
+    },
+    {
+      "title": "Microsoft Learn: Role-based access control for Microsoft Foundry",
+      "url": "https://learn.microsoft.com/en-us/azure/foundry/concepts/rbac-foundry",
+      "verified": true
+    }
+  ],
+  "quiz": [
+    {
+      "q": "What is the control plane used for?",
+      "choices": [
+        "Managing Azure resources",
+        "Writing documents to blob storage",
+        "Sending user prompts to a model",
+        "Rendering a chat message"
+      ],
+      "answer": 0,
+      "explanation": "Control plane operations create and manage resources through Azure Resource Manager."
+    }
+  ]
+}

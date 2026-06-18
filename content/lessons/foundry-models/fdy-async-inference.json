@@ -1,0 +1,52 @@
+{
+  "id": "fdy-async-inference",
+  "title": "Async Inference",
+  "lane": "foundry-models",
+  "type": "concept",
+  "order": 213,
+  "summary": "The async clients live in azure.ai.inference.aio, with equivalent methods such as complete and embed. Async code uses async with, await, and async iteration for streams. The docs note aiohttp is needed for asynchronous clients.",
+  "tags": [
+    "async",
+    "aio",
+    "concurrency"
+  ],
+  "analogy": "A synchronous cashier serves one customer at a time. An async cashier takes an order, hands it to the kitchen, and starts the next order while the first cooks.",
+  "diagram": "flowchart LR\n  RequestA[Request A] --> AwaitA[Await model]\n  RequestB[Request B] --> AwaitB[Await model]\n  AwaitA --> ResponseA[Response A]\n  AwaitB --> ResponseB[Response B]\n  Loop[Event loop] --> AwaitA\n  Loop --> AwaitB",
+  "body": "## First principles\n\nSynchronous code waits with its hands in its pockets. Async code can wait for the model while letting other requests progress. The model is still remote; async improves concurrency, not model intelligence.\n\n## Definition\n\nThe async clients live in azure.ai.inference.aio, with equivalent methods such as complete and embed. Async code uses async with, await, and async iteration for streams. The docs note aiohttp is needed for asynchronous clients.\n\n## How it fits together\n\nUse async in web APIs, bots, and services that handle many simultaneous users. Use a single client per process or request scope as appropriate, close it cleanly, and do not block the event loop with time.sleep or CPU-heavy work.\n\n## Worked example\n\n```python\nimport asyncio\nimport os\nfrom azure.identity.aio import DefaultAzureCredential\nfrom azure.ai.inference.aio import ChatCompletionsClient\nfrom azure.ai.inference.models import UserMessage\n\nasync def main() -> None:\n    async with DefaultAzureCredential() as credential:\n        async with ChatCompletionsClient(\n            endpoint=os.environ[\"AZURE_AI_CHAT_ENDPOINT\"],\n            credential=credential,\n        ) as client:\n            response = await client.complete(\n                model=os.getenv(\"AZURE_AI_MODEL_DEPLOYMENT_NAME\"),\n                messages=[UserMessage(\"Explain async inference in one analogy.\")],\n                max_tokens=100,\n            )\n            print(response.choices[0].message.content)\n\nasyncio.run(main())\n```\n\n*Async chat completion with managed identity.*",
+  "drills": [
+    {
+      "q": "What namespace contains async inference clients?",
+      "a": "azure.ai.inference.aio."
+    },
+    {
+      "q": "Does async make a single model response compute faster?",
+      "a": "Usually no. It lets your app handle other work while waiting."
+    },
+    {
+      "q": "What Python keyword waits for async complete?",
+      "a": "await."
+    }
+  ],
+  "teachItBack": "Async inference is about concurrency. Use azure.ai.inference.aio and await remote calls. It is essential for scalable web apps and bots but still needs retries and timeouts.",
+  "glossary": [
+    {
+      "term": "async",
+      "definition": "Programming style where waiting operations yield control to an event loop."
+    },
+    {
+      "term": "aio",
+      "definition": "Azure SDK namespace suffix for asynchronous clients."
+    },
+    {
+      "term": "event loop",
+      "definition": "Runtime scheduler for async tasks."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Azure AI Inference client library for Python",
+      "url": "https://learn.microsoft.com/en-us/python/api/overview/azure/ai-inference-readme?view=azure-python-preview",
+      "verified": true
+    }
+  ]
+}

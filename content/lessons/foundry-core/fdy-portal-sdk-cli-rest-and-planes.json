@@ -1,0 +1,77 @@
+{
+  "id": "fdy-portal-sdk-cli-rest-and-planes",
+  "title": "Interfaces And Planes",
+  "lane": "foundry-core",
+  "type": "concept",
+  "order": 110,
+  "summary": "The portal, SDK, Azure CLI, and REST APIs are interfaces. The control plane manages Azure resources through Azure Resource Manager, while the data plane uses service-specific endpoints to perform the resource's actual work.",
+  "tags": [
+    "portal",
+    "sdk",
+    "cli",
+    "rest",
+    "planes"
+  ],
+  "analogy": "Control plane is the base commander issuing construction orders. Data plane is the trained crew flying missions from the base after it exists.",
+  "diagram": "graph TD\nHuman[Human or automation] --> Portal[Portal]\nHuman --> CLI[Azure CLI]\nHuman --> SDK[SDK]\nHuman --> REST[REST]\nPortal --> Control[Control plane]\nCLI --> Control\nSDK --> Control\nSDK --> Data[Data plane]\nREST --> Control\nREST --> Data\nControl --> ARM[Azure Resource Manager]\nData --> Endpoint[Project or service endpoint]",
+  "body": "## First principles\n\nFirst principles: cloud systems separate changing the factory from using what the factory produces. Creating a project, assigning roles, or configuring resources is control plane. Calling a model, running an agent, or uploading project data is data plane. Different interfaces can talk to either plane, but the intent is the key distinction.\n\n## Definition\n\nThe portal, SDK, Azure CLI, and REST APIs are interfaces. The control plane manages Azure resources through Azure Resource Manager, while the data plane uses service-specific endpoints to perform the resource's actual work.\n\n## How it fits together\n\nPortal is best for learning and exploration. CLI is good for repeatable admin commands. SDK is good for application and automation code. REST is the universal protocol layer. Use managed identity capable credentials such as DefaultAzureCredential or ManagedIdentityCredential for code paths.\n\n## Worked example\n\n```python\n# pip install azure-identity\nfrom azure.identity import DefaultAzureCredential, ManagedIdentityCredential\n\n# DefaultAzureCredential uses managed identity automatically when running on Azure hosts.\ncredential = DefaultAzureCredential()\nmanagement_token = credential.get_token(\"https://management.azure.com/.default\")\nprint(\"Control plane token acquired length:\", len(management_token.token))\n\n# If you want to require managed identity on an Azure host, use ManagedIdentityCredential directly.\nmi_credential = ManagedIdentityCredential()\n# token = mi_credential.get_token(\"https://management.azure.com/.default\")\n```\n\n*Get a control plane token with managed identity aware credentials*",
+  "drills": [
+    {
+      "q": "What is control plane?",
+      "a": "Operations that manage Azure resources, usually through Azure Resource Manager."
+    },
+    {
+      "q": "What is data plane?",
+      "a": "Operations that use a resource's capabilities through its service endpoint."
+    },
+    {
+      "q": "Which interface should automation prefer for repeatable code?",
+      "a": "SDK, CLI, REST, or infrastructure templates depending on the task, with managed identity aware credentials."
+    }
+  ],
+  "teachItBack": "Interfaces are how you talk; planes are what kind of action you are taking. Control plane changes resources, while data plane uses them. Portal, CLI, SDK, and REST can all matter, but production automation should use identity based access rather than copied credentials.",
+  "glossary": [
+    {
+      "term": "Control plane",
+      "definition": "Azure management operations for creating, updating, or deleting resources."
+    },
+    {
+      "term": "Data plane",
+      "definition": "Service operations that use an existing resource's functionality."
+    },
+    {
+      "term": "Azure Resource Manager",
+      "definition": "Azure control plane service endpoint and deployment system."
+    },
+    {
+      "term": "DefaultAzureCredential",
+      "definition": "Azure Identity credential chain that supports managed identity and developer sign in flows."
+    },
+    {
+      "term": "ManagedIdentityCredential",
+      "definition": "Azure Identity credential that obtains tokens from an Azure managed identity."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Microsoft Learn: Control plane and data plane operations",
+      "url": "https://learn.microsoft.com/en-us/azure/azure-resource-manager/management/control-plane-and-data-plane",
+      "verified": true
+    },
+    {
+      "title": "Microsoft Learn: Azure Identity client library for Python",
+      "url": "https://learn.microsoft.com/en-us/python/api/overview/azure/identity-readme?view=azure-python",
+      "verified": true
+    },
+    {
+      "title": "Microsoft Learn: Authenticate Azure hosted Python apps with managed identity",
+      "url": "https://learn.microsoft.com/en-us/azure/developer/python/sdk/authentication/system-assigned-managed-identity",
+      "verified": true
+    },
+    {
+      "title": "Microsoft Learn: What is Microsoft Foundry?",
+      "url": "https://learn.microsoft.com/en-us/azure/foundry/what-is-foundry",
+      "verified": true
+    }
+  ]
+}

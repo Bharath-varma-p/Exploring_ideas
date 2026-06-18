@@ -1,0 +1,75 @@
+{
+  "id": "fdy-work-item-states-wiql",
+  "title": "States and WIQL Queries",
+  "lane": "foundry-connectors",
+  "type": "concept",
+  "order": 303,
+  "summary": "WIQL is Work Item Query Language. It uses SELECT, FROM, WHERE, ORDER BY, and optional ASOF clauses to query Azure Boards. The REST WIQL endpoint returns IDs first; clients often follow with a batch get to fetch full field details.",
+  "tags": [
+    "boards",
+    "wiql",
+    "queries"
+  ],
+  "analogy": "WIQL is like a radar sweep. You choose the sector with WHERE, choose what columns you want with SELECT, and sort the blips with ORDER BY.",
+  "diagram": "stateDiagram-v2\n    New --> Active\n    Active --> Resolved\n    Resolved --> Closed\n    Active --> Closed\n    Resolved --> Active",
+  "body": "## First principles\n\nFirst principles: an agent needs a precise filter language. Natural language is ambiguous; WIQL is the contract that says which work items count, which fields matter, and how results are ordered.\n\n## Definition\n\nWIQL is Work Item Query Language. It uses SELECT, FROM, WHERE, ORDER BY, and optional ASOF clauses to query Azure Boards. The REST WIQL endpoint returns IDs first; clients often follow with a batch get to fetch full field details.\n\n## How it fits together\n\nKeep the flow simple: New or Proposed means not started, Active means in progress, Resolved means believed fixed, Closed means accepted done. Processes differ, so teach the agent to inspect work item type metadata when exact states matter.\n\n## Worked example\n\n```python\nproject = 'SpaceElevator'\nwiql = f\"\"\"\nSELECT [System.Id], [System.Title], [System.State], [System.AssignedTo]\nFROM WorkItems\nWHERE [System.TeamProject] = '{project}'\n  AND [System.WorkItemType] = 'Bug'\n  AND [System.State] <> 'Closed'\nORDER BY [Microsoft.VSTS.Common.Priority] ASC, [System.ChangedDate] DESC\n\"\"\".strip()\nprint(wiql)\n```\n\n*Build a WIQL query for active bugs*",
+  "drills": [
+    {
+      "q": "What clause filters a WIQL query?",
+      "a": "WHERE."
+    },
+    {
+      "q": "Does the WIQL REST API return full field data directly?",
+      "a": "No. It returns matching IDs and references; fetch full work items afterward."
+    },
+    {
+      "q": "Why avoid hard coding one universal state flow?",
+      "a": "Projects can use different processes and customized workflows."
+    }
+  ],
+  "teachItBack": "WIQL is the exact language behind many work item questions. The agent can translate list my active bugs into a safe query, then fetch fields for the returned IDs. States are workflow checkpoints, not prose.",
+  "glossary": [
+    {
+      "term": "WIQL",
+      "definition": "SQL like query language for Azure Boards work items."
+    },
+    {
+      "term": "ASOF",
+      "definition": "WIQL clause for asking what matched at a past time."
+    },
+    {
+      "term": "State",
+      "definition": "Workflow field showing a work item's current lifecycle step."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Microsoft Learn: WIQL syntax reference",
+      "url": "https://learn.microsoft.com/en-us/azure/devops/boards/queries/wiql-syntax?view=azure-devops",
+      "verified": true
+    },
+    {
+      "title": "Microsoft Learn REST: Query by WIQL",
+      "url": "https://learn.microsoft.com/en-us/rest/api/azure/devops/wit/wiql/query-by-wiql?view=azure-devops-rest-7.1",
+      "verified": true
+    },
+    {
+      "title": "Microsoft Learn: About work items and work item types",
+      "url": "https://learn.microsoft.com/en-us/azure/devops/boards/work-items/about-work-items?view=azure-devops",
+      "verified": true
+    }
+  ],
+  "quiz": [
+    {
+      "q": "What must happen before a managed identity can read Azure DevOps project data?",
+      "choices": [
+        "Add it to ADO and grant permissions",
+        "Decode the token claims",
+        "Create a PAT for it",
+        "Disable project security"
+      ],
+      "answer": 0,
+      "explanation": "Authentication alone is not authorization; ADO membership and permissions are required."
+    }
+  ]
+}

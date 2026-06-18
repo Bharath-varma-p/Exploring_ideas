@@ -1,0 +1,67 @@
+{
+  "id": "fdy-sync-vs-async",
+  "title": "Sync and Async Clients",
+  "lane": "foundry-core",
+  "type": "concept",
+  "order": 211,
+  "summary": "The synchronous client is azure.ai.projects.AIProjectClient with azure.identity.DefaultAzureCredential. The asynchronous client is azure.ai.projects.aio.AIProjectClient with azure.",
+  "tags": [
+    "async",
+    "aio",
+    "transport"
+  ],
+  "analogy": "Sync is one clerk walking each form to the counter. Async is one dispatcher tracking many forms while the counters work in parallel.",
+  "diagram": "flowchart TD\nSimpleScript[Simple script] --> SyncClient[azure ai projects AIProjectClient]\nAsyncApp[Async app] --> AioClient[azure ai projects aio AIProjectClient]\nAioClient --> AsyncCredential[azure identity aio credential]\nAioClient --> AsyncOpenAI[AsyncOpenAI client]",
+  "body": "## First principles\n\nConcurrency is about waiting efficiently. A script can block while one request finishes, but a web service or batch worker may need to keep doing other work while many network calls are in flight.\n\n## Definition\n\nThe synchronous client is azure.ai.projects.AIProjectClient with azure.identity.DefaultAzureCredential. The asynchronous client is azure.ai.projects.aio.AIProjectClient with azure.identity.aio.DefaultAzureCredential and async with. The async reference returns AsyncOpenAI from get_openai_client, and async usage needs an async transport such as aiohttp.\n\n## How it fits together\n\nUse sync for notebooks, CLIs, and simple lessons. Use async when your app already runs asyncio or needs many concurrent network operations.\n\n## Worked example\n\n```python\nimport asyncio\nimport os\nfrom azure.ai.projects.aio import AIProjectClient\nfrom azure.identity.aio import DefaultAzureCredential\n\nasync def main():\n    async with DefaultAzureCredential() as credential:\n        async with AIProjectClient(\n            endpoint=os.environ[\"FOUNDRY_PROJECT_ENDPOINT\"],\n            credential=credential,\n        ) as project_client:\n            print(type(project_client).__name__)\n\nasyncio.run(main())\n```\n\n*Construct the async project client and print its type.*",
+  "drills": [
+    {
+      "q": "What namespace holds the async project client?",
+      "a": "azure.ai.projects.aio."
+    },
+    {
+      "q": "What keyword manages async clients?",
+      "a": "async with."
+    },
+    {
+      "q": "When should a beginner prefer sync?",
+      "a": "For simple scripts, notebooks, and lessons where concurrency is not the main topic."
+    }
+  ],
+  "teachItBack": "Teach it back as: Sync clients block until each network call returns. Async clients use the aio namespace and async with so my program can wait on network work efficiently. I choose async because of my app shape, not because it is magically more correct.",
+  "glossary": [
+    {
+      "term": "aio",
+      "definition": "Azure SDK namespace convention for asynchronous clients and credentials."
+    },
+    {
+      "term": "async with",
+      "definition": "Python syntax for asynchronously opening and closing resources."
+    },
+    {
+      "term": "AsyncOpenAI",
+      "definition": "The async OpenAI client returned by the async AIProjectClient get_openai_client method."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Async AIProjectClient class reference",
+      "url": "https://learn.microsoft.com/en-us/python/api/azure-ai-projects/azure.ai.projects.aio.aiprojectclient?view=azure-python",
+      "verified": true
+    },
+    {
+      "title": "Azure AI Projects client library for Python",
+      "url": "https://learn.microsoft.com/en-us/python/api/overview/azure/ai-projects-readme?view=azure-python",
+      "verified": true
+    },
+    {
+      "title": "Usage patterns with the Azure libraries for Python",
+      "url": "https://learn.microsoft.com/en-us/azure/developer/python/sdk/azure-sdk-library-usage-patterns",
+      "verified": true
+    },
+    {
+      "title": "Azure Identity client library for Python",
+      "url": "https://learn.microsoft.com/en-us/python/api/overview/azure/identity-readme?view=azure-python",
+      "verified": true
+    }
+  ]
+}

@@ -1,0 +1,62 @@
+{
+  "id": "fdy-where-kusto-shows-up",
+  "title": "Kusto Beyond ADX",
+  "lane": "foundry-connectors",
+  "type": "concept",
+  "order": 202,
+  "summary": "Kusto Query Language is used by Azure Data Explorer and also underpins or appears in related analytics experiences such as Azure Monitor Logs, Log Analytics, Microsoft Sentinel, and Microsoft Fabric Real-Time Intelligence/Eventhouse scenarios.",
+  "tags": [
+    "azure-monitor",
+    "fabric",
+    "log-analytics"
+  ],
+  "analogy": "Learning KQL is like learning the NATO phonetic alphabet: once you know it, many radios and teams can understand you.",
+  "diagram": "flowchart LR\n  KQL[KQL] --> ADX[Azure Data Explorer]\n  KQL --> Monitor[Azure Monitor Logs]\n  KQL --> Sentinel[Microsoft Sentinel]\n  KQL --> Fabric[Fabric Eventhouse]",
+  "body": "## First principles\n\nA query language becomes more valuable when the same mental model works across multiple stores. KQL is not limited to one UI; it appears wherever Microsoft stores operational analytics data.\n\n## Definition\n\nKusto Query Language is used by Azure Data Explorer and also underpins or appears in related analytics experiences such as Azure Monitor Logs, Log Analytics, Microsoft Sentinel, and Microsoft Fabric Real-Time Intelligence/Eventhouse scenarios. The exact resource wrapper changes, but the table-pipe query model remains familiar.\n\n## How it fits together\n\nSeparate language from host. KQL is the grammar; ADX, Azure Monitor Logs, Sentinel, and Fabric Eventhouse are places where that grammar can be useful.\n\n## Worked example\n\n```kql\n// In an ADX database, Azure Monitor workspace, or Sentinel table,\n// the table name changes but the pipe idea stays the same.\nSigninLogs\n| where TimeGenerated > ago(24h)\n| summarize Attempts = count() by ResultType\n| top 5 by Attempts desc\n```\n\n*The same shape appears in multiple KQL hosts.*",
+  "drills": [
+    {
+      "q": "What stays the same across KQL hosts?",
+      "a": "The tabular pipe model and common operators."
+    },
+    {
+      "q": "What changes across hosts?",
+      "a": "Available tables, schema, permissions, endpoints, and some service-specific features."
+    }
+  ],
+  "teachItBack": "KQL is a transferable analytics language. ADX is one major home for it, and Azure Monitor, Sentinel, and Fabric also use it. I should always inspect the actual schema before writing final queries.",
+  "glossary": [
+    {
+      "term": "Log Analytics",
+      "definition": "Azure Monitor log workspace experience using KQL."
+    },
+    {
+      "term": "Eventhouse",
+      "definition": "Microsoft Fabric real-time analytics storage that uses KQL."
+    }
+  ],
+  "sources": [
+    {
+      "title": "What is Azure Data Explorer?",
+      "url": "https://learn.microsoft.com/en-us/azure/data-explorer/data-explorer-overview",
+      "verified": true
+    },
+    {
+      "title": "Kusto Query Language overview",
+      "url": "https://learn.microsoft.com/en-us/kusto/query/?view=azure-data-explorer&preserve-view=true",
+      "verified": true
+    }
+  ],
+  "quiz": [
+    {
+      "q": "Which KQL symbol passes tabular output to the next operator?",
+      "choices": [
+        "|",
+        "->",
+        "=>",
+        "::"
+      ],
+      "answer": 0,
+      "explanation": "The pipe character sequences KQL operators left to right."
+    }
+  ]
+}

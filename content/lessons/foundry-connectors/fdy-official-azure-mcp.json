@@ -1,0 +1,75 @@
+{
+  "id": "fdy-official-azure-mcp",
+  "title": "Official Azure MCP Server Kusto Tools",
+  "lane": "foundry-connectors",
+  "type": "concept",
+  "order": 206,
+  "summary": "The official Azure MCP Server lives in microsoft/mcp after Azure/azure-mcp was archived.",
+  "tags": [
+    "mcp",
+    "tools",
+    "official"
+  ],
+  "analogy": "The MCP server is a translator at the gate. The agent speaks intent, the server exposes approved verbs, and ADX receives authenticated API calls instead of free-form shell commands.",
+  "diagram": "flowchart LR\n  Agent[Foundry agent] --> MCP[Azure MCP Server]\n  MCP --> ToolList[Kusto tools]\n  ToolList --> Cluster[List clusters]\n  ToolList --> Schema[Get schema]\n  ToolList --> Query[Run KQL]\n  Query --> ADX[Azure Data Explorer]",
+  "body": "## First principles\n\nAn agent should not embed Kusto SDK logic in its prompt. It should call a tool boundary that validates arguments, obtains Azure tokens, talks to ADX, and returns structured results.\n\n## Definition\n\nThe official Azure MCP Server lives in microsoft/mcp after Azure/azure-mcp was archived. Its Kusto area is titled Azure Data Explorer and registers read-only commands for sample, query, cluster list, cluster get, database list, table list, and table schema. In consolidated mode it is described as getting Azure Data Explorer Kusto details: list clusters, execute KQL queries, manage databases, explore table schemas, and get data samples.\n\n## How it fits together\n\nUse the official Azure MCP Server first when you need broad Azure integration and maintained Kusto tooling. Expose only the Kusto namespace or a narrow allow-list when the lesson is about read-only ADX questions.\n\n## Worked example\n\n```json\n{\n  \"server\": \"Azure MCP Server\",\n  \"namespace\": \"kusto\",\n  \"tools\": [\n    \"kusto_cluster_list\",\n    \"kusto_cluster_get\",\n    \"kusto_database_list\",\n    \"kusto_table_list\",\n    \"kusto_table_schema\",\n    \"kusto_sample\",\n    \"kusto_query\"\n  ]\n}\n```\n\n*Representative tool names exposed by the Kusto area.*",
+  "drills": [
+    {
+      "q": "Which Kusto action actually runs KQL?",
+      "a": "The query command, surfaced as the Kusto query tool."
+    },
+    {
+      "q": "Why prefer official Azure MCP first?",
+      "a": "It is Microsoft-maintained and covers Azure authentication and resource discovery."
+    },
+    {
+      "q": "Should every Azure MCP tool be enabled?",
+      "a": "No. Use allow-lists such as only Kusto read tools when teaching or deploying this lane."
+    }
+  ],
+  "teachItBack": "The official path is Azure MCP Server from microsoft/mcp. Its Kusto area exposes cluster, database, table, schema, sample, and query capabilities. I should allow only the tools the agent truly needs.",
+  "glossary": [
+    {
+      "term": "MCP tool",
+      "definition": "A callable capability exposed by an MCP server to an agent."
+    },
+    {
+      "term": "Kusto namespace",
+      "definition": "The Azure MCP area that groups Azure Data Explorer commands."
+    },
+    {
+      "term": "Tool allow-list",
+      "definition": "A configuration that exposes only approved tools to the agent."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Azure MCP Server README",
+      "url": "https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/README.md",
+      "verified": true
+    },
+    {
+      "title": "Azure MCP Kusto setup source",
+      "url": "https://github.com/microsoft/mcp/blob/main/tools/Azure.Mcp.Tools.Kusto/src/KustoSetup.cs",
+      "verified": true
+    },
+    {
+      "title": "Azure MCP Kusto query command source",
+      "url": "https://github.com/microsoft/mcp/blob/main/tools/Azure.Mcp.Tools.Kusto/src/Commands/QueryCommand.cs",
+      "verified": true
+    }
+  ],
+  "quiz": [
+    {
+      "q": "What should the agent do before writing a nontrivial KQL query?",
+      "choices": [
+        "Discover tables and schema",
+        "Guess column names from memory",
+        "Ask for a secret key",
+        "Enable database admin"
+      ],
+      "answer": 0,
+      "explanation": "Schema grounding prevents hallucinated table and column names."
+    }
+  ]
+}

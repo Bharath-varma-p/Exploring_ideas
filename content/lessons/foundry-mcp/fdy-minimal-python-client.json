@@ -1,0 +1,62 @@
+{
+  "id": "fdy-minimal-python-client",
+  "title": "Minimal Python MCP Client",
+  "lane": "foundry-mcp",
+  "type": "concept",
+  "order": 114,
+  "summary": "The Python SDK can build clients with ClientSession and transports such as stdio client. A minimal client launches a local server process, initializes the MCP session, lists tools, and calls one tool with arguments.",
+  "tags": [
+    "sdk",
+    "python",
+    "client"
+  ],
+  "analogy": "The client is a radio operator following procedure: open channel, perform comms check, ask for the catalog, then send a numbered request.",
+  "diagram": "sequenceDiagram\nparticipant Script as client py\nparticipant Server as server py\nScript->>Server: launch via stdio\nScript->>Server: initialize\nServer-->>Script: capabilities\nScript->>Server: tools list\nServer-->>Script: add tool\nScript->>Server: tools call add\nServer-->>Script: result five",
+  "body": "## First principles\n\nFirst principles: a client is a disciplined protocol peer. It starts the transport, performs initialize, discovers capabilities, then calls only what the server advertised.\n\n## Definition\n\nThe Python SDK can build clients with ClientSession and transports such as stdio_client. A minimal client launches a local server process, initializes the MCP session, lists tools, and calls one tool with arguments.\n\n## How it fits together\n\nLearn the client flow before relying on a host UI. It reveals the protocol sequence underneath: transport, ClientSession, initialize, list_tools, call_tool. Real hosts add model orchestration and user consent on top.\n\n## Worked example\n\n```python\n# client.py\n# Install in a project environment: python -m pip install mcp\n# Place next to server.py, then run: python client.py\n\nimport asyncio\nfrom mcp import ClientSession, StdioServerParameters\nfrom mcp.client.stdio import stdio_client\n\nasync def main() -> None:\n    server = StdioServerParameters(command=\"python\", args=[\"server.py\"])\n\n    async with stdio_client(server) as (read, write):\n        async with ClientSession(read, write) as session:\n            await session.initialize()\n\n            tools = await session.list_tools()\n            print(\"tools:\", [tool.name for tool in tools.tools])\n\n            result = await session.call_tool(\"add\", {\"a\": 2, \"b\": 3})\n            print(\"result:\", result)\n\nif __name__ == \"__main__\":\n    asyncio.run(main())\n```\n\n*Runnable minimal client for the server example*",
+  "drills": [
+    {
+      "q": "What call begins normal protocol use?",
+      "a": "session.initialize()."
+    },
+    {
+      "q": "What does list_tools map to at the protocol layer?",
+      "a": "tools/list."
+    },
+    {
+      "q": "What does call_tool map to?",
+      "a": "tools/call."
+    }
+  ],
+  "teachItBack": "A Python MCP client opens a transport, creates a session, initializes, then uses advertised capabilities. The SDK hides JSON-RPC details but preserves the same lifecycle. This is the simplest way to test a local server without a full host application.",
+  "glossary": [
+    {
+      "term": "ClientSession",
+      "definition": "Python SDK object representing an initialized MCP client session."
+    },
+    {
+      "term": "StdioServerParameters",
+      "definition": "Python SDK configuration for launching a local stdio server."
+    },
+    {
+      "term": "stdio_client",
+      "definition": "Python SDK helper that connects to a stdio MCP server."
+    }
+  ],
+  "sources": [
+    {
+      "title": "modelcontextprotocol Python SDK",
+      "url": "https://github.com/modelcontextprotocol/python-sdk",
+      "verified": true
+    },
+    {
+      "title": "Official MCP SDKs",
+      "url": "https://modelcontextprotocol.io/docs/sdk.md",
+      "verified": true
+    },
+    {
+      "title": "MCP Lifecycle",
+      "url": "https://modelcontextprotocol.io/specification/2025-11-25/basic/lifecycle.md",
+      "verified": true
+    }
+  ]
+}

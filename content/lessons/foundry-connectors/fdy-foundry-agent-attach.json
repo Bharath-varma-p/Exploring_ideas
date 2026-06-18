@@ -1,0 +1,70 @@
+{
+  "id": "fdy-foundry-agent-attach",
+  "title": "Attach the MCP Server to a Foundry Agent",
+  "lane": "foundry-connectors",
+  "type": "concept",
+  "order": 106,
+  "summary": "Microsoft Foundry Agent Service supports connecting agents to remote MCP server endpoints. The agent receives a server label, server URL, optional project connection for authentication, and approval policy.",
+  "tags": [
+    "foundry",
+    "agent",
+    "mcp"
+  ],
+  "analogy": "Attaching an MCP server is like adding a specialized radio channel to a command center. The commander can request information or actions over that channel, but the channel still has call signs, permissions, and approval rules.",
+  "diagram": "graph TD\nProject[Foundry project] --> Agent[Agent]\nAgent --> MCPTool[MCP tool attachment]\nMCPTool --> Server[Incident MCP server]\nServer --> Backend[Incident backend]",
+  "body": "## First principles\n\nFirst principles: the model should not know how to authenticate to every backend. Foundry hosts the agent, attaches an MCP endpoint as a tool, and mediates tool approval and execution.\n\n## Definition\n\nMicrosoft Foundry Agent Service supports connecting agents to remote MCP server endpoints. The agent receives a server label, server URL, optional project connection for authentication, and approval policy. The agent can then discover and call MCP tools through Foundry.\n\n## How it fits together\n\nUse the generic MCP attach pattern: create an AIProjectClient with DefaultAzureCredential, define an MCPTool with server_label and server_url, require approval for risky calls, and add the tool to the agent definition. The incident server URL is representative until your organization provides the real endpoint.\n\n## Worked example\n\n```python\n# Representative Foundry SDK wiring. The MCP mechanics are documented by Microsoft;\n# the incident server URL and tool names are representative.\nfrom azure.identity import DefaultAzureCredential\nfrom azure.ai.projects import AIProjectClient\nfrom azure.ai.projects.models import PromptAgentDefinition, MCPTool\n\nPROJECT_ENDPOINT = \"https://YOUR-RESOURCE.services.ai.azure.com/api/projects/YOUR-PROJECT\"\nINCIDENT_MCP_URL = \"https://incident-mcp.contoso.internal/mcp\"  # representative\n\nproject = AIProjectClient(\n    endpoint=PROJECT_ENDPOINT,\n    credential=DefaultAzureCredential(),  # managed identity when running in Azure\n)\n\nincident_mcp = MCPTool(\n    server_label=\"incident-management\",\n    server_url=INCIDENT_MCP_URL,\n    require_approval=\"always\",  # safest default for incident write-capable tools\n    # project_connection_id may be used when your Foundry project stores the MCP auth setup.\n)\n\nagent = project.agents.create_version(\n    agent_name=\"IncidentHelper\",\n    definition=PromptAgentDefinition(\n        model=\"gpt-5-mini\",\n        instructions=\"Help responders read incidents. Ask approval before writes.\",\n        tools=[incident_mcp],\n    ),\n)\nprint(agent.name, agent.version)\n```\n\n*Representative Foundry agent with an incident MCP tool*",
+  "drills": [
+    {
+      "q": "What are the two key MCP attachment fields?",
+      "a": "server_label and server_url."
+    },
+    {
+      "q": "Why set require_approval to always in this lane?",
+      "a": "Incident tools can change operational records, so human approval should be the default."
+    },
+    {
+      "q": "What credential object is used by the Foundry client?",
+      "a": "DefaultAzureCredential."
+    }
+  ],
+  "teachItBack": "Foundry attaches an MCP server to an agent as a tool. The agent can then discover and call server tools through Foundry's orchestration path. For incident systems, attach with managed identity and require approval for write actions.",
+  "glossary": [
+    {
+      "term": "AIProjectClient",
+      "definition": "Python SDK client for a Foundry project endpoint."
+    },
+    {
+      "term": "MCPTool",
+      "definition": "Foundry SDK model describing a remote MCP server attached to an agent."
+    },
+    {
+      "term": "Approval policy",
+      "definition": "Configuration controlling whether tool calls require human confirmation."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Microsoft Learn: Connect to MCP Server Endpoints for agents",
+      "url": "https://learn.microsoft.com/en-us/azure/foundry/agents/how-to/tools/model-context-protocol",
+      "verified": true
+    },
+    {
+      "title": "Microsoft Learn: Set Up MCP Server Authentication",
+      "url": "https://learn.microsoft.com/en-us/azure/foundry/agents/how-to/mcp-authentication",
+      "verified": true
+    }
+  ],
+  "quiz": [
+    {
+      "q": "What does the token audience identify in managed-identity auth?",
+      "choices": [
+        "The intended receiving service for the access token",
+        "The human reader of the final answer",
+        "The severity of the incident",
+        "The number of available MCP tools"
+      ],
+      "answer": 0,
+      "explanation": "The audience tells Entra and the receiver which service the token is meant for."
+    }
+  ]
+}

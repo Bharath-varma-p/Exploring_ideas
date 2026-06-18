@@ -1,0 +1,62 @@
+{
+  "id": "fdy-connections-sdk",
+  "title": "Connections via SDK",
+  "lane": "foundry-core",
+  "type": "concept",
+  "order": 209,
+  "summary": "project client.connections exposes list, get, and get default. list returns ItemPaged of Connection. Connection fields include name, id, type, target, is default, credentials, and metadata.",
+  "tags": [
+    "connections",
+    "resources",
+    "paging"
+  ],
+  "analogy": "Connections are the project’s address book. Instead of memorizing every warehouse and lab address, the SDK asks the address book for the named or default resource.",
+  "diagram": "flowchart TD\nProject[Foundry project] --> Connections[connections group]\nConnections --> List[list returns ItemPaged]\nConnections --> Get[get by name]\nConnections --> Default[get default by type]\nList --> Connection[Connection name type target]",
+  "body": "## First principles\n\nProject code often needs other resources: storage, search, OpenAI, Cosmos DB, App Insights, or custom resources. A connection records where that resource is and how the Foundry project knows it, so SDK features can discover resources without hard-coding every target.\n\n## Definition\n\nproject_client.connections exposes list, get, and get_default. list returns ItemPaged of Connection. Connection fields include name, id, type, target, is_default, credentials, and metadata. Known connection types include AzureOpenAI, AzureBlob, AzureStorageAccount, CognitiveSearch, CosmosDB, ApiKey, AppConfig, AppInsights, CustomKeys, and RemoteTool_Preview.\n\n## How it fits together\n\nList connections for discovery, get one by name for explicit wiring, or get_default by type when the project owner has marked a standard resource. Avoid include_credentials unless a specialized scenario truly requires it.\n\n## Worked example\n\n```python\nimport os\nfrom azure.identity import DefaultAzureCredential\nfrom azure.ai.projects import AIProjectClient\nfrom azure.core.exceptions import HttpResponseError\n\nwith DefaultAzureCredential() as credential, AIProjectClient(\n    endpoint=os.environ[\"FOUNDRY_PROJECT_ENDPOINT\"],\n    credential=credential,\n) as project_client:\n    try:\n        for connection in project_client.connections.list():\n            print(connection.name, connection.type, connection.target)\n    except HttpResponseError as error:\n        print(f\"Connection listing failed: {error.status_code} {error.reason}\")\n```\n\n*List connection names, types, and targets.*",
+  "drills": [
+    {
+      "q": "What does project_client.connections.list return?",
+      "a": "An azure-core ItemPaged iterator of Connection objects."
+    },
+    {
+      "q": "What is a connection target?",
+      "a": "The URL or target endpoint for the connected resource."
+    },
+    {
+      "q": "Why do connections matter?",
+      "a": "They let SDK features discover project-linked resources without scattering resource URLs through code."
+    }
+  ],
+  "teachItBack": "Teach it back as: A Foundry connection is the project address book entry for another resource. The SDK can list connections, get one by name, or ask for the default connection type. Each Connection tells me its name, type, target, default status, metadata, and credential shape.",
+  "glossary": [
+    {
+      "term": "Connection",
+      "definition": "A Foundry project resource describing a linked service target and its connection metadata."
+    },
+    {
+      "term": "get_default",
+      "definition": "A connections operation that returns the default connection for a specified type."
+    },
+    {
+      "term": "include_credentials",
+      "definition": "An optional flag on get operations that asks the service to include credential details in the response."
+    }
+  ],
+  "sources": [
+    {
+      "title": "ConnectionsOperations class reference",
+      "url": "https://learn.microsoft.com/en-us/python/api/azure-ai-projects/azure.ai.projects.operations.connectionsoperations?view=azure-python",
+      "verified": true
+    },
+    {
+      "title": "Connection model reference",
+      "url": "https://learn.microsoft.com/en-us/python/api/azure-ai-projects/azure.ai.projects.models.connection?view=azure-python",
+      "verified": true
+    },
+    {
+      "title": "ItemPaged class reference",
+      "url": "https://learn.microsoft.com/en-us/python/api/azure-core/azure.core.paging.itempaged?view=azure-python",
+      "verified": true
+    }
+  ]
+}

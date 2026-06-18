@@ -1,0 +1,49 @@
+{
+  "id": "fdy-teaching-kit",
+  "title": "Teaching Kit: Present the Stack",
+  "order": 200,
+  "tags": [
+    "teaching",
+    "slides",
+    "talking-points"
+  ],
+  "summary": "A ready-to-present deck outline. Each slide has talking points and a one-line script you can read aloud. Move top to bottom and you will have taught the entire Foundry + MCP + managed-identity stack in ~20 minutes.",
+  "body": "A ready-to-present deck outline. Each slide has talking points and a one-line script you can read aloud. Move top to bottom and you will have taught the entire Foundry + MCP + managed-identity stack in ~20 minutes.\n\n### The problem\n\n- AI apps need a model **plus** identity, governance, tools, and observability\n- Wiring each tool to each model by hand is an N×M mess\n- Secrets sprawl is the #1 way these systems get breached\n\n> We want an AI agent that can act on our real systems — safely, with no secrets, and without bespoke glue for every integration.\n\n### Azure AI Foundry\n\n- A governed Azure platform for building and operating AI apps\n- Hierarchy: subscription → resource group → Foundry resource → project\n- Portal for humans, SDK/CLI/REST for automation\n\n> Foundry is the aircraft carrier: models are the aircraft, projects are the mission bays, and Azure governance is the command structure.\n\n### Deploy & inference\n\n- Pick a model from the catalog and create a **deployment** (an alias)\n- Call chat completions through the project client\n- Tokens in, tokens out; watch context window and usage\n\n> A deployment is a named phone line to a model; we dial the deployment name, not the raw model version.\n\n### Managed identity (the core)\n\n- The workload gets an Entra identity with **no password**\n- `DefaultAzureCredential` uses az login locally, managed identity in Azure\n- RBAC grants least-privilege access per resource\n\n> Managed identity is a building badge the platform issues and rotates for us — we never carry a key, and the badge only opens the doors RBAC allows.\n\n### MCP in one breath\n\n- MCP is the USB-C port for AI tools\n- Host embeds Clients; each Client talks to one Server over JSON-RPC\n- Servers expose Tools (actions), Resources (data), Prompts (templates)\n\n> MCP standardizes how a model discovers and calls tools, so any compliant server plugs into any compliant host.\n\n### Agents + MCP\n\n- An agent = model + instructions + tools + state (threads/runs)\n- Attach MCP servers as tools with a label, URL, and allowed tool list\n- The agent carries the managed-identity token on every tool call\n\n> The agent is the on-call engineer; MCP servers are its tools; managed identity is the badge it taps to use each one.\n\n### ICM · Kusto · ADO\n\n- **ICM**: query/ack/create incidents (writes need approval)\n- **Kusto/ADX**: run KQL over telemetry — read-only mindset\n- **ADO**: work items via WIQL, pipelines, repos/PRs\n\n> Same pattern three times: an MCP server fronts the system, the agent calls tools, and a managed-identity token authorizes each call.\n\n### Safety & observability\n\n- Least privilege + human-in-the-loop on writes + full audit\n- OpenTelemetry traces every call, tool, and token\n- Preview features: verify against current Microsoft docs\n\n> We let reads flow, gate writes behind approval, and trace everything — so the agent is powerful but never reckless.",
+  "drills": [
+    {
+      "q": "Slide \"The problem\": give the one-line script from memory.",
+      "a": "We want an AI agent that can act on our real systems — safely, with no secrets, and without bespoke glue for every integration."
+    },
+    {
+      "q": "Slide \"Azure AI Foundry\": give the one-line script from memory.",
+      "a": "Foundry is the aircraft carrier: models are the aircraft, projects are the mission bays, and Azure governance is the command structure."
+    },
+    {
+      "q": "Slide \"Deploy & inference\": give the one-line script from memory.",
+      "a": "A deployment is a named phone line to a model; we dial the deployment name, not the raw model version."
+    },
+    {
+      "q": "Slide \"Managed identity (the core)\": give the one-line script from memory.",
+      "a": "Managed identity is a building badge the platform issues and rotates for us — we never carry a key, and the badge only opens the doors RBAC allows."
+    },
+    {
+      "q": "Slide \"MCP in one breath\": give the one-line script from memory.",
+      "a": "MCP standardizes how a model discovers and calls tools, so any compliant server plugs into any compliant host."
+    },
+    {
+      "q": "Slide \"Agents + MCP\": give the one-line script from memory.",
+      "a": "The agent is the on-call engineer; MCP servers are its tools; managed identity is the badge it taps to use each one."
+    },
+    {
+      "q": "Slide \"ICM · Kusto · ADO\": give the one-line script from memory.",
+      "a": "Same pattern three times: an MCP server fronts the system, the agent calls tools, and a managed-identity token authorizes each call."
+    },
+    {
+      "q": "Slide \"Safety & observability\": give the one-line script from memory.",
+      "a": "We let reads flow, gate writes behind approval, and trace everything — so the agent is powerful but never reckless."
+    }
+  ],
+  "teachItBack": "Foundry is the governed platform, managed identity is the keyless badge, and MCP is the universal tool port. Present those three ideas first and every slide hangs off them.",
+  "lane": "foundry-capstone",
+  "type": "concept"
+}

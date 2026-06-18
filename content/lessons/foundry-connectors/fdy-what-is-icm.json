@@ -1,0 +1,70 @@
+{
+  "id": "fdy-what-is-icm",
+  "title": "What IcM Means in This Lane",
+  "lane": "foundry-connectors",
+  "type": "concept",
+  "order": 101,
+  "summary": "IcM, often written ICM or IcM inside Microsoft contexts, refers to incident management tooling and process for on-call engineering.",
+  "tags": [
+    "incident-management",
+    "icm",
+    "domain"
+  ],
+  "analogy": "Think of IcM as an emergency dispatch center for cloud services: alarms become cases, dispatchers route them to the right crew, responders acknowledge, commanders track severity, and everyone records what happened so the next emergency is handled faster.",
+  "diagram": "graph TD\nAlert[Monitor alert] --> Incident[Incident record]\nIncident --> Owner[Owning team]\nOwner --> Responder[On call responder]\nResponder --> Mitigation[Mitigation work]\nMitigation --> Learning[Post incident learning]",
+  "body": "## First principles\n\nFirst principles: reliable services fail in real life. When failure affects customers, engineers need one shared record of truth, clear ownership, urgency, escalation, mitigation work, and learning afterward. Incident management is the operating system for that emergency response.\n\n## Definition\n\nIcM, often written ICM or IcM inside Microsoft contexts, refers to incident management tooling and process for on-call engineering. Public Microsoft documents describe incident management practices, on-call response, containment, recovery, and postmortems, but a public official IcM MCP API surface was not verified for this lesson.\n\n## How it fits together\n\nTreat every incident as a living operational record: who owns it, what broke, how bad it is, what is being done, whether customers are still impacted, and what must be learned after resolution. In this lane, IcM-specific implementation details are internal or representative; the transferable pattern works for any incident backend with MCP and managed identity.\n\n## Worked example\n\n```python\n# Representative domain object. This is not an official IcM API model.\nincident = {\n    \"id\": \"INC123456\",\n    \"title\": \"Checkout latency above threshold\",\n    \"severity\": \"Sev2\",\n    \"owning_team\": \"Payments OnCall\",\n    \"status\": \"acknowledged\",\n    \"customer_impact\": \"Some checkouts exceed 5 seconds\",\n    \"current_mitigation\": \"Rolling back last deployment\",\n}\nprint(f\"{incident['severity']} {incident['status']}: {incident['title']}\")\n```\n\n*Representative incident record shape*",
+  "drills": [
+    {
+      "q": "What is the core job of an incident system?",
+      "a": "Maintain a shared, auditable record of urgent service disruption work: ownership, severity, status, actions, and learning."
+    },
+    {
+      "q": "Why is this concept marked uncertain?",
+      "a": "Because IcM is largely Microsoft-internal and a public official IcM MCP server or API surface was not verified."
+    },
+    {
+      "q": "What transfers to other tools like PagerDuty or ServiceNow?",
+      "a": "The lifecycle, permissions, MCP connector shape, approval controls, and managed-identity token pattern."
+    }
+  ],
+  "teachItBack": "IcM is best understood as incident command software for engineering teams. Public docs confirm Microsoft incident-management practices, but not a public IcM MCP API. Therefore, learn the incident-system pattern and mark IcM-specific examples as representative.",
+  "glossary": [
+    {
+      "term": "Incident",
+      "definition": "A tracked operational event that disrupts, degrades, or threatens a service."
+    },
+    {
+      "term": "Severity",
+      "definition": "A priority level indicating customer impact and urgency."
+    },
+    {
+      "term": "On-call",
+      "definition": "The engineer or team currently responsible for urgent response."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Microsoft Service Assurance: Security incident management overview",
+      "url": "https://learn.microsoft.com/en-us/compliance/assurance/assurance-incident-management",
+      "verified": false
+    },
+    {
+      "title": "Microsoft Well-Architected Framework: Develop an incident management practice",
+      "url": "https://github.com/MicrosoftDocs/well-architected/blob/main/well-architected/design-guides/incident-management.md",
+      "verified": false
+    }
+  ],
+  "quiz": [
+    {
+      "q": "Why are IcM-specific MCP tool names in this lane marked representative?",
+      "choices": [
+        "Because a public official IcM MCP API surface was not verified",
+        "Because MCP cannot expose tools",
+        "Because managed identity requires API keys",
+        "Because incident systems cannot be automated"
+      ],
+      "answer": 0,
+      "explanation": "IcM is largely internal, so the lesson teaches the transferable incident MCP pattern instead of inventing official APIs."
+    }
+  ]
+}

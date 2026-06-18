@@ -1,0 +1,82 @@
+{
+  "id": "fdy-entra-tenants-identities",
+  "title": "Microsoft Entra ID: Tenants, Identities, Tokens",
+  "lane": "foundry-auth",
+  "type": "concept",
+  "order": 102,
+  "summary": "A tenant is an Entra directory boundary. An identity is a user, group, workload identity, or managed identity represented in that directory. A token is a time-limited signed statement about one identity for one audience.",
+  "tags": [
+    "entra",
+    "tenant",
+    "tokens"
+  ],
+  "analogy": "Think of a tenant as a military personnel office, identities as personnel records, and tokens as mission orders signed for one destination. Orders for the hangar do not unlock the medical bay.",
+  "diagram": "flowchart TD\n  Tenant[Entra tenant] --> Identity[Managed identity]\n  Identity --> Token[Access token]\n  Token --> Audience[One target audience]\n  Audience --> Service[Azure service]",
+  "body": "## First principles\n\nA cloud resource cannot trust a random process. It trusts an identity provider. In Azure, that provider is Microsoft Entra ID, which keeps a directory of identities and issues signed tokens that resource services can validate.\n\n## Definition\n\nA tenant is an Entra directory boundary. An identity is a user, group, workload identity, or managed identity represented in that directory. A token is a time-limited signed statement about one identity for one audience.\n\n## How it fits together\n\nYour code does not invent trust. It asks Entra for a token. The target checks issuer, tenant, audience, expiry, and then permissions. The token is portable proof, but only to the audience it names.\n\n## Worked example\n\n```python\nimport base64\nimport json\n\ndef decode_jwt_payload_without_verifying(token: str) -> dict:\n    # This is for inspection only. Services validate signatures before trusting claims.\n    payload = token.split(\".\")[1]\n    payload += \"=\" * (-len(payload) % 4)\n    return json.loads(base64.urlsafe_b64decode(payload))\n\nsample = \"eyJhbGciOiJub25lIn0.eyJ0aWQiOiJ0ZW5hbnQiLCJhdWQiOiJodHRwczovL2V4YW1wbGUvLmRlZmF1bHQiLCJleHAiOjQxMDI0NDQ4MDB9.\"\nprint(decode_jwt_payload_without_verifying(sample))\n```\n\n*Decode non-secret JWT claims for learning. Do not trust decoded text without signature validation.*",
+  "drills": [
+    {
+      "q": "What is a tenant?",
+      "a": "The Entra directory boundary that owns identities, groups, apps, and policy."
+    },
+    {
+      "q": "Why does audience matter?",
+      "a": "A token is minted for a target API; a different API should reject it."
+    },
+    {
+      "q": "What is token expiry for?",
+      "a": "It limits blast radius and forces periodic re-evaluation."
+    }
+  ],
+  "teachItBack": "Entra ID is the authority that issues signed, time-limited identity proof. A tenant is the directory boundary, and an identity lives inside it. A token is useful only for the audience it was issued to.",
+  "glossary": [
+    {
+      "term": "Microsoft Entra ID",
+      "definition": "Microsoft cloud identity platform, formerly Azure AD."
+    },
+    {
+      "term": "Tenant",
+      "definition": "Directory boundary for identities and policy."
+    },
+    {
+      "term": "Identity",
+      "definition": "A user or workload object that can be authenticated."
+    },
+    {
+      "term": "Access token",
+      "definition": "Bearer token used to call an API."
+    },
+    {
+      "term": "Audience",
+      "definition": "The intended recipient API of a token."
+    },
+    {
+      "term": "Claim",
+      "definition": "A statement inside a token, such as tenant or audience."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Managed identities for Azure resources",
+      "url": "https://learn.microsoft.com/en-us/entra/identity/managed-identities-azure-resources/overview",
+      "verified": true
+    },
+    {
+      "title": "Azure Identity client library for Python",
+      "url": "https://learn.microsoft.com/en-us/python/api/overview/azure/identity-readme?view=azure-python",
+      "verified": true
+    }
+  ],
+  "quiz": [
+    {
+      "q": "What is the primary security value of managed identity?",
+      "choices": [
+        "No stored workload credential to leak or rotate",
+        "It grants Owner automatically",
+        "It works without Entra ID",
+        "It removes the need for authorization"
+      ],
+      "answer": 0,
+      "explanation": "Managed identity lets Azure manage identity and token issuance while you assign least-privilege roles."
+    }
+  ]
+}

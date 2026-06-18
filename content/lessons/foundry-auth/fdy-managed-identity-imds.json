@@ -1,0 +1,74 @@
+{
+  "id": "fdy-managed-identity-imds",
+  "title": "Managed Identity and IMDS",
+  "lane": "foundry-auth",
+  "type": "concept",
+  "order": 104,
+  "summary": "A managed identity is an Entra-backed workload identity assigned to an Azure resource.",
+  "tags": [
+    "managed-identity",
+    "imds",
+    "no-secrets"
+  ],
+  "analogy": "It is like a vehicle transponder welded to a registered military vehicle. The driver does not carry a master password; the gate recognizes the vehicle and issues a time-limited pass for a destination.",
+  "diagram": "flowchart LR\n  Code[App code] --> SDK[Azure Identity]\n  SDK --> IMDS[Managed identity endpoint]\n  IMDS --> Entra[Microsoft Entra ID]\n  Entra --> Token[Short lived token]\n  Token --> Code",
+  "body": "## First principles\n\nThe hard problem is not how to store a credential safely; the better problem framing is how to avoid having a credential to store at all. Managed identity moves credential custody to Azure and lets the host mint tokens only for the attached workload identity.\n\n## Definition\n\nA managed identity is an Entra-backed workload identity assigned to an Azure resource. Code running on that resource requests tokens through a local identity endpoint, commonly the Instance Metadata Service on VMs, without embedding credentials.\n\n## How it fits together\n\nManaged identity authenticates the compute environment, not a file. Your app calls Azure Identity; Azure Identity talks to the local identity endpoint; the endpoint and Entra complete the exchange; your app receives only the access token.\n\n## Worked example\n\n```python\nimport os\nfrom azure.identity import ManagedIdentityCredential\n\n# System-assigned managed identity: do not pass client_id.\n# User-assigned managed identity: set AZURE_CLIENT_ID to that identity's client ID.\nclient_id = os.getenv(\"AZURE_CLIENT_ID\")\ncredential = ManagedIdentityCredential(client_id=client_id) if client_id else ManagedIdentityCredential()\n\ntoken = credential.get_token(\"https://management.azure.com/.default\")\nprint(\"Managed identity token acquired. Expires:\", token.expires_on)\n```\n\n*Use ManagedIdentityCredential directly on Azure compute.*",
+  "drills": [
+    {
+      "q": "Does managed identity put a credential in your code?",
+      "a": "No. The code asks the Azure host identity endpoint for tokens."
+    },
+    {
+      "q": "Can code use managed identity from any laptop?",
+      "a": "No. Direct ManagedIdentityCredential works only where the managed identity endpoint exists."
+    },
+    {
+      "q": "What does IMDS commonly provide on VMs?",
+      "a": "Metadata and managed identity token access through a local endpoint."
+    }
+  ],
+  "teachItBack": "Managed identity removes credential custody from my application. The app requests a token from the Azure host identity endpoint and receives a short-lived Entra token. No credential file, environment credential, or connection string secret is needed.",
+  "glossary": [
+    {
+      "term": "Managed Identity",
+      "definition": "Azure-managed workload identity assigned to a resource."
+    },
+    {
+      "term": "IMDS",
+      "definition": "Instance Metadata Service, a local endpoint used by Azure VMs for metadata and identity tokens."
+    },
+    {
+      "term": "Credential custody",
+      "definition": "Responsibility for storing and protecting long-lived authentication material."
+    },
+    {
+      "term": "Client ID",
+      "definition": "Identifier used to select a user-assigned managed identity."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Managed identities for Azure resources",
+      "url": "https://learn.microsoft.com/en-us/entra/identity/managed-identities-azure-resources/overview",
+      "verified": true
+    },
+    {
+      "title": "Azure Identity client library for Python",
+      "url": "https://learn.microsoft.com/en-us/python/api/overview/azure/identity-readme?view=azure-python",
+      "verified": true
+    }
+  ],
+  "quiz": [
+    {
+      "q": "Which current role is the least-privilege Foundry build/data-plane role?",
+      "choices": [
+        "Foundry User",
+        "Azure AI Developer",
+        "Owner",
+        "Cognitive Services Contributor"
+      ],
+      "answer": 0,
+      "explanation": "Current Foundry docs identify Foundry User as the least-privilege Foundry role; Azure AI Developer is not for Foundry projects."
+    }
+  ]
+}

@@ -1,0 +1,75 @@
+{
+  "id": "fdy-api-surface-map",
+  "title": "Current Python SDK Surface",
+  "lane": "foundry-mcp",
+  "type": "concept",
+  "order": 202,
+  "summary": "Current Microsoft Foundry quickstarts use azure-ai-projects version 2.x, AIProjectClient, project.agents.create version, PromptAgentDefinition, project.get openai client, conversations, and responses with agent reference.",
+  "tags": [
+    "sdk",
+    "python",
+    "api-surface"
+  ],
+  "analogy": "Imagine two radio manuals on the desk: the new manual says use the digital mission console, while the old manual says operate individual channel switches. Both describe agents, but they are not interchangeable procedures.",
+  "diagram": "graph TD\nNew[Azure AI Projects 2.x] --> CreateVersion[project agents create version]\nCreateVersion --> Responses[OpenAI responses with agent reference]\nClassic[Azure AI Agents samples] --> CreateAgent[agents client create agent]\nCreateAgent --> ThreadRun[threads messages runs run steps]",
+  "body": "## First principles\n\nFirst principles: SDK names are contracts between your code and a cloud API. When a service evolves, the safest engineer separates current GA paths from older or preview paths instead of mixing snippets blindly.\n\n## Definition\n\nCurrent Microsoft Foundry quickstarts use azure-ai-projects version 2.x, AIProjectClient, project.agents.create_version, PromptAgentDefinition, project.get_openai_client, conversations, and responses with agent_reference. The older classic persistent-agent flow uses azure-ai-agents objects such as agents_client.create_agent, threads, messages, runs, and run_steps and is still visible in SDK samples.\n\n## How it fits together\n\nFor new Foundry projects, start with azure-ai-projects >= 2.0.0. Use azure-ai-agents samples only when you intentionally need the classic or persistent thread-run API shape shown by that package. Treat MCP examples as moving quickly because docs and SDK samples show both the new Responses based prompt-agent flow and the create_agent thread-run flow.\n\n## Worked example\n\n```python\n# Run inside your application environment before copying SDK snippets.\nfrom importlib.metadata import version, PackageNotFoundError\n\nfor package in [\"azure-ai-projects\", \"azure-ai-agents\", \"azure-identity\"]:\n    try:\n        print(package, version(package))\n    except PackageNotFoundError:\n        print(package, \"not installed\")\n\nprint(\"Rule: new Foundry quickstart code expects azure-ai-projects >= 2.0.0.\")\nprint(\"Rule: thread run samples using create_agent come from azure-ai-agents sample APIs.\")\n```\n\n*Print the installed packages and fail fast on mixed assumptions*",
+  "drills": [
+    {
+      "q": "Which package does the current Foundry quickstart tell Python learners to install?",
+      "a": "azure-ai-projects>=2.0.0 plus azure-identity."
+    },
+    {
+      "q": "What method creates a prompt-agent version in the current quickstart?",
+      "a": "project.agents.create_version with PromptAgentDefinition."
+    },
+    {
+      "q": "Why is this concept marked uncertain?",
+      "a": "Because Microsoft documentation and SDK samples expose both new Projects 2.x Responses APIs and azure-ai-agents thread-run samples during a transition."
+    }
+  ],
+  "teachItBack": "Use the new Projects 2.x quickstart as the default path. Know that azure-ai-agents still documents thread, message, run, and run-step flows used by many samples. When copying code, match package version, endpoint format, and API family before debugging anything else.",
+  "glossary": [
+    {
+      "term": "AIProjectClient",
+      "definition": "Python client for a Foundry project endpoint."
+    },
+    {
+      "term": "PromptAgentDefinition",
+      "definition": "Current Projects 2.x model for defining a prompt agent."
+    },
+    {
+      "term": "agent_reference",
+      "definition": "Responses API extra body value that tells Foundry which agent to use."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Microsoft Learn: Foundry quickstart with Azure AI Projects 2.x",
+      "url": "https://learn.microsoft.com/en-us/azure/foundry/quickstarts/get-started-code",
+      "verified": false
+    },
+    {
+      "title": "Microsoft Learn: Connect to MCP server endpoints for agents",
+      "url": "https://learn.microsoft.com/en-us/azure/foundry/agents/how-to/tools/model-context-protocol",
+      "verified": false
+    },
+    {
+      "title": "Azure SDK for Python: MCP create and process sample",
+      "url": "https://github.com/Azure/azure-sdk-for-python/blob/main/sdk/ai/azure-ai-agents/samples/agents_tools/sample_agents_mcp_in_create_and_process.py",
+      "verified": false
+    }
+  ],
+  "quiz": [
+    {
+      "q": "Which Python package and API shape does the current Foundry quickstart emphasize for new projects?",
+      "choices": [
+        "azure-ai-projects >= 2.0.0 with AIProjectClient and project.agents.create_version",
+        "azure-storage-blob with BlobServiceClient",
+        "requests with a hand-written API key",
+        "azure-ai-translation-text with TranslatorCredential"
+      ],
+      "answer": 0,
+      "explanation": "The current quickstart installs azure-ai-projects>=2.0.0 and creates prompt agent versions through AIProjectClient."
+    }
+  ]
+}

@@ -1,0 +1,70 @@
+{
+  "id": "fdy-community-options",
+  "title": "Community and Specialized MCP Servers",
+  "lane": "foundry-connectors",
+  "type": "concept",
+  "order": 207,
+  "summary": "GitHub currently shows community or specialized KQL and ADX MCP servers such as pab1it0/adx-mcp-server and rod-trent/KQL-MCP, and Microsoft also publishes fabric-rti-mcp for Fabric Real-Time Intelligence scenarios.",
+  "tags": [
+    "community",
+    "preview",
+    "risk"
+  ],
+  "analogy": "Community MCP servers are like third-party field radios. They may work beautifully, but you still inspect encryption, frequencies, batteries, and who maintains them before mission use.",
+  "body": "## First principles\n\nOpen ecosystems move faster than official services, but speed shifts verification burden to you. A community MCP server may be useful, stale, insecure, or tuned for a different KQL host.\n\n## Definition\n\nGitHub currently shows community or specialized KQL and ADX MCP servers such as pab1it0/adx-mcp-server and rod-trent/KQL-MCP, and Microsoft also publishes fabric-rti-mcp for Fabric Real-Time Intelligence scenarios. Treat these as options to evaluate, not defaults for a managed-identity-only Foundry deployment.\n\n## How it fits together\n\nDecision rule: official Azure MCP for ADX first; Fabric RTI MCP for Fabric-specific Eventhouse work; community servers only after code review, dependency review, auth review, and read-only enforcement.\n\n## Worked example\n\n```python\nchecks = [\n    \"uses DefaultAzureCredential or ManagedIdentityCredential\",\n    \"does not require keys or connection string secrets\",\n    \"validates table and database identifiers\",\n    \"blocks or gates management commands\",\n    \"limits rows and timeout\",\n    \"has active maintenance and security fixes\",\n]\nfor item in checks:\n    print(f\"[ ] {item}\")\n```\n\n*A vetting checklist you can run mentally before adopting a non-official server.*",
+  "drills": [
+    {
+      "q": "Why is this concept marked uncertain?",
+      "a": "Community repositories and their security posture can change quickly, so each candidate must be re-verified before use."
+    },
+    {
+      "q": "Name one official-first alternative to community ADX MCP servers.",
+      "a": "The Azure MCP Server Kusto namespace."
+    },
+    {
+      "q": "When might fabric-rti-mcp be more relevant?",
+      "a": "When the target is Microsoft Fabric Real-Time Intelligence or Eventhouse rather than plain ADX."
+    }
+  ],
+  "teachItBack": "Community KQL MCP servers exist, but existence is not approval. I choose official Azure MCP first for ADX. If I evaluate another server, I verify identity, safety, maintenance, and read-only behavior.",
+  "glossary": [
+    {
+      "term": "Community server",
+      "definition": "A non-official or independently maintained MCP server."
+    },
+    {
+      "term": "Security posture",
+      "definition": "The current state of a project's vulnerabilities, maintenance, and safe defaults."
+    }
+  ],
+  "sources": [
+    {
+      "title": "pab1it0 adx-mcp-server",
+      "url": "https://github.com/pab1it0/adx-mcp-server",
+      "verified": false
+    },
+    {
+      "title": "rod-trent KQL-MCP",
+      "url": "https://github.com/rod-trent/KQL-MCP",
+      "verified": false
+    },
+    {
+      "title": "Microsoft Fabric RTI MCP server",
+      "url": "https://github.com/microsoft/fabric-rti-mcp",
+      "verified": false
+    }
+  ],
+  "quiz": [
+    {
+      "q": "Which pattern is safest for production telemetry questions?",
+      "choices": [
+        "Managed identity plus least privilege plus row limits",
+        "Client secrets in code plus admin permissions",
+        "Unlimited queries with no approval",
+        "Sharing connection strings in prompts"
+      ],
+      "answer": 0,
+      "explanation": "The lane requires managed identity, narrow roles, approval, and query bounds."
+    }
+  ]
+}

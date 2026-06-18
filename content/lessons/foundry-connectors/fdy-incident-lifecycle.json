@@ -1,0 +1,70 @@
+{
+  "id": "fdy-incident-lifecycle",
+  "title": "Incident Lifecycle Mental Model",
+  "lane": "foundry-connectors",
+  "type": "concept",
+  "order": 103,
+  "summary": "A practical lifecycle is new to acknowledged to mitigated to resolved to postmortem.",
+  "tags": [
+    "lifecycle",
+    "workflow",
+    "diagram"
+  ],
+  "analogy": "Picture a hospital emergency room: patient arrives, triage accepts the case, doctors stabilize the patient, discharge happens when safe, and a review improves future care.",
+  "diagram": "stateDiagram-v2\nNew --> Acknowledged\nAcknowledged --> Mitigated\nMitigated --> Resolved\nResolved --> Postmortem\nAcknowledged --> Escalated\nEscalated --> Mitigated",
+  "body": "## First principles\n\nFirst principles: an incident is not a single event; it is a state machine. The system must move from uncertainty to ownership, from ownership to impact reduction, from impact reduction to closure, and from closure to learning.\n\n## Definition\n\nA practical lifecycle is new to acknowledged to mitigated to resolved to postmortem. Some organizations add detected, triaged, contained, recovered, or closed, but the core shape remains ownership, action, stabilization, closure, and learning.\n\n## How it fits together\n\nEvery MCP write tool should respect the lifecycle. Acknowledge moves ownership, update adds evidence, mitigate records impact reduction, resolve closes active response, and postmortem records preventive work. Do not let an agent skip states without policy.\n\n## Worked example\n\n```python\n# Representative lifecycle guardrail for an incident MCP connector.\nALLOWED_TRANSITIONS = {\n    \"new\": {\"acknowledged\"},\n    \"acknowledged\": {\"mitigated\", \"escalated\"},\n    \"escalated\": {\"mitigated\"},\n    \"mitigated\": {\"resolved\"},\n    \"resolved\": {\"postmortem\"},\n}\n\ndef can_transition(current: str, desired: str) -> bool:\n    return desired in ALLOWED_TRANSITIONS.get(current, set())\n\nprint(can_transition(\"new\", \"resolved\"))       # False: too much authority for one jump.\nprint(can_transition(\"new\", \"acknowledged\"))  # True: normal first response.\n```\n\n*Representative incident state machine*",
+  "drills": [
+    {
+      "q": "Why model incidents as a state machine?",
+      "a": "It prevents ambiguous status changes and makes approvals, audit, and automation safer."
+    },
+    {
+      "q": "Which transition proves a human responder accepted ownership?",
+      "a": "New to acknowledged."
+    },
+    {
+      "q": "What phase turns pain into future reliability?",
+      "a": "Postmortem."
+    }
+  ],
+  "teachItBack": "The incident lifecycle is a state machine for emergency response. New means no one owns it yet, acknowledged means a responder accepted it, mitigated means impact is reduced, resolved means response is done, and postmortem means learning is captured. Agents must honor that flow rather than improvising unsafe jumps.",
+  "glossary": [
+    {
+      "term": "Acknowledged",
+      "definition": "A responder has accepted responsibility for the incident."
+    },
+    {
+      "term": "Escalated",
+      "definition": "The incident has been raised to additional responders or authority."
+    },
+    {
+      "term": "State machine",
+      "definition": "A controlled set of states and allowed transitions."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Microsoft Service Assurance: Security incident management overview",
+      "url": "https://learn.microsoft.com/en-us/compliance/assurance/assurance-incident-management",
+      "verified": true
+    },
+    {
+      "title": "Model Context Protocol: Tools",
+      "url": "https://modelcontextprotocol.io/specification/2025-06-18/server/tools",
+      "verified": true
+    }
+  ],
+  "quiz": [
+    {
+      "q": "What credential pattern is allowed in this lane?",
+      "choices": [
+        "DefaultAzureCredential or ManagedIdentityCredential with managed identity",
+        "A hard-coded client secret",
+        "A personal access token in source code",
+        "A shared admin password"
+      ],
+      "answer": 0,
+      "explanation": "The hard constraint is managed identity only: no keys, secrets, service-principal passwords, or PATs."
+    }
+  ]
+}

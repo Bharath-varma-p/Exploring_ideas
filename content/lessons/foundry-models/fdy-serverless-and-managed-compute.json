@@ -1,0 +1,80 @@
+{
+  "id": "fdy-serverless-and-managed-compute",
+  "title": "Serverless API versus managed compute",
+  "lane": "foundry-models",
+  "type": "concept",
+  "order": 103,
+  "summary": "Serverless API deployments, often described as MaaS, provide API access to a provider-hosted model and typically bill by inputs and outputs such as tokens.",
+  "tags": [
+    "serverless",
+    "maas",
+    "managed-compute",
+    "hosting"
+  ],
+  "analogy": "Serverless is ordering electricity from the grid. Managed compute is leasing a generator that Azure maintains but you size and pay for while it runs.",
+  "diagram": "flowchart LR\n  Model[model] --> Serverless[serverless API]\n  Serverless --> Provider[provider hosted]\n  Serverless --> TokenBilling[token billing]\n  Model --> Managed[managed compute]\n  Managed --> VM[managed VM instances]\n  Managed --> ComputeBilling[compute hours]",
+  "body": "## First principles\n\nA model can be exposed as an API without your own host, or deployed onto managed compute you size and pay for. The right choice depends on control, cost shape, and operational burden.\n\n## Definition\n\nServerless API deployments, often described as MaaS, provide API access to a provider-hosted model and typically bill by inputs and outputs such as tokens. Managed compute, documented in Foundry classic as managed online deployment, places model weights behind a real-time managed online endpoint on dedicated VM resources and bills by compute-hours. New Foundry guidance recommends Foundry resource deployments for many Foundry Models, while classic serverless and managed compute remain important patterns to recognize.\n\n## How it fits together\n\nUse serverless when you want minimal hosting responsibility and usage billing. Use managed compute when a model requires it or when you need VM sizing, instance count, or dedicated host control. Always check portal version, model support, region support, Marketplace terms, and expected idle cost.\n\n## Worked example\n\n```python\nfrom azure.ai.ml import MLClient\nfrom azure.identity import DefaultAzureCredential\n\ncredential = DefaultAzureCredential()  # Uses managed identity on Azure hosts.\nml_client = MLClient(\n    credential=credential,\n    subscription_id=\"<subscription-id>\",\n    resource_group_name=\"<resource-group>\",\n    workspace_name=\"<hub-project-or-aml-workspace>\",\n)\n\n# Managed compute deployment creation uses ManagedOnlineEndpoint and\n# ManagedOnlineDeployment. This lane stops at deployment setup, not inference.\nfor endpoint in ml_client.online_endpoints.list():\n    print(endpoint.name)\n```\n\n*Managed identity pattern for managed compute client setup.*",
+  "drills": [
+    {
+      "q": "Does serverless host the model on VMs in your subscription?",
+      "a": "No, the provider hosts and manages the API infrastructure."
+    },
+    {
+      "q": "What is the managed compute target URI shape shown in docs?",
+      "a": "https://<endpoint-name>.<region>.inference.ml.azure.com/score"
+    },
+    {
+      "q": "What is the managed compute idle-cost risk?",
+      "a": "You can pay for VM resources while traffic is low or zero."
+    }
+  ],
+  "teachItBack": "Serverless gives me a hosted API and usage billing. Managed compute gives me dedicated managed infrastructure and compute-hour billing. I choose based on model support, control needs, and cost shape.",
+  "glossary": [
+    {
+      "term": "Serverless API",
+      "definition": "Hosted model API without customer-managed compute."
+    },
+    {
+      "term": "MaaS",
+      "definition": "Model as a service."
+    },
+    {
+      "term": "Managed compute",
+      "definition": "Managed online endpoint backed by VM resources."
+    },
+    {
+      "term": "Compute-hour",
+      "definition": "Cost based on VM size, instance count, and running time."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Deploy models as serverless API deployments",
+      "url": "https://learn.microsoft.com/en-us/azure/foundry-classic/how-to/deploy-models-serverless",
+      "verified": true
+    },
+    {
+      "title": "Deploy models with managed compute",
+      "url": "https://learn.microsoft.com/en-us/azure/foundry-classic/how-to/deploy-models-managed",
+      "verified": true
+    },
+    {
+      "title": "Microsoft Foundry Models overview",
+      "url": "https://learn.microsoft.com/en-us/azure/foundry-classic/concepts/foundry-models-overview",
+      "verified": true
+    }
+  ],
+  "quiz": [
+    {
+      "q": "Which deployment type family reserves throughput?",
+      "choices": [
+        "Provisioned",
+        "Standard only",
+        "Developer only",
+        "Instant only"
+      ],
+      "answer": 0,
+      "explanation": "Provisioned deployments reserve throughput with PTUs."
+    }
+  ]
+}

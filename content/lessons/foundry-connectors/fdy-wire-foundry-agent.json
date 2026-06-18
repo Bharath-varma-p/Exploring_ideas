@@ -1,0 +1,62 @@
+{
+  "id": "fdy-wire-foundry-agent",
+  "title": "Wire a Foundry Agent to Kusto MCP",
+  "lane": "foundry-connectors",
+  "type": "concept",
+  "order": 210,
+  "summary": "Foundry Agent Service supports MCP tools by attaching an MCP server endpoint with a server label, server url, optional project connection, approval policy, and allow-list.",
+  "tags": [
+    "foundry",
+    "agent",
+    "python"
+  ],
+  "analogy": "The agent is an officer asking for intelligence. The MCP server is the analyst desk. The desk has access to ADX, not the officer's notebook.",
+  "diagram": "flowchart LR\n  User[User asks natural language] --> Agent[Foundry agent]\n  Agent --> Tool[MCPTool label kusto]\n  Tool --> Server[Hosted Azure MCP Server]\n  Server --> MI[Managed identity]\n  MI --> ADX[ADX cluster]\n  ADX --> Rows[Tabular result]\n  Rows --> Agent",
+  "body": "## First principles\n\nThe agent should plan and explain, but tools should touch external systems. Wiring is the act of giving the agent a labeled, governed tool endpoint it can call when a question requires ADX data.\n\n## Definition\n\nFoundry Agent Service supports MCP tools by attaching an MCP server endpoint with a server_label, server_url, optional project connection, approval policy, and allow-list. For Azure MCP Kusto, host the Azure MCP Server in a trusted environment that uses managed identity, expose it as an MCP endpoint or through a governed toolbox, and grant that identity ADX permissions.\n\n## How it fits together\n\nKeep the Foundry code simple: create AIProjectClient with DefaultAzureCredential, create MCPTool for the hosted Kusto MCP endpoint, define instructions that prefer schema discovery and read-only KQL, and require approval when risk is not zero.\n\n## Worked example\n\n```python\nimport os\nfrom azure.identity import DefaultAzureCredential\nfrom azure.ai.projects import AIProjectClient\nfrom azure.ai.projects.models import PromptAgentDefinition, MCPTool\n\nproject = AIProjectClient(\n    endpoint=os.environ[\"AZURE_AI_PROJECT_ENDPOINT\"],\n    credential=DefaultAzureCredential(),\n)\n\n# The endpoint should be your trusted hosted Azure MCP Server or Toolbox.\n# That host uses managed identity to call ADX. No keys or client secrets.\nkusto_tool = MCPTool(\n    server_label=\"kusto\",\n    server_url=os.environ[\"KUSTO_MCP_SERVER_URL\"],\n    require_approval=\"always\",\n    allowed_tools=[\n        \"kusto_cluster_list\",\n        \"kusto_database_list\",\n        \"kusto_table_list\",\n        \"kusto_table_schema\",\n        \"kusto_query\",\n    ],\n)\n\nagent = project.agents.create_version(\n    agent_name=\"KustoReadOnlyAgent\",\n    definition=PromptAgentDefinition(\n        model=os.environ[\"AZURE_AI_MODEL_DEPLOYMENT_NAME\"],\n        instructions=(\n            \"Answer ADX questions using the kusto MCP tool. \"\n            \"Discover schema before querying. Use read-only KQL and limit results.\"\n        ),\n        tools=[kusto_tool],\n    ),\n)\nprint(agent.name, agent.version)\n```\n\n*Create a Foundry prompt agent with a hosted Kusto MCP endpoint.*",
+  "drills": [
+    {
+      "q": "Where does the ADX managed identity run?",
+      "a": "On the trusted MCP host or Foundry-managed tool host that actually requests ADX tokens."
+    },
+    {
+      "q": "Why use server_label?",
+      "a": "It gives the agent and approval UI a stable name for the MCP server."
+    },
+    {
+      "q": "Why require approval in examples?",
+      "a": "So humans can inspect tool name and arguments before ADX is queried."
+    }
+  ],
+  "teachItBack": "Wiring means attaching a trusted MCP endpoint as a Foundry tool. The MCP host uses managed identity to query ADX. The agent gets a narrow Kusto allow-list, approval policy, and instructions to discover schema first.",
+  "glossary": [
+    {
+      "term": "MCPTool",
+      "definition": "Foundry SDK model that attaches a remote MCP server endpoint to an agent."
+    },
+    {
+      "term": "server_url",
+      "definition": "HTTPS endpoint for a remote MCP-compatible server or toolbox."
+    },
+    {
+      "term": "require_approval",
+      "definition": "Policy that requires review before tool calls proceed."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Connect to MCP Server Endpoints for agents",
+      "url": "https://learn.microsoft.com/en-us/azure/foundry/agents/how-to/tools/model-context-protocol",
+      "verified": true
+    },
+    {
+      "title": "Azure AI Projects client library for Python",
+      "url": "https://learn.microsoft.com/en-us/python/api/overview/azure/ai-projects-readme?view=azure-python-preview",
+      "verified": true
+    },
+    {
+      "title": "Azure MCP Server README",
+      "url": "https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/README.md",
+      "verified": true
+    }
+  ]
+}

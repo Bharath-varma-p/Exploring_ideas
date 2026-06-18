@@ -1,0 +1,57 @@
+{
+  "id": "fdy-agent-interaction-traces",
+  "title": "End-to-End Interaction Traces",
+  "lane": "foundry-connectors",
+  "type": "concept",
+  "order": 111,
+  "summary": "An interaction trace is a step-by-step record of a user request through Foundry, MCP, the incident connector, and the final response. For incident systems, traces are essential for audit, debugging, and responder confidence.",
+  "tags": [
+    "examples",
+    "trace",
+    "workflow"
+  ],
+  "analogy": "It is like a flight data recorder. After the mission, you can see each input, instrument reading, command, and outcome instead of relying on memory.",
+  "diagram": "sequenceDiagram\nparticipant User\nparticipant FoundryAgent\nparticipant Approval\nparticipant MCPServer\nUser->>FoundryAgent: Acknowledge incident INC123456\nFoundryAgent->>Approval: Request approval for acknowledge\nApproval-->>FoundryAgent: Approved\nFoundryAgent->>MCPServer: tools call acknowledge incident\nMCPServer-->>FoundryAgent: Acknowledged result\nFoundryAgent-->>User: Confirmed with audit reference",
+  "body": "## First principles\n\nFirst principles: to trust an agent, you must be able to replay why it answered or acted. A trace links the user's sentence, selected tool, arguments, result, approval, and final answer.\n\n## Definition\n\nAn interaction trace is a step-by-step record of a user request through Foundry, MCP, the incident connector, and the final response. For incident systems, traces are essential for audit, debugging, and responder confidence.\n\n## How it fits together\n\nRecord read traces and write traces differently. Read trace: request, tool, result, answer. Write trace: request, proposed tool, approval request, approval decision, execution result, final answer. This makes safety visible.\n\n## Worked example\n\n```python\n# Representative trace events for a write interaction.\ntrace = []\ntrace.append({\"step\": \"user_request\", \"text\": \"Acknowledge INC123456\"})\ntrace.append({\"step\": \"tool_selected\", \"tool\": \"acknowledge_incident\", \"arguments\": {\"incident_id\": \"INC123456\"}})\ntrace.append({\"step\": \"approval\", \"decision\": \"approved\", \"approver\": \"human-responder\"})\ntrace.append({\"step\": \"tool_result\", \"status\": \"acknowledged\", \"audit_id\": \"AUDIT789\"})\ntrace.append({\"step\": \"agent_answer\", \"text\": \"Incident INC123456 is acknowledged. Audit AUDIT789.\"})\n\nfor event in trace:\n    print(event)\n```\n\n*Representative trace for an approved incident write*",
+  "drills": [
+    {
+      "q": "What should a read trace contain?",
+      "a": "User request, selected tool, arguments, result, and final answer."
+    },
+    {
+      "q": "What extra events should a write trace contain?",
+      "a": "Approval request, approval decision, executor identity, and audit reference."
+    },
+    {
+      "q": "Why are traces valuable during incidents?",
+      "a": "They let responders verify what the agent did and reconstruct decisions later."
+    }
+  ],
+  "teachItBack": "An agent trace is the evidence chain for a response. It proves which tool was selected, what arguments were used, what result came back, and who approved writes. In incident management, traceability is a safety feature, not a luxury.",
+  "glossary": [
+    {
+      "term": "Trace",
+      "definition": "Ordered record of events in an agent interaction."
+    },
+    {
+      "term": "Approval request",
+      "definition": "A prompt asking a human to approve or deny a proposed tool invocation."
+    },
+    {
+      "term": "Audit reference",
+      "definition": "Identifier linking an action to a durable audit record."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Microsoft Learn: Connect to MCP Server Endpoints for agents",
+      "url": "https://learn.microsoft.com/en-us/azure/foundry/agents/how-to/tools/model-context-protocol",
+      "verified": false
+    },
+    {
+      "title": "Model Context Protocol: Tools",
+      "url": "https://modelcontextprotocol.io/specification/2025-06-18/server/tools",
+      "verified": false
+    }
+  ]
+}

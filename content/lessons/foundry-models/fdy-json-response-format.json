@@ -1,0 +1,70 @@
+{
+  "id": "fdy-json-response-format",
+  "title": "JSON Mode and Structured Output",
+  "lane": "foundry-models",
+  "type": "concept",
+  "order": 206,
+  "summary": "response format controls output format. The ChatCompletionsClient reference lists 'text', 'json object', and JsonSchemaFormat.",
+  "tags": [
+    "json",
+    "structured-output",
+    "parameters"
+  ],
+  "analogy": "Plain text is a paragraph. JSON mode is a form. Schema mode is a form with required boxes and field types. The model can still make mistakes, so your parser is the receiving clerk.",
+  "diagram": "flowchart TD\n  Request[Messages plus response format] --> Model[Model constrained to JSON]\n  Model --> Text[JSON string]\n  Text --> Parser[json loads]\n  Parser --> Validate[Check required fields]\n  Validate --> App[Use typed data]",
+  "body": "## First principles\n\nText is flexible but brittle for machines. If downstream code needs fields, the model should be constrained to produce JSON, and your code should still parse and validate it like untrusted input.\n\n## Definition\n\nresponse_format controls output format. The ChatCompletionsClient reference lists 'text', 'json_object', and JsonSchemaFormat. JSON object mode asks the model to emit valid JSON text without a schema; schema mode asks it to follow a supplied schema if supported by the model.\n\n## How it fits together\n\nUse JSON mode for small machine-readable replies, then json.loads and check required keys. Use schema format when your model and service support it. Keep max_tokens large enough for the full JSON object.\n\n## Worked example\n\n```python\nimport json\nimport os\nfrom azure.identity import DefaultAzureCredential\nfrom azure.ai.inference import ChatCompletionsClient\nfrom azure.ai.inference.models import SystemMessage, UserMessage\n\nclient = ChatCompletionsClient(\n    endpoint=os.environ[\"AZURE_AI_CHAT_ENDPOINT\"],\n    credential=DefaultAzureCredential(),\n)\n\nresponse = client.complete(\n    model=os.getenv(\"AZURE_AI_MODEL_DEPLOYMENT_NAME\"),\n    response_format=\"json_object\",\n    messages=[\n        SystemMessage(\"Return only valid JSON with keys summary and risk.\"),\n        UserMessage(\"Summarize the risk of hard-coding an API key.\"),\n    ],\n    max_tokens=200,\n)\n\npayload = json.loads(response.choices[0].message.content)\nif not {\"summary\", \"risk\"}.issubset(payload):\n    raise ValueError(f\"Missing expected keys: {payload}\")\nprint(payload[\"summary\"])\n```\n\n*Request JSON object output and validate it.*",
+  "drills": [
+    {
+      "q": "What does json_object guarantee better than plain text?",
+      "a": "The model is asked to return JSON-formatted text."
+    },
+    {
+      "q": "Should you skip parsing validation because JSON mode was used?",
+      "a": "No. Always parse and validate."
+    },
+    {
+      "q": "What can JsonSchemaFormat add?",
+      "a": "A schema the model should follow when supported."
+    }
+  ],
+  "teachItBack": "JSON mode turns a prose answer into machine-readable text. It does not remove the need for validation. Use schema support where available for stricter contracts.",
+  "glossary": [
+    {
+      "term": "response_format",
+      "definition": "Parameter that controls text versus JSON-shaped model output."
+    },
+    {
+      "term": "json_object",
+      "definition": "JSON mode without a provided schema."
+    },
+    {
+      "term": "JsonSchemaFormat",
+      "definition": "Model output format constrained by a JSON schema."
+    }
+  ],
+  "sources": [
+    {
+      "title": "ChatCompletionsClient class",
+      "url": "https://learn.microsoft.com/en-us/python/api/azure-ai-inference/azure.ai.inference.chatcompletionsclient?view=azure-python-preview",
+      "verified": true
+    },
+    {
+      "title": "Azure AI Inference client library for Python",
+      "url": "https://learn.microsoft.com/en-us/python/api/overview/azure/ai-inference-readme?view=azure-python-preview",
+      "verified": true
+    }
+  ],
+  "quiz": [
+    {
+      "q": "Which exception should code catch for non-success Azure SDK HTTP responses?",
+      "choices": [
+        "HttpResponseError",
+        "SyntaxError",
+        "KeyboardInterrupt",
+        "ImportWarning"
+      ],
+      "answer": 0,
+      "explanation": "azure.core.exceptions.HttpResponseError carries status_code, reason, and message."
+    }
+  ]
+}

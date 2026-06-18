@@ -1,0 +1,56 @@
+{
+  "id": "fdy-tool-call-example",
+  "title": "From Natural Language to KQL Tool Call",
+  "lane": "foundry-connectors",
+  "type": "concept",
+  "order": 211,
+  "summary": "A representative Kusto MCP query call includes cluster URI or cluster name and subscription, database, and query text. The server returns structured JSON containing tabular rows.",
+  "tags": [
+    "example",
+    "kql",
+    "results"
+  ],
+  "analogy": "It is like a reconnaissance report: request, route, collected observations, then commander's summary. If any part is missing, trust drops.",
+  "body": "## First principles\n\nAn agent answer should be traceable. You should be able to see the natural-language question, the selected tool, the concrete KQL, and the returned rows.\n\n## Definition\n\nA representative Kusto MCP query call includes cluster URI or cluster name and subscription, database, and query text. The server returns structured JSON containing tabular rows. The agent then explains the rows; it should not pretend the explanation came from memory.\n\n## How it fits together\n\nThe mapping is simple: databases and tables are resources; schema and sample are resource-inspection tools; run query is the action tool; returned rows are evidence for the answer.\n\n## Worked example\n\n```json\n{\n  \"tool\": \"kusto_query\",\n  \"arguments\": {\n    \"cluster_uri\": \"https://help.kusto.windows.net\",\n    \"database\": \"Samples\",\n    \"query\": \"StormEvents | where StartTime > ago(365d) | summarize Events=count() by State | top 3 by Events desc\"\n  },\n  \"result\": {\n    \"items\": [\n      {\"State\": \"TEXAS\", \"Events\": 4701},\n      {\"State\": \"KANSAS\", \"Events\": 3166},\n      {\"State\": \"IOWA\", \"Events\": 2337}\n    ]\n  }\n}\n```\n\n*Representative MCP call and result for a read-only KQL query.*",
+  "drills": [
+    {
+      "q": "What should be visible in an auditable tool call?",
+      "a": "Tool name, arguments such as database and query, approval decision if required, and returned rows."
+    },
+    {
+      "q": "What should the agent do after rows return?",
+      "a": "Summarize and cite the observed rows, not invent missing data."
+    },
+    {
+      "q": "What is the resource in this example?",
+      "a": "The ADX database and its tables."
+    }
+  ],
+  "teachItBack": "Natural language becomes a concrete Kusto MCP tool call. The query text and returned rows are evidence. The final answer should be a plain-language interpretation of those rows.",
+  "glossary": [
+    {
+      "term": "Tool argument",
+      "definition": "Structured input passed to an MCP tool."
+    },
+    {
+      "term": "Result row",
+      "definition": "One object in the tabular output returned by ADX."
+    },
+    {
+      "term": "Evidence",
+      "definition": "The data returned by a tool call that supports the answer."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Azure MCP Kusto query command source",
+      "url": "https://github.com/microsoft/mcp/blob/main/tools/Azure.Mcp.Tools.Kusto/src/Commands/QueryCommand.cs",
+      "verified": true
+    },
+    {
+      "title": "Connect to MCP Server Endpoints for agents",
+      "url": "https://learn.microsoft.com/en-us/azure/foundry/agents/how-to/tools/model-context-protocol",
+      "verified": true
+    }
+  ]
+}

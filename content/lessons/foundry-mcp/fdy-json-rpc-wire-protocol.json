@@ -1,0 +1,70 @@
+{
+  "id": "fdy-json-rpc-wire-protocol",
+  "title": "JSON RPC Wire Protocol",
+  "lane": "foundry-mcp",
+  "type": "concept",
+  "order": 103,
+  "summary": "MCP data-layer messages are JSON-RPC 2.0 requests, responses, and notifications. Requests include a method and usually an id. Responses echo the id and contain either result or error.",
+  "tags": [
+    "wire",
+    "json-rpc",
+    "messages"
+  ],
+  "analogy": "Think of a military message form. A request has a tracking number, a response quotes that tracking number, and a notification is a bulletin posted for awareness only.",
+  "diagram": "sequenceDiagram\nparticipant Client\nparticipant Server\nClient->>Server: Request with id and method\nServer-->>Client: Response with same id\nServer--)Client: Notification with no id",
+  "body": "## First principles\n\nFirst principles: distributed systems need a precise envelope so both sides can tell a question from an answer from an announcement. MCP uses JSON-RPC 2.0 because it already defines requests with ids, responses that match ids, and notifications that require no response.\n\n## Definition\n\nMCP data-layer messages are JSON-RPC 2.0 requests, responses, and notifications. Requests include a method and usually an id. Responses echo the id and contain either result or error. Notifications have a method but no id and expect no reply.\n\n## How it fits together\n\nThe transport moves bytes; JSON-RPC gives those bytes meaning. If you can identify jsonrpc, id, method, params, result, and error, you can read the protocol even before learning an SDK. MCP method names such as tools/list and resources/read live inside that JSON-RPC envelope.\n\n## Worked example\n\n```json\n{\n  \"request\": {\n    \"jsonrpc\": \"2.0\",\n    \"id\": 7,\n    \"method\": \"tools/list\",\n    \"params\": {}\n  },\n  \"response\": {\n    \"jsonrpc\": \"2.0\",\n    \"id\": 7,\n    \"result\": {\n      \"tools\": []\n    }\n  },\n  \"notification\": {\n    \"jsonrpc\": \"2.0\",\n    \"method\": \"notifications/initialized\"\n  }\n}\n```\n\n*Request response and notification shapes*",
+  "drills": [
+    {
+      "q": "What field lets a client match a response to a request?",
+      "a": "The id field."
+    },
+    {
+      "q": "What is different about a notification?",
+      "a": "It has no id and does not expect a response."
+    },
+    {
+      "q": "Where does tools/list appear?",
+      "a": "As the JSON-RPC method name."
+    }
+  ],
+  "teachItBack": "MCP messages are JSON-RPC 2.0 envelopes. Requests ask, responses answer by id, and notifications announce without requiring a reply. The method name tells you which MCP operation is being performed.",
+  "glossary": [
+    {
+      "term": "Request",
+      "definition": "JSON-RPC message with an id that expects a response."
+    },
+    {
+      "term": "Response",
+      "definition": "JSON-RPC message with the same id and either result or error."
+    },
+    {
+      "term": "Notification",
+      "definition": "JSON-RPC message without an id that expects no response."
+    }
+  ],
+  "sources": [
+    {
+      "title": "MCP Specification 2025-11-25",
+      "url": "https://modelcontextprotocol.io/specification/2025-11-25.md",
+      "verified": true
+    },
+    {
+      "title": "MCP Architecture overview",
+      "url": "https://modelcontextprotocol.io/docs/learn/architecture.md",
+      "verified": true
+    }
+  ],
+  "quiz": [
+    {
+      "q": "Which JSON-RPC message expects no response?",
+      "choices": [
+        "Notification",
+        "Request",
+        "Response",
+        "Error"
+      ],
+      "answer": 0,
+      "explanation": "A notification has no id and expects no response."
+    }
+  ]
+}

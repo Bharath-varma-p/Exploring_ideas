@@ -1,0 +1,75 @@
+{
+  "id": "fdy-why-mcp-exists",
+  "title": "Why MCP Exists",
+  "lane": "foundry-mcp",
+  "type": "concept",
+  "order": 101,
+  "summary": "MCP is an open protocol for connecting AI applications to external systems such as data sources, tools, and reusable workflows.",
+  "tags": [
+    "overview",
+    "problem",
+    "standard"
+  ],
+  "analogy": "Imagine every phone needing a different charger for every wall outlet. MCP is the common socket: hosts know how to plug in, and servers know what shape to expose.",
+  "diagram": "graph TD\nBefore[Many hosts] --> Custom[Custom connectors]\nCustom --> Sources[Many data and tool systems]\nAfter[MCP hosts] --> Protocol[MCP standard]\nProtocol --> Servers[MCP servers]\nServers --> Sources",
+  "body": "## First principles\n\nFirst principles: a model without external context is like a radio operator with no maps, no tools, and no permission to act. Before MCP, every AI app had to custom-integrate every data source and action system, creating an N times M explosion: N hosts times M integrations. A protocol collapses that grid into one common contract.\n\n## Definition\n\nMCP is an open protocol for connecting AI applications to external systems such as data sources, tools, and reusable workflows. The official docs describe it as a USB-C port for AI applications: one standard connector instead of a custom cable for every pairing.\n\n## How it fits together\n\nThink in three questions. What does the model need to know? That is context. What may it do? Those are tools. How do independent products agree on this safely? That is the protocol. MCP does not replace the LLM; it standardizes the layer around the LLM that exposes capabilities and context.\n\n## Worked example\n\n```json\n{\n  \"before_mcp\": \"Every AI host builds a custom connector to every external system.\",\n  \"after_mcp\": \"Every host speaks MCP and every server exposes MCP.\",\n  \"result\": \"Less glue code, more reusable integrations.\"\n}\n```\n\n*The N by M integration problem in one picture*",
+  "drills": [
+    {
+      "q": "What explosion does MCP reduce?",
+      "a": "The N times M integration problem between many AI hosts and many external systems."
+    },
+    {
+      "q": "Does MCP define a model provider?",
+      "a": "No. MCP defines how applications exchange context, tools, prompts, and client capabilities around LLM use."
+    },
+    {
+      "q": "Why is USB-C a good analogy?",
+      "a": "Because many devices can use one standard connection instead of custom adapters for every pair."
+    }
+  ],
+  "teachItBack": "MCP exists because AI apps need a standard way to connect to external data and actions. It turns many one-off integrations into a reusable protocol boundary. If you remember one phrase, remember USB-C for AI applications.",
+  "glossary": [
+    {
+      "term": "MCP",
+      "definition": "Open protocol for connecting LLM applications with external context, tools, and workflows."
+    },
+    {
+      "term": "N times M integration",
+      "definition": "The combinatorial cost of custom connectors between many hosts and many systems."
+    },
+    {
+      "term": "Host",
+      "definition": "The AI application a user interacts with, such as an IDE or chat app."
+    }
+  ],
+  "sources": [
+    {
+      "title": "MCP Introduction",
+      "url": "https://modelcontextprotocol.io/docs/getting-started/intro.md",
+      "verified": true
+    },
+    {
+      "title": "MCP Specification 2025-11-25",
+      "url": "https://modelcontextprotocol.io/specification/2025-11-25.md",
+      "verified": true
+    },
+    {
+      "title": "MCP Architecture overview",
+      "url": "https://modelcontextprotocol.io/docs/learn/architecture.md",
+      "verified": true
+    }
+  ],
+  "quiz": [
+    {
+      "q": "What problem does MCP primarily solve?",
+      "choices": [
+        "The N times M integration explosion between AI hosts and external systems",
+        "Replacing all LLM APIs with one model",
+        "Encrypting every prompt automatically",
+        "Deploying Azure resources without identity"
+      ],
+      "answer": 0,
+      "explanation": "MCP standardizes host to server integrations so every host does not need a custom connector to every system."
+    }
+  ]
+}

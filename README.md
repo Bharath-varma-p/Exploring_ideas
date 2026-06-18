@@ -1,128 +1,167 @@
-# Foundry SDK Academy
+<div align="center">
 
-An interactive, A–Z field manual for mastering the **Microsoft / Azure AI Foundry SDK**
-and wiring a Foundry agent to **ICM**, **Kusto**, and **Azure DevOps** over **MCP** —
-authenticated with **managed identity only, never keys**.
+# ◆ Agentic Design Academy
 
-It is a pure static site (HTML/CSS/vanilla JS). No backend, no build toolchain beyond
-Python, no secrets, $0 to host on GitHub Pages.
+### An interactive, extensible curriculum for **context-aware & platform-aware** agentic AI system design — now with a full **Azure AI Foundry SDK + MCP** track.
 
-**Live site:** https://bharath-varma-p.github.io/Exploring_ideas/
+Learn how the best teams build agents that sense the screen, the app, and even the cursor —
+then design your own. Then go deeper: deploy a model in **Azure AI Foundry**, call it from code,
+and wire a Foundry agent to **ICM**, **Kusto**, and **Azure DevOps** over **MCP**, authenticated
+with **managed identity only — never keys**.
 
-> Public-repo requirement: GitHub Pages is free, but for a free account the repo must be
-> **public** for Pages to serve. Cost is **$0** either way.
+**▶ Live site:** `https://bharath-varma-p.github.io/Exploring_ideas/` *(after you enable Pages — see below)*
+
+</div>
 
 ---
 
 ## What's inside
 
-| # | Lane | Concepts | Quiz |
-|---|------|---------:|-----:|
-| 1 | 🏗️ Azure AI Foundry Fundamentals | 13 | 8 |
-| 2 | 🧰 Foundry SDK Core | 14 | 8 |
-| 3 | 🔐 Authentication — Managed Identity ONLY | 15 | 10 |
-| 4 | 🚀 Model Deployment | 11 | 8 |
-| 5 | 💬 Model Inference & Access | 14 | 7 |
-| 6 | 🔌 MCP Fundamentals | 15 | 9 |
-| 7 | 🤖 Foundry Agents + MCP Integration | 13 | 8 |
-| 8 | 🚨 ICM MCP Connector | 12 | 7 |
-| 9 | 📊 Kusto (Azure Data Explorer) MCP Connector | 13 | 8 |
-| 10 | 🛠️ Azure DevOps (ADO) MCP Connector | 12 | 7 |
+| | |
+|---|---|
+| **189 lessons** across 11 lanes | Every concept taught from first principles → analogy → diagram → real example → drill → "teach it back" |
+| **501-term glossary** | Every term defined before it's used; A–Z index of everything |
+| **10 product teardowns** | Whoop, Gemini, Claude, Cursor, Perplexity, ChatGPT, Copilot, Arc/Dia, Raycast, Notion AI |
+| **182 quiz questions** | Instant-feedback drills, per-lane quizzes, and a final self-test |
+| **Flashcard drill mode** | Auto-generated from every lesson's drills, filterable by lane |
+| **Progress tracking** | Mark concepts learned; persists in `localStorage` |
+| **Command palette** | `⌘K` / `Ctrl+K` global search across patterns, teardowns, terms, and the Foundry track |
 
-**Totals:** 10 lanes · 132 concepts · 80 quiz questions · 447 glossary terms · 129 Mermaid diagrams.
+### The lanes
 
-Every concept follows the same six-part method: **first principles → plain definition →
-analogy → mental model + diagram → runnable code → drills → teach-it-back script.**
+**Agentic design (the original 5):**
+1. 🧩 **Agentic Architecture & Patterns** — ReAct, planner-executor, multi-agent, tool use, RAG, memory, reflection, routing, guardrails, HITL.
+2. 🛰️ **Context & Platform Awareness** — sensing cursor/selection/screen/app/history/OS, accessibility APIs, permissions, and deciding "where to go and what to search."
+3. ✨ **UI/UX & Engagement** — streaming, motion, microinteractions, latency masking, trust, onboarding, and the *ethical* Hook model.
+4. 🔍 **Real-World Teardowns** — product → context signals → patterns → UX moves → sources.
+5. 📐 **System-Design Framework & Blueprint** — a repeatable method, applied to a full cursor/context/platform-aware desktop-agent build blueprint.
 
-### Site features
-- Sidebar navigation by lane, global search (press `/`), and an **A–Z topic index**.
-- Collapsible **concept cards** with all six teaching blocks, syntax-highlighted code,
-  copy-to-clipboard, and Mermaid diagrams.
-- **Quiz Arena** with instant feedback and scoring.
-- **Drill Mode** flashcards (term / teach / drill) with keyboard navigation.
-- **Teaching Mode** — a clean view of every teach-it-back script for presenting.
-- **Progress tracking** — mark concepts learned, persisted in `localStorage`.
-- **Reference Architecture**, **Teaching Kit**, and a **Capstone Self-Test**.
-- Dark/light theme, mobile-responsive, keyboard-accessible.
+**Azure AI Foundry SDK + MCP (the 6 new lanes — managed identity only, never keys):**
+6. 🏗️ **Azure AI Foundry & SDK** — hubs, projects, resources, portal vs SDK, `AIProjectClient`, connections, config.
+7. 🔐 **Managed Identity (Keyless Auth)** — Entra tokens, IMDS, system- vs user-assigned identity, `DefaultAzureCredential`, RBAC, zero secrets.
+8. 🚀 **Model Deployment & Inference** — model catalog, deployments, endpoints, versions, chat completions, streaming, tokens, error handling.
+9. 🔌 **MCP & Foundry Agents** — the Model Context Protocol (servers, tools, transports, JSON-RPC) and the Foundry Agent Service (threads, runs, tool calling).
+10. 🛠️ **MCP Connectors: ICM, Kusto, ADO** — wire agents to real systems: ICM incidents, Kusto/ADX KQL, and Azure DevOps work items/pipelines/repos.
+11. 🎖️ **Reference Architecture & Teaching Kit** — the whole stack on one page (end-to-end diagram), a present-it deck, and a teach-it-back capstone self-test.
 
----
-
-## Repo layout
-
-```
-.
-├── docs/                      # the published site (GitHub Pages serves this folder)
-│   ├── index.html             # SPA shell
-│   ├── css/styles.css         # design system (dark/light, responsive)
-│   ├── js/
-│   │   ├── util.js            # helpers + localStorage store
-│   │   ├── app.js             # data layer + concept-card renderer
-│   │   └── views.js           # hash router + all views
-│   └── data/
-│       ├── lanes/*.json       # source content, one file per lane (edit these)
-│       ├── curriculum.js      # GENERATED by build.py — do not edit by hand
-│       └── extras.js          # reference architecture, teaching kit, capstone
-├── build.py                   # assembles lanes/*.json -> data/curriculum.js
-└── .github/workflows/pages.yml# CI: runs build.py and deploys docs/ to Pages
-```
-
-Content is delivered as JavaScript globals (`window.CURRICULUM`, `window.EXTRAS`) rather
-than `fetch()`, so the site works from `file://` and from Pages with no CORS setup.
+> The Foundry track was built by **10 specialized subagents** (one per domain, no overlap), each
+> teaching its lane from first principles, then integrated into this academy's shared content schema
+> so the sidebar, search, A–Z index, glossary, flashcards, and quizzes all pick it up automatically.
 
 ---
 
-## Local development
+## Run it locally
 
-Requires Python 3 only (no Node).
+Zero dependencies. You just need Node 18+.
 
 ```bash
-# 1. Rebuild the curriculum bundle after editing any docs/data/lanes/*.json
-python3 build.py
-
-# 2. Serve the site locally
-cd docs && python3 -m http.server 8099
-
-# 3. Open http://localhost:8099/
+npm run build     # validate + bundle all lesson JSON into content/data.json
+npm run serve     # static server at http://localhost:8080
+# or do both:
+npm run dev
 ```
 
-### Editing or adding content
-1. Edit the relevant `docs/data/lanes/<lane>.json` (schema is documented at the top of
-   `build.py`). To add a lane, drop a new `<id>.json` in that folder with an `order`.
-2. Run `python3 build.py` to regenerate `docs/data/curriculum.js`.
-3. Reload the page. `build.py` warns on schema gaps and normalizes Mermaid sources.
+Open <http://localhost:8080>.
 
 ---
 
-## Deploy to GitHub Pages (exact steps)
+## 🌱 Extend it in one file (the extensibility contract)
 
-This repo ships a GitHub Actions workflow (`.github/workflows/pages.yml`) that builds
-`curriculum.js` and publishes `docs/` on every push to `main`.
+This site is **content-driven**. You grow it for years by dropping in small JSON files — no code changes.
 
-1. Push this branch and merge it to **`main`**.
-2. Make the repository **public** (Settings → General → Danger Zone → Change visibility),
-   if it isn't already.
-3. Go to **Settings → Pages**. Under **Build and deployment → Source**, choose
-   **GitHub Actions**.
-4. Push to `main` (or run the workflow manually from the **Actions** tab →
-   *Deploy Foundry SDK Academy to GitHub Pages* → **Run workflow**).
-5. After the run finishes, the site is live at:
+1. Create `content/lessons/<lane>/<your-id>.json`.
+2. Fill the **6 required fields** (`id`, `title`, `lane`, `type`, `summary`, `body`) plus any rich extras
+   (`diagram`, `examples`, `drills`, `quiz`, `sources`, `glossary`, `teachItBack`, …).
+3. Run `npm run build` (or just push — CI rebuilds). **The site picks it up automatically** — sidebar,
+   search, A–Z index, glossary, flashcards and quizzes all populate themselves.
 
-   **https://bharath-varma-p.github.io/Exploring_ideas/**
+The full schema, field rules, and how each field powers a feature live in **[`CONTENT_SCHEMA.md`](CONTENT_SCHEMA.md)**.
+To add a whole new **lane**, add one entry to the `LANES` array in `tools/build.mjs` and create the folder.
 
-   (Pattern: `https://<user>.github.io/<repo>/`.)
-
-No secrets, no API keys, no paid services. Total cost: **$0**.
+```
+content/
+├── lessons/
+│   ├── architecture/         ← agentic pattern/concept lessons
+│   ├── context-awareness/
+│   ├── uiux/
+│   ├── teardowns/
+│   ├── framework/
+│   ├── foundry-core/         ← Azure AI Foundry & SDK
+│   ├── foundry-auth/         ← managed identity (keyless auth)
+│   ├── foundry-models/       ← deployment & inference
+│   ├── foundry-mcp/          ← MCP & Foundry agents
+│   ├── foundry-connectors/   ← ICM · Kusto · ADO over MCP
+│   └── foundry-capstone/     ← reference architecture, teaching kit, self-test
+├── glossary.json             ← optional standalone terms
+├── quizzes/                  ← optional curated quiz banks (e.g. final-exam.json)
+├── data.json                 ← GENERATED bundle the site loads (don't hand-edit)
+└── manifest.json             ← GENERATED index
+```
 
 ---
 
-## The managed-identity rule
+## 🚀 Deploy to GitHub Pages (free, $0)
 
-Every authentication example in this curriculum uses `DefaultAzureCredential` or
-`ManagedIdentityCredential` with Azure RBAC role assignments. The site deliberately does
-**not** teach API keys, connection-string secrets, or service-principal passwords beyond a
-short note on why we avoid them. Keyless, end to end.
+This repo ships a GitHub Actions workflow ([`.github/workflows/deploy.yml`](.github/workflows/deploy.yml))
+that builds the content bundle and deploys on every push to `main`.
 
-> Accuracy note: concept cards cite official Microsoft Learn docs. A few items about
-> internal/preview connectors (notably ICM) are marked **⚠ verify** where public docs are
-> thin — those teach the representative pattern and should be confirmed against your
-> tenant's current docs.
+**One-time setup:**
+1. Push this code to GitHub on the **`main`** branch (the repo must be **public** for free Pages).
+2. Go to **Settings → Pages**.
+3. Under **Build and deployment → Source**, choose **GitHub Actions**.
+4. That's it. The next push to `main` builds and deploys automatically.
+
+Your site will be live at:
+
+```
+https://<your-username>.github.io/<repo-name>/
+```
+
+For this repo that's **`https://bharath-varma-p.github.io/Exploring_ideas/`**.
+
+You can also trigger a deploy manually from the **Actions** tab → *Deploy to GitHub Pages* → **Run workflow**.
+
+> **Cost:** $0. GitHub Pages is free for public repositories. No backend, no database, no server bills.
+> **Note:** Pages on the free tier requires a **public** repo (or GitHub Pro/Team/Enterprise for private).
+
+---
+
+## Tech & design
+
+- **Pure static** — vanilla JS (ES modules), no framework, no bundler, no backend.
+- **Markdown** via vendored [`marked`](https://github.com/markedjs/marked) (`lib/marked.min.js`).
+- **Diagrams** via [Mermaid](https://mermaid.js.org/), lazy-loaded from CDN only on pages that need it (graceful code fallback offline).
+- **Syntax highlighting** via a tiny dependency-free regex highlighter.
+- **Accessible & responsive** — keyboard-navigable, mobile drawer, dark/light themes, `prefers-reduced-motion` respected.
+- The site itself demonstrates the UX patterns it teaches (streaming-style reveals, microinteractions, a `⌘K` palette, flip-card flashcards).
+
+### Build pipeline
+
+`tools/build.mjs` (zero-dep Node) walks `content/lessons/**`, validates every file against the schema
+(required fields, unique kebab-case ids, valid enums, in-range quiz answers, lane/folder match), then emits
+`content/data.json` (the bundle the site loads) and `content/manifest.json`. CI runs it before every deploy.
+
+---
+
+## How this was built
+
+The original 5 agentic-design lanes were written by 5 specialized subagents (one per lane, different models).
+The 6 Foundry lanes were written by 10 more subagents — one per domain (Foundry fundamentals, SDK core,
+managed identity, model deployment, inference, MCP fundamentals, Foundry agents, and the ICM/Kusto/ADO
+connectors) — then converted into this academy's lesson schema so everything lives in one site.
+
+| Lane | Model | Why |
+|---|---|---|
+| Architecture & patterns | Claude Opus 4.8 | Deepest reasoning for precise pattern trade-offs |
+| Context & platform awareness | GPT-5.5 | Strong systems reasoning about OS/sensing/permissions |
+| UI/UX & engagement | Gemini 3.1 Pro | Design & motion sensibility, UX breadth |
+| Real-world teardowns | GPT-5.5 | Broad, source-grounded research synthesis |
+| Framework & blueprint | Claude Opus 4.8 | Synthesis & end-to-end design rigor |
+| Azure AI Foundry SDK + MCP (×10 lanes) | Claude Opus 4.8 | First-principles teaching, managed-identity-only, A–Z coverage |
+
+Sources are linked on every lesson and flagged `verified` / `unverified` for honesty. Foundry features that
+are preview or internal are called out as such rather than guessed.
+
+## License
+
+[MIT](LICENSE).

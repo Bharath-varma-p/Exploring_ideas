@@ -1,0 +1,66 @@
+{
+  "id": "fdy-rbac-and-managed-identity-posture",
+  "title": "Managed Identity Posture",
+  "lane": "foundry-core",
+  "type": "concept",
+  "order": 112,
+  "summary": "Managed identity is an Azure provided identity for a workload. Foundry RBAC assigns roles such as Foundry User, Foundry Project Manager, Foundry Account Owner, or Foundry Owner at Foundry resource or project scopes.",
+  "tags": [
+    "identity",
+    "rbac",
+    "security"
+  ],
+  "analogy": "A managed identity is a soldier's badge issued by the base, not a sticky note with the gate code. RBAC is the guard roster saying which doors that badge can open.",
+  "diagram": "graph TD\nWorkload[Azure hosted workload] --> MI[Managed identity]\nMI --> Role[RBAC role assignment]\nRole --> Scope[Foundry resource or project scope]\nScope --> Allowed[Allowed actions]\nScope --> Denied[Denied actions]",
+  "body": "## First principles\n\nFirst principles: software should not carry human passwords or copied keys. Azure gives workloads managed identities, and Azure RBAC grants those identities only the actions they need at a specific scope. Foundry follows this same identity and scope discipline for secure automation and team access.\n\n## Definition\n\nManaged identity is an Azure provided identity for a workload. Foundry RBAC assigns roles such as Foundry User, Foundry Project Manager, Foundry Account Owner, or Foundry Owner at Foundry resource or project scopes.\n\n## How it fits together\n\nUse managed identities for Azure-hosted automation and project access. Assign least privilege at the narrowest practical scope. The official RBAC docs recommend Foundry User as a starter role for users and project managed identities, while more privileged roles should be reserved for management duties.\n\n## Worked example\n\n```bash\n# Replace placeholders. This uses Azure RBAC and managed identity, not copied credentials.\nFOUNDry_RESOURCE_ID=\"/subscriptions/<sub>/resourceGroups/<rg>/providers/Microsoft.CognitiveServices/accounts/<foundry-resource>\"\nMANAGED_IDENTITY_PRINCIPAL_ID=\"<principal-id>\"\n\naz role assignment create   --assignee-object-id \"$MANAGED_IDENTITY_PRINCIPAL_ID\"   --assignee-principal-type ServicePrincipal   --role \"Foundry User\"   --scope \"$FOUNDry_RESOURCE_ID\"\n```\n\n*Assign Foundry User to a managed identity at a Foundry resource scope*",
+  "drills": [
+    {
+      "q": "Why use managed identity?",
+      "a": "It lets Azure-hosted workloads authenticate without storing application secrets."
+    },
+    {
+      "q": "What does RBAC add?",
+      "a": "It grants specific permissions at a chosen scope."
+    },
+    {
+      "q": "Which Foundry role is a common least privilege starter?",
+      "a": "Foundry User."
+    }
+  ],
+  "teachItBack": "Foundry security starts with identity, role, and scope. Managed identity gives workloads an Azure issued identity, and RBAC decides what that identity can do. Teach peers to avoid copied credentials and grant the smallest useful role at the smallest useful scope.",
+  "glossary": [
+    {
+      "term": "Managed identity",
+      "definition": "Azure managed workload identity that obtains Microsoft Entra tokens without app secrets."
+    },
+    {
+      "term": "RBAC",
+      "definition": "Role based access control assigning permissions to identities at scopes."
+    },
+    {
+      "term": "Foundry User",
+      "definition": "Least privilege built-in Foundry role for building and using project data actions."
+    },
+    {
+      "term": "Scope",
+      "definition": "The Azure resource boundary where a role assignment applies."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Microsoft Learn: Role-based access control for Microsoft Foundry",
+      "url": "https://learn.microsoft.com/en-us/azure/foundry/concepts/rbac-foundry",
+      "verified": true
+    },
+    {
+      "title": "Microsoft Learn: Authenticate Azure hosted Python apps with managed identity",
+      "url": "https://learn.microsoft.com/en-us/azure/developer/python/sdk/authentication/system-assigned-managed-identity",
+      "verified": true
+    },
+    {
+      "title": "Microsoft Learn: Azure Identity client library for Python",
+      "url": "https://learn.microsoft.com/en-us/python/api/overview/azure/identity-readme?view=azure-python",
+      "verified": true
+    }
+  ]
+}
