@@ -1,0 +1,61 @@
+{
+  "id": "reflection",
+  "title": "Reflection — Self-Critique & Iterate",
+  "lane": "architecture",
+  "type": "pattern",
+  "order": 50,
+  "tags": ["reflection", "self-critique", "iteration", "reasoning", "quality"],
+  "summary": "Have the model review its own output, name what's wrong, and try again — turning a one-shot guess into an iterative draft-critique-revise loop that catches its own mistakes.",
+  "analogy": "A writer editing their first draft. The initial draft is rarely the best; rereading it ('this paragraph is weak, the ending rushes') and rewriting is where quality actually comes from. Reflection gives the model that editor.",
+  "problem": "A model's first answer is a single forward pass with no chance to check itself. It commits to mistakes — buggy code, flawed reasoning, missed requirements — that it could often catch if it simply looked again.",
+  "forces": [
+    "First-pass generation and careful evaluation are different skills the model can do separately.",
+    "Each reflection round adds latency and cost.",
+    "Without a real signal, self-critique can be hollow or convince itself it's fine.",
+    "Loops can oscillate or never converge without a stop condition."
+  ],
+  "solution": "After producing output, prompt the model to critique it against the goal (or run it against a test/tool for feedback), then revise. Repeat until the critique is satisfied or a budget is hit. Feedback can be self-generated (Self-Refine) or grounded in external signals like test results or error messages (Reflexion).",
+  "tradeoffs": [
+    "More latency and tokens per task — each loop is extra calls.",
+    "Ungrounded self-critique can be unreliable; the model may rationalize its own errors.",
+    "Needs a clear stop condition or it loops without converging.",
+    "Diminishing returns: most gains come in the first one or two iterations."
+  ],
+  "body": "## First principles\nGenerating and judging are **different cognitive tasks**. When a model produces an answer in one pass, it never gets to apply its judging ability to its own work — so avoidable errors slip through. Humans don't write final drafts in one go; we draft, reread, and revise. The improvement lives in the **revision loop**, not the first attempt.\n\nReflection gives the model that loop: produce → **critique** → **revise** → repeat. The critical design choice is **where the feedback comes from**. Pure self-critique (Self-Refine, Madaan et al. 2023) asks the model to find its own flaws. Grounded reflection (Reflexion, Shinn et al. 2023) feeds in **real signals** — test failures, tool errors, environment feedback — which are far more reliable than the model grading itself.\n\n## Plain definition\nReflection = a loop where the model evaluates its own output against the goal (and ideally external feedback), then revises, until it's satisfied or hits a budget.\n\n## Mental model\nDraft → critique (self or grounded) → good enough? → if no, revise and loop; if yes, stop. The diagram makes the loop and its exit explicit.\n\n## Self-critique vs. grounded feedback\n- **Self-Refine**: model critiques itself. Cheap, no tools; but a model that made an error can also miss it.\n- **Reflexion**: critique is grounded in **external** signals (unit tests pass/fail, runtime errors). Much stronger because the feedback is real, not the model's opinion.\n\n## Real examples\n- **Coding agents (Cursor, Copilot, Claude Code)**: write code, run tests, read the failure, fix — grounded reflection in action.\n- **Reflexion paper**: agents that verbally reflect on failed attempts and retry improved markedly on reasoning and coding benchmarks.\n\n## When to use it\n- Output **quality** matters more than speed, and a **check** exists (tests, rubric, validator).\n- The task has a clear notion of 'better' the model can evaluate.\n\n## Watch out for\n- **Ungrounded critique** can be hollow — prefer real feedback signals when available.\n- **No stop condition** → endless loops; cap iterations.\n- Reflection is closely related to **evaluator-optimizer**; the difference is mainly whether the critic is the same model or a separate one.",
+  "diagram": "flowchart TD\n  G([Goal]) --> D[Draft output]\n  D --> CR[Critique:\\nself or external feedback\\n(tests, errors, rubric)]\n  CR --> Q{Good enough\\nor budget hit?}\n  Q -- no --> RV[Revise using critique]\n  RV --> CR\n  Q -- yes --> F([Final output])",
+  "examples": [
+    { "product": "Claude Code / Cursor", "what": "Generate code, execute the test suite, read failing tests and stack traces, then revise — a grounded reflection loop using real signals.", "source": "https://www.anthropic.com/engineering/building-effective-agents" },
+    { "product": "Reflexion (research)", "what": "Agents verbally reflect on why an attempt failed and store that reflection to guide the next try, boosting reasoning and coding success.", "source": "https://arxiv.org/abs/2303.11366" }
+  ],
+  "drills": [
+    { "q": "Why can a draft-critique-revise loop beat a single-pass answer?", "a": "Judging is a separate skill from generating; letting the model evaluate and revise its own work catches mistakes the first pass committed to." },
+    { "q": "What is the key difference between Self-Refine and Reflexion?", "a": "Self-Refine uses the model's own self-critique; Reflexion grounds the critique in external signals like test failures or runtime errors, which is more reliable." },
+    { "q": "What two failure modes must a reflection loop guard against?", "a": "Hollow ungrounded self-critique (the model rationalizing its error) and non-convergence/infinite looping (needs a stop condition or iteration cap)." }
+  ],
+  "teachItBack": "Reflection turns a one-shot answer into a draft-critique-revise loop, because judging work is a different skill from producing it and the revision is where quality comes from. The critique can be the model grading itself (Self-Refine) or, far more reliably, grounded in real signals like failing tests and error messages (Reflexion). You cap the loop with a budget so it converges, and you prefer real feedback over self-opinion so the critique isn't hollow.",
+  "sources": [
+    { "title": "Reflexion (Shinn et al., 2023)", "url": "https://arxiv.org/abs/2303.11366", "verified": true },
+    { "title": "Self-Refine (Madaan et al., 2023)", "url": "https://arxiv.org/abs/2303.17651", "verified": true },
+    { "title": "Anthropic — Building effective agents", "url": "https://www.anthropic.com/engineering/building-effective-agents", "verified": true }
+  ],
+  "related": ["evaluator-optimizer", "react", "planner-executor", "guardrails"],
+  "glossary": [
+    { "term": "Reflection", "definition": "A loop where a model critiques its own output and revises it until satisfied or out of budget." },
+    { "term": "Self-Refine", "definition": "A reflection approach where the same model generates feedback on its output and iterates without external tools." },
+    { "term": "Reflexion", "definition": "A reflection approach that grounds critique in external feedback (e.g., test results) and stores reflections to guide retries." }
+  ],
+  "quiz": [
+    {
+      "q": "What makes Reflexion-style reflection more reliable than pure self-critique?",
+      "choices": ["It uses a bigger model", "Its critique is grounded in external feedback like test failures, not the model's own opinion", "It never loops", "It skips the revision step"],
+      "answer": 1,
+      "explanation": "Grounding critique in real signals (tests, errors) is more trustworthy than a model grading its own work."
+    },
+    {
+      "q": "What must every reflection loop include to be safe in production?",
+      "choices": ["A second user", "A stop condition / iteration budget so it converges", "A vector store", "A bigger context window"],
+      "answer": 1,
+      "explanation": "Without a stop condition the critique-revise loop can run forever; cap iterations or stop when the critique is satisfied."
+    }
+  ]
+}

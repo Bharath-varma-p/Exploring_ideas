@@ -1,0 +1,76 @@
+{
+  "id": "error-recovery-ux",
+  "title": "Error Recovery UX",
+  "lane": "uiux",
+  "type": "pattern",
+  "order": 50,
+  "summary": "Designing graceful failure states, regenerate options, and honest error messages for non-deterministic AI.",
+  "problem": "AI models will inevitably fail\u2014hallucinations, context limit errors, or API timeouts. Generic 'Something went wrong' errors leave the user stuck, leading to task abandonment.",
+  "forces": [
+    "AI failures are often non-deterministic and hard to predict.",
+    "Users blame themselves when they hit a dead end.",
+    "Restarting a complex prompt from scratch is highly frustrating."
+  ],
+  "solution": "Design for failure. Offer one-click 'Regenerate' buttons. Preserve the user's input so they can edit and retry. Write honest, specific error messages that explain exactly what failed and offer an immediate next step.",
+  "tradeoffs": [
+    "Retries cost API tokens and compute.",
+    "Exposing too much technical error detail can confuse non-technical users."
+  ],
+  "body": "## First principles\nIn traditional software, errors are usually deterministic bugs. In AI, errors are part of the process\u2014the model hallucinates, the prompt is too vague, or the context window overflows. **Good UX doesn't try to eliminate all errors; it makes recovering from them effortless.**\n\n## The anatomy of recovery\nWhen an AI fails to generate a good response, never present a dead end. Always provide:\n1. **Preservation:** Keep the user's original text intact.\n2. **Explanation:** Be honest ('The document was too long for me to read completely').\n3. **Action:** Provide a clear way out ('Try summarizing a smaller section', or 'Regenerate response').\n\n## Undo and Regenerate\nThe simplest form of error recovery is the 'Regenerate' button. Because LLMs are probabilistic, the exact same prompt might yield a much better answer on the second try. Pair this with a mechanism to view previous generations so users aren't afraid of losing a 'pretty good' answer to try for a 'perfect' one.",
+  "tags": [
+    "errors",
+    "recovery",
+    "regenerate",
+    "resilience"
+  ],
+  "analogy": "When a GPS loses signal, it doesn't just turn off the screen. It says 'Recalculating...' and tries to find a new route based on your last known location.",
+  "diagram": "flowchart TD\n  Err[Error/Bad Generation] --> Keep[Preserve User Input]\n  Keep --> Msg[Explain Issue Honestly]\n  Msg --> Act[Provide Action: Edit / Regenerate]\n  Act --> Retry[Retry Request]",
+  "examples": [
+    {
+      "product": "ChatGPT",
+      "what": "Provides a 'Regenerate' button and allows pagination through previous generations so you never lose work.",
+      "source": "https://chatgpt.com/"
+    }
+  ],
+  "drills": [
+    {
+      "q": "Why is 'Regenerate' a valid error recovery strategy in AI?",
+      "a": "Because LLMs are non-deterministic, a second attempt at the exact same prompt might yield a better or correct result."
+    },
+    {
+      "q": "What is the worst thing a UI can do during an error?",
+      "a": "Delete the user's input and show a generic 'Something went wrong' message, creating a dead end."
+    }
+  ],
+  "teachItBack": "AI makes mistakes. Instead of hiding that fact, build UI that makes bouncing back easy. Keep their text, tell them exactly why it failed, and give them a one-click way to try again. Make failure a bump in the road, not a dead end.",
+  "sources": [
+    {
+      "title": "NN/g - Error Message Guidelines",
+      "url": "https://www.nngroup.com/articles/error-message-guidelines/",
+      "verified": true
+    }
+  ],
+  "related": [
+    "conversational-ux",
+    "trust-and-transparency"
+  ],
+  "glossary": [
+    {
+      "term": "Graceful Degradation",
+      "definition": "A system's ability to maintain limited functionality even when a large portion of it has been destroyed or rendered inoperative."
+    }
+  ],
+  "quiz": [
+    {
+      "q": "If a user uploads a PDF that exceeds the context window, what is the best UX response?",
+      "choices": [
+        "Error 500: Payload too large",
+        "The file is too large. Please upload a smaller file.",
+        "Ignore the error and summarize the first 10%",
+        "Your PDF is 50 pages, but I can only read 20 at a time. Do you want me to summarize the first 20 pages, or would you like to upload a smaller section?"
+      ],
+      "answer": 3,
+      "explanation": "Option D preserves context, explains the exact limitation honestly, and provides immediate, actionable next steps without creating a dead end."
+    }
+  ]
+}

@@ -1,0 +1,124 @@
+{
+  "id": "raycast",
+  "title": "Raycast — Command Palette as AI Operating Layer",
+  "lane": "teardowns",
+  "type": "teardown",
+  "order": 90,
+  "product": "Raycast",
+  "tags": [
+    "launcher",
+    "command-palette",
+    "ai-commands",
+    "extensions",
+    "macos"
+  ],
+  "summary": "Raycast turns the command launcher into an AI operating layer: selected text, clipboard, focused browser tab, Finder selection, extensions, and custom commands become one fast action surface.",
+  "contextSignals": [
+    "Root Search query",
+    "Selected text in the frontmost app",
+    "Focused field or active app",
+    "Clipboard contents and clipboard history",
+    "Focused browser tab content via browser extension",
+    "Runtime arguments entered in the search bar",
+    "Finder-selected files",
+    "Extension environment, command name, mode, and launch type",
+    "Calendar or app data accessed through AI Extensions"
+  ],
+  "patterns": [
+    "tool-use",
+    "routing",
+    "memory-long-term",
+    "planner-executor",
+    "guardrails"
+  ],
+  "uxMoves": [
+    "command-palette",
+    "latency-masking",
+    "keyboard-first",
+    "progressive-disclosure",
+    "trust-and-transparency"
+  ],
+  "analogy": "A keyboard-first control tower: select something anywhere, hit the launcher, and dispatch the right AI or app command.",
+  "diagram": "flowchart LR\n  K[Keyboard shortcut / Root Search] --> Q[Command query]\n  S[Selected text] --> C[Context placeholders]\n  B[Focused browser tab] --> C\n  CL[Clipboard] --> C\n  F[Finder selection] --> C\n  Q --> R{Command route}\n  C --> R\n  R --> AI[AI Command]\n  R --> EXT[Extension action]\n  R --> APP[App or OS command]\n  AI --> O[Rewrite, summarize, ask about page, find bugs]\n  EXT --> O\n  APP --> O\n  O --> P[Paste, copy, show, or continue chat]",
+  "body": "## What it is\nRaycast is a keyboard-first launcher and productivity platform. Its AI layer is interesting because it does not live in a separate AI app. AI Commands are just commands: pick text, open Raycast, run the command, get the result.\n\nThe official AI Commands manual says built-in commands include Improve Writing, Fix Spelling and Grammar, Explain This in Simple Terms, Find Bugs in Code, Summarize Webpage, and Ask About Webpage. Users can also create custom AI Commands with prompts, models, creativity settings, reasoning effort, tags, and dynamic placeholders.\n\n## Context signals it uses\nRaycast's context is operating-system context. Dynamic placeholders include clipboard, selected text from the frontmost app, arguments, date/time, and focused browser tab content when the browser extension is installed. The developer API can retrieve selected Finder items and selected text.\n\nExtensions add tool context. Developers can build Raycast extensions with TypeScript, React, and Node, use Raycast UI components, and call the AI API without separate API keys for eligible users. That makes Raycast an orchestration layer across apps, files, selected text, web pages, and AI models.\n\n## Patterns under the hood\nRaycast is tool-use first. Every command is a tool, and AI Commands can call into extensions when a prompt needs more than text transformation. Routing happens through Root Search: the user types intent, Raycast ranks commands, and the selected command receives context.\n\nGuardrails appear as permissions. Quick Fix needs Accessibility access to read and replace text in the active app. AI access can be checked through environment.canAccess. Context capture is useful because it is explicit and permissioned.\n\n## UX & engagement moves\nThe command palette is the engagement move. It is fast, global, and keyboard-first. Users do not need to open a destination app, copy text, paste into chat, copy the answer, and paste back. The action starts where the user already is.\n\nRaycast also uses progressive disclosure well. Simple users run built-in commands. Power users duplicate commands, add placeholders, choose models, and build extensions. The surface scales from \"fix this sentence\" to \"make a custom workflow over my tools.\"\n\n## What to steal (lessons)\nMake AI available at the point of selection. If the user already highlighted text, selected files, or focused a web tab, that is your context. Do not ask them to restate it.\n\nAlso make custom commands first-class. Repeated prompts are workflows in disguise. Turn them into named, keyboard-accessible actions with arguments and placeholders.",
+  "examples": [
+    {
+      "product": "Raycast AI Commands",
+      "what": "Turns repeated prompts into commands that can use selected text, focused fields, browser tab content, arguments, model settings, and AI Extensions.",
+      "source": "https://manual.raycast.com/ai/ai-commands"
+    },
+    {
+      "product": "Raycast dynamic placeholders",
+      "what": "Injects clipboard, selected text, focused browser tab, arguments, date/time, and other live context into commands.",
+      "source": "https://manual.raycast.com/dynamic-placeholders"
+    }
+  ],
+  "drills": [
+    {
+      "q": "Why does Raycast make AI feel fast?",
+      "a": "It launches from the keyboard and uses already-selected or focused context instead of requiring copy-paste into a separate chat app."
+    },
+    {
+      "q": "What is a repeated prompt in Raycast's product model?",
+      "a": "A candidate AI Command: a named, reusable action with placeholders, arguments, and model settings."
+    }
+  ],
+  "teachItBack": "Raycast makes AI feel like an operating-system command. It can use selected text, clipboard, focused browser tabs, files, and extensions as context. The product lesson is to turn common prompts into fast, permissioned, keyboard-accessible workflows.",
+  "sources": [
+    {
+      "title": "Raycast Manual — AI Commands",
+      "url": "https://manual.raycast.com/ai/ai-commands",
+      "verified": true
+    },
+    {
+      "title": "Raycast Manual — Dynamic Placeholders",
+      "url": "https://manual.raycast.com/dynamic-placeholders",
+      "verified": true
+    },
+    {
+      "title": "Raycast Developers — Introduction",
+      "url": "https://developers.raycast.com/",
+      "verified": true
+    },
+    {
+      "title": "Raycast Developers — AI API",
+      "url": "https://developers.raycast.com/api-reference/ai.md",
+      "verified": true
+    },
+    {
+      "title": "Raycast Developers — Environment API",
+      "url": "https://developers.raycast.com/api-reference/environment.md",
+      "verified": true
+    }
+  ],
+  "related": [
+    "tool-use",
+    "routing",
+    "command-palette",
+    "latency-masking",
+    "trust-and-transparency"
+  ],
+  "glossary": [
+    {
+      "term": "AI Command",
+      "definition": "A reusable Raycast command backed by a prompt, optional placeholders, model settings, and actions over selected or focused context."
+    },
+    {
+      "term": "Dynamic placeholder",
+      "definition": "A token that injects live context such as selected text, clipboard, arguments, or browser tab content into a command."
+    }
+  ],
+  "quiz": [
+    {
+      "q": "What is Raycast's key AI UX advantage?",
+      "choices": [
+        "It only works inside one document",
+        "It uses global command-palette context like selection, clipboard, and browser tab",
+        "It removes keyboard shortcuts",
+        "It forbids extensions"
+      ],
+      "answer": 1,
+      "explanation": "Raycast brings AI to the active app and selected context through a fast command palette."
+    }
+  ]
+}

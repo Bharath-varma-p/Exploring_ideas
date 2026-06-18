@@ -1,0 +1,124 @@
+{
+  "id": "claude",
+  "title": "Claude — Workspaces, Artifacts, and Transparent Control",
+  "lane": "teardowns",
+  "type": "teardown",
+  "order": 30,
+  "product": "Claude",
+  "tags": [
+    "anthropic",
+    "artifacts",
+    "projects",
+    "computer-use",
+    "long-context"
+  ],
+  "summary": "Claude turns a chat into a collaborative workspace through Artifacts, Projects, long context, tool use, and carefully framed computer-use capabilities.",
+  "contextSignals": [
+    "Current conversation history",
+    "Project knowledge: uploaded docs, code, insights, and custom instructions",
+    "Artifact content and user edits",
+    "Long-context documents and codebases",
+    "Screenshots and UI state for computer use",
+    "Mouse, cursor, click, and typing feedback in computer-use loops",
+    "Team-shared project activity when enabled",
+    "Safety and privacy preferences"
+  ],
+  "patterns": [
+    "memory-long-term",
+    "tool-use",
+    "reflection",
+    "planner-executor",
+    "guardrails",
+    "routing"
+  ],
+  "uxMoves": [
+    "trust-and-transparency",
+    "progressive-disclosure",
+    "side-by-side-workspace",
+    "streaming",
+    "human-in-the-loop"
+  ],
+  "analogy": "A careful teammate who keeps the shared project binder open, drafts in a side window, and asks for the controls before touching the computer.",
+  "diagram": "flowchart LR\n  U[User goal] --> P[Project knowledge and instructions]\n  P --> L[Long context assembly]\n  U --> C[Conversation]\n  C --> L\n  L --> D{Output type?}\n  D --> A[Artifact: code, doc, diagram, app]\n  D --> T[Tool or computer-use action]\n  D --> R[Plain explanation]\n  T --> O[Observe screen or tool result]\n  O --> L\n  A --> E[User reviews and edits]\n  E --> L",
+  "body": "## What it is\nClaude has evolved from a chat surface into a workspace. Artifacts put generated code, documents, diagrams, websites, and dashboards in a dedicated side window. Projects collect chats, knowledge, documents, code, and custom instructions so Claude can start with the right background instead of a cold prompt.\n\nAnthropic also introduced computer use in public beta, letting developers direct Claude to use computers by observing a screen, moving a cursor, clicking, and typing. Combined with long context, the product direction is clear: Claude is designed to work with large bodies of material, produce durable work objects, and act through controlled tools.\n\n## Context signals it uses\nProjects are the clearest context signal. Anthropic describes Projects as curated sets of knowledge and chat activity with a 200K context window in the launch post, suitable for style guides, codebases, interview transcripts, and past work. Claude can also use custom instructions to adopt a role, tone, or domain stance inside a project.\n\nArtifacts add a second context loop. The user can see and edit the work product directly, and that object becomes the shared reference. Computer use adds UI-state context: screenshots, cursor position, clicked elements, typed text, and subsequent observations.\n\n## Patterns under the hood\nClaude uses long-context retrieval and compression patterns to keep large work sessions usable. Projects are long-term memory at the workspace level. Artifacts are a tool-output pattern: the model does not just answer; it creates an object that can be inspected and iterated.\n\nComputer use is ReAct-like tool use over a graphical interface. The loop is observe screen, decide next action, click or type, observe again. Anthropic's launch post is explicit that computer use was experimental and could be cumbersome or error-prone, which is a transparency and guardrails pattern rather than a marketing gloss.\n\n## UX & engagement moves\nThe strongest UX move is side-by-side collaboration. Artifacts reduce the chat scroll problem by giving important outputs a stable surface. This increases trust because users can review the artifact as an object, not hunt through a transcript.\n\nClaude also leans into transparency. Projects tell users what context they are giving Claude. Computer use is framed as an early, experimental capability. Privacy notes in Anthropic's posts emphasize that user data is not used for training without explicit consent in stated contexts.\n\n## What to steal (lessons)\nFor serious work, chat alone is not enough. Give the agent a durable workspace, durable context, and durable outputs. Let users inspect and edit the result while the conversation continues.\n\nAlso copy the caution. If an agent can operate a computer, say exactly what it can do, how it observes, and where it is unreliable. Trust comes from bounded power, not theatrical autonomy.",
+  "examples": [
+    {
+      "product": "Claude Artifacts",
+      "what": "Generated work appears in a dedicated window alongside conversation, enabling users to see, edit, and build on the output.",
+      "source": "https://claude.com/blog/artifacts"
+    },
+    {
+      "product": "Claude computer use",
+      "what": "Claude can be directed through an API to look at a screen, move a cursor, click buttons, and type text in an experimental public beta.",
+      "source": "https://www.anthropic.com/news/3-5-models-and-computer-use"
+    }
+  ],
+  "drills": [
+    {
+      "q": "Why are Artifacts more than a visual flourish?",
+      "a": "They make generated work durable, inspectable, editable, and separate from the chat transcript."
+    },
+    {
+      "q": "What is the core agent loop in Claude computer use?",
+      "a": "Observe the screen, decide the next UI action, click or type, observe the result, and repeat with guardrails."
+    }
+  ],
+  "teachItBack": "Claude teaches that agentic products need workspaces, not just chat bubbles. Projects provide persistent context, while Artifacts turn outputs into editable objects. Computer use extends the agent loop into UI actions, but Anthropic frames it with clear caveats and controls.",
+  "sources": [
+    {
+      "title": "Claude — Artifacts",
+      "url": "https://claude.com/blog/artifacts",
+      "verified": true
+    },
+    {
+      "title": "Anthropic — Projects",
+      "url": "https://www.anthropic.com/news/projects",
+      "verified": true
+    },
+    {
+      "title": "Anthropic — Claude 3.5 models and computer use",
+      "url": "https://www.anthropic.com/news/3-5-models-and-computer-use",
+      "verified": true
+    },
+    {
+      "title": "Anthropic docs — Context windows",
+      "url": "https://platform.claude.com/docs/en/build-with-claude/context-windows",
+      "verified": true
+    },
+    {
+      "title": "Anthropic — Claude 3.5 Sonnet",
+      "url": "https://www.anthropic.com/news/claude-3-5-sonnet",
+      "verified": true
+    }
+  ],
+  "related": [
+    "memory-long-term",
+    "tool-use",
+    "reflection",
+    "guardrails",
+    "trust-and-transparency"
+  ],
+  "glossary": [
+    {
+      "term": "Artifact",
+      "definition": "A Claude output shown as a persistent, editable object in a dedicated workspace beside the conversation."
+    },
+    {
+      "term": "Computer use",
+      "definition": "A tool-use capability where an AI observes a computer interface and issues mouse and keyboard actions."
+    }
+  ],
+  "quiz": [
+    {
+      "q": "What product problem do Claude Artifacts solve?",
+      "choices": [
+        "They hide the model output",
+        "They turn important outputs into stable editable work objects",
+        "They remove the need for context",
+        "They prevent iteration"
+      ],
+      "answer": 1,
+      "explanation": "Artifacts create a durable side-by-side surface for code, documents, diagrams, apps, and other outputs."
+    }
+  ]
+}

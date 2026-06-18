@@ -1,0 +1,118 @@
+{
+  "id": "perplexity",
+  "title": "Perplexity — Search, Cite, and Refine",
+  "lane": "teardowns",
+  "type": "teardown",
+  "order": 50,
+  "product": "Perplexity",
+  "tags": [
+    "search",
+    "citations",
+    "research",
+    "answer-engine",
+    "rag"
+  ],
+  "summary": "Perplexity productizes the retrieve → reason → cite loop: it searches the live web, composes direct answers, exposes sources, and lets users refine the source domain with Focus.",
+  "contextSignals": [
+    "Natural-language query",
+    "Follow-up questions in the current thread",
+    "Real-time web search results",
+    "Source type selected by Focus, such as academic or social",
+    "Clickable citations and source metadata",
+    "Uploaded files when provided",
+    "Pro Search decomposition for deeper searches",
+    "Premium data-provider availability for some domains"
+  ],
+  "patterns": [
+    "rag",
+    "react",
+    "routing",
+    "reflection",
+    "guardrails"
+  ],
+  "uxMoves": [
+    "trust-and-transparency",
+    "progressive-disclosure",
+    "streaming",
+    "focus-modes",
+    "source-cards"
+  ],
+  "analogy": "A research assistant who answers first, but staples the source packet to every claim.",
+  "diagram": "flowchart LR\n  Q[User question] --> F{Focus selected?}\n  F -->|Web/Academic/Social/etc.| S[Retrieve live sources]\n  S --> C[Rank and choose evidence]\n  C --> A[Compose concise answer]\n  A --> X[Attach clickable citations]\n  X --> U[User reads or opens sources]\n  U --> R[Follow-up question]\n  R --> S",
+  "body": "## What it is\nPerplexity calls itself an answer engine. Its core promise is simple: ask a question, get a direct answer, and see the sources. The official getting-started guide says Perplexity searches the internet in real time and includes sources and citations with answers.\n\nThat makes the product feel different from both classic search and ordinary chat. Search gives links without synthesis. Chat gives synthesis without enough provenance. Perplexity tries to combine the two into a research loop.\n\n## Context signals it uses\nThe initial context is the query. Then Perplexity adds retrieved web sources, follow-up questions, file uploads, and Focus mode. The guide describes Focus as a way to narrow results to specific sources such as academic journals or social media. It also describes Pro Search as a deeper mode that breaks questions into smaller steps and pulls from a broader range of sources.\n\nCitations are context signals too. They tell the user where each answer came from and give the system a visible accountability layer. Premium source partnerships add another signal: for health, finance, statistics, market data, and educational content, the product can route to more authoritative datasets when available.\n\n## Patterns under the hood\nPerplexity is a textbook RAG product. Retrieve sources, synthesize the answer, cite evidence, then let the user refine with follow-ups. The loop is ReAct-like because the answer depends on live search actions and observations rather than model memory alone.\n\nRouting is important. A query about academic literature should not use the same source pool as a query about social sentiment. Guardrails show up through citation visibility and domain-specific cautions, especially in health contexts where Perplexity says answers include citations and care-seeking guidance.\n\n## UX & engagement moves\nThe signature UX move is source-first trust. Clickable citations make verification part of the normal reading flow. Users do not have to ask \"where did that come from?\" because the product puts the source next to the claim.\n\nFocus is a second strong move. It gives users an understandable control for retrieval scope without exposing the retrieval stack. Instead of tuning embeddings or ranking weights, users choose the kind of source they want.\n\n## What to steal (lessons)\nIf your AI product uses retrieval, expose provenance. Citations are not decoration; they are the trust interface for RAG. Let users refine the corpus in human terms: academic, news, social, docs, file, workspace.\n\nAlso keep the answer compact. Perplexity works because it reduces the link-hunting cost while keeping the escape hatch open: every claim can lead back to source material.",
+  "examples": [
+    {
+      "product": "Perplexity answer engine",
+      "what": "Provides real-time answers with clickable citations and supports follow-up questions in a conversational thread.",
+      "source": "https://www.perplexity.ai/hub/blog/getting-started-with-perplexity"
+    },
+    {
+      "product": "Perplexity premium sources",
+      "what": "Integrates premium content providers such as Statista, PitchBook, and Wiley to cite trusted data in selected domains.",
+      "source": "https://www.perplexity.ai/hub/blog/more-value-in-every-answer-new-benefits-for-every-level-of-perplexity-user"
+    }
+  ],
+  "drills": [
+    {
+      "q": "Why do citations change the UX of AI search?",
+      "a": "They turn trust into an inspectable interface: users can verify the source behind a claim."
+    },
+    {
+      "q": "What does Focus mode teach product designers?",
+      "a": "Expose retrieval control in user-friendly source categories rather than technical knobs."
+    }
+  ],
+  "teachItBack": "Perplexity is a RAG product wrapped in a search UX. It retrieves live sources, writes a concise answer, and makes citations visible. The lesson is that grounded AI should let users inspect and steer the evidence base.",
+  "sources": [
+    {
+      "title": "Perplexity — Getting started with Perplexity",
+      "url": "https://www.perplexity.ai/hub/blog/getting-started-with-perplexity",
+      "verified": true
+    },
+    {
+      "title": "Perplexity Blog",
+      "url": "https://www.perplexity.ai/hub/blog",
+      "verified": true
+    },
+    {
+      "title": "Perplexity — More Value In Every Answer",
+      "url": "https://www.perplexity.ai/hub/blog/more-value-in-every-answer-new-benefits-for-every-level-of-perplexity-user",
+      "verified": true
+    },
+    {
+      "title": "Perplexity — Introducing Perplexity Health",
+      "url": "https://www.perplexity.ai/hub/blog/introducing-perplexity-health",
+      "verified": true
+    }
+  ],
+  "related": [
+    "rag",
+    "react",
+    "routing",
+    "guardrails",
+    "trust-and-transparency"
+  ],
+  "glossary": [
+    {
+      "term": "Answer engine",
+      "definition": "A search experience that synthesizes a direct answer while preserving links to underlying sources."
+    },
+    {
+      "term": "Focus mode",
+      "definition": "A user-facing control that narrows retrieval to a source type or domain."
+    }
+  ],
+  "quiz": [
+    {
+      "q": "What is Perplexity's central trust move?",
+      "choices": [
+        "No links at all",
+        "Clickable citations attached to answers",
+        "Only offline model knowledge",
+        "Hidden retrieval settings"
+      ],
+      "answer": 1,
+      "explanation": "Perplexity makes source verification a first-class part of the answer interface."
+    }
+  ]
+}

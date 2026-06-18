@@ -1,0 +1,125 @@
+{
+  "id": "cursor",
+  "title": "Cursor — Repo Context as the Interface",
+  "lane": "teardowns",
+  "type": "teardown",
+  "order": 40,
+  "product": "Cursor",
+  "tags": [
+    "developer-tools",
+    "codebase-indexing",
+    "autocomplete",
+    "agents",
+    "semantic-search"
+  ],
+  "summary": "Cursor makes the codebase itself the context layer: indexes, embeddings, editor state, linter errors, Tab completions, and agents all work together to predict the next useful code action.",
+  "contextSignals": [
+    "Current file and cursor position",
+    "Recent edits and surrounding code",
+    "Linter and diagnostics errors",
+    "Open workspace files",
+    "Syntactic code chunks and embeddings",
+    "Merkle-tree file hashes for index sync",
+    "Semantic search results across the repository",
+    "User accept/reject feedback on Tab suggestions",
+    "Agent task prompt, working set, terminal output, and test results"
+  ],
+  "patterns": [
+    "rag",
+    "tool-use",
+    "planner-executor",
+    "reflection",
+    "memory-long-term",
+    "routing"
+  ],
+  "uxMoves": [
+    "ghost-text",
+    "latency-masking",
+    "command-palette",
+    "streaming",
+    "human-in-the-loop"
+  ],
+  "analogy": "An IDE that reads the room: it watches your cursor, knows the repo map, notices the linter, and suggests the next edit before you ask.",
+  "diagram": "flowchart TD\n  F[Files in workspace] --> I[Index: chunks, hashes, embeddings]\n  E[Editor state: cursor, recent edits, diagnostics] --> P[Prompt/context builder]\n  I --> P\n  P --> R{Need fast edit or task?}\n  R --> T[Cursor Tab suggestion]\n  R --> A[Agent mode: search, edit, run commands]\n  T --> U[Developer accepts, rejects, or keeps typing]\n  A --> O[Terminal/test/tool observations]\n  O --> A\n  U --> L[Feedback signals improve future behavior]",
+  "body": "## What it is\nCursor is an AI code editor whose core product insight is that code assistance is only as good as repo context. Cursor Tab is AI-powered autocomplete that suggests code as you type using recent edits, surrounding code, and linter errors. Cursor's indexing work turns the broader codebase into semantic search context for agents.\n\nThe product is not one feature. It is a stack: instant inline completions, cross-file edit prediction, semantic codebase search, and agents that can search, edit, run commands, and return work for review.\n\n## Context signals it uses\nThe fast path is editor context: cursor position, nearby code, recent edits, and diagnostics. The Tab docs say suggestions appear as grayed-out text and can edit multiple lines, add missing imports, predict next locations, and even suggest cross-file edits.\n\nThe deep path is indexing. Cursor's secure codebase indexing post explains that it builds a searchable index when a project opens, splits changed files into syntactic chunks, converts chunks into embeddings, and uses Merkle trees and hashes to sync changes efficiently. That gives the AI a map of where concepts live, not just what is visible on screen.\n\n## Patterns under the hood\nCursor is a productized RAG system over code. Semantic search retrieves relevant chunks; the model uses those chunks plus editor state to answer or edit. Tool use appears when agents read files, edit files, search the repo, and run terminal commands.\n\nReflection shows up in agent loops: run a command, see an error, change code, run again. Routing decides whether a task belongs to Tab, chat, agent mode, semantic search, or a terminal action.\n\n## UX & engagement moves\nCursor Tab is ghost text with a high bar for interruption. Cursor's reinforcement-learning post says low-accept suggestions are distracting, so the system learns when to show nothing. That is a major UX lesson: silence can be an AI feature.\n\nLatency masking is also central. Tab is useful because it is nearly instant. Cursor's Fusion post reports lower server latency and longer context than earlier Tab models. For agents, the UX shifts from keystroke assistance to supervised delegation: users review diffs, logs, and artifacts instead of typing every line.\n\n## What to steal (lessons)\nContext beats clever prompts. If you want an AI developer tool to feel magical, invest in indexing, diagnostics, recent-edit state, and fast retrieval. Then decide which surface should answer: inline ghost text for low-friction edits, chat for explanation, agent mode for multi-step work.\n\nAlso steal the acceptance discipline. If your assistant is not confident, it should not interrupt. Great AI UX is often about knowing when to stay quiet.",
+  "examples": [
+    {
+      "product": "Cursor secure codebase indexing",
+      "what": "Builds searchable codebase indexes with syntactic chunks, embeddings, Merkle trees, and access proofs for fast semantic search.",
+      "source": "https://cursor.com/blog/secure-codebase-indexing"
+    },
+    {
+      "product": "Cursor Tab",
+      "what": "Uses recent edits, surrounding code, and linter errors to suggest grayed-out completions, multi-line edits, imports, jumps, and cross-file edits.",
+      "source": "https://cursor.com/help/ai-features/tab"
+    }
+  ],
+  "drills": [
+    {
+      "q": "Why is codebase indexing more important than a bigger prompt alone?",
+      "a": "Indexing retrieves the relevant code chunks from a large repo instead of stuffing unrelated files into context."
+    },
+    {
+      "q": "What UX principle does Cursor Tab demonstrate?",
+      "a": "Only interrupt when useful; a bad ghost-text suggestion is worse than silence."
+    }
+  ],
+  "teachItBack": "Cursor works because it treats the repository as live context, not static text. Tab handles fast in-flow edits, while semantic indexing and agents handle larger tasks. The product lesson is to match the context depth to the interaction surface.",
+  "sources": [
+    {
+      "title": "Cursor — Secure codebase indexing",
+      "url": "https://cursor.com/blog/secure-codebase-indexing",
+      "verified": true
+    },
+    {
+      "title": "Cursor Help — Tab completion",
+      "url": "https://cursor.com/help/ai-features/tab",
+      "verified": true
+    },
+    {
+      "title": "Cursor — A new Tab model",
+      "url": "https://cursor.com/blog/tab-update",
+      "verified": true
+    },
+    {
+      "title": "Cursor — Improving Cursor Tab with online RL",
+      "url": "https://cursor.com/blog/tab-rl",
+      "verified": true
+    },
+    {
+      "title": "Cursor — The third era of AI software development",
+      "url": "https://cursor.com/blog/third-era",
+      "verified": true
+    }
+  ],
+  "related": [
+    "rag",
+    "tool-use",
+    "planner-executor",
+    "reflection",
+    "latency-masking"
+  ],
+  "glossary": [
+    {
+      "term": "Semantic code search",
+      "definition": "Retrieval that finds code by meaning using embeddings, not only by exact text match."
+    },
+    {
+      "term": "Ghost text",
+      "definition": "A low-friction inline suggestion shown in the editor before the user accepts it."
+    }
+  ],
+  "quiz": [
+    {
+      "q": "Which context signal is especially important for Cursor Tab?",
+      "choices": [
+        "Only marketing copy",
+        "Recent edits, surrounding code, and linter errors",
+        "Weather forecasts",
+        "User birthdays"
+      ],
+      "answer": 1,
+      "explanation": "Cursor Tab is designed around local editor state plus diagnostics and repo context."
+    }
+  ]
+}

@@ -1,0 +1,124 @@
+{
+  "id": "arc-dia",
+  "title": "Arc / Dia — Browser as Context Engine",
+  "lane": "teardowns",
+  "type": "teardown",
+  "order": 80,
+  "product": "Arc / Dia by The Browser Company",
+  "tags": [
+    "browser",
+    "tabs",
+    "ai-browser",
+    "arc-max",
+    "dia"
+  ],
+  "summary": "Arc Max and Dia show the browser becoming an AI context engine: page content, links, tabs, downloads, GSuite, Slack, and recent browsing all become usable work context.",
+  "contextSignals": [
+    "Current web page content",
+    "Hovered links and destination pages",
+    "Pinned tabs and tab titles",
+    "Today tabs and sidebar organization",
+    "Downloaded file contents and names",
+    "Command bar queries",
+    "Open tabs and browsing context in Dia",
+    "GSuite and Slack context in Dia when connected",
+    "Privacy settings and sync state"
+  ],
+  "patterns": [
+    "rag",
+    "tool-use",
+    "routing",
+    "memory-long-term",
+    "guardrails"
+  ],
+  "uxMoves": [
+    "command-palette",
+    "latency-masking",
+    "progressive-disclosure",
+    "trust-and-transparency",
+    "ambient-ai"
+  ],
+  "analogy": "A browser that stops being a pile of tabs and starts acting like an assistant who knows what is open on your desk.",
+  "diagram": "flowchart TD\n  P[Current page] --> B[Browser context layer]\n  L[Hovered link] --> B\n  T[Tabs and sidebar] --> B\n  D[Downloads] --> B\n  W[GSuite, Slack, recent work in Dia] --> B\n  B --> R{What does the user need?}\n  R --> S[Summarize page or link]\n  R --> O[Organize tabs/downloads]\n  R --> Q[Answer from work context]\n  R --> C[Command bar action]\n  S --> U[Less tab switching]\n  O --> U\n  Q --> U\n  C --> U",
+  "body": "## What it is\nArc Max was The Browser Company's first major AI bundle inside Arc. The official Arc help page describes features such as 5-second Previews, Tidy Tab Titles, Tidy Downloads, ChatGPT in the Command Bar, Instant Links, and Tidy Tabs. These are small, contextual AI actions embedded into browsing.\n\nDia is the larger browser-as-AI move. Dia's homepage says it digs into full context across GSuite, Slack, tabs, and more, and answers like someone who has seen every thread. The browser becomes the assistant's context container.\n\n## Context signals it uses\nArc Max uses the page you are on, the link you hover, pinned tab titles, downloaded file contents, command-bar intent, and the current sidebar state. These are browser-native signals; the user does not have to copy text into a chatbot.\n\nDia expands the context surface to work apps and tabs. Its privacy page says Dia sometimes needs to share a little — such as your question and relevant context from the page you are on — to provide helpful answers. It also says browser data is encrypted and stored locally, with request data routed through servers to trusted AI partners.\n\n## Patterns under the hood\nArc Max is mostly routing plus tool use. A hover can trigger a summarization route. A download can trigger a rename route. The command bar can route to ChatGPT or Instant Links. Dia is closer to RAG over browser and work context, retrieving relevant page, tab, Slack, or GSuite material for an answer.\n\nGuardrails matter because browsers see sensitive things. The Dia privacy page is part of the product pattern: browser AI must explain what leaves the device, what is stored, and what users can turn off.\n\n## UX & engagement moves\nThe brilliant Arc Max move is ambient AI. It does not demand that users become prompt engineers. Hover a link, press Shift, get a preview. Pin a tab, get a tidier title. Download a file, get a smarter name.\n\nThe command bar is the other major move. Browsers already have an omnibox habit. Arc and Dia use that habit as the launch surface for AI actions, reducing the friction of asking, searching, opening, and organizing.\n\n## What to steal (lessons)\nPut AI where the context already lives. In a browser, the best signals are pages, links, tabs, downloads, and app sessions. Do not ask users to paste what the browser can already see with permission.\n\nBut copy the privacy discipline too. Browser context is intimate. Explain what data is local, what is sent, who processes it, and what controls users have.",
+  "examples": [
+    {
+      "product": "Arc Max",
+      "what": "Adds AI-powered previews, tab title cleanup, download renaming, ChatGPT in the command bar, Instant Links, and tab tidying directly in the browser.",
+      "source": "https://resources.arc.net/hc/en-us/articles/19335160678679-Arc-Max-Boost-Your-Browsing-with-AI"
+    },
+    {
+      "product": "Dia",
+      "what": "Positions the browser as an assistant that can answer using full work context across tabs, GSuite, Slack, and more.",
+      "source": "https://www.diabrowser.com/"
+    }
+  ],
+  "drills": [
+    {
+      "q": "What makes browser AI different from generic chat?",
+      "a": "The browser already has page, link, tab, download, and app context that can drive actions without copy-paste."
+    },
+    {
+      "q": "What is the privacy risk of browser-as-context?",
+      "a": "The browser may see sensitive pages and work data, so users need clear controls and disclosure about what is sent or stored."
+    }
+  ],
+  "teachItBack": "Arc Max starts with small contextual browser actions like link previews and tidy downloads. Dia pushes further by making tabs and work apps part of the assistant context. The lesson is to embed AI into existing browser habits while being explicit about privacy.",
+  "sources": [
+    {
+      "title": "Arc Help — Arc Max: Boost Your Browsing with AI",
+      "url": "https://resources.arc.net/hc/en-us/articles/19335160678679-Arc-Max-Boost-Your-Browsing-with-AI",
+      "verified": true
+    },
+    {
+      "title": "Dia — The browser for your best work",
+      "url": "https://www.diabrowser.com/",
+      "verified": true
+    },
+    {
+      "title": "Dia Privacy",
+      "url": "https://www.diabrowser.com/privacy",
+      "verified": true
+    },
+    {
+      "title": "The Browser Company",
+      "url": "https://www.thebrowser.company/",
+      "verified": true
+    },
+    {
+      "title": "TechCrunch — Arc browser AI features combine OpenAI and Anthropic models",
+      "url": "https://techcrunch.com/2023/10/03/arc-browsers-new-ai-powered-features-combine-openai-and-anthropics-models/",
+      "verified": true
+    }
+  ],
+  "related": [
+    "rag",
+    "tool-use",
+    "routing",
+    "command-palette",
+    "trust-and-transparency"
+  ],
+  "glossary": [
+    {
+      "term": "Ambient AI",
+      "definition": "AI behavior embedded into existing interactions so users get help without opening a separate assistant."
+    },
+    {
+      "term": "Browser context",
+      "definition": "The pages, tabs, links, downloads, history, and connected web apps available to a browser-based assistant."
+    }
+  ],
+  "quiz": [
+    {
+      "q": "What is the strongest reusable idea from Arc Max?",
+      "choices": [
+        "Make every feature a full chatbot",
+        "Trigger small AI actions from native browser context",
+        "Remove the command bar",
+        "Ignore privacy controls"
+      ],
+      "answer": 1,
+      "explanation": "Arc Max works by adding lightweight AI actions to browser-native signals like links, tabs, and downloads."
+    }
+  ]
+}

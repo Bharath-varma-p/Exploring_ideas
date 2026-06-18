@@ -1,0 +1,12 @@
+{
+  "name": "agentic-design-academy",
+  "version": "1.0.0",
+  "description": "Interactive, content-driven curriculum for context-aware & platform-aware agentic AI system design.",
+  "type": "module",
+  "scripts": {
+    "build": "node tools/build.mjs",
+    "serve": "node tools/serve.mjs",
+    "dev": "node tools/build.mjs && node tools/serve.mjs"
+  },
+  "license": "MIT"
+}

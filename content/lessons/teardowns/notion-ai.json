@@ -1,0 +1,124 @@
+{
+  "id": "notion-ai",
+  "title": "Notion AI — Workspace Knowledge as Context",
+  "lane": "teardowns",
+  "type": "teardown",
+  "order": 100,
+  "product": "Notion AI",
+  "tags": [
+    "workspace",
+    "documents",
+    "q-and-a",
+    "knowledge-base",
+    "inline-ai"
+  ],
+  "summary": "Notion AI works because the workspace is already structured context: pages, databases, wikis, projects, meeting notes, permissions, embeddings, and inline editing all feed the assistant.",
+  "contextSignals": [
+    "Current Notion page content",
+    "Highlighted text or cursor location in a page",
+    "Workspace pages and databases the user can access",
+    "Project roadmaps, tasks, meeting notes, docs, and wikis",
+    "Search query from Q&A",
+    "Semantic embeddings over workspace content",
+    "Vector-search results and relevance rankings",
+    "Connected apps and web context for some Notion AI features",
+    "Permission model determining which pages can be referenced"
+  ],
+  "patterns": [
+    "rag",
+    "memory-long-term",
+    "routing",
+    "tool-use",
+    "guardrails"
+  ],
+  "uxMoves": [
+    "inline-ai",
+    "trust-and-transparency",
+    "command-palette",
+    "progressive-disclosure",
+    "contextual-suggestions"
+  ],
+  "analogy": "A teammate who has read the company wiki, sprint board, meeting notes, and docs — but only the pages they are allowed to see.",
+  "diagram": "flowchart TD\n  W[Workspace pages, databases, docs, wikis] --> E[Embeddings / semantic index]\n  P[User permissions] --> F[Accessible content filter]\n  E --> F\n  Q[Q&A question or inline request] --> R{Need workspace search?}\n  R -->|yes| F\n  F --> K[Relevant pages ranked]\n  K --> A[Answer with workspace context]\n  R -->|no| G[Draft, edit, summarize current page]\n  A --> S[Sources / referenced pages]\n  G --> U[Inline document update]\n  S --> U",
+  "body": "## What it is\nNotion AI is embedded into the workspace where teams already keep docs, projects, databases, meeting notes, and wikis. Q&A lets users ask questions across that workspace and get answers from pages they can access. Writer and inline AI help draft, edit, summarize, translate, and brainstorm inside pages.\n\nThe product advantage is that Notion already has structured work context. The user does not need to build a knowledge base for AI; the workspace is the knowledge base.\n\n## Context signals it uses\nNotion's Q&A blog says Q&A uses information across knowledge, docs, projects, meeting notes, and more. It can be opened from Search, the sparkle icon, or a keyboard shortcut, and it only references pages the user has permission to view.\n\nThe security practices page gives the architectural version: Notion generates embeddings from workspace content, stores them in a vector database, uses a query to find relevant pages, refines and ranks pages by relevance, and generates responses informed by those pages. Inline Writer uses the current page context for drafting, editing, and summarization.\n\n## Patterns under the hood\nNotion AI is workspace RAG. The retrieval corpus is not the public web; it is your company's documents and databases. Long-term memory is the workspace itself. Routing decides whether the request needs Q&A over the workspace, inline writing help, database Autofill, meeting notes, or web/model knowledge.\n\nGuardrails come from permissions and data handling. Notion states that Q&A references only information in pages the user can view, and that customer data is not used to train AI models in the Q&A launch post.\n\n## UX & engagement moves\nThe inline move is the key. Users can hit space in a page and ask AI to draft, edit, summarize, or transform without leaving the document. Q&A also appears where search already lives, so asking the workspace feels like a natural extension of finding a page.\n\nTrust comes from source and permission expectations. In a company workspace, answers are only useful if people believe they are grounded in the right docs and do not leak restricted pages. The product's permission model becomes part of the UX.\n\n## What to steal (lessons)\nIf users already store knowledge in your product, make that structure the AI context layer. Pages, databases, tasks, owners, timestamps, and permissions are all signals.\n\nDo not separate AI from work. Put writing help inside the editor, Q&A inside search, and summaries inside databases. The best AI surface is often the place where the work object already lives.",
+  "examples": [
+    {
+      "product": "Notion Q&A",
+      "what": "Answers questions using information across workspace knowledge, docs, projects, meeting notes, and pages the user has permission to view.",
+      "source": "https://www.notion.com/blog/introducing-q-and-a"
+    },
+    {
+      "product": "Notion AI security practices",
+      "what": "Explains embeddings, vector search, page retrieval, relevance ranking, and response generation over workspace content.",
+      "source": "https://www.notion.com/help/notion-ai-security-practices"
+    }
+  ],
+  "drills": [
+    {
+      "q": "Why is Notion AI a strong RAG example?",
+      "a": "Its retrieval corpus is the user's structured workspace: docs, databases, projects, meeting notes, and wikis."
+    },
+    {
+      "q": "What product constraint makes workspace Q&A trustworthy?",
+      "a": "It must respect page permissions and show or imply which workspace content informed the answer."
+    }
+  ],
+  "teachItBack": "Notion AI uses the workspace as its memory. Q&A retrieves across pages and databases, while inline AI helps draft and edit where work already happens. The lesson is to turn existing structured content and permissions into the AI context layer.",
+  "sources": [
+    {
+      "title": "Notion — Introducing Q&A",
+      "url": "https://www.notion.com/blog/introducing-q-and-a",
+      "verified": true
+    },
+    {
+      "title": "Notion guide — Get answers about content faster with Q&A",
+      "url": "https://www.notion.com/help/guides/get-answers-about-content-faster-with-q-and-a",
+      "verified": true
+    },
+    {
+      "title": "Notion — Notion AI security practices",
+      "url": "https://www.notion.com/help/notion-ai-security-practices",
+      "verified": true
+    },
+    {
+      "title": "Notion — Introducing Notion AI",
+      "url": "https://www.notion.com/blog/introducing-notion-ai",
+      "verified": true
+    },
+    {
+      "title": "Notion AI product page",
+      "url": "https://www.notion.com/product/ai",
+      "verified": true
+    }
+  ],
+  "related": [
+    "rag",
+    "memory-long-term",
+    "routing",
+    "guardrails",
+    "inline-ai"
+  ],
+  "glossary": [
+    {
+      "term": "Workspace RAG",
+      "definition": "Retrieval-augmented generation where the knowledge corpus is a team workspace rather than the public web."
+    },
+    {
+      "term": "Autofill",
+      "definition": "A Notion AI database capability that can summarize, extract, translate, or update fields based on database entry content."
+    }
+  ],
+  "quiz": [
+    {
+      "q": "What is Notion AI's most important context source?",
+      "choices": [
+        "Random public webpages only",
+        "The user's accessible workspace pages and databases",
+        "Only the model's training data",
+        "Unrelated browser history"
+      ],
+      "answer": 1,
+      "explanation": "Notion AI is strongest when grounded in the workspace content the user is allowed to access."
+    }
+  ]
+}

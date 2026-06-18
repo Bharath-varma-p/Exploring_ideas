@@ -1,0 +1,130 @@
+{
+  "id": "deciding-where-to-go",
+  "title": "Deciding Where to Go",
+  "lane": "context-awareness",
+  "type": "pattern",
+  "order": 55,
+  "tags": [
+    "decision-making",
+    "intent-inference",
+    "grounding",
+    "search"
+  ],
+  "summary": "This pattern turns sensed context into action: infer intent, ground it to UI targets or search queries, choose the safest next step, and verify the result.",
+  "analogy": "It is like a taxi dispatcher: understand the passenger’s destination, locate the pickup point, choose a route, send the driver, then confirm they arrived.",
+  "body": "## First principles\nThe learner’s goal is a bot that “knows where to go and what to search.” That is not one feature. It is a decision pipeline. The model must sense the situation, infer intent, choose whether the next step is navigation or information gathering, ground the step to a real target, act safely, and verify.\n\nThe core problem is reference resolution under uncertainty. Users say “this,” “there,” “fix it,” “find that,” and “open the right page.” The agent must convert vague language plus context into a concrete next action.\n\n## Plain definition\nDeciding where to go is the pattern that turns sensed context into a grounded action. “Where” can mean a UI coordinate, accessibility node, browser route, app, file, search result, API endpoint, or next question. “What to search” means the focused query that closes the current information gap.\n\nThe taxi dispatcher analogy is useful: the dispatcher does not just hear “take me home.” They identify the passenger, pickup location, destination, route, constraints, and confirmation that the ride arrived.\n\n## The decision pipeline\nA robust pipeline has six steps:\n\n1. **Observe** — collect current user words, screen state, cursor/selection, history, and platform capabilities.\n2. **Infer intent** — decide what the user likely wants and what success means.\n3. **Classify need** — is the next step information retrieval, UI navigation, form entry, or a clarifying question?\n4. **Ground** — bind the plan to a target: element id, accessibility node, bounding box, URL, file, query, or API object.\n5. **Guard** — check permission, sensitivity, reversibility, and risk.\n6. **Verify** — observe after acting and compare with expected state.\n\n## Mental model\nThe diagram is an observe-decide-act-verify loop. Observation feeds intent inference. The agent branches between search/query formulation and UI target grounding. Both paths pass through tool/action selection and risk checks before acting. Verification either completes the task or loops back.\n\n## Query formulation: what to search\nAgents search well when they phrase the missing fact, not the whole conversation. Start with the user goal, add the visible object, add constraints, and remove noise.\n\nExample: user points at an error in a React app and says “what is this?” Bad query: “fix app.” Better query: exact error text + framework version + relevant component.\n\nFor WHOOP Coach, the “search” may be internal retrieval: find the user’s recent sleep debt, strain trend, recovery score, and journal behaviors that explain fatigue.\n\n## Target grounding: where to go\nFor UI action, grounding needs a target. Prefer semantic targets first: accessibility node with role/name/action, DOM element, selected text range, file id, or app object. Use coordinates only when semantic targets are unavailable or as a final execution detail.\n\nBefore clicking, ask: Is this the right element? Is it visible and enabled? What will happen? Is confirmation required? Can I undo it?\n\n## Real examples\nAnthropic computer use is the canonical screen-action loop: Claude can look at a screen, move a cursor, click buttons, and type text. Each step requires deciding where to go from observations.\n\nOpenAI’s Computer-Using Agent belongs to the same family: computer state becomes input to action selection.\n\nWHOOP Coach shows the non-UI version. It senses biometric context and decides what coaching path to take: explain, recommend rest, suggest training, or ask for more goals.\n\n## Drills\nA user says “book the cheapest one” on a flight results page. Identify intent, target candidates, missing information, risk, and verification.\n\nA user says “why am I tired?” in WHOOP. Identify the retrieval query: recent sleep, recovery, strain, stress, illness signals, and journal behaviors.\n\nA user says “click that” while hovering over a destructive delete button. What guard should fire? Confirmation with the exact object and consequence.\n\n## Teach-it-back\nDeciding where to go means turning context into a grounded next step. The agent infers intent, chooses search or UI action, binds the step to a real target or query, checks risk, acts, and verifies. That loop is what makes the bot appear to know where to go and what to search.",
+  "diagram": "flowchart TD\n  OBS[Observe signals] --> INTENT[Infer intent]\n  INTENT --> NEED{Need information or UI action?}\n  NEED -- information --> QUERY[Formulate search query]\n  NEED -- UI action --> TARGET[Ground target to element or coordinate]\n  QUERY --> SELECT[Select action/tool]\n  TARGET --> SELECT\n  SELECT --> GUARD[Check permission and risk]\n  GUARD --> ACT[Act]\n  ACT --> VERIFY[Observe result]\n  VERIFY --> DONE{Done?}\n  DONE -- no --> OBS\n  DONE -- yes --> FINAL[Report outcome]",
+  "examples": [
+    {
+      "product": "Anthropic computer use",
+      "what": "Shows the full loop: look at a screen, move a cursor, click buttons, type text, and update from observations.",
+      "source": "https://www.anthropic.com/news/3-5-models-and-computer-use"
+    },
+    {
+      "product": "OpenAI Computer-Using Agent",
+      "what": "Represents the same decision class: use perceived computer state to choose browser/computer actions grounded in the interface.",
+      "source": "https://openai.com/index/computer-using-agent/"
+    },
+    {
+      "product": "WHOOP Coach",
+      "what": "Turns sensed health context into the decision of what to explain, recommend, or ask next rather than where to click.",
+      "source": "https://www.whoop.com/us/en/thelocker/whoop-unveils-the-new-whoop-coach-powered-by-openai/"
+    }
+  ],
+  "drills": [
+    {
+      "q": "What are the four core steps in deciding where to go?",
+      "a": "Infer intent, ground targets or queries, select an action, and verify the result."
+    },
+    {
+      "q": "How does an agent decide “what to search”?",
+      "a": "It extracts the information gap from the user goal and context, adds constraints from screen/history, and formulates a focused query."
+    },
+    {
+      "q": "What should happen before a risky action like sending or purchasing?",
+      "a": "The agent should ask for confirmation, show the target and consequence, and respect permissions."
+    }
+  ],
+  "teachItBack": "To decide where to go, an agent observes context, infers intent, chooses whether it needs information or UI action, grounds the target or search query, checks risk, acts, and verifies. “Knows where to go” means it can map vague user language to real elements, coordinates, apps, pages, or searches. The loop repeats until the goal is done or the agent needs help.",
+  "sources": [
+    {
+      "title": "Anthropic — Claude 3.5 models and computer use",
+      "url": "https://www.anthropic.com/news/3-5-models-and-computer-use",
+      "verified": true
+    },
+    {
+      "title": "OpenAI — Computer-Using Agent",
+      "url": "https://openai.com/index/computer-using-agent/",
+      "verified": true
+    },
+    {
+      "title": "WHOOP — WHOOP Coach powered by OpenAI",
+      "url": "https://www.whoop.com/us/en/thelocker/whoop-unveils-the-new-whoop-coach-powered-by-openai/",
+      "verified": true
+    },
+    {
+      "title": "Anthropic — Building effective agents",
+      "url": "https://www.anthropic.com/engineering/building-effective-agents",
+      "verified": true
+    }
+  ],
+  "related": [
+    "sensing-cursor-and-selection",
+    "sensing-screen-and-app-state",
+    "accessibility-apis-as-sensing",
+    "permissions-and-consent",
+    "context-engineering"
+  ],
+  "glossary": [
+    {
+      "term": "Intent inference",
+      "definition": "Estimating what the user wants based on words, UI signals, history, and environment."
+    },
+    {
+      "term": "Target grounding",
+      "definition": "Binding an intended action to a real UI element, coordinate, document span, app object, or API resource."
+    },
+    {
+      "term": "Query formulation",
+      "definition": "Turning a knowledge gap into a search or retrieval query with the right keywords, constraints, and context."
+    }
+  ],
+  "quiz": [
+    {
+      "q": "A user says “find the pricing page” while on a SaaS homepage. What is the best first action?",
+      "choices": [
+        "Click a random link",
+        "Search the current page/navigation for “Pricing” and ground a target before clicking",
+        "Ask for their password",
+        "Summarize WHOOP"
+      ],
+      "answer": 1,
+      "explanation": "The action should be grounded in visible/navigation context before clicking."
+    },
+    {
+      "q": "What is verification in a computer-use loop?",
+      "choices": [
+        "Assuming the click worked",
+        "Observing the result after acting and checking it matches the goal",
+        "Deleting context",
+        "Skipping permissions"
+      ],
+      "answer": 1,
+      "explanation": "Agents need an observe-after-act step to detect failure and recover."
+    }
+  ],
+  "problem": "Agents receive vague goals and many noisy signals, then must choose a concrete search, UI target, or next action without guessing dangerously.",
+  "forces": [
+    "User language is often ambiguous: “this,” “there,” “fix it,” and “find the right one.”",
+    "Screens contain many possible targets, some visually similar and some risky.",
+    "Search queries must be specific enough to retrieve facts but not so narrow that they miss the answer.",
+    "Every action has platform, permission, latency, and safety constraints."
+  ],
+  "solution": "Use an observe → infer intent → classify need → ground target/query → guard → act → verify loop. Prefer semantic grounding through DOM/accessibility/API objects, use coordinates as execution details, and formulate searches from the current information gap.",
+  "tradeoffs": [
+    "More sensing improves grounding but increases privacy and latency costs.",
+    "Asking clarifying questions is safer but can feel slow if overused.",
+    "Semantic targets are robust but may be missing or wrong; coordinate fallback works broadly but is brittle.",
+    "Autonomous action feels magical until it makes a high-impact mistake, so confirmations are necessary for risky steps."
+  ]
+}

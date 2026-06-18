@@ -1,0 +1,59 @@
+{
+  "id": "routing",
+  "title": "Routing — Classify then Dispatch",
+  "lane": "architecture",
+  "type": "pattern",
+  "order": 25,
+  "tags": ["workflow", "classification", "dispatch", "specialization"],
+  "summary": "Look at the input first, classify it, then send it down the specialized path best suited to handle it — the right model, tool, or sub-flow for each kind of request.",
+  "analogy": "A hospital triage nurse. Before any treatment, they assess each arrival and route them: chest pain to cardiology, a sprain to orthopedics. One smart sorting step makes every downstream specialist far more effective.",
+  "problem": "When one prompt or one model must handle wildly different kinds of input, it becomes a jack-of-all-trades: optimizing for hard cases hurts easy ones, and a single instruction set gets bloated and mediocre at everything.",
+  "forces": [
+    "Different input types need different handling, models, or tools.",
+    "A prompt tuned for one category degrades the others (separation of concerns).",
+    "Cheap inputs shouldn't pay for an expensive model; hard ones shouldn't get a weak one.",
+    "The classifier itself can misroute, sending input down the wrong path."
+  ],
+  "solution": "Add a first step that classifies the input into one of N categories, then dispatch it to the handler specialized for that category — a different prompt, model, or sub-workflow. Each handler can now be simple and excellent at its one job.",
+  "tradeoffs": [
+    "A misclassification sends the request to the wrong handler — the router is a single point of failure.",
+    "Extra latency and a call for the classification step.",
+    "More paths to build, test, and maintain than one catch-all prompt."
+  ],
+  "body": "## First principles\nA model handling diverse inputs faces an impossible optimization: the prompt that nails refund requests is wrong for technical bugs, which is wrong for sales questions. Cramming all of it into one instruction set produces a blurry generalist. And cost compounds the problem — routing every trivial query to your most expensive model is wasteful, while routing a hard one to a cheap model fails.\n\nThe fix is **separation of concerns**: decide *what kind* of input this is **first**, then handle it with something purpose-built. Classification is a much easier task than the full job, so a small/fast model can do it reliably.\n\n## Plain definition\nRouting = a classifier step that maps each input to one of N categories, followed by **dispatch** to the handler (prompt, model, or sub-flow) specialized for that category.\n\n## Mental model\nOne diamond (classify) fanning out to several distinct handlers. The key property: the paths don't merge back into one generic prompt — each stays specialized.\n\n## Real examples\n- **Customer support**: route 'refund' vs. 'technical issue' vs. 'general question' to different prompts and tools.\n- **Cost routing**: send easy questions to a small cheap model and only escalate hard ones to a frontier model — a pattern Anthropic highlights for saving cost without losing quality.\n\n## When to use it\n- Inputs fall into **distinct categories** that benefit from different handling.\n- You want **cost/latency control** by sending easy work to cheap models.\n- A single mega-prompt is getting unwieldy.\n\n## Watch out for\n- **Misrouting**: invest in the classifier; add a fallback/'unknown' path.\n- **Too many categories**: each is code to maintain — keep the taxonomy tight.\n- Confusing routing with chaining: routing **picks one** path; chaining **runs all** in order.",
+  "diagram": "flowchart TD\n  In([Input]) --> C{Classifier:\\nwhat kind?}\n  C -- refund --> H1[Refund flow\\n+ billing tools]\n  C -- bug --> H2[Tech-support flow\\n+ frontier model]\n  C -- general --> H3[FAQ flow\\n+ small cheap model]\n  C -- unknown --> F[Fallback / human]\n  H1 --> Out([Response])\n  H2 --> Out\n  H3 --> Out\n  F --> Out",
+  "examples": [
+    { "product": "Anthropic (docs example)", "what": "Routes customer queries by type to specialized prompts, and routes easy vs. hard questions to cheaper vs. more capable models to control cost.", "source": "https://www.anthropic.com/engineering/building-effective-agents" },
+    { "product": "OpenRouter / model routers", "what": "Classify a request and dispatch it to whichever model is cheapest/best for that category, abstracting model choice behind one endpoint.", "source": "https://openrouter.ai/docs/features/model-routing" }
+  ],
+  "drills": [
+    { "q": "How is routing different from prompt chaining?", "a": "Routing classifies the input and runs exactly one specialized path; chaining runs all steps in a fixed sequence regardless of input." },
+    { "q": "Why can routing reduce cost?", "a": "Easy inputs can be dispatched to a small cheap model while only hard inputs escalate to an expensive frontier model." },
+    { "q": "What is the main failure mode of routing and one mitigation?", "a": "Misclassification sends input to the wrong handler; mitigate with a strong classifier plus a fallback/'unknown' path or human escalation." }
+  ],
+  "teachItBack": "Routing adds a classification step that figures out what kind of input you've got, then dispatches it to a handler built just for that kind. This lets each path stay simple and excellent, and lets you send cheap work to cheap models and hard work to strong ones. The catch is that the classifier is a single point of failure, so you invest in it and add a fallback path for inputs it can't place.",
+  "sources": [
+    { "title": "Anthropic — Building effective agents", "url": "https://www.anthropic.com/engineering/building-effective-agents", "verified": true },
+    { "title": "OpenRouter — Model routing", "url": "https://openrouter.ai/docs/features/model-routing", "verified": false }
+  ],
+  "related": ["prompt-chaining", "agentic-patterns-overview", "multi-agent-orchestration", "tool-use"],
+  "glossary": [
+    { "term": "Routing", "definition": "A workflow pattern that classifies input and dispatches it to a specialized downstream handler." },
+    { "term": "Classifier", "definition": "The step (often a small fast model) that assigns an input to one of several predefined categories." },
+    { "term": "Cost routing", "definition": "Dispatching easy inputs to cheaper models and only escalating hard inputs to expensive ones." }
+  ],
+  "quiz": [
+    {
+      "q": "What does the routing pattern do that distinguishes it from chaining?",
+      "choices": ["Runs every step in sequence", "Classifies the input and runs one specialized path", "Retrieves documents", "Loops until a budget is hit"],
+      "answer": 1,
+      "explanation": "Routing picks exactly one specialized handler based on a classification of the input."
+    },
+    {
+      "q": "What is the single point of failure in a routing workflow?",
+      "choices": ["The embedding model", "The classifier — a wrong category misroutes the request", "The vector store", "The final answer formatter"],
+      "answer": 1,
+      "explanation": "If the classifier mislabels the input, the request goes to the wrong handler, so the classifier is critical."
+    }
+  ]
+}

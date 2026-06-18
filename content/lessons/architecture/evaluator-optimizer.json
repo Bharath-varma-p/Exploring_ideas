@@ -1,0 +1,62 @@
+{
+  "id": "evaluator-optimizer",
+  "title": "Evaluator–Optimizer",
+  "lane": "architecture",
+  "type": "pattern",
+  "order": 55,
+  "tags": ["evaluation", "critic", "generator", "iteration", "quality"],
+  "summary": "Pair a generator that produces an answer with a separate evaluator that scores it against criteria; the generator revises using that feedback, looping until the output passes the bar.",
+  "analogy": "A chess player with a coach. One makes the move; the other scores it against clear criteria and says exactly what to improve. Splitting 'play' from 'judge' produces sharper feedback than grading your own game.",
+  "problem": "When the same model both produces and judges its work, the critique is biased toward what it already wrote, and there's no objective, consistent yardstick to decide when an answer is actually good enough.",
+  "forces": [
+    "Generating and evaluating benefit from being optimized separately.",
+    "Feedback must be specific and measurable, not vague approval.",
+    "A separate, explicit rubric gives a consistent bar across attempts.",
+    "Each loop costs an extra evaluation call and latency.",
+    "If the evaluator is weak, it can reject good answers or accept bad ones."
+  ],
+  "solution": "Use two roles: an optimizer/generator that produces or revises the output, and an evaluator/critic that scores it against explicit criteria and returns actionable feedback. Loop generate→evaluate→revise until the evaluator's score clears a threshold or a budget is hit.",
+  "tradeoffs": [
+    "Extra evaluation calls add cost and latency on every iteration.",
+    "Quality is bounded by the evaluator — a poor critic gives misleading scores.",
+    "Needs clear, measurable criteria; vague rubrics yield vague feedback.",
+    "Can loop without converging if the threshold is unrealistic — cap iterations."
+  ],
+  "body": "## First principles\nThis pattern is reflection's more structured sibling. Reflection has one model critique itself; evaluator-optimizer makes the **critic a distinct role** with an **explicit rubric**. Two things improve as a result. First, **separation removes self-bias**: a dedicated evaluator judging against criteria is less likely to rubber-stamp the generator's work. Second, an explicit rubric gives a **consistent, measurable bar** — you know *why* an attempt passed or failed and what to fix.\n\nIt mirrors how good teams work: the author writes; a reviewer checks against a definition-of-done and gives concrete feedback; the author revises. The loop, not any single attempt, is what raises quality.\n\n## Plain definition\nEvaluator-Optimizer = a generator produces output; a separate evaluator scores it against explicit criteria and returns actionable feedback; the generator revises. Repeat until the score clears a threshold or a budget runs out.\n\n## Mental model\nGenerate → evaluate (score + specific feedback) → pass threshold? → if no, feed feedback back to the generator and loop; if yes, ship. The diagram shows the two roles and the scored gate.\n\n## When it shines (per Anthropic)\nUse it when you have **clear evaluation criteria** and **iteration provably helps** — e.g., literary translation where a critic catches nuance, or complex search where an evaluator decides whether more rounds are needed.\n\n## Real examples\n- **LLM-as-a-judge pipelines**: a separate model scores generations on a rubric (helpfulness, correctness), driving revision or selection — widely used in eval and RLAIF.\n- **Code review loops**: a generator writes code; an evaluator agent reviews against standards (tests, style, security) and requests changes until it passes.\n\n## When to use it\n- You can write down **clear, measurable** success criteria.\n- **Iteration demonstrably improves** the result.\n- You want an objective gate, not the author's self-assessment.\n\n## Watch out for\n- **Weak evaluator** = misleading scores; invest in the rubric and critic prompt.\n- **No convergence**: cap iterations; accept the best-so-far.\n- Reuses a lot from **reflection** — the distinguishing feature is the separate, criteria-driven evaluator.",
+  "diagram": "flowchart LR\n  G([Task]) --> O[Optimizer:\\ngenerate / revise]\n  O --> E[Evaluator:\\nscore vs. rubric\\n+ specific feedback]\n  E --> Q{Score >= threshold\\nor budget hit?}\n  Q -- no --> O\n  Q -- yes --> F([Accepted output])",
+  "examples": [
+    { "product": "Anthropic (docs example)", "what": "Recommends the evaluator-optimizer workflow when criteria are clear and iteration helps, e.g., translation refined by a critic or evaluator-gated search.", "source": "https://www.anthropic.com/engineering/building-effective-agents" },
+    { "product": "LLM-as-a-judge (industry practice)", "what": "A separate judge model scores outputs against a rubric to drive selection or revision, common in evals and RLAIF training loops.", "source": "https://huyenchip.com/2025/01/07/agents.html" }
+  ],
+  "drills": [
+    { "q": "How does evaluator-optimizer differ from plain reflection?", "a": "It makes the critic a separate role with an explicit rubric, reducing self-bias and giving a consistent, measurable bar, rather than the model grading itself." },
+    { "q": "When does Anthropic say this pattern shines?", "a": "When you have clear evaluation criteria and iteration demonstrably improves the output (e.g., literary translation or evaluator-gated search)." },
+    { "q": "What caps the quality of an evaluator-optimizer loop?", "a": "The evaluator: a weak critic or vague rubric produces misleading scores, so the generator optimizes toward the wrong target." }
+  ],
+  "teachItBack": "Evaluator-optimizer pairs a generator that produces output with a separate evaluator that scores it against an explicit rubric and gives specific feedback, then loops until the score clears a threshold. Making the critic a distinct role with measurable criteria removes self-bias and gives a consistent bar for 'good enough.' It works best when criteria are clear and iteration helps, and its quality is capped by how good the evaluator is, so you invest in the rubric and cap the loop.",
+  "sources": [
+    { "title": "Anthropic — Building effective agents", "url": "https://www.anthropic.com/engineering/building-effective-agents", "verified": true },
+    { "title": "Self-Refine (Madaan et al., 2023)", "url": "https://arxiv.org/abs/2303.17651", "verified": true },
+    { "title": "Chip Huyen — Agents", "url": "https://huyenchip.com/2025/01/07/agents.html", "verified": true }
+  ],
+  "related": ["reflection", "multi-agent-orchestration", "guardrails", "prompt-chaining"],
+  "glossary": [
+    { "term": "Evaluator-optimizer", "definition": "A loop pairing a generator with a separate evaluator that scores output against criteria and drives revision." },
+    { "term": "LLM-as-a-judge", "definition": "Using a model to score or rank outputs against a rubric, often as the evaluator in this pattern." },
+    { "term": "Rubric", "definition": "An explicit set of measurable criteria the evaluator uses to score and give feedback on an output." }
+  ],
+  "quiz": [
+    {
+      "q": "What distinguishes evaluator-optimizer from basic reflection?",
+      "choices": ["It never iterates", "The critic is a separate role scoring against an explicit rubric", "It uses no model at all", "It only retrieves documents"],
+      "answer": 1,
+      "explanation": "Evaluator-optimizer separates the evaluator from the generator and uses explicit criteria, reducing self-bias."
+    },
+    {
+      "q": "What most limits the effectiveness of an evaluator-optimizer loop?",
+      "choices": ["The temperature setting", "The quality of the evaluator and its rubric", "The number of tools", "The font size"],
+      "answer": 1,
+      "explanation": "A weak evaluator or vague rubric gives misleading scores, so the generator optimizes toward the wrong target."
+    }
+  ]
+}

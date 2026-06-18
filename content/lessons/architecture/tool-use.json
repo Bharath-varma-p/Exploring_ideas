@@ -1,0 +1,60 @@
+{
+  "id": "tool-use",
+  "title": "Tool Use — Function Calling",
+  "lane": "architecture",
+  "type": "pattern",
+  "order": 30,
+  "tags": ["tool-use", "function-calling", "schemas", "actions", "foundational"],
+  "summary": "Give the model a menu of typed actions — functions with defined inputs — so it can do real things (search, query a DB, send an email) instead of only producing text.",
+  "analogy": "A smart home voice assistant with named buttons. It can't rewire your house, but it can press well-labeled buttons: 'turn_on(lights)', 'set(thermostat, 70)'. You define the buttons and what each expects; the model decides which to press.",
+  "problem": "A bare LLM can only emit text. It can't fetch fresh data, run code, or change the world — and when it tries to 'act' by free-form text, the output is unstructured and unreliable for software to consume.",
+  "forces": [
+    "You want real-world capability (data, computation, side effects) plus the model's flexibility.",
+    "Software needs structured, validated arguments — not prose it must parse.",
+    "Every tool you expose is new surface area for misuse or error.",
+    "The model must pick the right tool and supply correct arguments."
+  ],
+  "solution": "Define each action as a function with a name, description, and a typed argument schema (usually JSON Schema). Pass these definitions to the model; it responds with a structured call naming the tool and arguments. Your code executes it and returns the result for the model to use.",
+  "tradeoffs": [
+    "The model can call the wrong tool or pass invalid/hallucinated arguments — validate against the schema.",
+    "Side-effecting tools (send, delete, pay) need guardrails and often human approval.",
+    "More tools widen the choice space and can confuse selection — keep the toolset focused and well-described."
+  ],
+  "body": "## First principles\nAn LLM is a text function: text in, text out. It has no hands. To make it useful in real systems you must bridge it to the outside world — but if the model 'acts' by writing free-form sentences ('I'll now search for...'), your software has to parse fuzzy prose, which is brittle.\n\nThe key realization: the model doesn't need to *perform* the action, it just needs to **decide and specify** it in a structured form your code can execute. That's tool use (a.k.a. function calling): the model outputs a typed call, your runtime runs the actual function, and the result flows back.\n\n## Plain definition\nTool use = expose actions to the model as **named functions with typed argument schemas**. The model emits a structured call (tool name + arguments); your code validates and executes it and returns the result.\n\n## Mental model\nThe model is the brain choosing an action; the schema is the contract; your runtime is the hands. Result returns to the brain. The diagram shows that round trip.\n\n## Real examples\n- **OpenAI / Anthropic function calling**: you pass JSON-Schema tool definitions; the model returns `{name, arguments}` for your app to run.\n- **Toolformer** (Schick et al., 2023) showed models can *learn* when and how to call APIs (calculator, search, translation) to improve answers.\n- **Cursor / Copilot** expose tools like read-file, edit-file, run-terminal so the model can actually change a codebase.\n\n## When to use it\n- The task needs **fresh data, computation, or side effects**.\n- You need **structured, machine-executable** outputs, not prose.\n\n## Watch out for\n- **Hallucinated arguments**: validate every call against the schema; reject bad ones.\n- **Dangerous tools**: gate destructive/irreversible actions behind guardrails and human-in-the-loop.\n- **Tool sprawl**: too many similar tools hurt selection accuracy — curate and describe them clearly.",
+  "diagram": "sequenceDiagram\n  participant U as User\n  participant M as Model\n  participant R as Runtime\n  participant T as Tool/API\n  U->>M: request\n  M->>R: tool_call {name, args}\n  R->>R: validate args vs schema\n  R->>T: execute function\n  T-->>R: result\n  R-->>M: observation\n  M-->>U: grounded answer",
+  "examples": [
+    { "product": "OpenAI function calling", "what": "Developers declare tools with JSON-Schema parameters; the model returns a structured call the app executes and feeds back.", "source": "https://platform.openai.com/docs/guides/function-calling" },
+    { "product": "Cursor", "what": "Exposes editor/filesystem/terminal tools so the model can read, edit, and run code — turning chat into real repository actions.", "source": "https://docs.cursor.com/" }
+  ],
+  "drills": [
+    { "q": "Why expose actions as typed functions instead of letting the model describe them in prose?", "a": "Structured, schema-validated calls are reliable for software to execute, whereas free-form prose is brittle to parse and easy to get wrong." },
+    { "q": "What part of tool use does the model actually do versus your code?", "a": "The model decides which tool and supplies arguments; your runtime validates the arguments and executes the real function, returning the result." },
+    { "q": "Which tools most need guardrails or human approval?", "a": "Side-effecting, destructive, or irreversible ones (send email, delete data, make a payment) where a wrong call has real consequences." }
+  ],
+  "teachItBack": "Tool use gives the model a menu of named functions with typed argument schemas so it can decide on real actions instead of only writing text. The model emits a structured call, your runtime validates the arguments against the schema and executes the actual function, then returns the result for the model to use. Because the model can call the wrong tool or invent arguments, you validate every call and put guardrails and human approval around anything destructive.",
+  "sources": [
+    { "title": "OpenAI — Function calling guide", "url": "https://platform.openai.com/docs/guides/function-calling", "verified": true },
+    { "title": "Toolformer (Schick et al., 2023)", "url": "https://arxiv.org/abs/2302.04761", "verified": true },
+    { "title": "Anthropic — Building effective agents", "url": "https://www.anthropic.com/engineering/building-effective-agents", "verified": true }
+  ],
+  "related": ["react", "rag", "guardrails", "human-in-the-loop", "agentic-patterns-overview"],
+  "glossary": [
+    { "term": "Tool use", "definition": "Exposing actions to a model as named, typed functions it can call to affect the world or fetch data." },
+    { "term": "Function calling", "definition": "The mechanism where a model returns a structured {name, arguments} object that application code executes." },
+    { "term": "JSON Schema", "definition": "A standard for describing the shape and types of a function's arguments, used to define and validate tool calls." }
+  ],
+  "quiz": [
+    {
+      "q": "In tool use, what does the model output when it wants to act?",
+      "choices": ["The executed result of the action", "A structured call naming the tool and its arguments", "Raw SQL only", "A natural-language paragraph the user must run"],
+      "answer": 1,
+      "explanation": "The model emits a structured tool call (name + arguments); your runtime executes the real function."
+    },
+    {
+      "q": "What is the best mitigation for a model passing invalid or hallucinated arguments?",
+      "choices": ["Use a bigger model and hope", "Validate every call against its typed schema and reject bad ones", "Remove all tools", "Let it call tools without checking"],
+      "answer": 1,
+      "explanation": "Schema validation catches malformed or hallucinated arguments before any function runs."
+    }
+  ]
+}

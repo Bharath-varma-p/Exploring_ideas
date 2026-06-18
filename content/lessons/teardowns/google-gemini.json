@@ -1,0 +1,118 @@
+{
+  "id": "google-gemini",
+  "title": "Google Gemini — Multimodal Context with Motion as Feedback",
+  "lane": "teardowns",
+  "type": "teardown",
+  "order": 20,
+  "product": "Google Gemini",
+  "tags": [
+    "multimodal",
+    "google",
+    "motion",
+    "assistant",
+    "material-design"
+  ],
+  "summary": "Gemini pairs multimodal inputs — text, audio, image, video, screen, and tools — with a visual language of gradients, containers, and motion that makes AI feel responsive instead of static.",
+  "contextSignals": [
+    "Text prompts and conversation history",
+    "Images and screenshots",
+    "Audio and natural voice input",
+    "Video streams and real-time camera context",
+    "Screen or app context in developer demos",
+    "Search grounding and tool results",
+    "Latency and turn-taking signals in live multimodal sessions",
+    "User intent inferred from modality choice"
+  ],
+  "patterns": [
+    "routing",
+    "tool-use",
+    "rag",
+    "planner-executor",
+    "guardrails"
+  ],
+  "uxMoves": [
+    "motion-and-animation",
+    "streaming",
+    "latency-masking",
+    "trust-and-transparency",
+    "progressive-disclosure"
+  ],
+  "analogy": "A translator in a glass studio: it listens, watches, searches, and uses motion to show that the system is alive and tracking your context.",
+  "diagram": "flowchart TD\n  T[Text prompt] --> C[Gemini context window]\n  I[Image or screenshot] --> C\n  A[Audio or voice] --> C\n  V[Video stream] --> C\n  C --> R{Route by modality and intent}\n  R --> S[Search grounding or tools]\n  R --> M[Multimodal model reasoning]\n  S --> M\n  M --> O[Answer: text, voice, visual structure]\n  O --> UX[Motion, gradient, streaming feedback]\n  UX --> U[User continues or interrupts]",
+  "body": "## What it is\nGemini is Google's family of multimodal AI models and product experiences. The important teardown angle is not only that Gemini can work with text, images, audio, and video. It is that Google treats the response experience as a designed interface: visual identity, responsive containers, gradients, streaming, and motion all communicate state.\n\nGoogle's Gemini announcement positioned the model as natively multimodal. The Gemini 2.0 Multimodal Live API adds bidirectional streaming of text, audio, and video, sub-second first-token latency, voice activity detection, interruption, video understanding, tool integration, search grounding, and code execution.\n\n## Context signals it uses\nGemini can take many context signals at once: text instructions, visual input, audio, video, and tool results. In a live interaction, the system can also infer intent from turn-taking: whether the user interrupted, paused, pointed a camera, or continued speaking.\n\nThat changes the product shape. A typed assistant waits for a prompt. A multimodal assistant can interpret the scene, the user's voice, and the task simultaneously. The context surface becomes less like a chat box and more like a sensorium.\n\n## Patterns under the hood\nRouting is the key architecture pattern. A Gemini experience must decide whether to answer from the model, ground via Search, call a tool, execute code, or combine modalities in the same request. The Live API documentation explicitly describes tool integration, function calling, code execution, search grounding, and combinations of tools inside one request.\n\nRAG matters when Search grounding is used. Guardrails matter because multimodal inputs raise new failure modes: mistaken visual interpretation, overconfident search synthesis, and privacy-sensitive screen or camera context.\n\n## UX & engagement moves\nMotion is the differentiator to study. Google Design's Gemini visual-design writeup says gradients, responsive containers, and intentional motion work together to create magic, clarity, familiarity, and trust. Material motion principles give those state changes a grammar: continuity, feedback, and purposeful transitions.\n\nStreaming and low latency make the assistant feel present. Motion should not be decoration; it should explain state. Listening, processing, grounding, and responding can each have a different visual cadence. This helps users understand that multimodal AI is doing work without forcing them to read technical logs.\n\n## What to steal (lessons)\nIf your agent sees more than text, design more than text. Use motion to reveal state: listening, looking, searching, composing, and done. Give the user interruption and correction paths so multimodality does not feel like surveillance or inevitability.\n\nAlso steal the routing mindset. Multimodal context is expensive and noisy. The product should choose the smallest useful context and the right tool path, then make that choice legible through the interface.",
+  "examples": [
+    {
+      "product": "Gemini 2.0 Multimodal Live API",
+      "what": "Supports bidirectional streaming with text, audio, video, low latency, tool integration, search grounding, and code execution.",
+      "source": "https://developers.googleblog.com/en/gemini-2-0-level-up-your-apps-with-real-time-multimodal-interactions/"
+    },
+    {
+      "product": "Gemini visual design",
+      "what": "Uses gradients, responsive containers, and intentional motion to make the evolving AI assistant feel intuitive and trustworthy.",
+      "source": "https://design.google/library/gemini-ai-visual-design"
+    }
+  ],
+  "drills": [
+    {
+      "q": "Why does motion matter in Gemini-like AI interfaces?",
+      "a": "It communicates state — listening, processing, grounding, responding — so users can follow what the assistant is doing."
+    },
+    {
+      "q": "What is the architectural challenge of multimodal context?",
+      "a": "Routing: deciding which modalities and tools are relevant without overwhelming the model or the user."
+    }
+  ],
+  "teachItBack": "Gemini is a multimodal assistant, so its context can include text, image, audio, video, screen, and tool results. Google pairs that capability with motion and responsive visuals so the product feels alive and understandable. The key lesson is that multimodal AI needs multimodal feedback.",
+  "sources": [
+    {
+      "title": "Google — Making Gemini available to the world",
+      "url": "https://blog.google/innovation-and-ai/technology/ai/google-gemini-ai/",
+      "verified": true
+    },
+    {
+      "title": "Google Developers Blog — Gemini 2.0 real-time multimodal interactions",
+      "url": "https://developers.googleblog.com/en/gemini-2-0-level-up-your-apps-with-real-time-multimodal-interactions/",
+      "verified": true
+    },
+    {
+      "title": "Google Design — Gemini AI visual design",
+      "url": "https://design.google/library/gemini-ai-visual-design",
+      "verified": true
+    },
+    {
+      "title": "Material Design 3 — Motion",
+      "url": "https://m3.material.io/styles/motion/overview/how-it-works",
+      "verified": true
+    }
+  ],
+  "related": [
+    "routing",
+    "tool-use",
+    "rag",
+    "motion-and-animation",
+    "streaming"
+  ],
+  "glossary": [
+    {
+      "term": "Multimodal context",
+      "definition": "Inputs from multiple modalities such as text, audio, image, video, screen, and tool results used together in one AI interaction."
+    },
+    {
+      "term": "Motion feedback",
+      "definition": "Animation that communicates interface state, continuity, and progress rather than merely decorating the UI."
+    }
+  ],
+  "quiz": [
+    {
+      "q": "What should motion communicate in a multimodal AI response?",
+      "choices": [
+        "Only brand personality",
+        "System state and continuity",
+        "Hidden model weights",
+        "Nothing; motion is always decorative"
+      ],
+      "answer": 1,
+      "explanation": "In Gemini-like interfaces, motion is useful when it shows state such as listening, processing, grounding, and responding."
+    }
+  ]
+}

@@ -1,0 +1,72 @@
+{
+  "id": "motion-and-animation",
+  "title": "Motion and Animation",
+  "lane": "uiux",
+  "type": "concept",
+  "order": 20,
+  "summary": "Using purposeful motion to signal state, shift focus, and add delight, like Gemini's breathing response motion.",
+  "body": "## First principles\nMotion in UI isn't just decoration; it's communication. It explains changes in state, establishes hierarchy, and masks loading times. In AI interfaces, where states (thinking, streaming, idle) are fluid, motion provides critical context.\n\n## Purposeful motion\nEvery animation should serve a purpose. When an AI is \"thinking,\" a subtle, organic pulsing or \"breathing\" animation signals life and activity without being distracting. When a response finishes, easing the layout signals completion.\n\n## Material design principles\nFollow established physics: use ease-in-out for natural movement. Avoid linear animations which feel robotic. The choreography of elements should guide the user's eye from the prompt to the emerging response.",
+  "tags": [
+    "motion",
+    "animation",
+    "delight",
+    "feedback"
+  ],
+  "analogy": "Motion in UI is like body language in a conversation. A nod, a thinking expression, or a gesture tells you what the other person is doing before they even speak.",
+  "diagram": "flowchart TD\n  Idle[Idle: Static] --> |Input| Think[Thinking: Organic Pulse]\n  Think --> |Generate| Stream[Streaming: Smooth Reveal]\n  Stream --> |Done| Settle[Settle: Ease to Rest]",
+  "examples": [
+    {
+      "product": "Google Gemini",
+      "what": "Uses a glowing, breathing star animation to indicate thinking, giving the AI a subtle, organic presence.",
+      "source": "https://blog.google/products/gemini/",
+      "verified": true
+    },
+    {
+      "product": "Apple Intelligence",
+      "what": "Uses a glowing edge animation around the screen to indicate the assistant is listening and processing.",
+      "source": "https://developer.apple.com/design/human-interface-guidelines",
+      "verified": true
+    }
+  ],
+  "drills": [
+    {
+      "q": "Why is linear animation discouraged?",
+      "a": "It feels robotic and unnatural compared to ease-in-out which mimics real-world physics."
+    },
+    {
+      "q": "What does 'purposeful motion' mean?",
+      "a": "Animation that communicates state, shifts focus, or masks latency, rather than just being decorative."
+    }
+  ],
+  "teachItBack": "Motion acts as the body language of your UI. When the AI is thinking, a subtle breathing animation tells the user the system is alive and working. Good motion guides the user's eye and uses natural easing to feel fluid, not robotic.",
+  "sources": [
+    {
+      "title": "Material Design 3 - Motion",
+      "url": "https://m3.material.io/styles/motion/overview",
+      "verified": true
+    }
+  ],
+  "related": [
+    "microinteractions",
+    "latency-masking"
+  ],
+  "glossary": [
+    {
+      "term": "Easing",
+      "definition": "The rate of change of a parameter over time, used to make animations feel natural (e.g., ease-in-out)."
+    }
+  ],
+  "quiz": [
+    {
+      "q": "What is the primary role of a 'breathing' animation during AI generation?",
+      "choices": [
+        "To consume CPU cycles",
+        "To signal that the system is active and processing",
+        "To distract the user from reading",
+        "To show brand colors"
+      ],
+      "answer": 1,
+      "explanation": "An organic, pulsing animation reassures the user that the system hasn't frozen and is actively working on their request."
+    }
+  ]
+}

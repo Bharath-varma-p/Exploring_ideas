@@ -1,0 +1,57 @@
+{
+  "id": "react",
+  "title": "ReAct — Reason + Act",
+  "lane": "architecture",
+  "type": "pattern",
+  "order": 20,
+  "tags": ["reasoning", "tool-use", "loop", "foundational"],
+  "summary": "Interleave the model's reasoning with real actions in a loop, so it can think, use a tool, observe the result, and think again — instead of guessing in one shot.",
+  "analogy": "A detective who doesn't solve the case from the armchair: they form a hunch, go check a clue, see what they find, update the hunch, and repeat until the case cracks.",
+  "problem": "A single forward pass forces the model to commit to an answer before it has the facts. For multi-step tasks (look something up, then act on it) that produces confident-but-wrong answers and hallucinated steps.",
+  "forces": [
+    "You want the model's flexible reasoning AND grounding in real, fresh data.",
+    "Each tool call adds latency and cost, so you can't loop forever.",
+    "More autonomy means more places to go wrong without guardrails."
+  ],
+  "solution": "Run a loop where each turn the model emits a Thought (reasoning), an Action (a tool call with arguments), then receives an Observation (the tool's result) that feeds the next Thought. Stop when it emits a final answer or hits a budget.",
+  "tradeoffs": [
+    "Latency/cost grow with loop length — cap iterations and add a token/time budget.",
+    "Loops can get stuck repeating actions — add reflection, dedup, or a step limit.",
+    "Powerful but needs guardrails since the model is taking real actions."
+  ],
+  "body": "## First principles\nLanguage models are next-token predictors with no senses and no memory of the live world. If you ask one to 'book the cheapest flight,' it will *pretend* to know prices. The root problem: **reasoning and acting are separated** — the model reasons in a vacuum.\n\nReAct's insight (Yao et al., 2022) is to **interleave** them. Reasoning decides what to do next; acting fetches real information; the observation grounds the next round of reasoning. Thought → Action → Observation → repeat.\n\n## Mental model\nThink of it as a `while` loop the model itself drives:\n\n1. **Thought** — 'I need the current price, I'll search.'\n2. **Action** — `search(\"SFO→JFK cheapest Tuesday\")`\n3. **Observation** — the tool returns results.\n4. Back to **Thought** with new facts. Stop at a final answer or a budget.\n\n## When to use it\n- Tasks that need **fresh or external facts** (search, DB, code execution).\n- Multi-step tasks where each step depends on the last.\n- Skip it for pure single-shot Q&A — the loop just adds latency.\n\n## Watch out for\n- **Runaway loops**: cap iterations, detect repeated actions.\n- **Bad observations poison reasoning**: validate tool output.\n- Pair with **reflection** for self-correction and **guardrails** on the actions.",
+  "diagram": "flowchart LR\n  U([Goal]) --> T[Thought: reason about next step]\n  T --> A[Action: call a tool]\n  A --> O[Observation: tool result]\n  O --> D{Done or budget hit?}\n  D -- no --> T\n  D -- yes --> F([Final answer])",
+  "examples": [
+    { "product": "LangChain agents", "what": "The default 'ReAct agent' implements exactly this Thought/Action/Observation loop over a tool set.", "source": "https://python.langchain.com/docs/how_to/agent_executor/" },
+    { "product": "Perplexity", "what": "Answers by reasoning about a query, issuing real web searches, then composing a grounded, cited answer — a productized search-and-reason loop.", "source": "https://www.perplexity.ai/hub/blog" }
+  ],
+  "drills": [
+    { "q": "Why does interleaving reasoning with actions reduce hallucination compared to one-shot answering?", "a": "Because each reasoning step is grounded in a real Observation from a tool, so the model updates on facts instead of inventing them." },
+    { "q": "Name two ways a ReAct loop can fail and a mitigation for each.", "a": "Runaway/looping actions → cap iterations + detect repeats; poisoned reasoning from bad tool output → validate/sanitize observations." },
+    { "q": "When is ReAct the wrong choice?", "a": "For single-shot questions the model can already answer from its weights — the loop only adds latency and cost." }
+  ],
+  "teachItBack": "ReAct makes an agent think and act in a loop: it reasons about the next step, calls a tool, observes the real result, and reasons again. That grounding in real observations is what stops it from confidently making things up. You cap the loop with an iteration/token budget so it can't run forever.",
+  "sources": [
+    { "title": "ReAct: Synergizing Reasoning and Acting in Language Models (Yao et al., 2022)", "url": "https://arxiv.org/abs/2210.03629", "verified": true },
+    { "title": "Anthropic — Building effective agents", "url": "https://www.anthropic.com/engineering/building-effective-agents", "verified": true }
+  ],
+  "related": ["planner-executor", "reflection", "tool-use", "guardrails"],
+  "glossary": [
+    { "term": "ReAct", "definition": "A pattern that interleaves reasoning traces (Thought) with tool actions (Action) and their results (Observation) in a loop." },
+    { "term": "Agent loop", "definition": "The repeating observe→decide→act cycle that turns a one-shot model into a goal-seeking agent." }
+  ],
+  "quiz": [
+    {
+      "q": "What three elements repeat in a ReAct loop?",
+      "choices": ["Prompt, Completion, Reward", "Thought, Action, Observation", "Plan, Execute, Reflect", "Retrieve, Augment, Generate"],
+      "answer": 1,
+      "explanation": "ReAct interleaves Thought (reasoning), Action (tool call), and Observation (result) each turn."
+    },
+    {
+      "q": "What is the main risk introduced by giving a ReAct agent real tool access?",
+      "choices": ["It uses fewer tokens", "It can take wrong/harmful real actions without guardrails", "It can no longer reason", "It always loops forever"],
+      "answer": 1,
+      "explanation": "Acting in the real world means mistakes have real consequences, so guardrails and budgets are essential."
+    }
+  ]
+}

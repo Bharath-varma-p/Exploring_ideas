@@ -1,0 +1,126 @@
+{
+  "id": "github-copilot",
+  "title": "GitHub Copilot — IDE Context and Ghost Text",
+  "lane": "teardowns",
+  "type": "teardown",
+  "order": 70,
+  "product": "GitHub Copilot",
+  "tags": [
+    "developer-tools",
+    "ide",
+    "ghost-text",
+    "chat",
+    "agents"
+  ],
+  "summary": "GitHub Copilot uses the developer’s IDE context — current file, cursor, suffix, open tabs, selected files, chat context, and workspace signals — to generate inline suggestions, chat answers, edits, and agentic workflows.",
+  "contextSignals": [
+    "Current file prefix and suffix around the cursor",
+    "Cursor location and active editor state",
+    "Open files and neighboring tabs",
+    "Relevant repositories, files, folders, symbols, and codebase context",
+    "Natural-language comments and prompts",
+    "Chat history and explicitly added context",
+    "Terminal output and tool results in agent workflows",
+    "Issue, PR, and custom-instruction context for cloud/agent tasks",
+    "User accept/reject behavior for suggestions"
+  ],
+  "patterns": [
+    "rag",
+    "tool-use",
+    "planner-executor",
+    "reflection",
+    "routing",
+    "guardrails"
+  ],
+  "uxMoves": [
+    "ghost-text",
+    "command-palette",
+    "latency-masking",
+    "streaming",
+    "human-in-the-loop",
+    "trust-and-transparency"
+  ],
+  "analogy": "A pair programmer looking over your shoulder, aware of the file, the neighboring tabs, the chat, and the tests you are about to run.",
+  "diagram": "flowchart LR\n  IDE[IDE state: cursor, prefix, suffix] --> P[Prompt/context assembly]\n  Tabs[Open files / neighboring tabs] --> P\n  Chat[Chat prompt and selected context] --> P\n  P --> D{Interaction surface}\n  D --> G[Ghost-text completion]\n  D --> C[Copilot Chat answer]\n  D --> E[Multi-file edits]\n  D --> A[Agent mode]\n  A --> T[Run/read/edit/tool observations]\n  T --> A\n  G --> U[Developer accepts, rejects, or edits]\n  E --> U\n  C --> U",
+  "body": "## What it is\nGitHub Copilot is an AI coding assistant across IDEs, GitHub, and agentic workflows. The classic magic is ghost text: Copilot offers grayed-out inline code suggestions as you type, accepted with Tab. The newer surface is Copilot Chat, Edits, and agent mode.\n\nThe important teardown is context assembly. Copilot does not simply send the last line you typed. GitHub's engineering blog explains prompt construction from IDE code and relevant context, including neighboring tabs and fill-in-the-middle.\n\n## Context signals it uses\nCopilot uses immediate editor context: code before and after the cursor, comments, active file, and language. GitHub's docs say inline suggestions are best for snippets, variable names, functions, repetitive code, tests, and natural-language comments.\n\nThe GitHub blog describes neighboring tabs as a technique that lets Copilot process all open files in the IDE, not just the active file. Best-practice docs tell users to open relevant files and close irrelevant ones. Chat and VS Code context tools add explicit references to files, folders, symbols, terminal output, source control changes, and codebase context.\n\n## Patterns under the hood\nCopilot uses RAG-like context selection over editor and repository signals. Chat and agent mode add tool use: read files, edit code, run commands, and self-correct after errors. Agent mode is planner-executor plus reflection: break down the task, make changes, observe errors, remediate, and continue.\n\nGuardrails are product and workflow guardrails. The docs repeatedly remind users to review and validate Copilot's suggestions, run tests, and keep the human in charge.\n\n## UX & engagement moves\nGhost text is a low-friction UX masterpiece. It appears exactly where work is happening, can be accepted with Tab, partially accepted, ignored, or replaced. It does not require a separate chat ritual.\n\nChat and Edits handle tasks that need more explicit context and review. Agent mode changes the engagement loop again: the user states a task, Copilot streams edits, may suggest or run commands depending on environment, and the user reviews results.\n\n## What to steal (lessons)\nMatch autonomy to context and reversibility. Inline suggestions should be fast and easy to ignore. Multi-file edits should be reviewable. Agents should expose steps, terminal output, and final changes.\n\nAlso teach users how to shape context. Copilot's own best-practice docs say to open relevant files and close irrelevant ones. Great AI products do not hide context management; they make it a learnable skill.",
+  "examples": [
+    {
+      "product": "GitHub Copilot code suggestions",
+      "what": "Shows grayed-out code suggestions in the IDE as the user types, accepted with Tab and adjustable through alternatives or partial acceptance.",
+      "source": "https://docs.github.com/en/copilot/how-tos/get-code-suggestions/get-ide-code-suggestions"
+    },
+    {
+      "product": "Neighboring tabs",
+      "what": "GitHub describes using open IDE tabs as context so Copilot can include relevant matches from files beyond the active editor.",
+      "source": "https://github.blog/ai-and-ml/github-copilot/how-github-copilot-is-getting-better-at-understanding-your-code/"
+    }
+  ],
+  "drills": [
+    {
+      "q": "Why do neighboring tabs improve Copilot suggestions?",
+      "a": "They give the model relevant code from open files, not only the active file, so suggestions better match project patterns."
+    },
+    {
+      "q": "What is the UX advantage of ghost text?",
+      "a": "It is immediate, in-place, reversible, and easy to ignore or accept without leaving the editor."
+    }
+  ],
+  "teachItBack": "GitHub Copilot is strongest when it has the right IDE context. Ghost text handles fast completions, chat handles explanation, and agent mode handles multi-step changes. The lesson is to make context shaping and human review central to the workflow.",
+  "sources": [
+    {
+      "title": "GitHub Docs — Best practices for using GitHub Copilot",
+      "url": "https://docs.github.com/en/copilot/get-started/best-practices",
+      "verified": true
+    },
+    {
+      "title": "GitHub Docs — Getting code suggestions in your IDE",
+      "url": "https://docs.github.com/en/copilot/how-tos/get-code-suggestions/get-ide-code-suggestions",
+      "verified": true
+    },
+    {
+      "title": "GitHub Docs — Asking Copilot questions in your IDE",
+      "url": "https://docs.github.com/en/copilot/how-tos/chat-with-copilot/chat-in-ide",
+      "verified": true
+    },
+    {
+      "title": "GitHub Blog — How GitHub Copilot is getting better at understanding your code",
+      "url": "https://github.blog/ai-and-ml/github-copilot/how-github-copilot-is-getting-better-at-understanding-your-code/",
+      "verified": true
+    },
+    {
+      "title": "GitHub Blog — GitHub Copilot: The agent awakens",
+      "url": "https://github.blog/news-insights/product-news/github-copilot-the-agent-awakens/",
+      "verified": true
+    }
+  ],
+  "related": [
+    "rag",
+    "tool-use",
+    "planner-executor",
+    "reflection",
+    "ghost-text"
+  ],
+  "glossary": [
+    {
+      "term": "Neighboring tabs",
+      "definition": "A context technique where open files in the IDE are considered alongside the active file."
+    },
+    {
+      "term": "Fill-in-the-middle",
+      "definition": "A prompting pattern that gives the model code before and after the cursor so it can complete the gap."
+    }
+  ],
+  "quiz": [
+    {
+      "q": "What should users do to help Copilot provide better IDE suggestions?",
+      "choices": [
+        "Open relevant files and close irrelevant files",
+        "Hide all context",
+        "Never review outputs",
+        "Only use empty files"
+      ],
+      "answer": 0,
+      "explanation": "GitHub recommends shaping context by opening relevant files and closing irrelevant ones."
+    }
+  ]
+}

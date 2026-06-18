@@ -1,0 +1,61 @@
+{
+  "id": "planner-executor",
+  "title": "Planner–Executor",
+  "lane": "architecture",
+  "type": "pattern",
+  "order": 40,
+  "tags": ["planning", "decomposition", "agents", "separation-of-concerns"],
+  "summary": "Split the work in two: one component makes a plan (the list of steps), another carries each step out. Separating thinking from doing makes complex, multi-step tasks tractable and inspectable.",
+  "analogy": "An architect and a construction crew. The architect draws the blueprint; the crew builds room by room. You wouldn't ask one person to simultaneously design and pour concrete — separating the roles makes both better.",
+  "problem": "For long, multi-step tasks, asking one loop to figure out the next move while also executing it leads to short-sighted, drifting behavior — it loses the thread of the overall goal and can't see the whole task at once.",
+  "forces": [
+    "Complex tasks need a global view, but execution happens one local step at a time.",
+    "You want an inspectable, editable plan before acting (especially for risky work).",
+    "Plans must adapt when an executed step fails or reveals new information.",
+    "More structure means more orchestration and more LLM calls."
+  ],
+  "solution": "Use a Planner that decomposes the goal into an explicit ordered list of steps, then an Executor that performs each step (often with tools). Optionally re-plan: after executing, feed results back to the planner to revise the remaining steps.",
+  "tradeoffs": [
+    "A bad initial plan derails everything — add re-planning or a critique step.",
+    "More LLM calls and latency than a single reactive loop.",
+    "Rigid up-front plans can't anticipate surprises; dynamic re-planning costs more but adapts.",
+    "Two roles to design, prompt, and coordinate."
+  ],
+  "body": "## First principles\nThere's a fundamental tension in agentic tasks: good execution needs a **global** understanding of the goal, but actions happen **locally**, one at a time. A single reactive loop (decide-and-do each turn) optimizes the next step and easily loses sight of the whole — it drifts, repeats, or stops short on long tasks.\n\nThe fix is **separation of concerns**, the same idea behind routing and chaining: split *deciding the strategy* from *carrying it out*. A **Planner** holds the global view and lays out the steps; an **Executor** focuses on doing one step well. Now each role is simpler and the plan is a visible artifact you can inspect or edit before any action runs.\n\n## Plain definition\nPlanner–Executor = one component decomposes the goal into an explicit step list (the plan); another executes each step, usually with tools. Often there's a **re-plan** loop: results feed back so the planner can revise remaining steps.\n\n## Mental model\nPlan once → execute step → check → either continue, or loop back to re-plan with what you learned. The diagram shows the optional feedback edge that makes it adaptive.\n\n## Static vs. dynamic\n- **Static (plan-and-execute)**: make the whole plan once, then run it. Cheaper, predictable; brittle if reality differs.\n- **Dynamic (re-planning)**: revise the plan as steps complete or fail. Robust, adaptive; costs more calls. LangGraph's 'plan-and-execute' agent implements exactly this loop.\n\n## Real examples\n- **LangGraph plan-and-execute agent**: an explicit planner node creates steps; an executor runs them; control returns to re-plan until done.\n- **BabyAGI / AutoGPT (early autonomous agents)**: popularized task-list planners that generate, prioritize, and execute subtasks in a loop.\n- **Deep-research assistants** (e.g., agentic research modes): plan the sub-questions, then execute searches and synthesis per sub-question.\n\n## When to use it\n- **Long-horizon** tasks with many interdependent steps.\n- You want a **reviewable plan** before acting (pair with human-in-the-loop).\n\n## Watch out for\n- **Garbage plan → garbage outcome**: critique or validate the plan first.\n- **Over-planning**: simple tasks don't need a separate planner — use ReAct.\n- Without re-planning, the agent can't recover when a step fails.",
+  "diagram": "flowchart TD\n  G([Goal]) --> P[Planner:\\ndecompose into steps]\n  P --> Q[(Plan: step list)]\n  Q --> E[Executor:\\nrun next step + tools]\n  E --> C{Step result:\\ndone? failed? new info?}\n  C -- more steps --> E\n  C -- need changes --> P\n  C -- complete --> F([Final result])",
+  "examples": [
+    { "product": "LangGraph", "what": "Its 'plan-and-execute' agent uses a planner node to generate steps and an executor to run them, looping back to re-plan as needed.", "source": "https://langchain-ai.github.io/langgraph/tutorials/plan-and-execute/plan-and-execute/" },
+    { "product": "AutoGPT", "what": "An early autonomous agent that generates a task list from a goal, then executes and re-prioritizes subtasks in a loop.", "source": "https://github.com/Significant-Gravitas/AutoGPT" }
+  ],
+  "drills": [
+    { "q": "Why separate planning from execution instead of using one reactive loop?", "a": "Planning needs a global view of the goal while execution is local and step-by-step; separating them keeps the agent from drifting and produces an inspectable plan." },
+    { "q": "What is the difference between static and dynamic (re-planning) planner-executor?", "a": "Static plans the whole task once then runs it (cheaper, brittle); dynamic revises the plan as steps complete or fail (costlier, adaptive)." },
+    { "q": "What is the biggest risk of planner-executor and how do you mitigate it?", "a": "A bad initial plan derails everything; mitigate by critiquing/validating the plan first and enabling re-planning when steps fail." }
+  ],
+  "teachItBack": "Planner–executor splits a complex task into a planner that decomposes the goal into steps and an executor that carries each step out. Separating global strategy from local doing keeps a long task on track and gives you a plan you can inspect before anything runs. Add a re-planning loop so results feed back and the plan adapts when a step fails, since a bad fixed plan would otherwise derail the whole job.",
+  "sources": [
+    { "title": "LangGraph — Plan-and-Execute", "url": "https://langchain-ai.github.io/langgraph/tutorials/plan-and-execute/plan-and-execute/", "verified": false },
+    { "title": "Lilian Weng — LLM Powered Autonomous Agents", "url": "https://lilianweng.github.io/posts/2023-06-23-agent/", "verified": true },
+    { "title": "Anthropic — Building effective agents", "url": "https://www.anthropic.com/engineering/building-effective-agents", "verified": true }
+  ],
+  "related": ["react", "multi-agent-orchestration", "reflection", "human-in-the-loop", "agentic-patterns-overview"],
+  "glossary": [
+    { "term": "Planner", "definition": "The component that decomposes a goal into an explicit ordered list of steps to execute." },
+    { "term": "Executor", "definition": "The component that carries out individual plan steps, typically using tools." },
+    { "term": "Re-planning", "definition": "Revising the remaining plan after executing steps, using new results or failures to adapt." }
+  ],
+  "quiz": [
+    {
+      "q": "What is the core idea of the planner-executor pattern?",
+      "choices": ["Run many models in parallel", "Separate deciding the steps (planner) from carrying them out (executor)", "Retrieve documents before answering", "Always ask a human first"],
+      "answer": 1,
+      "explanation": "Planner-executor separates global strategy (planning) from local action (execution)."
+    },
+    {
+      "q": "What does adding a re-planning loop buy you?",
+      "choices": ["Lower cost always", "The ability to adapt the plan when steps fail or reveal new information", "Fewer LLM calls", "Guaranteed correct first plan"],
+      "answer": 1,
+      "explanation": "Re-planning feeds execution results back to the planner so it can revise the remaining steps."
+    }
+  ]
+}

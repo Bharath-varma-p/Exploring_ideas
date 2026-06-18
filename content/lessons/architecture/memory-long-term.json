@@ -1,0 +1,48 @@
+{
+  "id": "memory-long-term",
+  "title": "Long-Term Memory",
+  "lane": "architecture",
+  "type": "concept",
+  "order": 65,
+  "tags": ["memory", "persistence", "vector-store", "retrieval", "personalization"],
+  "summary": "Persistent memory that outlives a single session — facts, preferences, and past events stored externally and retrieved on demand — so an agent can remember you tomorrow and recall more than fits in its context window.",
+  "analogy": "A notebook plus a filing cabinet. You can't keep everything in your head (short-term memory), so you write important things down and file them. Later, when relevant, you pull the right folder. The agent does the same with an external store.",
+  "body": "## First principles\nShort-term memory dies when the session ends and is capped by the context window. But useful agents need to **remember across time** — your name, your preferences, what happened last week — and to access knowledge far larger than any window. You can't solve this by making the window bigger forever: it's costly and attention degrades.\n\nThe answer is the same architecture as RAG: **externalize memory**. Store information durably outside the model, and **retrieve** the relevant pieces back into context when needed. The model's weights stay frozen; memory becomes a database you read from and write to.\n\n## Plain definition\nLong-term memory = an **external, persistent** store of an agent's knowledge and history (facts, preferences, prior interactions). At the right moment, relevant entries are retrieved and injected into the working context. It survives across sessions.\n\n## What gets stored (types)\n- **Semantic**: facts and knowledge ('the user is vegetarian').\n- **Episodic**: past events/interactions ('last session we fixed the auth bug').\n- **Procedural**: how-to / learned skills and instructions.\n\n## Mental model\nOn each turn: decide what's worth remembering and **write** it to the store; when relevant, **retrieve** the closest entries (usually by embedding similarity) and add them to context. The diagram shows this read/write loop around an external store.\n\n## MemGPT-style paging\nMemGPT (Packer et al., 2023) frames the LLM like an **operating system**: a small fast 'main memory' (the context window) backed by large 'external memory.' The agent **pages** information in and out — moving relevant data into context and evicting the rest — so it can handle effectively unbounded history. This OS analogy is the canonical mental model for long-term memory.\n\n## Real examples\n- **ChatGPT Memory**: persists facts and preferences you share and recalls them in future chats for personalization.\n- **MemGPT / Letta**: explicit tiered memory with paging between context and an external store.\n- **Vector-store memory (LangChain, Mem0)**: write interactions as embeddings; retrieve relevant ones into future prompts.\n\n## When to use it\n- **Personalization** across sessions.\n- Knowledge that **exceeds the context window** or must persist.\n- Agents that should **learn from past** interactions.\n\n## Watch out for\n- **Retrieval quality** governs usefulness (same as RAG) — bad recall = forgotten or wrong memories.\n- **Stale/contradictory memories**: need updating and conflict resolution.\n- **Privacy**: persisting user data demands consent, scoping, and deletion controls.",
+  "diagram": "flowchart LR\n  subgraph Session\n    A[Agent turn] --> W{Worth\\nremembering?}\n    W -- yes --> WR[Write entry]\n    A --> NEED{Need past\\nknowledge?}\n  end\n  WR --> STORE[(Persistent memory\\nvector / DB)]\n  NEED -- yes --> RET[Retrieve relevant\\nentries]\n  STORE --> RET\n  RET --> CTX[Inject into context]\n  CTX --> A",
+  "examples": [
+    { "product": "ChatGPT Memory", "what": "Persists facts and preferences across conversations and recalls them later, so the assistant remembers you between sessions.", "source": "https://help.openai.com/en/articles/8590148-memory-faq" },
+    { "product": "MemGPT (Letta)", "what": "Treats the context window like RAM backed by external storage, paging memories in and out to handle unbounded history.", "source": "https://arxiv.org/abs/2310.08560" }
+  ],
+  "drills": [
+    { "q": "Why can't you solve long-term memory by just enlarging the context window?", "a": "It's costly, attention degrades over very long contexts, and it still can't persist across sessions; externalizing memory and retrieving on demand scales better." },
+    { "q": "What is the MemGPT operating-system analogy?", "a": "Treat the context window as fast 'main memory' backed by large external storage, paging relevant information in and evicting the rest, like an OS managing RAM and disk." },
+    { "q": "Name the three common types of long-term memory.", "a": "Semantic (facts/knowledge), episodic (past events/interactions), and procedural (how-to skills/instructions)." }
+  ],
+  "teachItBack": "Long-term memory stores an agent's knowledge and history in an external, persistent store and retrieves the relevant pieces back into context when needed, so it survives across sessions and exceeds the context window. The canonical model is MemGPT's OS analogy: the window is fast main memory backed by large external storage, with information paged in and out. Like RAG, its usefulness depends on retrieval quality, and persisting user data raises freshness and privacy concerns you must handle.",
+  "sources": [
+    { "title": "MemGPT (Packer et al., 2023)", "url": "https://arxiv.org/abs/2310.08560", "verified": true },
+    { "title": "Lilian Weng — LLM Powered Autonomous Agents", "url": "https://lilianweng.github.io/posts/2023-06-23-agent/", "verified": true },
+    { "title": "Chip Huyen — Agents", "url": "https://huyenchip.com/2025/01/07/agents.html", "verified": true }
+  ],
+  "related": ["memory-short-term", "rag", "agentic-patterns-overview", "guardrails"],
+  "glossary": [
+    { "term": "Long-term memory", "definition": "An external, persistent store of an agent's knowledge and history, retrieved into context on demand and surviving across sessions." },
+    { "term": "Episodic memory", "definition": "Stored records of past events or interactions an agent can recall later." },
+    { "term": "Memory paging", "definition": "MemGPT's technique of moving information between the context window and external storage like an OS manages RAM and disk." },
+    { "term": "Semantic memory", "definition": "Stored facts and general knowledge, as opposed to specific past events." }
+  ],
+  "quiz": [
+    {
+      "q": "What is the defining property of long-term memory versus short-term memory?",
+      "choices": ["It is faster", "It persists across sessions in an external store and is retrieved on demand", "It lives only in the context window", "It requires no retrieval"],
+      "answer": 1,
+      "explanation": "Long-term memory is externalized and durable, retrieved back into context when relevant, unlike ephemeral short-term memory."
+    },
+    {
+      "q": "What is MemGPT's core idea?",
+      "choices": ["Train a bigger model", "Treat the context window like RAM backed by external storage, paging memory in and out", "Never use retrieval", "Store everything in the prompt forever"],
+      "answer": 1,
+      "explanation": "MemGPT applies an operating-system analogy, paging information between limited context and large external memory."
+    }
+  ]
+}

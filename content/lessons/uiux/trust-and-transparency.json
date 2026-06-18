@@ -1,0 +1,69 @@
+{
+  "id": "trust-and-transparency",
+  "title": "Trust and Transparency",
+  "lane": "uiux",
+  "type": "concept",
+  "order": 35,
+  "summary": "Building calibrated trust by showing the AI's work, providing citations, and communicating confidence or uncertainty.",
+  "body": "## First principles\nAI systems are probabilistic, meaning they are sometimes wrong. If a system acts 100% confident 100% of the time, a single hallucination destroys all user trust. **Calibrated trust** means users trust the system when it's right, and know to verify when it's uncertain.\n\n## Show your work\nDon't just provide an answer; provide the provenance. Inline citations linked to verifiable sources allow the user to double-check the AI's claims. When the AI runs code to get an answer, show the code and the output.\n\n## Communicating uncertainty\nIf the prompt is ambiguous or the data is sparse, the UX should reflect that. Use hedging language ('Based on the available documents, it seems...'), or explicitly prompt the user for clarification. Allowing users to edit the AI's memory or context further increases transparency.",
+  "tags": [
+    "trust",
+    "citations",
+    "transparency",
+    "hallucination"
+  ],
+  "analogy": "A good AI is like a diligent research assistant. They don't just slide a summary under your door; they hand you the summary with footnotes pointing to the exact pages in the textbook.",
+  "diagram": "flowchart TD\n  Ans[AI Answer] --> Cite[Inline Citations]\n  Cite --> Src[Verifiable Sources]\n  Ans --> Hed[Hedging Language if Uncertain]\n  Hed --> UserVerify[User Verifies]",
+  "examples": [
+    {
+      "product": "Perplexity",
+      "what": "Places prominent superscript citations on every factual claim, linking directly to the source.",
+      "source": "https://www.perplexity.ai/"
+    },
+    {
+      "product": "ChatGPT (Data Analysis)",
+      "what": "Allows users to expand a toggle to see the exact Python code written and executed to generate a chart.",
+      "source": "https://chatgpt.com/"
+    }
+  ],
+  "drills": [
+    {
+      "q": "What is 'calibrated trust'?",
+      "a": "When a user correctly relies on the AI when it is accurate, but knows to verify when the AI signals uncertainty."
+    },
+    {
+      "q": "Why are inline citations critical for LLM UI?",
+      "a": "They provide provenance, allowing users to verify facts and catch hallucinations, which builds long-term trust."
+    }
+  ],
+  "teachItBack": "Don't build AI UIs that pretend to be omniscient. Build transparent systems that show their work, provide citations, and admit when they are unsure. This builds 'calibrated trust'\u2014users learn to rely on the AI safely because they can always verify its claims.",
+  "sources": [
+    {
+      "title": "NN/g - AI as a UX Assistant",
+      "url": "https://www.nngroup.com/topic/ai-ml/",
+      "verified": true
+    }
+  ],
+  "related": [
+    "error-recovery-ux"
+  ],
+  "glossary": [
+    {
+      "term": "Calibrated Trust",
+      "definition": "A state where a user's reliance on a system matches the system's actual reliability."
+    }
+  ],
+  "quiz": [
+    {
+      "q": "How should an AI UI handle a query where the underlying data is contradictory?",
+      "choices": [
+        "Pick the most likely answer and state it as fact",
+        "Fail and show a generic error",
+        "Provide an answer but use hedging language and cite the contradictions",
+        "Ignore the contradictory data"
+      ],
+      "answer": 2,
+      "explanation": "Transparency requires exposing the uncertainty and the sources, allowing the user to make the final judgment."
+    }
+  ]
+}

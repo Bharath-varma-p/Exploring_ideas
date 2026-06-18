@@ -1,0 +1,63 @@
+{
+  "id": "multi-agent-orchestration",
+  "title": "Multi-Agent Orchestration",
+  "lane": "architecture",
+  "type": "pattern",
+  "order": 45,
+  "tags": ["multi-agent", "orchestration", "supervisor", "parallelization", "coordination"],
+  "summary": "Coordinate several specialized agents to solve one problem — an orchestrator delegates to workers, agents run in parallel, or they debate and critique each other to reach a better answer.",
+  "analogy": "A film production. A director (orchestrator) doesn't shoot, light, and score the movie alone — they coordinate specialists: cinematographer, editor, composer. Each is excellent at one craft; the director composes them into a coherent whole.",
+  "problem": "One agent with one giant prompt and a huge tool belt becomes a confused generalist: its context overflows, tool selection degrades, and a single reasoning thread can't pursue several sub-problems at once.",
+  "forces": [
+    "Specialization beats generalization, but specialists must be coordinated.",
+    "Some subtasks are independent and could run in parallel for speed.",
+    "Every agent boundary adds communication overhead and failure points.",
+    "More agents multiply cost and make the system harder to debug.",
+    "A single critic can catch errors a lone author misses."
+  ],
+  "solution": "Decompose the problem across multiple agents with distinct roles, coordinated by a topology: an orchestrator/supervisor that delegates to workers and integrates results, parallel agents that fan out independent subtasks, or debate/critique setups where agents review each other's work.",
+  "tradeoffs": [
+    "Much higher token cost and latency than a single agent — Anthropic notes multi-agent can burn ~15x the tokens.",
+    "Coordination and message-passing add complexity and new failure modes.",
+    "Harder to debug: errors hide in inter-agent handoffs.",
+    "Often a well-built single agent is enough — don't reach for a swarm by default."
+  ],
+  "body": "## First principles\nAs a task grows, one agent hits ceilings: its **context window** fills with too many instructions and tool results, **tool selection** gets noisy among dozens of options, and a single reasoning thread can't explore multiple sub-problems simultaneously. These are the same limits a single overloaded person hits — and humans solve them the same way: **divide labor and coordinate**.\n\nMulti-agent orchestration applies division of labor to LLMs. Each agent gets a **focused role, a smaller prompt, and a tighter toolset**, so it performs better; a coordination structure stitches their work together.\n\n## Common topologies (mental model)\n- **Orchestrator–worker (supervisor)**: a lead agent breaks the task into subtasks and delegates each to a worker, then synthesizes results. The dominant production pattern (LangGraph supervisor, Anthropic's research system).\n- **Parallelization**: fan out independent subtasks to agents at once, then aggregate (voting, merging). Faster for separable work.\n- **Debate / critique**: multiple agents argue or one critiques another to surface errors and improve answers.\n\nThe diagram shows the supervisor topology fanning out to workers and gathering results.\n\n## Real examples\n- **Anthropic's multi-agent research system**: a lead agent spawns subagents that search in parallel and report back, improving over single-agent search — but using far more tokens.\n- **LangGraph supervisor / swarm**: framework primitives for a supervisor that routes to specialized worker agents.\n- **AutoGen / CrewAI**: frameworks for role-based agent teams that converse to solve tasks.\n\n## When to use it\n- The task has **separable subtasks** or benefits from **parallel exploration**.\n- You need **specialist** behavior that one prompt can't cover well.\n- Adversarial **critique** would catch errors (pair with reflection).\n\n## Watch out for\n- **Cost/latency explosion**: only go multi-agent when the value clearly beats a single agent.\n- **Coordination bugs**: define crisp interfaces between agents.\n- **Premature complexity**: start single-agent; split only when you hit real limits.",
+  "diagram": "flowchart TD\n  G([Task]) --> S[Supervisor /\\norchestrator]\n  S -->|delegate| W1[Worker A\\n(research)]\n  S -->|delegate| W2[Worker B\\n(code)]\n  S -->|delegate| W3[Worker C\\n(review)]\n  W1 --> S2[Integrate /\\nsynthesize]\n  W2 --> S2\n  W3 --> S2\n  S2 --> F([Final result])",
+  "examples": [
+    { "product": "Anthropic Research", "what": "A lead agent orchestrates parallel subagents that each search and report back; it beat single-agent on breadth but used roughly 15x the tokens.", "source": "https://www.anthropic.com/engineering/built-multi-agent-research-system" },
+    { "product": "LangGraph", "what": "Provides supervisor and swarm multi-agent primitives so a coordinator can route work to specialized worker agents.", "source": "https://langchain-ai.github.io/langgraph/concepts/multi_agent/" }
+  ],
+  "drills": [
+    { "q": "Why split a hard task across multiple specialized agents instead of one big agent?", "a": "Each agent gets a focused role, smaller prompt, and tighter toolset, avoiding context overflow and poor tool selection, and independent subtasks can run in parallel." },
+    { "q": "Name the three common multi-agent topologies.", "a": "Orchestrator-worker (supervisor), parallelization (fan out then aggregate), and debate/critique." },
+    { "q": "What is the biggest cost of going multi-agent?", "a": "Greatly increased token cost and latency (Anthropic reported ~15x) plus coordination complexity and harder debugging — so use it only when the value clearly justifies it." }
+  ],
+  "teachItBack": "Multi-agent orchestration solves big tasks by dividing labor among specialized agents and coordinating them, usually with a supervisor that delegates subtasks to workers and integrates their results, or by running agents in parallel or having them debate and critique. Each agent gets a focused role and toolset, which beats one overloaded generalist agent. The price is much higher token cost and latency plus coordination complexity, so you only reach for it when a single well-built agent genuinely can't cope.",
+  "sources": [
+    { "title": "Anthropic — How we built our multi-agent research system", "url": "https://www.anthropic.com/engineering/built-multi-agent-research-system", "verified": true },
+    { "title": "LangGraph — Multi-agent systems", "url": "https://langchain-ai.github.io/langgraph/concepts/multi_agent/", "verified": true },
+    { "title": "Anthropic — Building effective agents", "url": "https://www.anthropic.com/engineering/building-effective-agents", "verified": true }
+  ],
+  "related": ["planner-executor", "routing", "reflection", "evaluator-optimizer", "agentic-patterns-overview"],
+  "glossary": [
+    { "term": "Orchestrator-worker", "definition": "A topology where a lead agent delegates subtasks to worker agents and synthesizes their outputs." },
+    { "term": "Supervisor", "definition": "A coordinating agent that routes work to specialized sub-agents and integrates the results." },
+    { "term": "Parallelization", "definition": "Running independent subtasks across multiple agents simultaneously, then aggregating the outputs." },
+    { "term": "Debate / critique", "definition": "A multi-agent setup where agents argue or review each other's work to surface errors and improve quality." }
+  ],
+  "quiz": [
+    {
+      "q": "What is the most common production multi-agent topology?",
+      "choices": ["Fully peer-to-peer mesh", "Orchestrator-worker (a supervisor delegating to workers)", "Single agent only", "Random assignment"],
+      "answer": 1,
+      "explanation": "A supervisor/orchestrator delegating subtasks to specialized workers and integrating results is the dominant pattern."
+    },
+    {
+      "q": "What is the main reason NOT to default to multi-agent systems?",
+      "choices": ["They can't use tools", "They greatly increase token cost, latency, and coordination complexity", "They are illegal", "They only work with one model"],
+      "answer": 1,
+      "explanation": "Multi-agent systems can use many times more tokens and add coordination overhead, so a single agent is often the better default."
+    }
+  ]
+}

@@ -1,0 +1,115 @@
+{
+  "id": "what-is-context-awareness",
+  "title": "What Is Context Awareness?",
+  "lane": "context-awareness",
+  "type": "concept",
+  "order": 10,
+  "tags": [
+    "context",
+    "signals",
+    "sensing",
+    "agent-foundations"
+  ],
+  "summary": "Context awareness means an agent can notice relevant facts about the user, task, environment, and recent interaction before it decides what to do.",
+  "analogy": "A good assistant is like a waiter who notices your empty glass, the menu in your hand, and the birthday cake on the table before asking what you need.",
+  "body": "## First principles\nAn agent starts blind. A language model only sees the tokens and tool results you give it, so it cannot automatically know which app is open, what text is highlighted, where the mouse is, whether the user is driving, or whether yesterday was a recovery day. The first problem of context awareness is therefore sensing: how does the system notice facts outside the prompt?\n\nThe second problem is relevance. A user’s world contains infinite data, but only a small slice matters for the next helpful action. A context-aware system must filter raw observations into a compact answer to: “What is going on right now that should change my behavior?”\n\n## Plain definition\nContext awareness is the ability to collect permissioned signals about the user, task, interface, history, and environment, then use those signals to adapt the response or action. It is not spying and it is not dumping everything into the prompt. It is situation-sensing plus decision support.\n\nThe waiter analogy is useful: the waiter does not need your full life story. They need the table number, who ordered what, whether a plate is empty, and whether you are trying to pay. Good context is task-shaped.\n\n## Signal taxonomy\nA practical taxonomy has five buckets:\n\n1. **Task signals** — the user’s words, goal, constraints, open files, or current workflow.\n2. **UI signals** — active window, screen text, focused control, cursor position, hover target, selected text.\n3. **User-history signals** — preferences, past actions, recency, habits, saved memories.\n4. **Environment signals** — time, location if allowed, network, battery, device posture, available sensors.\n5. **Domain signals** — product-specific facts such as WHOOP Recovery, Strain, Sleep, Stress, or Journal behavior inputs.\n\nThe taxonomy prevents the common beginner mistake of treating “context” as one blob.\n\n## Mental model\nRead the diagram as a funnel. The world produces raw signals. The agent classifies them into a signal taxonomy, builds a context state, and decides. After it acts, the world changes, so the sensing loop repeats.\n\n## Real examples\nWHOOP Coach is biometric context awareness. It uses the member’s recovery, strain, sleep, stress, goals, and journal data to answer questions like why the user is tired or how hard to train today.\n\nAnthropic’s computer use work is UI context awareness. Claude can look at a screen, move a cursor, click buttons, and type text, which means the interface becomes part of the agent loop.\n\nOpenAI’s Computer-Using Agent similarly teaches the key principle: a computer-using model must ground choices in the current interface, not only in a text prompt.\n\n## Drills\nImagine a user says, “Can you fix this?” while text is selected in a browser. Name three context signals the agent should inspect before answering. Then decide which one is highest priority.\n\nNow imagine the same sentence in a code editor, a spreadsheet, and a video meeting. The words are identical, but the correct action changes because the context changes.\n\n## Teach-it-back\nSay it in three sentences: Context awareness lets an agent sense the situation before acting. It turns raw signals into a small, relevant context state. Better sensing improves decisions, but only when consent, relevance, and filtering are built in.",
+  "diagram": "flowchart TD\n  W[World around the user] --> S[Signals]\n  S --> T[Signal taxonomy]\n  T --> C[Context state]\n  C --> D[Decision]\n  D --> A[Helpful action]\n  A --> W",
+  "examples": [
+    {
+      "product": "WHOOP Coach",
+      "what": "Uses biometric context such as Recovery, Strain, Sleep, Stress, goals, and Journal behaviors to generate personalized coaching instead of generic fitness advice.",
+      "source": "https://www.whoop.com/us/en/thelocker/whoop-unveils-the-new-whoop-coach-powered-by-openai/"
+    },
+    {
+      "product": "Anthropic computer use",
+      "what": "Lets Claude inspect a screen, move a cursor, click, and type, turning pixels and UI state into context for a task.",
+      "source": "https://www.anthropic.com/news/3-5-models-and-computer-use"
+    },
+    {
+      "product": "OpenAI Computer-Using Agent",
+      "what": "Frames computer use as an agent capability: perceive the interface, choose browser/computer actions, and keep the task grounded in the current UI.",
+      "source": "https://openai.com/index/computer-using-agent/"
+    }
+  ],
+  "drills": [
+    {
+      "q": "List four signal families a context-aware agent might use.",
+      "a": "Task signals, UI/screen signals, user-history signals, and environment/device signals."
+    },
+    {
+      "q": "Why is context not the same as “more data”?",
+      "a": "Context is the subset of data that changes the next decision. Extra irrelevant data becomes noise."
+    },
+    {
+      "q": "What is the simplest context signal in a chat app?",
+      "a": "The current user message, plus the recent conversation needed to interpret it."
+    }
+  ],
+  "teachItBack": "Context awareness is an agent’s ability to sense the situation before acting. It turns raw signals like selected text, screen state, time, location, or past behavior into a compact context state. The goal is not to collect everything; it is to keep the few facts that change the next decision.",
+  "sources": [
+    {
+      "title": "WHOOP — WHOOP Coach powered by OpenAI",
+      "url": "https://www.whoop.com/us/en/thelocker/whoop-unveils-the-new-whoop-coach-powered-by-openai/",
+      "verified": true
+    },
+    {
+      "title": "Anthropic — Claude 3.5 models and computer use",
+      "url": "https://www.anthropic.com/news/3-5-models-and-computer-use",
+      "verified": true
+    },
+    {
+      "title": "OpenAI — Computer-Using Agent",
+      "url": "https://openai.com/index/computer-using-agent/",
+      "verified": true
+    },
+    {
+      "title": "Anthropic — Building effective agents",
+      "url": "https://www.anthropic.com/engineering/building-effective-agents",
+      "verified": true
+    }
+  ],
+  "related": [
+    "context-vs-platform",
+    "sensing-cursor-and-selection",
+    "sensing-screen-and-app-state",
+    "context-engineering"
+  ],
+  "glossary": [
+    {
+      "term": "Context",
+      "definition": "The relevant facts around a task that can change what the agent should say or do next."
+    },
+    {
+      "term": "Context signal",
+      "definition": "A raw observation such as selected text, active app, cursor position, recent click, device state, or biometric metric."
+    },
+    {
+      "term": "Context state",
+      "definition": "A structured summary of the signals the agent is currently allowed to use for decision-making."
+    }
+  ],
+  "quiz": [
+    {
+      "q": "Which statement best defines context awareness?",
+      "choices": [
+        "Knowing every file on the computer",
+        "Using relevant situational signals to improve the next decision",
+        "Having a larger model",
+        "Always tracking the user in the background"
+      ],
+      "answer": 1,
+      "explanation": "Context awareness is about relevant, permissioned signals that change the next action, not indiscriminate tracking."
+    },
+    {
+      "q": "Why can too much context hurt an agent?",
+      "choices": [
+        "It makes the UI prettier",
+        "It can add noise, cost, latency, and privacy risk",
+        "It prevents tool use",
+        "It removes the need for permissions"
+      ],
+      "answer": 1,
+      "explanation": "The useful context is a filtered working set; unrelated signals distract the model and expand risk."
+    }
+  ]
+}

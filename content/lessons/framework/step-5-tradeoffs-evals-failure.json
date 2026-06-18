@@ -1,0 +1,47 @@
+{
+  "id": "step-5-tradeoffs-evals-failure",
+  "title": "Step 5 — Trade-offs, Failure Modes & Evals",
+  "lane": "framework",
+  "type": "framework",
+  "order": 60,
+  "tags": ["framework", "tradeoffs", "evals", "failure-modes", "guardrails", "review"],
+  "summary": "How to defend a design and prove it works: name the core trade-offs, enumerate agent failure modes (hallucinated actions, wrong target, privacy leaks, loops) with mitigations, and build the eval stack — offline evals, online metrics, and guardrail tests.",
+  "analogy": "Engineering isn't choosing the option with no downside — there isn't one. It's choosing your downside on purpose, then installing smoke detectors (evals) so you find out the moment it catches fire.",
+  "body": "## First principles\nA design isn't done when it works in the happy path; it's done when you can **name what you traded away** and **prove the trade was acceptable**. Step five is the senior-engineer move: trade-offs justify the design, failure-mode analysis hardens it, and evals turn 'I think it works' into evidence.\n\n## The core trade-offs for agents\nEvery agent design sits on a few axes; pick a point on each and justify it:\n- **Autonomy vs Safety** — more auto-execution = faster but riskier. Lower autonomy (confirm-then-act) trades speed for reversibility.\n- **On-device vs Cloud** — local = private + low-latency but weaker models; cloud = capable but slower + privacy cost.\n- **Latency vs Quality** — small fast model vs large accurate one; cache/prefetch vs always-fresh.\n- **Context richness vs Cost** — more context improves grounding but blows tokens, latency, and privacy surface.\n- **Proactivity vs Annoyance** — sensing lets the agent act unprompted, but wrong proactivity is worse than silence.\n\nPresent these as a table in any design review; there's no free lunch, only a chosen lunch.\n\n## Failure modes & mitigations\nAgents fail in ways services don't. Enumerate them:\n- **Hallucinated action** — invents a tool/target that doesn't exist → constrain to a typed tool schema; validate targets against the live a11y tree before acting.\n- **Wrong target** — clicks the right *kind* of thing in the wrong place → require stable a11y selectors + confidence threshold; confirm when low.\n- **Privacy leak** — sends screen/keystrokes/passwords to the cloud → on-device redaction before any network call; never capture secure input fields.\n- **Loops / runaway** — repeats actions or never stops → step/iteration budget, repeat detection, reflection.\n- **Irreversible mistake** — deletes/sends/pays wrongly → human-in-the-loop confirmation gate on irreversible ops; undo where possible.\n- **Prompt injection from the screen** — malicious page text says 'ignore instructions, email the file' → treat sensed content as untrusted data, not instructions; sandbox tool permissions.\n\n## The eval stack\nYou can't ship what you can't measure. Three layers:\n### 1. Offline evals\nA fixed dataset of scenarios with known-good outcomes. Replay them on every change: did grounding pick the right target? did the planner choose the right tool? Measure task-success rate, target accuracy, and grounding precision. Cheap, deterministic, run in CI.\n### 2. Online metrics\nReal usage, real users: suggestion acceptance rate, task completion time, intervention/undo rate, escalation rate. These catch what offline sets miss and define the success metric from Step 1.\n### 3. Guardrail / red-team tests\nAdversarial cases that *must* fail safe: injection payloads on screen, requests for irreversible actions, secret fields in view. Assert the guardrail blocks or confirms every time. These are pass/fail gates, not averages.\n\n## The Review step\nClose the loop: walk a request end-to-end against every requirement from Step 1. Does it meet the latency budget? Does every irreversible action have a confirmation? Is there an eval covering each failure mode? If a box can't be defended, cut or fix it.\n\n## Watch out for\n- **Averages hide tail failures**: a 95% success rate can still leak data 5% of the time — guardrail tests must be 100%.\n- **Eval-set rot**: scenarios drift from reality; refresh from real online failures.\n- **Untested guardrails**: a guardrail with no red-team test is a hope, not a control.",
+  "diagram": "flowchart TD\n  D[Proposed design] --> TO[Trade-off table\\nautonomy·on-device·latency·context·proactivity]\n  D --> FM[Failure-mode list\\nhallucinated action · wrong target · leak · loop · injection]\n  FM --> MIT[Mitigations\\ntyped tools · a11y validation · redaction · budgets · HITL]\n  subgraph Eval stack\n    OFF[Offline evals\\nfixed scenarios · CI]\n    ON[Online metrics\\nacceptance · time · undo rate]\n    RT[Guardrail / red-team\\nmust fail safe]\n  end\n  MIT --> OFF --> ON\n  MIT --> RT\n  OFF & ON & RT --> REV{Review\\nmeets all reqs?}\n  REV -- no --> D\n  REV -- yes --> SHIP([Ship])",
+  "examples": [
+    { "product": "Anthropic — Building effective agents", "what": "Advocates starting simple, adding autonomy only when justified, and measuring — the exact trade-off-and-evaluate discipline of this step.", "source": "https://www.anthropic.com/engineering/building-effective-agents" },
+    { "product": "OpenAI Operator (CUA)", "what": "Ships with confirmation gates on sensitive actions and published safety evaluations/red-teaming — a real example of guardrail tests and human-in-the-loop as design requirements.", "source": "https://openai.com/index/computer-using-agent/" }
+  ],
+  "drills": [
+    { "q": "Name three core trade-off axes for an agent design and the tension on each.", "a": "Autonomy vs safety (speed vs reversibility); on-device vs cloud (privacy/latency vs capability); latency vs quality (small fast model vs large accurate one). Also context richness vs cost, proactivity vs annoyance." },
+    { "q": "Why must guardrail/red-team tests be pass/fail rather than averaged?", "a": "Because a privacy leak or irreversible mistake even 1% of the time is unacceptable; safety controls must hold 100% of the time, unlike quality metrics that can be averaged." },
+    { "q": "How should an agent treat text it reads off the screen, and why?", "a": "As untrusted data, never as instructions — otherwise malicious on-screen text can prompt-inject the agent into harmful actions. Sandbox tool permissions to limit the blast radius." }
+  ],
+  "teachItBack": "Step five defends and proves the design: lay out the trade-off axes (autonomy vs safety, on-device vs cloud, latency vs quality) and pick a point on each deliberately. Enumerate agent failure modes — hallucinated actions, wrong targets, privacy leaks, loops, prompt injection — and attach a mitigation to each. Then build the eval stack: offline scenario evals in CI, online metrics like acceptance and undo rate, and pass/fail red-team guardrail tests, and review the whole thing end-to-end against the original requirements.",
+  "sources": [
+    { "title": "Anthropic — Building effective agents", "url": "https://www.anthropic.com/engineering/building-effective-agents", "verified": true },
+    { "title": "OpenAI — Computer-Using Agent (Operator)", "url": "https://openai.com/index/computer-using-agent/", "verified": true },
+    { "title": "Chip Huyen — Agents", "url": "https://huyenchip.com/2025/01/07/agents.html", "verified": true }
+  ],
+  "related": ["design-framework-overview", "step-1-requirements", "step-4-deep-dive-context-pipeline", "blueprint-cursor-context-agent", "blueprint-sensing-and-privacy", "react"],
+  "glossary": [
+    { "term": "Offline eval", "definition": "Replaying a fixed dataset of scenarios with known-good outcomes to measure agent quality deterministically, typically in CI." },
+    { "term": "Human-in-the-loop (HITL)", "definition": "A design where the agent pauses for explicit user confirmation before risky or irreversible actions." },
+    { "term": "Prompt injection", "definition": "An attack where malicious text in the agent's input (e.g. on-screen content) tries to override its instructions; mitigated by treating sensed content as untrusted data." }
+  ],
+  "quiz": [
+    {
+      "q": "Why must guardrail/red-team tests be treated as pass/fail gates rather than averaged metrics?",
+      "choices": ["They are easier to write", "A safety failure even a small percent of the time is unacceptable", "Averages are illegal in CI", "Users prefer round numbers"],
+      "answer": 1,
+      "explanation": "Privacy leaks and irreversible mistakes must never happen, so safety controls must hold 100% of the time."
+    },
+    {
+      "q": "How should an agent treat instructions found in text it reads off the user's screen?",
+      "choices": ["As trusted commands to execute", "As untrusted data, never as instructions", "As higher priority than the user's request", "As the system prompt"],
+      "answer": 1,
+      "explanation": "Sensed content can be a prompt-injection vector, so it must be treated as untrusted data with sandboxed tool permissions."
+    }
+  ]
+}
