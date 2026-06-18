@@ -50,18 +50,27 @@ function computeFreshness(meta, refDate) {
 
 // Rank a lesson's sources by recency × authority. Current (non-historical, dated or
 // living) sources rank first by tier then newest-first; historical/origin sources are
-// demoted; undated sources sink to the bottom.
-function sourceSortKey(s) {
-  const status = s.freshness?.status;
-  const bucket = s.historical ? 1 : (status === "undated" ? 2 : 0);
-  const tier = Number.isFinite(s.tier) ? s.tier : 5;
-  const dateMs = (s.updated || s.published) ? new Date(s.updated || s.published).getTime() : 0;
-  return [bucket, tier, -(dateMs || 0)];
+// demoted; undated sources sink to the bottom. A `refMs` (the topic's last-verified
+// date) is used as the effective date for living docs so they rank as most-current.
+function sourceBucket(s) {
+  return s.historical ? 1 : (s.freshness?.status === "undated" ? 2 : 0);
 }
-function compareSources(a, b) {
-  const ka = sourceSortKey(a), kb = sourceSortKey(b);
-  for (let i = 0; i < ka.length; i++) if (ka[i] !== kb[i]) return ka[i] - kb[i];
-  return String(a.title || a.url).localeCompare(String(b.title || b.url));
+function effectiveMs(s, refMs) {
+  const dated = s.updated || s.published;
+  if (dated) { const t = new Date(dated).getTime(); return Number.isNaN(t) ? 0 : t; }
+  if (s.living) return refMs;
+  return 0;
+}
+function makeSourceComparator(refMs) {
+  return (a, b) => {
+    const ba = sourceBucket(a), bb = sourceBucket(b);
+    if (ba !== bb) return ba - bb;
+    const ta = Number.isFinite(a.tier) ? a.tier : 5, tb = Number.isFinite(b.tier) ? b.tier : 5;
+    if (ta !== tb) return ta - tb;
+    const ea = effectiveMs(a, refMs), eb = effectiveMs(b, refMs);
+    if (ea !== eb) return eb - ea;
+    return String(a.title || a.url).localeCompare(String(b.title || b.url));
+  };
 }
 
 // ---- Lane registry: edit here to add a lane ----
@@ -174,7 +183,7 @@ async function main() {
         warnings.push(`${l._file}: source not in catalog & undated — ${s.url}`);
       return merged;
     });
-    l.sources.sort(compareSources);
+    l.sources.sort(makeSourceComparator(new Date(l.lastVerified).getTime()));
     for (const s of l.sources) {
       const st = s.freshness.status;
       freshnessCounts[st] = (freshnessCounts[st] || 0) + 1;

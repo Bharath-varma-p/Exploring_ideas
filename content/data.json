@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-06-18T06:53:47.109Z",
+  "generatedAt": "2026-06-18T07:06:50.996Z",
   "verifiedOn": "2026-06-18",
   "lanes": [
     {
@@ -1149,6 +1149,21 @@
       "teachItBack": "Multi-agent orchestration solves big tasks by dividing labor among specialized agents and coordinating them, usually with a supervisor that delegates subtasks to workers and integrates their results, or by running agents in parallel or having them debate and critique. Each agent gets a focused role and toolset, which beats one overloaded generalist agent. The price is much higher token cost and latency plus coordination complexity, so you only reach for it when a single well-built agent genuinely can't cope.",
       "sources": [
         {
+          "publisher": "LangChain",
+          "type": "official-docs",
+          "tier": 1,
+          "living": true,
+          "title": "LangGraph — Multi-agent systems",
+          "url": "https://langchain-ai.github.io/langgraph/concepts/multi_agent/",
+          "verified": true,
+          "verifiedOn": "2026-06-18",
+          "freshness": {
+            "status": "living",
+            "badge": "🟢",
+            "label": "living"
+          }
+        },
+        {
           "publisher": "Anthropic",
           "type": "engineering-blog",
           "tier": 1,
@@ -1162,21 +1177,6 @@
             "badge": "🟡",
             "label": "aging",
             "ageMonths": 12.2
-          }
-        },
-        {
-          "publisher": "LangChain",
-          "type": "official-docs",
-          "tier": 1,
-          "living": true,
-          "title": "LangGraph — Multi-agent systems",
-          "url": "https://langchain-ai.github.io/langgraph/concepts/multi_agent/",
-          "verified": true,
-          "verifiedOn": "2026-06-18",
-          "freshness": {
-            "status": "living",
-            "badge": "🟢",
-            "label": "living"
           }
         },
         {
@@ -2517,6 +2517,21 @@
       "teachItBack": "Context is the situation; platform is the execution environment. A great agent chooses actions at their intersection: helpful for the current situation and possible on the current platform. If either side is missing, the plan becomes either irrelevant or impossible.",
       "sources": [
         {
+          "publisher": "Android (Google)",
+          "type": "official-docs",
+          "tier": 1,
+          "living": true,
+          "title": "Android Developers — AccessibilityService",
+          "url": "https://developer.android.com/reference/android/accessibilityservice/AccessibilityService",
+          "verified": true,
+          "verifiedOn": "2026-06-18",
+          "freshness": {
+            "status": "living",
+            "badge": "🟢",
+            "label": "living"
+          }
+        },
+        {
           "publisher": "Anthropic",
           "type": "product-announcement",
           "tier": 1,
@@ -2546,21 +2561,6 @@
             "badge": "🔴",
             "label": "stale",
             "ageMonths": 32.8
-          }
-        },
-        {
-          "publisher": "Android (Google)",
-          "type": "official-docs",
-          "tier": 1,
-          "living": true,
-          "title": "Android Developers — AccessibilityService",
-          "url": "https://developer.android.com/reference/android/accessibilityservice/AccessibilityService",
-          "verified": true,
-          "verifiedOn": "2026-06-18",
-          "freshness": {
-            "status": "living",
-            "badge": "🟢",
-            "label": "living"
           }
         },
         {
@@ -2679,6 +2679,21 @@
       "teachItBack": "Cursor and selection signals are attention signals. The cursor points at possible targets; selection marks the exact text or object the user cares about. Use them as strong hints, but fuse them with focus, recency, and the user’s words before acting.",
       "sources": [
         {
+          "publisher": "Microsoft",
+          "type": "official-docs",
+          "tier": 1,
+          "living": true,
+          "title": "Microsoft Learn — UI Automation Overview",
+          "url": "https://learn.microsoft.com/en-us/windows/win32/winauto/uiauto-uiautomationoverview",
+          "verified": true,
+          "verifiedOn": "2026-06-18",
+          "freshness": {
+            "status": "living",
+            "badge": "🟢",
+            "label": "living"
+          }
+        },
+        {
           "publisher": "Anthropic",
           "type": "product-announcement",
           "tier": 1,
@@ -2692,21 +2707,6 @@
             "badge": "🔴",
             "label": "stale",
             "ageMonths": 19.8
-          }
-        },
-        {
-          "publisher": "Microsoft",
-          "type": "official-docs",
-          "tier": 1,
-          "living": true,
-          "title": "Microsoft Learn — UI Automation Overview",
-          "url": "https://learn.microsoft.com/en-us/windows/win32/winauto/uiauto-uiautomationoverview",
-          "verified": true,
-          "verifiedOn": "2026-06-18",
-          "freshness": {
-            "status": "living",
-            "badge": "🟢",
-            "label": "living"
           }
         },
         {
@@ -2823,6 +2823,36 @@
       "teachItBack": "Screen sensing builds a machine-readable model of the current app view. Pixels and OCR tell what is visually present; accessibility APIs tell what elements mean and what actions they support. A screen-aware agent merges both before deciding where to click or what to search.",
       "sources": [
         {
+          "publisher": "Android (Google)",
+          "type": "official-docs",
+          "tier": 1,
+          "living": true,
+          "title": "Android Developers — AccessibilityService",
+          "url": "https://developer.android.com/reference/android/accessibilityservice/AccessibilityService",
+          "verified": true,
+          "verifiedOn": "2026-06-18",
+          "freshness": {
+            "status": "living",
+            "badge": "🟢",
+            "label": "living"
+          }
+        },
+        {
+          "publisher": "Microsoft",
+          "type": "official-docs",
+          "tier": 1,
+          "living": true,
+          "title": "Microsoft Learn — UI Automation Overview",
+          "url": "https://learn.microsoft.com/en-us/windows/win32/winauto/uiauto-uiautomationoverview",
+          "verified": true,
+          "verifiedOn": "2026-06-18",
+          "freshness": {
+            "status": "living",
+            "badge": "🟢",
+            "label": "living"
+          }
+        },
+        {
           "publisher": "OpenAI",
           "type": "product-announcement",
           "tier": 1,
@@ -2852,36 +2882,6 @@
             "badge": "🔴",
             "label": "stale",
             "ageMonths": 19.8
-          }
-        },
-        {
-          "publisher": "Android (Google)",
-          "type": "official-docs",
-          "tier": 1,
-          "living": true,
-          "title": "Android Developers — AccessibilityService",
-          "url": "https://developer.android.com/reference/android/accessibilityservice/AccessibilityService",
-          "verified": true,
-          "verifiedOn": "2026-06-18",
-          "freshness": {
-            "status": "living",
-            "badge": "🟢",
-            "label": "living"
-          }
-        },
-        {
-          "publisher": "Microsoft",
-          "type": "official-docs",
-          "tier": 1,
-          "living": true,
-          "title": "Microsoft Learn — UI Automation Overview",
-          "url": "https://learn.microsoft.com/en-us/windows/win32/winauto/uiauto-uiautomationoverview",
-          "verified": true,
-          "verifiedOn": "2026-06-18",
-          "freshness": {
-            "status": "living",
-            "badge": "🟢",
-            "label": "living"
           }
         }
       ],
@@ -3303,22 +3303,6 @@
       "teachItBack": "Device and OS capability sensing prevents impossible or rude actions. The agent builds a capability map from hardware, OS APIs, sensors, network, battery, and permission state. Then it chooses the best available path or degrades gracefully.",
       "sources": [
         {
-          "publisher": "WHOOP",
-          "type": "product-announcement",
-          "tier": 1,
-          "published": "2023-09-25",
-          "title": "WHOOP — WHOOP Coach powered by OpenAI",
-          "url": "https://www.whoop.com/us/en/thelocker/whoop-unveils-the-new-whoop-coach-powered-by-openai/",
-          "verified": true,
-          "verifiedOn": "2026-06-18",
-          "freshness": {
-            "status": "stale",
-            "badge": "🔴",
-            "label": "stale",
-            "ageMonths": 32.8
-          }
-        },
-        {
           "publisher": "Android (Google)",
           "type": "official-docs",
           "tier": 1,
@@ -3361,6 +3345,22 @@
             "status": "living",
             "badge": "🟢",
             "label": "living"
+          }
+        },
+        {
+          "publisher": "WHOOP",
+          "type": "product-announcement",
+          "tier": 1,
+          "published": "2023-09-25",
+          "title": "WHOOP — WHOOP Coach powered by OpenAI",
+          "url": "https://www.whoop.com/us/en/thelocker/whoop-unveils-the-new-whoop-coach-powered-by-openai/",
+          "verified": true,
+          "verifiedOn": "2026-06-18",
+          "freshness": {
+            "status": "stale",
+            "badge": "🔴",
+            "label": "stale",
+            "ageMonths": 32.8
           }
         }
       ],
@@ -3461,6 +3461,21 @@
       "teachItBack": "Permissions are part of the product, not a legal checkbox. A trustworthy agent explains why it needs a capability, asks for the minimum access, uses it transparently, and offers fallbacks. Consent should be specific, visible, and reversible.",
       "sources": [
         {
+          "publisher": "Android (Google)",
+          "type": "official-docs",
+          "tier": 1,
+          "living": true,
+          "title": "Android Developers — AccessibilityService",
+          "url": "https://developer.android.com/reference/android/accessibilityservice/AccessibilityService",
+          "verified": true,
+          "verifiedOn": "2026-06-18",
+          "freshness": {
+            "status": "living",
+            "badge": "🟢",
+            "label": "living"
+          }
+        },
+        {
           "publisher": "Anthropic",
           "type": "product-announcement",
           "tier": 1,
@@ -3474,21 +3489,6 @@
             "badge": "🔴",
             "label": "stale",
             "ageMonths": 19.8
-          }
-        },
-        {
-          "publisher": "Android (Google)",
-          "type": "official-docs",
-          "tier": 1,
-          "living": true,
-          "title": "Android Developers — AccessibilityService",
-          "url": "https://developer.android.com/reference/android/accessibilityservice/AccessibilityService",
-          "verified": true,
-          "verifiedOn": "2026-06-18",
-          "freshness": {
-            "status": "living",
-            "badge": "🟢",
-            "label": "living"
           }
         },
         {
@@ -4205,15 +4205,16 @@
           "type": "secondary-blog",
           "tier": 2,
           "published": "2022-07-24",
+          "foundational": true,
+          "note": "Microinteractions are a durable, first-principles UX concept.",
           "title": "Microinteractions: Designing with Details",
           "url": "https://www.nngroup.com/articles/microinteractions/",
           "verified": false,
           "verifiedOn": "2026-06-18",
           "freshness": {
-            "status": "stale",
-            "badge": "🔴",
-            "label": "stale",
-            "ageMonths": 46.8
+            "status": "foundational",
+            "badge": "📘",
+            "label": "foundational"
           }
         }
       ],
@@ -5074,6 +5075,36 @@
       "teachItBack": "Gemini is a multimodal assistant, so its context can include text, image, audio, video, screen, and tool results. Google pairs that capability with motion and responsive visuals so the product feels alive and understandable. The key lesson is that multimodal AI needs multimodal feedback.",
       "sources": [
         {
+          "publisher": "Google Design",
+          "type": "vendor-blog",
+          "tier": 1,
+          "living": true,
+          "title": "Google Design — Gemini AI visual design",
+          "url": "https://design.google/library/gemini-ai-visual-design",
+          "verified": true,
+          "verifiedOn": "2026-06-18",
+          "freshness": {
+            "status": "living",
+            "badge": "🟢",
+            "label": "living"
+          }
+        },
+        {
+          "publisher": "Google (Material Design 3)",
+          "type": "official-docs",
+          "tier": 1,
+          "living": true,
+          "title": "Material Design 3 — Motion",
+          "url": "https://m3.material.io/styles/motion/overview/how-it-works",
+          "verified": true,
+          "verifiedOn": "2026-06-18",
+          "freshness": {
+            "status": "living",
+            "badge": "🟢",
+            "label": "living"
+          }
+        },
+        {
           "publisher": "Google",
           "type": "engineering-blog",
           "tier": 1,
@@ -5103,36 +5134,6 @@
             "badge": "🔴",
             "label": "stale",
             "ageMonths": 30.4
-          }
-        },
-        {
-          "publisher": "Google Design",
-          "type": "vendor-blog",
-          "tier": 1,
-          "living": true,
-          "title": "Google Design — Gemini AI visual design",
-          "url": "https://design.google/library/gemini-ai-visual-design",
-          "verified": true,
-          "verifiedOn": "2026-06-18",
-          "freshness": {
-            "status": "living",
-            "badge": "🟢",
-            "label": "living"
-          }
-        },
-        {
-          "publisher": "Google (Material Design 3)",
-          "type": "official-docs",
-          "tier": 1,
-          "living": true,
-          "title": "Material Design 3 — Motion",
-          "url": "https://m3.material.io/styles/motion/overview/how-it-works",
-          "verified": true,
-          "verifiedOn": "2026-06-18",
-          "freshness": {
-            "status": "living",
-            "badge": "🟢",
-            "label": "living"
           }
         }
       ],
@@ -5238,6 +5239,21 @@
       "sources": [
         {
           "publisher": "Anthropic",
+          "type": "official-docs",
+          "tier": 1,
+          "living": true,
+          "title": "Anthropic docs — Context windows",
+          "url": "https://platform.claude.com/docs/en/build-with-claude/context-windows",
+          "verified": true,
+          "verifiedOn": "2026-06-18",
+          "freshness": {
+            "status": "living",
+            "badge": "🟢",
+            "label": "living"
+          }
+        },
+        {
+          "publisher": "Anthropic",
           "type": "product-announcement",
           "tier": 1,
           "published": "2024-10-22",
@@ -5298,21 +5314,6 @@
             "badge": "🔴",
             "label": "stale",
             "ageMonths": 23.9
-          }
-        },
-        {
-          "publisher": "Anthropic",
-          "type": "official-docs",
-          "tier": 1,
-          "living": true,
-          "title": "Anthropic docs — Context windows",
-          "url": "https://platform.claude.com/docs/en/build-with-claude/context-windows",
-          "verified": true,
-          "verifiedOn": "2026-06-18",
-          "freshness": {
-            "status": "living",
-            "badge": "🟢",
-            "label": "living"
           }
         }
       ],
@@ -5421,38 +5422,6 @@
           "publisher": "Cursor (Anysphere)",
           "type": "engineering-blog",
           "tier": 1,
-          "published": "2025-09-04",
-          "title": "Cursor — Improving Cursor Tab with online RL",
-          "url": "https://cursor.com/blog/tab-rl",
-          "verified": true,
-          "verifiedOn": "2026-06-18",
-          "freshness": {
-            "status": "aging",
-            "badge": "🟡",
-            "label": "aging",
-            "ageMonths": 9.4
-          }
-        },
-        {
-          "publisher": "Cursor (Anysphere)",
-          "type": "engineering-blog",
-          "tier": 1,
-          "published": "2024-11-22",
-          "title": "Cursor — A new Tab model",
-          "url": "https://cursor.com/blog/tab-update",
-          "verified": true,
-          "verifiedOn": "2026-06-18",
-          "freshness": {
-            "status": "stale",
-            "badge": "🔴",
-            "label": "stale",
-            "ageMonths": 18.8
-          }
-        },
-        {
-          "publisher": "Cursor (Anysphere)",
-          "type": "engineering-blog",
-          "tier": 1,
           "living": true,
           "title": "Cursor — Secure codebase indexing",
           "url": "https://cursor.com/blog/secure-codebase-indexing",
@@ -5492,6 +5461,38 @@
             "status": "living",
             "badge": "🟢",
             "label": "living"
+          }
+        },
+        {
+          "publisher": "Cursor (Anysphere)",
+          "type": "engineering-blog",
+          "tier": 1,
+          "published": "2025-09-04",
+          "title": "Cursor — Improving Cursor Tab with online RL",
+          "url": "https://cursor.com/blog/tab-rl",
+          "verified": true,
+          "verifiedOn": "2026-06-18",
+          "freshness": {
+            "status": "aging",
+            "badge": "🟡",
+            "label": "aging",
+            "ageMonths": 9.4
+          }
+        },
+        {
+          "publisher": "Cursor (Anysphere)",
+          "type": "engineering-blog",
+          "tier": 1,
+          "published": "2024-11-22",
+          "title": "Cursor — A new Tab model",
+          "url": "https://cursor.com/blog/tab-update",
+          "verified": true,
+          "verifiedOn": "2026-06-18",
+          "freshness": {
+            "status": "stale",
+            "badge": "🔴",
+            "label": "stale",
+            "ageMonths": 18.8
           }
         }
       ],
@@ -5596,6 +5597,36 @@
       "sources": [
         {
           "publisher": "Perplexity",
+          "type": "official-docs",
+          "tier": 1,
+          "living": true,
+          "title": "Perplexity — Getting started with Perplexity",
+          "url": "https://www.perplexity.ai/hub/blog/getting-started-with-perplexity",
+          "verified": true,
+          "verifiedOn": "2026-06-18",
+          "freshness": {
+            "status": "living",
+            "badge": "🟢",
+            "label": "living"
+          }
+        },
+        {
+          "publisher": "Perplexity",
+          "type": "vendor-blog",
+          "tier": 1,
+          "living": true,
+          "title": "Perplexity Blog",
+          "url": "https://www.perplexity.ai/hub/blog",
+          "verified": true,
+          "verifiedOn": "2026-06-18",
+          "freshness": {
+            "status": "living",
+            "badge": "🟢",
+            "label": "living"
+          }
+        },
+        {
+          "publisher": "Perplexity",
           "type": "product-announcement",
           "tier": 1,
           "published": "2025-09-18",
@@ -5624,36 +5655,6 @@
             "badge": "🟡",
             "label": "aging",
             "ageMonths": 15.9
-          }
-        },
-        {
-          "publisher": "Perplexity",
-          "type": "official-docs",
-          "tier": 1,
-          "living": true,
-          "title": "Perplexity — Getting started with Perplexity",
-          "url": "https://www.perplexity.ai/hub/blog/getting-started-with-perplexity",
-          "verified": true,
-          "verifiedOn": "2026-06-18",
-          "freshness": {
-            "status": "living",
-            "badge": "🟢",
-            "label": "living"
-          }
-        },
-        {
-          "publisher": "Perplexity",
-          "type": "vendor-blog",
-          "tier": 1,
-          "living": true,
-          "title": "Perplexity Blog",
-          "url": "https://www.perplexity.ai/hub/blog",
-          "verified": true,
-          "verifiedOn": "2026-06-18",
-          "freshness": {
-            "status": "living",
-            "badge": "🟢",
-            "label": "living"
           }
         }
       ],
@@ -5761,6 +5762,51 @@
       "sources": [
         {
           "publisher": "OpenAI",
+          "type": "official-docs",
+          "tier": 1,
+          "living": true,
+          "title": "OpenAI Help — Canvas in ChatGPT",
+          "url": "https://help.openai.com/en/articles/9930697-what-is-the-canvas-feature-in-chatgpt-and-how-do-i-use-it",
+          "verified": true,
+          "verifiedOn": "2026-06-18",
+          "freshness": {
+            "status": "living",
+            "badge": "🟢",
+            "label": "living"
+          }
+        },
+        {
+          "publisher": "OpenAI",
+          "type": "official-docs",
+          "tier": 1,
+          "living": true,
+          "title": "OpenAI Help — Memory FAQ",
+          "url": "https://help.openai.com/en/articles/8590148-memory-faq",
+          "verified": true,
+          "verifiedOn": "2026-06-18",
+          "freshness": {
+            "status": "living",
+            "badge": "🟢",
+            "label": "living"
+          }
+        },
+        {
+          "publisher": "OpenAI",
+          "type": "official-docs",
+          "tier": 1,
+          "living": true,
+          "title": "OpenAI Help — Voice mode FAQ",
+          "url": "https://help.openai.com/en/articles/8400625-voice-mode-faq",
+          "verified": true,
+          "verifiedOn": "2026-06-18",
+          "freshness": {
+            "status": "living",
+            "badge": "🟢",
+            "label": "living"
+          }
+        },
+        {
+          "publisher": "OpenAI",
           "type": "product-announcement",
           "tier": 1,
           "published": "2025-03-11",
@@ -5805,51 +5851,6 @@
             "badge": "🔴",
             "label": "stale",
             "ageMonths": 28.1
-          }
-        },
-        {
-          "publisher": "OpenAI",
-          "type": "official-docs",
-          "tier": 1,
-          "living": true,
-          "title": "OpenAI Help — Canvas in ChatGPT",
-          "url": "https://help.openai.com/en/articles/9930697-what-is-the-canvas-feature-in-chatgpt-and-how-do-i-use-it",
-          "verified": true,
-          "verifiedOn": "2026-06-18",
-          "freshness": {
-            "status": "living",
-            "badge": "🟢",
-            "label": "living"
-          }
-        },
-        {
-          "publisher": "OpenAI",
-          "type": "official-docs",
-          "tier": 1,
-          "living": true,
-          "title": "OpenAI Help — Memory FAQ",
-          "url": "https://help.openai.com/en/articles/8590148-memory-faq",
-          "verified": true,
-          "verifiedOn": "2026-06-18",
-          "freshness": {
-            "status": "living",
-            "badge": "🟢",
-            "label": "living"
-          }
-        },
-        {
-          "publisher": "OpenAI",
-          "type": "official-docs",
-          "tier": 1,
-          "living": true,
-          "title": "OpenAI Help — Voice mode FAQ",
-          "url": "https://help.openai.com/en/articles/8400625-voice-mode-faq",
-          "verified": true,
-          "verifiedOn": "2026-06-18",
-          "freshness": {
-            "status": "living",
-            "badge": "🟢",
-            "label": "living"
           }
         }
       ],
@@ -5957,38 +5958,6 @@
       "sources": [
         {
           "publisher": "GitHub",
-          "type": "product-announcement",
-          "tier": 1,
-          "published": "2025-02-06",
-          "title": "GitHub Blog — GitHub Copilot: The agent awakens",
-          "url": "https://github.blog/news-insights/product-news/github-copilot-the-agent-awakens/",
-          "verified": true,
-          "verifiedOn": "2026-06-18",
-          "freshness": {
-            "status": "aging",
-            "badge": "🟡",
-            "label": "aging",
-            "ageMonths": 16.3
-          }
-        },
-        {
-          "publisher": "GitHub",
-          "type": "engineering-blog",
-          "tier": 1,
-          "published": "2024-02-28",
-          "title": "GitHub Blog — How GitHub Copilot is getting better at understanding your code",
-          "url": "https://github.blog/ai-and-ml/github-copilot/how-github-copilot-is-getting-better-at-understanding-your-code/",
-          "verified": true,
-          "verifiedOn": "2026-06-18",
-          "freshness": {
-            "status": "stale",
-            "badge": "🔴",
-            "label": "stale",
-            "ageMonths": 27.6
-          }
-        },
-        {
-          "publisher": "GitHub",
           "type": "official-docs",
           "tier": 1,
           "living": true,
@@ -6030,6 +5999,38 @@
             "status": "living",
             "badge": "🟢",
             "label": "living"
+          }
+        },
+        {
+          "publisher": "GitHub",
+          "type": "product-announcement",
+          "tier": 1,
+          "published": "2025-02-06",
+          "title": "GitHub Blog — GitHub Copilot: The agent awakens",
+          "url": "https://github.blog/news-insights/product-news/github-copilot-the-agent-awakens/",
+          "verified": true,
+          "verifiedOn": "2026-06-18",
+          "freshness": {
+            "status": "aging",
+            "badge": "🟡",
+            "label": "aging",
+            "ageMonths": 16.3
+          }
+        },
+        {
+          "publisher": "GitHub",
+          "type": "engineering-blog",
+          "tier": 1,
+          "published": "2024-02-28",
+          "title": "GitHub Blog — How GitHub Copilot is getting better at understanding your code",
+          "url": "https://github.blog/ai-and-ml/github-copilot/how-github-copilot-is-getting-better-at-understanding-your-code/",
+          "verified": true,
+          "verifiedOn": "2026-06-18",
+          "freshness": {
+            "status": "stale",
+            "badge": "🔴",
+            "label": "stale",
+            "ageMonths": 27.6
           }
         }
       ],
@@ -6488,38 +6489,6 @@
       "sources": [
         {
           "publisher": "Notion",
-          "type": "product-announcement",
-          "tier": 1,
-          "published": "2023-11-16",
-          "title": "Notion — Introducing Q&A",
-          "url": "https://www.notion.com/blog/introducing-q-and-a",
-          "verified": true,
-          "verifiedOn": "2026-06-18",
-          "freshness": {
-            "status": "stale",
-            "badge": "🔴",
-            "label": "stale",
-            "ageMonths": 31
-          }
-        },
-        {
-          "publisher": "Notion",
-          "type": "product-announcement",
-          "tier": 1,
-          "published": "2022-11-16",
-          "title": "Notion — Introducing Notion AI",
-          "url": "https://www.notion.com/blog/introducing-notion-ai",
-          "verified": true,
-          "verifiedOn": "2026-06-18",
-          "freshness": {
-            "status": "stale",
-            "badge": "🔴",
-            "label": "stale",
-            "ageMonths": 43
-          }
-        },
-        {
-          "publisher": "Notion",
           "type": "official-docs",
           "tier": 1,
           "living": true,
@@ -6561,6 +6530,38 @@
             "status": "living",
             "badge": "🟢",
             "label": "living"
+          }
+        },
+        {
+          "publisher": "Notion",
+          "type": "product-announcement",
+          "tier": 1,
+          "published": "2023-11-16",
+          "title": "Notion — Introducing Q&A",
+          "url": "https://www.notion.com/blog/introducing-q-and-a",
+          "verified": true,
+          "verifiedOn": "2026-06-18",
+          "freshness": {
+            "status": "stale",
+            "badge": "🔴",
+            "label": "stale",
+            "ageMonths": 31
+          }
+        },
+        {
+          "publisher": "Notion",
+          "type": "product-announcement",
+          "tier": 1,
+          "published": "2022-11-16",
+          "title": "Notion — Introducing Notion AI",
+          "url": "https://www.notion.com/blog/introducing-notion-ai",
+          "verified": true,
+          "verifiedOn": "2026-06-18",
+          "freshness": {
+            "status": "stale",
+            "badge": "🔴",
+            "label": "stale",
+            "ageMonths": 43
           }
         }
       ],
@@ -10018,28 +10019,13 @@
     "counts": {
       "fresh": 0,
       "living": 59,
-      "foundational": 14,
+      "foundational": 15,
       "aging": 51,
-      "stale": 38,
+      "stale": 37,
       "undated": 3,
       "total": 165
     },
     "items": [
-      {
-        "lessonId": "microinteractions",
-        "lessonTitle": "Microinteractions",
-        "lane": "uiux",
-        "title": "Microinteractions: Designing with Details",
-        "url": "https://www.nngroup.com/articles/microinteractions/",
-        "publisher": "Nielsen Norman Group",
-        "type": "secondary-blog",
-        "tier": 2,
-        "status": "stale",
-        "badge": "🔴",
-        "ageMonths": 46.8,
-        "published": "2022-07-24",
-        "historical": false
-      },
       {
         "lessonId": "notion-ai",
         "lessonTitle": "Notion AI — Workspace Knowledge as Context",
@@ -11412,6 +11398,6 @@
     "glossaryTerms": 136,
     "quizQuestions": 102,
     "sources": 165,
-    "sourcesNeedingAttention": 92
+    "sourcesNeedingAttention": 91
   }
 }

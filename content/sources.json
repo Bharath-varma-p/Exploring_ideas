@@ -513,7 +513,9 @@
     "publisher": "Nielsen Norman Group",
     "type": "secondary-blog",
     "tier": 2,
-    "published": "2022-07-24"
+    "published": "2022-07-24",
+    "foundational": true,
+    "note": "Microinteractions are a durable, first-principles UX concept."
   },
   "https://m3.material.io/styles/motion/overview": {
     "publisher": "Google (Material Design 3)",
