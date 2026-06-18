@@ -1,0 +1,860 @@
+{
+  "id": "mcp-ado",
+  "title": "Azure DevOps (ADO) MCP Connector",
+  "icon": "🛠️",
+  "order": 10,
+  "summary": "Connect a Microsoft Foundry agent to Azure DevOps through the official Azure DevOps MCP server, using first principles vocabulary, work item and WIQL fluency, current remote and local MCP server shapes, managed identity and Microsoft Entra token authentication, least privilege ADO permissions, representative tool calls, write approvals, and safe REST fallback when MCP auth support is still catching up.",
+  "concepts": [
+    {
+      "id": "azure-devops-map",
+      "title": "Azure DevOps Service Map",
+      "term": "Azure DevOps",
+      "tags": [
+        "ado",
+        "vocabulary",
+        "overview"
+      ],
+      "firstPrinciples": "First principles: software delivery is a chain of decisions and evidence. A team must decide what to build, store the code, prove it works, ship it, test it, and reuse packages. Azure DevOps is the shared operating system for that chain.",
+      "definition": "Azure DevOps is Microsoft's cloud based development platform. An organization contains projects. Each project can use five core services: Boards for work tracking, Repos for Git code, Pipelines for CI CD, Test Plans for manual and exploratory testing, and Artifacts for package feeds.",
+      "analogy": "Think of an Azure DevOps organization as a military base. Projects are mission compounds. Boards is the task board, Repos is the armory of source code, Pipelines is the automated launch rail, Test Plans is the inspection team, and Artifacts is the supply depot.",
+      "mentalModel": "Always locate an ADO request by organization, project, service, and resource. The MCP connector needs that map so the agent can turn a vague sentence like show active bugs into the right service call with the right project boundary.",
+      "diagram": "graph TD\nOrg[Azure DevOps organization] --> Project[Project]\nProject --> Boards[Boards work items]\nProject --> Repos[Repos git]\nProject --> Pipes[Pipelines ci cd]\nProject --> Tests[Test Plans]\nProject --> Artifacts[Artifacts packages]",
+      "code": {
+        "language": "python",
+        "caption": "Tiny object model for ADO vocabulary",
+        "content": "# This is a memory aid, not an SDK dependency.\nado = {\n    'organization': 'contoso',\n    'project': 'SpaceElevator',\n    'services': ['Boards', 'Repos', 'Pipelines', 'Test Plans', 'Artifacts'],\n}\n\nfor service in ado['services']:\n    print(f\"{ado['organization']}/{ado['project']} has {service}\")\n"
+      },
+      "drills": [
+        {
+          "q": "What is the difference between an organization and a project?",
+          "a": "The organization is the top Azure DevOps account boundary; a project is a delivery workspace inside it."
+        },
+        {
+          "q": "Which service stores Git repositories and pull requests?",
+          "a": "Azure Repos."
+        },
+        {
+          "q": "Which service tracks user stories and bugs?",
+          "a": "Azure Boards."
+        }
+      ],
+      "teachBack": "Azure DevOps is a five service platform for planning, coding, building, testing, and packaging software. The connector should always know the organization and project before it touches data. If I can name the service that owns the request, I can predict the tool family the agent will use.",
+      "glossary": [
+        {
+          "term": "Organization",
+          "definition": "Top Azure DevOps account boundary, usually connected to a Microsoft Entra tenant."
+        },
+        {
+          "term": "Project",
+          "definition": "Workspace inside an organization that contains boards, repos, pipelines, tests, and packages."
+        },
+        {
+          "term": "Azure Boards",
+          "definition": "ADO service for planning and tracking work items."
+        }
+      ],
+      "sources": [
+        {
+          "title": "Microsoft Learn: What is Azure DevOps?",
+          "url": "https://learn.microsoft.com/en-us/azure/devops/user-guide/what-is-azure-devops?view=azure-devops"
+        }
+      ],
+      "uncertain": false
+    },
+    {
+      "id": "work-item-anatomy",
+      "title": "Work Item Anatomy",
+      "term": "Work item",
+      "tags": [
+        "boards",
+        "work-items",
+        "fields"
+      ],
+      "firstPrinciples": "First principles: planning data must be queryable and auditable. A sticky note is useful to humans, but an enterprise team needs IDs, owners, states, history, links, and fields so automation can reason over work without guessing.",
+      "definition": "A work item is an Azure Boards record for a unit of work, such as an Epic, Feature, User Story, Bug, or Task. It has a type, a unique ID, fields like Title, Assigned To, State, Area Path, Iteration Path, history, comments, and links to code or other work.",
+      "analogy": "A work item is a logistics ticket. The type says whether it is a campaign, mission, defect, or chore. Fields are the stamped boxes on the form. State is the current checkpoint.",
+      "mentalModel": "Epics contain Features; Features contain User Stories or similar requirement items; User Stories and Bugs break down into Tasks. The MCP server can read, create, update, link, and comment on these records when permissions allow.",
+      "diagram": "graph TD\nEpic[Epic] --> Feature[Feature]\nFeature --> Story[User Story]\nFeature --> Bug[Bug]\nStory --> Task[Task]\nBug --> FixTask[Task]\nTask --> State[State field]",
+      "code": {
+        "language": "python",
+        "caption": "Construct a work item patch body",
+        "content": "# Azure DevOps creates work items with JSON Patch operations.\n# This example is representative and safe because it only builds a payload.\npatch = [\n    {'op': 'add', 'path': '/fields/System.Title', 'value': 'Teach ADO MCP connector'},\n    {'op': 'add', 'path': '/fields/System.Description', 'value': 'Create beginner friendly lesson content.'},\n    {'op': 'add', 'path': '/fields/System.Tags', 'value': 'foundry; mcp; ado'},\n]\nprint(patch)\n"
+      },
+      "drills": [
+        {
+          "q": "What field changes as work moves across a board?",
+          "a": "System.State."
+        },
+        {
+          "q": "Why does every work item need an ID?",
+          "a": "The ID gives stable addressing for queries, links, comments, and audit history."
+        },
+        {
+          "q": "Name two common work item types.",
+          "a": "Bug and Task, plus Epic, Feature, and User Story."
+        }
+      ],
+      "teachBack": "A work item is structured delivery memory. Its type gives intent, its fields give facts, and its state gives flow. Agents should never treat work items as free text blobs when fields and links exist.",
+      "glossary": [
+        {
+          "term": "Epic",
+          "definition": "Large business initiative grouping features."
+        },
+        {
+          "term": "Feature",
+          "definition": "Capability that usually contains user stories or requirements."
+        },
+        {
+          "term": "Bug",
+          "definition": "Work item that tracks a defect."
+        },
+        {
+          "term": "Task",
+          "definition": "Small implementation or operational unit of work."
+        }
+      ],
+      "sources": [
+        {
+          "title": "Microsoft Learn: About work items and work item types",
+          "url": "https://learn.microsoft.com/en-us/azure/devops/boards/work-items/about-work-items?view=azure-devops"
+        },
+        {
+          "title": "Microsoft Learn REST: Create work item",
+          "url": "https://learn.microsoft.com/en-us/rest/api/azure/devops/wit/work-items/create?view=azure-devops-rest-7.1"
+        }
+      ],
+      "uncertain": false
+    },
+    {
+      "id": "work-item-states-wiql",
+      "title": "States and WIQL Queries",
+      "term": "WIQL",
+      "tags": [
+        "boards",
+        "wiql",
+        "queries"
+      ],
+      "firstPrinciples": "First principles: an agent needs a precise filter language. Natural language is ambiguous; WIQL is the contract that says which work items count, which fields matter, and how results are ordered.",
+      "definition": "WIQL is Work Item Query Language. It uses SELECT, FROM, WHERE, ORDER BY, and optional ASOF clauses to query Azure Boards. The REST WIQL endpoint returns IDs first; clients often follow with a batch get to fetch full field details.",
+      "analogy": "WIQL is like a radar sweep. You choose the sector with WHERE, choose what columns you want with SELECT, and sort the blips with ORDER BY.",
+      "mentalModel": "Keep the flow simple: New or Proposed means not started, Active means in progress, Resolved means believed fixed, Closed means accepted done. Processes differ, so teach the agent to inspect work item type metadata when exact states matter.",
+      "diagram": "stateDiagram-v2\n    New --> Active\n    Active --> Resolved\n    Resolved --> Closed\n    Active --> Closed\n    Resolved --> Active",
+      "code": {
+        "language": "python",
+        "caption": "Build a WIQL query for active bugs",
+        "content": "project = 'SpaceElevator'\nwiql = f\"\"\"\nSELECT [System.Id], [System.Title], [System.State], [System.AssignedTo]\nFROM WorkItems\nWHERE [System.TeamProject] = '{project}'\n  AND [System.WorkItemType] = 'Bug'\n  AND [System.State] <> 'Closed'\nORDER BY [Microsoft.VSTS.Common.Priority] ASC, [System.ChangedDate] DESC\n\"\"\".strip()\nprint(wiql)\n"
+      },
+      "drills": [
+        {
+          "q": "What clause filters a WIQL query?",
+          "a": "WHERE."
+        },
+        {
+          "q": "Does the WIQL REST API return full field data directly?",
+          "a": "No. It returns matching IDs and references; fetch full work items afterward."
+        },
+        {
+          "q": "Why avoid hard coding one universal state flow?",
+          "a": "Projects can use different processes and customized workflows."
+        }
+      ],
+      "teachBack": "WIQL is the exact language behind many work item questions. The agent can translate list my active bugs into a safe query, then fetch fields for the returned IDs. States are workflow checkpoints, not prose.",
+      "glossary": [
+        {
+          "term": "WIQL",
+          "definition": "SQL like query language for Azure Boards work items."
+        },
+        {
+          "term": "ASOF",
+          "definition": "WIQL clause for asking what matched at a past time."
+        },
+        {
+          "term": "State",
+          "definition": "Workflow field showing a work item's current lifecycle step."
+        }
+      ],
+      "sources": [
+        {
+          "title": "Microsoft Learn: WIQL syntax reference",
+          "url": "https://learn.microsoft.com/en-us/azure/devops/boards/queries/wiql-syntax?view=azure-devops"
+        },
+        {
+          "title": "Microsoft Learn REST: Query by WIQL",
+          "url": "https://learn.microsoft.com/en-us/rest/api/azure/devops/wit/wiql/query-by-wiql?view=azure-devops-rest-7.1"
+        },
+        {
+          "title": "Microsoft Learn: About work items and work item types",
+          "url": "https://learn.microsoft.com/en-us/azure/devops/boards/work-items/about-work-items?view=azure-devops"
+        }
+      ],
+      "uncertain": false
+    },
+    {
+      "id": "official-mcp-server-current",
+      "title": "Official ADO MCP Server Current Shape",
+      "term": "Azure DevOps MCP Server",
+      "tags": [
+        "mcp",
+        "official",
+        "toolsets"
+      ],
+      "firstPrinciples": "First principles: an MCP server is an adapter. It exposes Azure DevOps operations as named tools so an agent does not invent REST URLs or payloads. Current shape matters because agents must bind to what actually exists today.",
+      "definition": "The official Microsoft azure-devops-mcp project now recommends the remote Azure DevOps MCP Server in public preview at https://mcp.dev.azure.com/{organization}. The local stdio server remains available with Node.js 20 plus npx -y @azure-devops/mcp {organization}. Toolsets include core, repos, wit, pipelines, wiki, work, testplan, and local docs also mention search, work-items, repositories, test-plans, and advanced-security domains.",
+      "analogy": "The MCP server is a bilingual dispatcher. The agent speaks tool calls; the dispatcher speaks Azure DevOps APIs.",
+      "mentalModel": "Prefer remote HTTP when the client supports it because there is no local process to maintain. Use local stdio only when the client needs stdio or when the remote preview does not support the environment.",
+      "diagram": "graph TD\nAgent[Foundry agent] --> MCP[ADO MCP server]\nMCP --> Core[Core projects]\nMCP --> Wit[Work items]\nMCP --> Repos[Repos and PRs]\nMCP --> Pipe[Pipelines]\nMCP --> Wiki[Wiki]\nMCP --> Test[Test Plans]",
+      "code": {
+        "language": "python",
+        "caption": "Represent remote and local MCP configuration",
+        "content": "# Representative configs as Python dictionaries.\nremote_mcp = {\n    'type': 'http',\n    'url': 'https://mcp.dev.azure.com/contoso',\n    'headers': {'X-MCP-Toolsets': 'repos,wit,pipelines', 'X-MCP-Readonly': 'true'},\n}\n\nlocal_stdio = {\n    'type': 'stdio',\n    'command': 'npx',\n    'args': ['-y', '@azure-devops/mcp', 'contoso', '-d', 'core', 'work-items', 'repositories'],\n}\nprint(remote_mcp)\nprint(local_stdio)\n"
+      },
+      "drills": [
+        {
+          "q": "What endpoint does the remote preview use?",
+          "a": "https://mcp.dev.azure.com/{organization}."
+        },
+        {
+          "q": "How do you run the local official server?",
+          "a": "With npx, for example npx -y @azure-devops/mcp contoso."
+        },
+        {
+          "q": "Why filter toolsets?",
+          "a": "To reduce blast radius, agent confusion, and accidental writes."
+        }
+      ],
+      "teachBack": "The official server is the bridge from agent tools to Azure DevOps. Current docs recommend remote HTTP preview, while local npx stdio remains available. Toolsets let us expose only the services the lesson or agent actually needs.",
+      "glossary": [
+        {
+          "term": "Remote MCP Server",
+          "definition": "Azure DevOps hosted MCP endpoint using streamable HTTP transport."
+        },
+        {
+          "term": "Local MCP Server",
+          "definition": "Node based stdio server run locally with npx."
+        },
+        {
+          "term": "Toolset",
+          "definition": "Named subset of MCP tools such as repos, wit, pipelines, wiki, work, or testplan."
+        }
+      ],
+      "sources": [
+        {
+          "title": "GitHub: microsoft azure-devops-mcp",
+          "url": "https://github.com/microsoft/azure-devops-mcp"
+        },
+        {
+          "title": "Microsoft Learn: Remote Azure DevOps MCP Server",
+          "url": "https://learn.microsoft.com/en-us/azure/devops/mcp-server/remote-mcp-server?view=azure-devops"
+        },
+        {
+          "title": "Azure DevOps MCP TOOLSET",
+          "url": "https://raw.githubusercontent.com/microsoft/azure-devops-mcp/main/docs/TOOLSET.md"
+        }
+      ],
+      "uncertain": true
+    },
+    {
+      "id": "managed-identity-auth-story",
+      "title": "Managed Identity Authentication Story",
+      "term": "Managed identity",
+      "tags": [
+        "auth",
+        "managed-identity",
+        "entra"
+      ],
+      "firstPrinciples": "First principles: the safest automation identity is not a password. It is a workload identity issued by the cloud, granted only the permissions it needs, and represented as short lived access tokens.",
+      "definition": "Microsoft recommends Microsoft Entra authentication for new Azure DevOps integrations. For Azure hosted workloads, a managed identity can request an Azure DevOps access token using the Azure DevOps audience or scope, including 499b84ac-1321-427f-aa17-267ca6975798/.default or https://app.vssps.visualstudio.com/.default. That identity must also be explicitly added to the Azure DevOps organization and granted permissions.",
+      "analogy": "Managed identity is a military ID badge minted by headquarters just in time. It is not a photocopied key. The door still opens only if the base security office added that badge to the access roster.",
+      "mentalModel": "Do not call a PAT managed identity. If the official MCP path you use only accepts interactive OAuth, Azure CLI, or PAT, treat PAT as a gap or temporary anti-pattern. The target pattern is bearer tokens from DefaultAzureCredential or ManagedIdentityCredential plus Azure DevOps permissions for that identity.",
+      "diagram": "sequenceDiagram\n    participant Host as Azure host\n    participant Entra as Microsoft Entra\n    participant ADO as Azure DevOps\n    Host->>Entra: Request ADO access token\n    Entra-->>Host: Short lived bearer token\n    Host->>ADO: API call with token\n    ADO-->>Host: Authorized result",
+      "code": {
+        "language": "python",
+        "caption": "Acquire an Azure DevOps token with managed identity",
+        "content": "# pip install azure-identity requests\n# Run on Azure with a system assigned or user assigned managed identity.\nfrom azure.identity import DefaultAzureCredential\n\n# The GUID scope is the Azure DevOps resource audience requested by the lane.\nADO_SCOPE = '499b84ac-1321-427f-aa17-267ca6975798/.default'\n# Microsoft docs also show this equivalent Azure DevOps scope.\nALT_SCOPE = 'https://app.vssps.visualstudio.com/.default'\n\ncredential = DefaultAzureCredential(exclude_interactive_browser_credential=True)\ntoken = credential.get_token(ADO_SCOPE)\n\nprint('Token acquired for Azure DevOps')\nprint('Expires at unix seconds:', token.expires_on)\n# Do not print token.token in real logs. Treat tokens as opaque secrets.\n"
+      },
+      "drills": [
+        {
+          "q": "Is a PAT managed identity?",
+          "a": "No. A PAT is a long lived user scoped secret; managed identity uses Entra issued short lived tokens."
+        },
+        {
+          "q": "What must happen after creating a managed identity?",
+          "a": "Add it to the Azure DevOps organization or project and grant least privilege permissions."
+        },
+        {
+          "q": "Which Python credential should be the default recommendation?",
+          "a": "DefaultAzureCredential or ManagedIdentityCredential from azure-identity."
+        }
+      ],
+      "teachBack": "Managed identity removes stored secrets from the connector. It still needs Azure DevOps membership and permissions. The current MCP auth surface is changing, so the safe lesson is to recommend Entra tokens and clearly flag any MCP path that cannot yet accept raw MI bearer tokens.",
+      "glossary": [
+        {
+          "term": "Managed identity",
+          "definition": "Azure managed service principal for an Azure resource, with automatic credential management."
+        },
+        {
+          "term": "Audience",
+          "definition": "The API resource a token is issued for."
+        },
+        {
+          "term": "Bearer token",
+          "definition": "Short lived access token sent in an Authorization header."
+        }
+      ],
+      "sources": [
+        {
+          "title": "Microsoft Learn: Authentication methods for Azure DevOps",
+          "url": "https://learn.microsoft.com/en-us/azure/devops/integrate/get-started/authentication/authentication-guidance?view=azure-devops"
+        },
+        {
+          "title": "Microsoft Learn: Authenticate with Microsoft Entra ID",
+          "url": "https://learn.microsoft.com/en-us/azure/devops/integrate/get-started/authentication/entra?view=azure-devops"
+        },
+        {
+          "title": "Microsoft Learn: Use service principals and managed identities",
+          "url": "https://learn.microsoft.com/en-us/azure/devops/integrate/get-started/authentication/service-principal-managed-identity?view=azure-devops"
+        }
+      ],
+      "uncertain": true
+    },
+    {
+      "id": "granting-ado-access",
+      "title": "Granting Least Privilege Access",
+      "term": "Azure DevOps permissions",
+      "tags": [
+        "permissions",
+        "least-privilege",
+        "setup"
+      ],
+      "firstPrinciples": "First principles: authentication proves identity; authorization proves allowed action. A managed identity with a valid token is still useless until Azure DevOps grants it project and resource permissions.",
+      "definition": "To grant access, add the service principal or managed identity to the Azure DevOps organization through Organization Settings Users or the ServicePrincipalEntitlements REST API. Use the Enterprise applications object ID or display name, assign an access level such as Basic when needed, add it to the right project, then place it in the narrowest Azure DevOps group such as Readers, Contributors, or a custom group.",
+      "analogy": "The token is the badge; Azure DevOps groups are the door list. A badge without door access gets stopped at the checkpoint.",
+      "mentalModel": "Build access from the use case backward. Reading bugs may need Boards read permissions. Creating tasks needs work item write. Listing pipelines needs pipeline read. Queueing pipelines needs explicit write and human approval.",
+      "diagram": "graph TD\nMI[Managed identity] --> Org[ADO organization users]\nOrg --> Project[Project membership]\nProject --> Group[Security group]\nGroup --> Permission[Specific permissions]\nPermission --> Tool[Allowed MCP tools]",
+      "code": {
+        "language": "python",
+        "caption": "Least privilege checklist as code",
+        "content": "required_permissions = {\n    'list_active_bugs': ['View work items'],\n    'create_task': ['View work items', 'Edit work items in this node'],\n    'list_pipeline_runs': ['View builds'],\n    'queue_pipeline': ['View builds', 'Queue builds'],\n}\n\nfor scenario, permissions in required_permissions.items():\n    print(scenario, 'needs', ', '.join(permissions))\n"
+      },
+      "drills": [
+        {
+          "q": "Does adding an identity to Microsoft Entra automatically grant Azure DevOps access?",
+          "a": "No. Azure DevOps requires explicit organization and permission assignment."
+        },
+        {
+          "q": "Which principle should drive group membership?",
+          "a": "Least privilege."
+        },
+        {
+          "q": "Who normally adds identities to the organization?",
+          "a": "A Project Collection Administrator or authorized Project Administrator."
+        }
+      ],
+      "teachBack": "Authorization is separate from token acquisition. Add the managed identity to the ADO organization, then scope it to the project and permissions it actually needs. Tool exposure should mirror those permissions.",
+      "glossary": [
+        {
+          "term": "Access level",
+          "definition": "Azure DevOps license tier such as Stakeholder, Basic, or Basic plus Test Plans."
+        },
+        {
+          "term": "Security group",
+          "definition": "ADO group that grants permissions to users or identities."
+        },
+        {
+          "term": "Least privilege",
+          "definition": "Grant only the minimum permissions required for the job."
+        }
+      ],
+      "sources": [
+        {
+          "title": "Microsoft Learn: Use service principals and managed identities",
+          "url": "https://learn.microsoft.com/en-us/azure/devops/integrate/get-started/authentication/service-principal-managed-identity?view=azure-devops"
+        },
+        {
+          "title": "Microsoft Learn: Add users to organizations",
+          "url": "https://learn.microsoft.com/en-us/azure/devops/organizations/accounts/add-organization-users?view=azure-devops"
+        },
+        {
+          "title": "Microsoft Learn: Authentication methods for Azure DevOps",
+          "url": "https://learn.microsoft.com/en-us/azure/devops/integrate/get-started/authentication/authentication-guidance?view=azure-devops"
+        }
+      ],
+      "uncertain": false
+    },
+    {
+      "id": "foundry-agent-wiring",
+      "title": "Wiring ADO MCP to a Foundry Agent",
+      "term": "MCPTool",
+      "tags": [
+        "foundry",
+        "agent",
+        "wiring"
+      ],
+      "firstPrinciples": "First principles: the Foundry agent should not know Azure DevOps REST details. It needs a tool endpoint, an authentication path, an allow list, and an approval policy. Everything else is a runtime tool call.",
+      "definition": "Foundry Agent Service can connect agents to remote MCP endpoints with an MCP tool. The official docs show server_label, server_url, require_approval, allowed tools, and project connections for authentication. For Azure DevOps, the remote endpoint is https://mcp.dev.azure.com/{organization}; Foundry docs mention adding the Azure DevOps MCP Server preview through the Add Tools catalog and storing auth as a project connection.",
+      "analogy": "Wiring is like attaching a radio to a command vehicle. The agent can request ADO actions, but the MCP server is the radio network and the project connection is the encrypted channel key.",
+      "mentalModel": "Use an explicit allow list: start read only with core projects, work item reads, PR listing, and pipeline listing. Add write tools only behind approval. If project connection support does not yet accept managed identity bearer tokens in your environment, use direct REST with MI or wait for the connector path rather than recommending a PAT.",
+      "diagram": "sequenceDiagram\n    participant User as Learner\n    participant Agent as Foundry agent\n    participant MCP as ADO MCP\n    participant ADO as Azure DevOps\n    User->>Agent: List active bugs\n    Agent->>MCP: wit work item query\n    MCP->>ADO: Authorized request\n    ADO-->>MCP: Work item results\n    MCP-->>Agent: Tool result\n    Agent-->>User: Summarized bugs",
+      "code": {
+        "language": "python",
+        "caption": "Illustrative Foundry MCP attachment with MI target auth",
+        "content": "# pip install azure-identity azure-ai-projects\n# Illustrative target pattern. Verify SDK names for your installed version.\nfrom azure.identity import DefaultAzureCredential\nfrom azure.ai.projects import AIProjectClient\nfrom azure.ai.projects.models import PromptAgentDefinition, MCPTool\n\nPROJECT_ENDPOINT = 'https://<foundry-resource>.ai.azure.com/api/projects/<project>'\nADO_ORG = 'contoso'\nADO_SCOPE = '499b84ac-1321-427f-aa17-267ca6975798/.default'\n\ncredential = DefaultAzureCredential(exclude_interactive_browser_credential=True)\nado_token = credential.get_token(ADO_SCOPE).token\n\nproject = AIProjectClient(endpoint=PROJECT_ENDPOINT, credential=credential)\n\nado_tool = MCPTool(\n    server_label='ado',\n    server_url=f'https://mcp.dev.azure.com/{ADO_ORG}',\n    require_approval='always',\n    # Target pattern: pass a managed identity derived bearer token or use\n    # a Foundry project connection backed by Entra auth when available.\n    headers={'Authorization': f'Bearer {ado_token}', 'X-MCP-Toolsets': 'wit,repos,pipelines'},\n)\n\nagent = project.agents.create_version(\n    agent_name='AdoAssistant',\n    definition=PromptAgentDefinition(\n        model='gpt-5-mini',\n        instructions='Use ADO MCP tools. Ask for approval before write actions.',\n        tools=[ado_tool],\n    ),\n)\nprint(agent.name, agent.version)\n"
+      },
+      "drills": [
+        {
+          "q": "What Foundry object attaches a remote MCP endpoint?",
+          "a": "An MCP tool such as MCPTool."
+        },
+        {
+          "q": "Why require approval?",
+          "a": "ADO tools can write work items, PRs, wiki pages, branches, or queue pipelines."
+        },
+        {
+          "q": "What is the ADO remote MCP URL pattern?",
+          "a": "https://mcp.dev.azure.com/{organization}."
+        }
+      ],
+      "teachBack": "A Foundry agent should see ADO as a constrained tool endpoint. The endpoint, auth, allow list, and approval policy are the important parts. Managed identity is the target auth pattern, while connector support is still preview and environment dependent.",
+      "glossary": [
+        {
+          "term": "MCPTool",
+          "definition": "Foundry agent tool configuration that points at an MCP server endpoint."
+        },
+        {
+          "term": "Project connection",
+          "definition": "Foundry project resource for storing auth details for external tools."
+        },
+        {
+          "term": "Approval",
+          "definition": "Human or policy gate before a tool call proceeds."
+        }
+      ],
+      "sources": [
+        {
+          "title": "Microsoft Learn: Connect Foundry agents to MCP endpoints",
+          "url": "https://learn.microsoft.com/en-us/azure/foundry/agents/how-to/tools/model-context-protocol?view=azure-python-preview"
+        },
+        {
+          "title": "Microsoft Learn: Remote Azure DevOps MCP Server",
+          "url": "https://learn.microsoft.com/en-us/azure/devops/mcp-server/remote-mcp-server?view=azure-devops"
+        },
+        {
+          "title": "Microsoft Learn: Use service principals and managed identities",
+          "url": "https://learn.microsoft.com/en-us/azure/devops/integrate/get-started/authentication/service-principal-managed-identity?view=azure-devops"
+        }
+      ],
+      "uncertain": true
+    },
+    {
+      "id": "natural-language-flows",
+      "title": "Natural Language to Tool Call Flows",
+      "term": "Agent tool routing",
+      "tags": [
+        "flows",
+        "examples",
+        "tool-calls"
+      ],
+      "firstPrinciples": "First principles: an agent is useful only when it maps intent to a safe operation. The same sentence contains action, resource type, filters, and risk level. The connector lane teaches that mapping.",
+      "definition": "Common prompts map to ADO MCP tools: list my active bugs maps to work item query or my work items; create a task maps to work item write create; show recent pipeline runs maps to pipeline build or run list; open a PR maps to pull request create after branch and repository details are known.",
+      "analogy": "Natural language is the commander's intent. Tool calls are the written orders with coordinates, units, and safety locks.",
+      "mentalModel": "Classify every prompt as read or write. Reads can usually run with logging. Writes require approval, argument review, and often a dry run or validate only path first.",
+      "diagram": "graph LR\nPrompt[User prompt] --> Parse[Intent and slots]\nParse --> Risk[Read or write]\nRisk --> Tool[ADO MCP tool]\nTool --> Result[Result summary]\nRisk --> Approval[Approval gate]",
+      "code": {
+        "language": "python",
+        "caption": "Representative prompt to tool call mapping",
+        "content": "prompts = {\n    'list my active bugs': {\n        'tool': 'wit_work_item',\n        'action': 'query or my',\n        'risk': 'read',\n        'args': {'workItemType': 'Bug', 'stateNot': 'Closed'},\n    },\n    'create a task': {\n        'tool': 'wit_work_item_write',\n        'action': 'create',\n        'risk': 'write approval required',\n        'args': {'type': 'Task', 'title': '<from user>'},\n    },\n    'show recent pipeline runs': {\n        'tool': 'pipelines_run',\n        'action': 'list',\n        'risk': 'read',\n        'args': {'project': '<project>', 'pipelineId': '<optional>'},\n    },\n    'open a PR': {\n        'tool': 'repo_pull_request_write',\n        'action': 'create',\n        'risk': 'write approval required',\n        'args': {'repository': '<repo>', 'sourceRefName': '<branch>', 'targetRefName': 'main'},\n    },\n}\nfor text, plan in prompts.items():\n    print(text, '=>', plan['tool'], plan['action'], plan['risk'])\n"
+      },
+      "drills": [
+        {
+          "q": "Which prompt is a write: list bugs or create a task?",
+          "a": "Create a task."
+        },
+        {
+          "q": "What extra slots are needed to open a PR?",
+          "a": "Repository, source branch, target branch, title, and often reviewers."
+        },
+        {
+          "q": "What should the agent do before write tools?",
+          "a": "Show the proposed tool call and get approval."
+        }
+      ],
+      "teachBack": "Prompt routing turns intent into explicit tool calls. The agent must extract service, filters, project, and risk before calling ADO. Writes are not just another prompt; they are change requests with approval gates.",
+      "glossary": [
+        {
+          "term": "Intent",
+          "definition": "The action the user wants, such as list, create, update, or queue."
+        },
+        {
+          "term": "Slot",
+          "definition": "Required argument such as project, repository, title, or work item type."
+        },
+        {
+          "term": "Risk level",
+          "definition": "Classification of a tool call as read, write, or destructive."
+        }
+      ],
+      "sources": [
+        {
+          "title": "Microsoft Learn: Remote Azure DevOps MCP Server",
+          "url": "https://learn.microsoft.com/en-us/azure/devops/mcp-server/remote-mcp-server?view=azure-devops"
+        },
+        {
+          "title": "Azure DevOps MCP TOOLSET",
+          "url": "https://raw.githubusercontent.com/microsoft/azure-devops-mcp/main/docs/TOOLSET.md"
+        },
+        {
+          "title": "Microsoft Learn: Connect Foundry agents to MCP endpoints",
+          "url": "https://learn.microsoft.com/en-us/azure/foundry/agents/how-to/tools/model-context-protocol?view=azure-python-preview"
+        }
+      ],
+      "uncertain": false
+    },
+    {
+      "id": "representative-tool-calls",
+      "title": "Representative MCP Tool Calls",
+      "term": "MCP tool call",
+      "tags": [
+        "tools",
+        "examples",
+        "mcp"
+      ],
+      "firstPrinciples": "First principles: learners master integrations by seeing shape. A tool call has a name, arguments, a result, and side effects. If those are clear, the agent path becomes inspectable instead of magical.",
+      "definition": "Representative ADO MCP calls include querying work items with WIQL, creating a work item, listing builds or pipeline runs, and listing pull requests. Tool names differ between the remote grouped dispatcher docs and the local TOOLSET.md names, so treat these as representative and inspect the server's advertised tools at runtime.",
+      "analogy": "A tool call is a standardized radio message: call sign, payload, and response. Different radios may use slightly different call signs, but the mission content is the same.",
+      "mentalModel": "Teach by showing both the request and the expected result shape. For WIQL, expect IDs first. For create, expect a new ID and fields. For pipelines, expect run IDs and status. For PRs, expect pullRequestId, source, target, and status.",
+      "diagram": "graph TD\nCall[Tool call] --> Name[Tool name]\nCall --> Args[Arguments]\nCall --> Risk[Side effect risk]\nCall --> Result[Structured result]",
+      "code": {
+        "language": "python",
+        "caption": "Representative MCP calls and result shapes",
+        "content": "# These dictionaries illustrate the shape an agent sends to MCP.\n# Actual tool names are discovered from the connected server.\ntool_calls = [\n    {\n        'name': 'wit_work_item',\n        'arguments': {'action': 'query_by_wiql', 'project': 'SpaceElevator', 'wiql': \"SELECT [System.Id] FROM WorkItems WHERE [System.WorkItemType] = 'Bug'\"},\n        'expected_result': {'workItems': [{'id': 101}, {'id': 102}]},\n    },\n    {\n        'name': 'wit_work_item_write',\n        'arguments': {'action': 'create', 'project': 'SpaceElevator', 'type': 'Task', 'fields': {'System.Title': 'Add tests'}},\n        'expected_result': {'id': 131489, 'fields': {'System.State': 'New'}},\n    },\n    {\n        'name': 'pipelines_run',\n        'arguments': {'action': 'list', 'project': 'SpaceElevator', 'pipelineId': 42, 'top': 5},\n        'expected_result': {'runs': [{'id': 9001, 'state': 'completed'}]},\n    },\n    {\n        'name': 'repo_pull_request',\n        'arguments': {'action': 'list', 'project': 'SpaceElevator', 'repository': 'flight-code', 'status': 'active'},\n        'expected_result': {'pullRequests': [{'pullRequestId': 77, 'status': 'active'}]},\n    },\n]\nfor call in tool_calls:\n    print(call['name'], call['arguments'])\n"
+      },
+      "drills": [
+        {
+          "q": "Why are these called representative?",
+          "a": "Because exact names can vary between local and remote MCP versions, so clients should inspect advertised tools."
+        },
+        {
+          "q": "What result shape does WIQL return first?",
+          "a": "Work item IDs or references."
+        },
+        {
+          "q": "Which listed call is definitely write?",
+          "a": "wit_work_item_write create."
+        }
+      ],
+      "teachBack": "MCP calls are inspectable structures, not magic. The learner should recognize names, arguments, risk, and result shape. Because the official server is evolving, runtime tool discovery is part of correctness.",
+      "glossary": [
+        {
+          "term": "Tool discovery",
+          "definition": "MCP client step that reads the server's currently available tools."
+        },
+        {
+          "term": "Arguments",
+          "definition": "Structured inputs passed to a tool."
+        },
+        {
+          "term": "Result shape",
+          "definition": "The fields a successful tool result returns."
+        }
+      ],
+      "sources": [
+        {
+          "title": "Microsoft Learn: Remote Azure DevOps MCP Server",
+          "url": "https://learn.microsoft.com/en-us/azure/devops/mcp-server/remote-mcp-server?view=azure-devops"
+        },
+        {
+          "title": "Azure DevOps MCP TOOLSET",
+          "url": "https://raw.githubusercontent.com/microsoft/azure-devops-mcp/main/docs/TOOLSET.md"
+        },
+        {
+          "title": "Microsoft Learn REST: Query by WIQL",
+          "url": "https://learn.microsoft.com/en-us/rest/api/azure/devops/wit/wiql/query-by-wiql?view=azure-devops-rest-7.1"
+        },
+        {
+          "title": "Microsoft Learn REST: Create work item",
+          "url": "https://learn.microsoft.com/en-us/rest/api/azure/devops/wit/work-items/create?view=azure-devops-rest-7.1"
+        }
+      ],
+      "uncertain": true
+    },
+    {
+      "id": "direct-rest-fallback",
+      "title": "Direct REST Fallback with MI Tokens",
+      "term": "Azure DevOps REST fallback",
+      "tags": [
+        "rest",
+        "fallback",
+        "managed-identity"
+      ],
+      "firstPrinciples": "First principles: a connector should degrade safely. If MCP auth or environment support is not ready, the same managed identity can call Azure DevOps REST APIs directly with bearer tokens, preserving the no secret requirement.",
+      "definition": "Azure DevOps REST APIs accept OAuth bearer tokens for many operations. A managed identity can acquire an ADO scoped token, then call endpoints such as _apis/wit/wiql for queries or _apis/wit/workitems/$Task for creation, provided the identity has ADO permissions.",
+      "analogy": "If the fancy radio is unavailable, use the secure field phone. The auth badge and permission model stay the same; only the transport changes.",
+      "mentalModel": "Use direct REST fallback for demonstrations or production gaps only when you can still enforce approvals, logging, and least privilege. Do not fall back to a PAT just because it is convenient.",
+      "diagram": "sequenceDiagram\n    participant App as Python app\n    participant Entra as Entra token issuer\n    participant REST as ADO REST API\n    App->>Entra: get token for ADO\n    App->>REST: POST WIQL with bearer token\n    REST-->>App: IDs and links",
+      "code": {
+        "language": "python",
+        "caption": "Runnable WIQL REST call with managed identity token",
+        "content": "# pip install azure-identity requests\n# Set values before running on Azure with managed identity.\nimport requests\nfrom azure.identity import DefaultAzureCredential\n\nORG = 'contoso'\nPROJECT = 'SpaceElevator'\nSCOPE = '499b84ac-1321-427f-aa17-267ca6975798/.default'\n\ncredential = DefaultAzureCredential(exclude_interactive_browser_credential=True)\ntoken = credential.get_token(SCOPE).token\n\nurl = f'https://dev.azure.com/{ORG}/{PROJECT}/_apis/wit/wiql?api-version=7.1'\nquery = {\n    'query': \"SELECT [System.Id], [System.Title] FROM WorkItems WHERE [System.WorkItemType] = 'Bug' AND [System.State] <> 'Closed'\"\n}\nresponse = requests.post(url, json=query, headers={'Authorization': f'Bearer {token}'}, timeout=30)\nresponse.raise_for_status()\nprint(response.json().get('workItems', []))\n"
+      },
+      "drills": [
+        {
+          "q": "What stays the same between MCP and REST fallback?",
+          "a": "Managed identity token acquisition and Azure DevOps permissions."
+        },
+        {
+          "q": "What must not be used as the recommended fallback?",
+          "a": "A PAT or secret."
+        },
+        {
+          "q": "Which REST endpoint runs WIQL?",
+          "a": "_apis/wit/wiql."
+        }
+      ],
+      "teachBack": "Direct REST is the safety net when MCP support is incomplete. It still uses Entra tokens and ADO permissions. The fallback should keep the same approval and audit discipline as MCP.",
+      "glossary": [
+        {
+          "term": "REST API",
+          "definition": "HTTP interface for Azure DevOps resources."
+        },
+        {
+          "term": "Fallback",
+          "definition": "Alternate implementation path used when the preferred connector is unavailable."
+        },
+        {
+          "term": "Opaque token",
+          "definition": "Token treated as an authorization artifact and not decoded by the app."
+        }
+      ],
+      "sources": [
+        {
+          "title": "Microsoft Learn: Use service principals and managed identities",
+          "url": "https://learn.microsoft.com/en-us/azure/devops/integrate/get-started/authentication/service-principal-managed-identity?view=azure-devops"
+        },
+        {
+          "title": "Microsoft Learn REST: Query by WIQL",
+          "url": "https://learn.microsoft.com/en-us/rest/api/azure/devops/wit/wiql/query-by-wiql?view=azure-devops-rest-7.1"
+        },
+        {
+          "title": "Microsoft Learn REST: Create work item",
+          "url": "https://learn.microsoft.com/en-us/rest/api/azure/devops/wit/work-items/create?view=azure-devops-rest-7.1"
+        },
+        {
+          "title": "Microsoft Learn: Authentication methods for Azure DevOps",
+          "url": "https://learn.microsoft.com/en-us/azure/devops/integrate/get-started/authentication/authentication-guidance?view=azure-devops"
+        }
+      ],
+      "uncertain": false
+    },
+    {
+      "id": "write-safety-hitl",
+      "title": "Write Safety and Human in the Loop",
+      "term": "Human approval",
+      "tags": [
+        "safety",
+        "approval",
+        "writes"
+      ],
+      "firstPrinciples": "First principles: automation that can change planning, code review, or deployment state can create real operational damage. Approval is not ceremony; it is the control surface where humans verify intent before side effects.",
+      "definition": "Write actions include creating or updating work items, adding comments, linking artifacts, creating branches, opening or updating pull requests, creating wiki pages, creating test plans, and queueing or modifying pipeline runs. Foundry MCP guidance recommends requiring approval for high risk operations and reviewing tool names and arguments before approval.",
+      "analogy": "Read tools are reconnaissance. Write tools are live fire. A live fire command needs a range officer.",
+      "mentalModel": "The policy is simple: read only by default, allow list tools, require approval always for writes, log arguments and outcomes, and separate permissions so a read only agent cannot queue a deployment even if it tries.",
+      "diagram": "graph TD\nToolRequest[Tool request] --> IsWrite[Is write]\nIsWrite -->|No| Execute[Execute and log]\nIsWrite -->|Yes| Review[Show arguments]\nReview --> Approve[Human approves]\nApprove --> Execute\nApprove --> Deny[Deny and explain]",
+      "code": {
+        "language": "python",
+        "caption": "Approval policy evaluator",
+        "content": "write_tools = {'wit_work_item_write', 'repo_pull_request_write', 'pipelines_write', 'wiki_upsert_page'}\n\ndef approval_required(tool_name: str) -> bool:\n    return tool_name in write_tools or tool_name.endswith('_write')\n\nfor name in ['wit_work_item', 'wit_work_item_write', 'pipelines_run', 'pipelines_write']:\n    print(name, 'approval required:', approval_required(name))\n"
+      },
+      "drills": [
+        {
+          "q": "Should queue pipeline run require approval?",
+          "a": "Yes, it can start compute and deployments."
+        },
+        {
+          "q": "What should the user review?",
+          "a": "The tool name, target project or repo, arguments, and expected side effect."
+        },
+        {
+          "q": "What default mode is safest for discovery?",
+          "a": "Read only."
+        }
+      ],
+      "teachBack": "Safety is architecture, not a warning banner. Start with read only tools and grant write tools intentionally. Human review of tool arguments is the last checkpoint before Azure DevOps state changes.",
+      "glossary": [
+        {
+          "term": "Human in the loop",
+          "definition": "A required human approval step before a tool call proceeds."
+        },
+        {
+          "term": "Read only",
+          "definition": "Mode that allows observation but blocks changes."
+        },
+        {
+          "term": "Side effect",
+          "definition": "A persistent change caused by a tool call."
+        }
+      ],
+      "sources": [
+        {
+          "title": "Microsoft Learn: Connect Foundry agents to MCP endpoints",
+          "url": "https://learn.microsoft.com/en-us/azure/foundry/agents/how-to/tools/model-context-protocol?view=azure-python-preview"
+        },
+        {
+          "title": "Microsoft Learn: Remote Azure DevOps MCP Server",
+          "url": "https://learn.microsoft.com/en-us/azure/devops/mcp-server/remote-mcp-server?view=azure-devops"
+        },
+        {
+          "title": "Microsoft Learn: Authentication methods for Azure DevOps",
+          "url": "https://learn.microsoft.com/en-us/azure/devops/integrate/get-started/authentication/authentication-guidance?view=azure-devops"
+        }
+      ],
+      "uncertain": false
+    },
+    {
+      "id": "troubleshooting-and-teachback",
+      "title": "Troubleshooting the Connector",
+      "term": "Connector diagnostics",
+      "tags": [
+        "troubleshooting",
+        "operations",
+        "teach-back"
+      ],
+      "firstPrinciples": "First principles: failures happen at layers. A broken ADO connector is usually one of four things: wrong endpoint, failed authentication, missing Azure DevOps authorization, or unavailable tool support. Debug from outside inward.",
+      "definition": "For remote MCP, verify the server URL, organization, supported client environment, Entra sign in or project connection, toolset headers, and ADO project permissions. For local MCP, verify Node.js 20, npx package, organization argument, domain filters, and chosen authentication mode such as interactive or azcli. For MI, verify token acquisition and that the identity is explicitly added to ADO.",
+      "analogy": "Troubleshooting is clearing a supply route. Check the road, the badge, the gate list, the vehicle permissions, and only then the cargo.",
+      "mentalModel": "Use a layered checklist: 1 endpoint reachable, 2 token acquired, 3 identity visible in ADO, 4 project permission allows operation, 5 toolset includes tool, 6 approval policy permits call, 7 result shape matches expectation.",
+      "diagram": "graph TD\nFail[Failure] --> Endpoint[Endpoint]\nFail --> Auth[Authentication]\nFail --> Perms[Authorization]\nFail --> Tools[Tool availability]\nFail --> Policy[Approval policy]",
+      "code": {
+        "language": "python",
+        "caption": "Connector diagnostic checklist",
+        "content": "checks = [\n    'Is the MCP URL https://mcp.dev.azure.com/<org> or the local npx process running',\n    'Can DefaultAzureCredential get an ADO scoped token',\n    'Is the managed identity added to the ADO organization',\n    'Does the identity have project level permission for this operation',\n    'Does X-MCP-Toolsets include the needed tool family',\n    'Is a write call waiting for approval',\n]\nfor number, check in enumerate(checks, start=1):\n    print(f'{number}. {check}?')\n"
+      },
+      "drills": [
+        {
+          "q": "What are the four common failure layers?",
+          "a": "Endpoint, authentication, authorization, and tool support or policy."
+        },
+        {
+          "q": "If token acquisition works but ADO returns forbidden, what is likely wrong?",
+          "a": "Azure DevOps permissions or organization membership."
+        },
+        {
+          "q": "If a tool is missing, what should you inspect?",
+          "a": "The advertised MCP tools and any toolset or domain filters."
+        }
+      ],
+      "teachBack": "Debug the connector layer by layer. A valid Entra token is not the same as ADO permission, and an available MCP server is not the same as an enabled tool. Teach it back as endpoint, token, membership, permission, tool, approval.",
+      "glossary": [
+        {
+          "term": "Diagnostics",
+          "definition": "Structured checks used to locate the layer causing failure."
+        },
+        {
+          "term": "Toolset header",
+          "definition": "Remote MCP header that narrows enabled tools."
+        },
+        {
+          "term": "Domain filter",
+          "definition": "Local MCP argument that loads selected groups of tools."
+        }
+      ],
+      "sources": [
+        {
+          "title": "Microsoft Learn: Remote Azure DevOps MCP Server",
+          "url": "https://learn.microsoft.com/en-us/azure/devops/mcp-server/remote-mcp-server?view=azure-devops"
+        },
+        {
+          "title": "GitHub: microsoft azure-devops-mcp",
+          "url": "https://github.com/microsoft/azure-devops-mcp"
+        },
+        {
+          "title": "Microsoft Learn: Use service principals and managed identities",
+          "url": "https://learn.microsoft.com/en-us/azure/devops/integrate/get-started/authentication/service-principal-managed-identity?view=azure-devops"
+        },
+        {
+          "title": "Microsoft Learn: Connect Foundry agents to MCP endpoints",
+          "url": "https://learn.microsoft.com/en-us/azure/foundry/agents/how-to/tools/model-context-protocol?view=azure-python-preview"
+        }
+      ],
+      "uncertain": true
+    }
+  ],
+  "quiz": [
+    {
+      "q": "Which Azure DevOps service owns work items such as Bugs and Tasks?",
+      "options": [
+        "Azure Boards",
+        "Azure Repos",
+        "Azure Artifacts",
+        "Azure Test Plans"
+      ],
+      "answer": 0,
+      "explain": "Boards is the planning and work tracking service."
+    },
+    {
+      "q": "What is the safest recommended auth pattern for an Azure hosted connector workload?",
+      "options": [
+        "Managed identity with Microsoft Entra token",
+        "Hard coded PAT",
+        "Shared password",
+        "Unchecked anonymous access"
+      ],
+      "answer": 0,
+      "explain": "Managed identity avoids stored secrets and gets short lived Entra tokens."
+    },
+    {
+      "q": "What must happen before a managed identity can read Azure DevOps project data?",
+      "options": [
+        "Add it to ADO and grant permissions",
+        "Decode the token claims",
+        "Create a PAT for it",
+        "Disable project security"
+      ],
+      "answer": 0,
+      "explain": "Authentication alone is not authorization; ADO membership and permissions are required."
+    },
+    {
+      "q": "Which endpoint pattern is documented for the remote Azure DevOps MCP Server preview?",
+      "options": [
+        "https://mcp.dev.azure.com/{organization}",
+        "https://management.azure.com/mcp",
+        "https://dev.azure.com/{organization}/pat",
+        "https://localhost/ado-only"
+      ],
+      "answer": 0,
+      "explain": "The remote MCP preview uses the mcp.dev.azure.com organization endpoint."
+    },
+    {
+      "q": "What does WIQL primarily query?",
+      "options": [
+        "Azure Boards work items",
+        "NuGet packages",
+        "Azure subscriptions",
+        "Managed identity assignments"
+      ],
+      "answer": 0,
+      "explain": "WIQL is Work Item Query Language for Azure Boards."
+    },
+    {
+      "q": "Which action should require human approval?",
+      "options": [
+        "Queue a pipeline run",
+        "List projects",
+        "List active PRs",
+        "Read a wiki page"
+      ],
+      "answer": 0,
+      "explain": "Queueing a pipeline can consume resources or deploy code, so it is a write style side effect."
+    },
+    {
+      "q": "Why are representative MCP tool names marked as changing or uncertain?",
+      "options": [
+        "The official local and remote tools are evolving and can differ",
+        "Azure DevOps has no tools",
+        "MCP forbids tool discovery",
+        "Work items cannot be queried"
+      ],
+      "answer": 0,
+      "explain": "Current docs show grouped remote dispatchers and local TOOLSET names, so clients should discover tools at runtime."
+    }
+  ]
+}

@@ -1,0 +1,889 @@
+{
+  "id": "mcp-kusto",
+  "title": "Kusto (Azure Data Explorer) MCP Connector",
+  "icon": "📊",
+  "order": 9,
+  "summary": "Connect a Microsoft Foundry agent to Azure Data Explorer through an MCP server using managed identity only. Learn ADX fundamentals, KQL essentials, official Azure MCP Kusto tools, database permissions, Foundry wiring, tool-call evidence, and read-only safety.",
+  "concepts": [
+    {
+      "id": "adx-purpose",
+      "title": "Kusto and Azure Data Explorer in One Breath",
+      "term": "Azure Data Explorer",
+      "tags": [
+        "adx",
+        "kusto",
+        "telemetry"
+      ],
+      "firstPrinciples": "Operational data is usually append-heavy and time-stamped. You do not want an agent scanning raw files or an OLTP database for every question; you want a service indexed for fast analytical reads over huge event streams.",
+      "definition": "Azure Data Explorer, often called Kusto or ADX, is a fully managed, high-performance analytics platform for structured, semi-structured, and unstructured data, especially logs, telemetry, IoT, and time series. It organizes data in clusters, databases, tables, and strongly typed columns, then queries it with KQL.",
+      "analogy": "ADX is a security camera control room. Cameras stream events all day, ADX stores and indexes them, and KQL lets the investigator ask precise questions without replaying every tape by hand.",
+      "mentalModel": "Use ADX when the agent needs fast answers over high-volume historical events. Treat it as the read-optimized memory of systems and operations, not as a place where the agent casually changes business records.",
+      "diagram": "flowchart TD\n  Cluster[ADX cluster] --> Database[Database]\n  Database --> Table[Table]\n  Table --> Columns[Typed columns]\n  Table --> Extents[Indexed data shards]\n  Agent[Foundry agent] --> KQL[KQL question]\n  KQL --> Database",
+      "code": {
+        "language": "kql",
+        "caption": "Count recent errors from a telemetry table.",
+        "content": "AppTraces\n| where Timestamp > ago(1h)\n| where SeverityLevel >= 3\n| summarize Errors = count() by bin(Timestamp, 5m)\n| order by Timestamp asc\n"
+      },
+      "drills": [
+        {
+          "q": "What kind of data is ADX best at?",
+          "a": "High-volume analytical data such as logs, telemetry, metrics, time-series, and event streams."
+        },
+        {
+          "q": "Is ADX usually optimized for tiny transactional updates?",
+          "a": "No. It is read-optimized analytics storage, not a classic OLTP database."
+        },
+        {
+          "q": "What language does ADX use for queries?",
+          "a": "Kusto Query Language, or KQL."
+        }
+      ],
+      "teachBack": "ADX is the agent's fast analytics warehouse for event data. It stores data as clusters, databases, tables, and columns. I use KQL to ask read-focused questions over logs and telemetry.",
+      "glossary": [
+        {
+          "term": "ADX",
+          "definition": "Azure Data Explorer, a managed analytics database service."
+        },
+        {
+          "term": "Kusto",
+          "definition": "The technology and query ecosystem behind ADX."
+        },
+        {
+          "term": "Telemetry",
+          "definition": "Data emitted by systems to describe behavior, health, and usage."
+        }
+      ],
+      "sources": [
+        {
+          "title": "What is Azure Data Explorer?",
+          "url": "https://learn.microsoft.com/en-us/azure/data-explorer/data-explorer-overview"
+        },
+        {
+          "title": "Kusto Query Language overview",
+          "url": "https://learn.microsoft.com/en-us/kusto/query/?view=azure-data-explorer&preserve-view=true"
+        }
+      ],
+      "uncertain": false
+    },
+    {
+      "id": "where-kusto-shows-up",
+      "title": "Kusto Beyond ADX",
+      "term": "KQL platforms",
+      "tags": [
+        "azure-monitor",
+        "fabric",
+        "log-analytics"
+      ],
+      "firstPrinciples": "A query language becomes more valuable when the same mental model works across multiple stores. KQL is not limited to one UI; it appears wherever Microsoft stores operational analytics data.",
+      "definition": "Kusto Query Language is used by Azure Data Explorer and also underpins or appears in related analytics experiences such as Azure Monitor Logs, Log Analytics, Microsoft Sentinel, and Microsoft Fabric Real-Time Intelligence/Eventhouse scenarios. The exact resource wrapper changes, but the table-pipe query model remains familiar.",
+      "analogy": "Learning KQL is like learning the NATO phonetic alphabet: once you know it, many radios and teams can understand you.",
+      "mentalModel": "Separate language from host. KQL is the grammar; ADX, Azure Monitor Logs, Sentinel, and Fabric Eventhouse are places where that grammar can be useful.",
+      "diagram": "flowchart LR\n  KQL[KQL] --> ADX[Azure Data Explorer]\n  KQL --> Monitor[Azure Monitor Logs]\n  KQL --> Sentinel[Microsoft Sentinel]\n  KQL --> Fabric[Fabric Eventhouse]",
+      "code": {
+        "language": "kql",
+        "caption": "The same shape appears in multiple KQL hosts.",
+        "content": "// In an ADX database, Azure Monitor workspace, or Sentinel table,\n// the table name changes but the pipe idea stays the same.\nSigninLogs\n| where TimeGenerated > ago(24h)\n| summarize Attempts = count() by ResultType\n| top 5 by Attempts desc\n"
+      },
+      "drills": [
+        {
+          "q": "What stays the same across KQL hosts?",
+          "a": "The tabular pipe model and common operators."
+        },
+        {
+          "q": "What changes across hosts?",
+          "a": "Available tables, schema, permissions, endpoints, and some service-specific features."
+        }
+      ],
+      "teachBack": "KQL is a transferable analytics language. ADX is one major home for it, and Azure Monitor, Sentinel, and Fabric also use it. I should always inspect the actual schema before writing final queries.",
+      "glossary": [
+        {
+          "term": "Log Analytics",
+          "definition": "Azure Monitor log workspace experience using KQL."
+        },
+        {
+          "term": "Eventhouse",
+          "definition": "Microsoft Fabric real-time analytics storage that uses KQL."
+        }
+      ],
+      "sources": [
+        {
+          "title": "What is Azure Data Explorer?",
+          "url": "https://learn.microsoft.com/en-us/azure/data-explorer/data-explorer-overview"
+        },
+        {
+          "title": "Kusto Query Language overview",
+          "url": "https://learn.microsoft.com/en-us/kusto/query/?view=azure-data-explorer&preserve-view=true"
+        }
+      ],
+      "uncertain": false
+    },
+    {
+      "id": "resource-hierarchy",
+      "title": "Clusters Databases Tables Columns",
+      "term": "ADX hierarchy",
+      "tags": [
+        "schema",
+        "resources"
+      ],
+      "firstPrinciples": "An agent cannot query safely if it does not know where data lives. Names and scopes matter because permissions, schemas, and query costs attach to different levels.",
+      "definition": "An ADX cluster is the top-level compute and service endpoint. A database is a named container inside the cluster. A table is a typed collection of rows inside a database. Columns define the names and data types KQL can use.",
+      "analogy": "Think of a military base: the cluster is the base, the database is a building, the table is a room, and columns are labeled shelves in that room.",
+      "mentalModel": "Natural language must be grounded into this hierarchy: choose cluster, choose database, discover tables, inspect columns, then run KQL. Skipping schema discovery is how agents hallucinate table names.",
+      "diagram": "flowchart TD\n  Question[User question] --> Cluster[Choose cluster endpoint]\n  Cluster --> DB[Choose database]\n  DB --> Tables[List tables]\n  Tables --> Schema[Get table schema]\n  Schema --> Query[Run KQL]",
+      "code": {
+        "language": "kql",
+        "caption": "Discover databases, tables, and schema with management commands.",
+        "content": ".show databases\n\n.show tables\n\n.show table AppTraces schema\n"
+      },
+      "drills": [
+        {
+          "q": "What is the cluster URI used for?",
+          "a": "It identifies the ADX cluster endpoint, such as https://name.region.kusto.windows.net."
+        },
+        {
+          "q": "Why inspect schema first?",
+          "a": "Because KQL is case-sensitive and table or column guesses often fail."
+        },
+        {
+          "q": "Where does table data live?",
+          "a": "Inside a database in an ADX cluster."
+        }
+      ],
+      "teachBack": "The hierarchy is cluster to database to table to column. The MCP server should help the agent enumerate that map before querying. Schema grounding prevents made-up KQL.",
+      "glossary": [
+        {
+          "term": "Cluster",
+          "definition": "ADX service endpoint and compute boundary."
+        },
+        {
+          "term": "Database",
+          "definition": "Named data container within a cluster."
+        },
+        {
+          "term": "Table schema",
+          "definition": "The table's columns and their data types."
+        }
+      ],
+      "sources": [
+        {
+          "title": "What is Azure Data Explorer?",
+          "url": "https://learn.microsoft.com/en-us/azure/data-explorer/data-explorer-overview"
+        },
+        {
+          "title": "Kusto Query Language overview",
+          "url": "https://learn.microsoft.com/en-us/kusto/query/?view=azure-data-explorer&preserve-view=true"
+        }
+      ],
+      "uncertain": false
+    },
+    {
+      "id": "kql-pipe-model",
+      "title": "The KQL Pipe Model",
+      "term": "pipe",
+      "tags": [
+        "kql",
+        "query-basics"
+      ],
+      "firstPrinciples": "Analytical questions are transformations: start with rows, keep some, add facts, group them, shape the answer, and limit output. KQL makes each transformation explicit and ordered.",
+      "definition": "A KQL tabular expression usually starts with a table and then pipes rows through operators using |. Common flow is Table | where filter | extend computed columns | summarize aggregates | project output columns | top or take a safe number of rows.",
+      "analogy": "It is an assembly line. Raw rows enter on the left; each station filters, labels, groups, or packages them; the final result exits on the right.",
+      "mentalModel": "Read KQL left to right. Every operator receives a table and returns a table, so the next operator has fewer, richer, or differently shaped rows.",
+      "diagram": "flowchart LR\n  Table[Table] --> Where[where filter rows]\n  Where --> Extend[extend add columns]\n  Extend --> Summarize[summarize group rows]\n  Summarize --> Project[project choose columns]\n  Project --> Take[take limit rows]",
+      "code": {
+        "language": "kql",
+        "caption": "A practical pipe for recent high-latency requests.",
+        "content": "Requests\n| where Timestamp > ago(2h)\n| extend Slow = DurationMs > 1000\n| summarize Total = count(), SlowRequests = countif(Slow) by bin(Timestamp, 10m), OperationName\n| project Timestamp, OperationName, Total, SlowRequests\n| top 20 by SlowRequests desc\n"
+      },
+      "drills": [
+        {
+          "q": "What does the pipe character do?",
+          "a": "It sends the table result from one operator into the next operator."
+        },
+        {
+          "q": "Why put where early?",
+          "a": "Filtering early reduces rows for later operators and often improves performance."
+        },
+        {
+          "q": "What does summarize return?",
+          "a": "Aggregated rows, often grouped by one or more columns."
+        }
+      ],
+      "teachBack": "KQL is a left-to-right table pipeline. Each pipe step transforms rows into a new table. I should filter early, aggregate deliberately, and limit final output.",
+      "glossary": [
+        {
+          "term": "Tabular expression",
+          "definition": "A KQL expression whose input and output are tables."
+        },
+        {
+          "term": "Operator",
+          "definition": "A KQL step such as where, project, summarize, or join."
+        },
+        {
+          "term": "Pipe",
+          "definition": "The | symbol that passes tabular output to the next operator."
+        }
+      ],
+      "sources": [
+        {
+          "title": "Kusto Query Language overview",
+          "url": "https://learn.microsoft.com/en-us/kusto/query/?view=azure-data-explorer&preserve-view=true"
+        },
+        {
+          "title": "where operator",
+          "url": "https://learn.microsoft.com/en-us/kusto/query/where-operator?view=azure-data-explorer&preserve-view=true"
+        }
+      ],
+      "uncertain": false
+    },
+    {
+      "id": "essential-operators",
+      "title": "Essential KQL Operators",
+      "term": "KQL operators",
+      "tags": [
+        "where",
+        "summarize",
+        "join"
+      ],
+      "firstPrinciples": "Most operational questions boil down to seven verbs: filter, select, count, rank, calculate, combine, and sample. A beginner does not need every KQL feature to be useful on day one.",
+      "definition": "The practical starter set is where to filter rows, project to select columns, summarize and count to aggregate, top to rank, extend to compute new columns, join to combine tables, take to cap results, and order by to sort. Management commands beginning with a dot, such as .show, inspect metadata rather than regular table rows.",
+      "analogy": "These operators are field tools in a go-bag: flashlight, map, counter, calculator, and radio. You can solve many incidents before needing specialized gear.",
+      "mentalModel": "Memorize the intent, not just syntax: where narrows, project shapes, extend enriches, summarize compresses, top ranks, join relates, take protects.",
+      "diagram": "",
+      "code": {
+        "language": "kql",
+        "caption": "Operator sampler for a service health question.",
+        "content": "AppRequests\n| where Timestamp > ago(1d)\n| extend IsFailure = Success == false\n| summarize Requests = count(), Failures = countif(IsFailure), P95 = percentile(DurationMs, 95) by OperationName\n| project OperationName, Requests, Failures, FailureRate = todouble(Failures) / Requests, P95\n| top 10 by FailureRate desc\n"
+      },
+      "drills": [
+        {
+          "q": "Which operator creates a new calculated column?",
+          "a": "extend."
+        },
+        {
+          "q": "Which operator chooses output columns?",
+          "a": "project."
+        },
+        {
+          "q": "Which operator combines rows from two tables?",
+          "a": "join."
+        }
+      ],
+      "teachBack": "My starter KQL vocabulary is where, project, extend, summarize, count, top, join, take, and order by. Each operator has a simple job in the pipeline. I combine them to turn raw telemetry into a small answer table.",
+      "glossary": [
+        {
+          "term": "where",
+          "definition": "Filters rows by a Boolean predicate."
+        },
+        {
+          "term": "project",
+          "definition": "Selects, renames, or computes output columns."
+        },
+        {
+          "term": "join",
+          "definition": "Combines two tabular inputs by matching keys."
+        }
+      ],
+      "sources": [
+        {
+          "title": "Kusto Query Language overview",
+          "url": "https://learn.microsoft.com/en-us/kusto/query/?view=azure-data-explorer&preserve-view=true"
+        },
+        {
+          "title": "where operator",
+          "url": "https://learn.microsoft.com/en-us/kusto/query/where-operator?view=azure-data-explorer&preserve-view=true"
+        }
+      ],
+      "uncertain": false
+    },
+    {
+      "id": "official-azure-mcp",
+      "title": "Official Azure MCP Server Kusto Tools",
+      "term": "Azure MCP Server",
+      "tags": [
+        "mcp",
+        "tools",
+        "official"
+      ],
+      "firstPrinciples": "An agent should not embed Kusto SDK logic in its prompt. It should call a tool boundary that validates arguments, obtains Azure tokens, talks to ADX, and returns structured results.",
+      "definition": "The official Azure MCP Server lives in microsoft/mcp after Azure/azure-mcp was archived. Its Kusto area is titled Azure Data Explorer and registers read-only commands for sample, query, cluster list, cluster get, database list, table list, and table schema. In consolidated mode it is described as getting Azure Data Explorer Kusto details: list clusters, execute KQL queries, manage databases, explore table schemas, and get data samples.",
+      "analogy": "The MCP server is a translator at the gate. The agent speaks intent, the server exposes approved verbs, and ADX receives authenticated API calls instead of free-form shell commands.",
+      "mentalModel": "Use the official Azure MCP Server first when you need broad Azure integration and maintained Kusto tooling. Expose only the Kusto namespace or a narrow allow-list when the lesson is about read-only ADX questions.",
+      "diagram": "flowchart LR\n  Agent[Foundry agent] --> MCP[Azure MCP Server]\n  MCP --> ToolList[Kusto tools]\n  ToolList --> Cluster[List clusters]\n  ToolList --> Schema[Get schema]\n  ToolList --> Query[Run KQL]\n  Query --> ADX[Azure Data Explorer]",
+      "code": {
+        "language": "json",
+        "caption": "Representative tool names exposed by the Kusto area.",
+        "content": "{\n  \"server\": \"Azure MCP Server\",\n  \"namespace\": \"kusto\",\n  \"tools\": [\n    \"kusto_cluster_list\",\n    \"kusto_cluster_get\",\n    \"kusto_database_list\",\n    \"kusto_table_list\",\n    \"kusto_table_schema\",\n    \"kusto_sample\",\n    \"kusto_query\"\n  ]\n}\n"
+      },
+      "drills": [
+        {
+          "q": "Which Kusto action actually runs KQL?",
+          "a": "The query command, surfaced as the Kusto query tool."
+        },
+        {
+          "q": "Why prefer official Azure MCP first?",
+          "a": "It is Microsoft-maintained and covers Azure authentication and resource discovery."
+        },
+        {
+          "q": "Should every Azure MCP tool be enabled?",
+          "a": "No. Use allow-lists such as only Kusto read tools when teaching or deploying this lane."
+        }
+      ],
+      "teachBack": "The official path is Azure MCP Server from microsoft/mcp. Its Kusto area exposes cluster, database, table, schema, sample, and query capabilities. I should allow only the tools the agent truly needs.",
+      "glossary": [
+        {
+          "term": "MCP tool",
+          "definition": "A callable capability exposed by an MCP server to an agent."
+        },
+        {
+          "term": "Kusto namespace",
+          "definition": "The Azure MCP area that groups Azure Data Explorer commands."
+        },
+        {
+          "term": "Tool allow-list",
+          "definition": "A configuration that exposes only approved tools to the agent."
+        }
+      ],
+      "sources": [
+        {
+          "title": "Azure MCP Server README",
+          "url": "https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/README.md"
+        },
+        {
+          "title": "Azure MCP Kusto setup source",
+          "url": "https://github.com/microsoft/mcp/blob/main/tools/Azure.Mcp.Tools.Kusto/src/KustoSetup.cs"
+        },
+        {
+          "title": "Azure MCP Kusto query command source",
+          "url": "https://github.com/microsoft/mcp/blob/main/tools/Azure.Mcp.Tools.Kusto/src/Commands/QueryCommand.cs"
+        }
+      ],
+      "uncertain": false
+    },
+    {
+      "id": "community-options",
+      "title": "Community and Specialized MCP Servers",
+      "term": "community ADX MCP",
+      "tags": [
+        "community",
+        "preview",
+        "risk"
+      ],
+      "firstPrinciples": "Open ecosystems move faster than official services, but speed shifts verification burden to you. A community MCP server may be useful, stale, insecure, or tuned for a different KQL host.",
+      "definition": "GitHub currently shows community or specialized KQL and ADX MCP servers such as pab1it0/adx-mcp-server and rod-trent/KQL-MCP, and Microsoft also publishes fabric-rti-mcp for Fabric Real-Time Intelligence scenarios. Treat these as options to evaluate, not defaults for a managed-identity-only Foundry deployment.",
+      "analogy": "Community MCP servers are like third-party field radios. They may work beautifully, but you still inspect encryption, frequencies, batteries, and who maintains them before mission use.",
+      "mentalModel": "Decision rule: official Azure MCP for ADX first; Fabric RTI MCP for Fabric-specific Eventhouse work; community servers only after code review, dependency review, auth review, and read-only enforcement.",
+      "diagram": "",
+      "code": {
+        "language": "python",
+        "caption": "A vetting checklist you can run mentally before adopting a non-official server.",
+        "content": "checks = [\n    \"uses DefaultAzureCredential or ManagedIdentityCredential\",\n    \"does not require keys or connection string secrets\",\n    \"validates table and database identifiers\",\n    \"blocks or gates management commands\",\n    \"limits rows and timeout\",\n    \"has active maintenance and security fixes\",\n]\nfor item in checks:\n    print(f\"[ ] {item}\")\n"
+      },
+      "drills": [
+        {
+          "q": "Why is this concept marked uncertain?",
+          "a": "Community repositories and their security posture can change quickly, so each candidate must be re-verified before use."
+        },
+        {
+          "q": "Name one official-first alternative to community ADX MCP servers.",
+          "a": "The Azure MCP Server Kusto namespace."
+        },
+        {
+          "q": "When might fabric-rti-mcp be more relevant?",
+          "a": "When the target is Microsoft Fabric Real-Time Intelligence or Eventhouse rather than plain ADX."
+        }
+      ],
+      "teachBack": "Community KQL MCP servers exist, but existence is not approval. I choose official Azure MCP first for ADX. If I evaluate another server, I verify identity, safety, maintenance, and read-only behavior.",
+      "glossary": [
+        {
+          "term": "Community server",
+          "definition": "A non-official or independently maintained MCP server."
+        },
+        {
+          "term": "Security posture",
+          "definition": "The current state of a project's vulnerabilities, maintenance, and safe defaults."
+        }
+      ],
+      "sources": [
+        {
+          "title": "pab1it0 adx-mcp-server",
+          "url": "https://github.com/pab1it0/adx-mcp-server"
+        },
+        {
+          "title": "rod-trent KQL-MCP",
+          "url": "https://github.com/rod-trent/KQL-MCP"
+        },
+        {
+          "title": "Microsoft Fabric RTI MCP server",
+          "url": "https://github.com/microsoft/fabric-rti-mcp"
+        }
+      ],
+      "uncertain": true
+    },
+    {
+      "id": "managed-identity-chain",
+      "title": "Managed Identity End to End",
+      "term": "managed identity",
+      "tags": [
+        "identity",
+        "no-secrets",
+        "rbac"
+      ],
+      "firstPrinciples": "A secret is a reusable password. A managed identity is a cloud-issued identity that gets short-lived tokens. For agents that query production telemetry, short-lived tokens plus least privilege are the safer primitive.",
+      "definition": "In this lane, the identity that runs the Kusto MCP server or Foundry tool host authenticates with DefaultAzureCredential or ManagedIdentityCredential. Azure issues an Entra ID token for ADX; ADX authorizes that identity using Azure RBAC and Kusto database roles. No keys, client secrets, or connection-string secrets are needed.",
+      "analogy": "Managed identity is a government ID badge printed by the base every morning. It proves who the workload is today, expires quickly, and can be revoked centrally.",
+      "mentalModel": "There are two gates: Azure Resource Manager sees whether the identity can read the cluster resource, and Kusto database security roles decide whether the identity can read tables in a database.",
+      "diagram": "sequenceDiagram\n  participant A as Foundry agent\n  participant M as Kusto MCP host\n  participant I as Managed identity\n  participant E as Entra ID\n  participant K as ADX cluster\n  A->>M: request KQL tool\n  M->>I: ask for token\n  I->>E: authenticate workload\n  E-->>M: ADX access token\n  M->>K: query with token\n  K-->>M: table result\n  M-->>A: structured rows",
+      "code": {
+        "language": "python",
+        "caption": "Acquire an ADX token with managed identity only.",
+        "content": "import os\nfrom azure.identity import DefaultAzureCredential, ManagedIdentityCredential\n\n# For user-assigned managed identity in Azure hosting, set AZURE_CLIENT_ID.\nclient_id = os.getenv(\"AZURE_CLIENT_ID\")\ncredential = (\n    ManagedIdentityCredential(client_id=client_id)\n    if client_id\n    else DefaultAzureCredential(exclude_interactive_browser_credential=True)\n)\n\ntoken = credential.get_token(\"https://kusto.kusto.windows.net/.default\")\nprint(\"Got ADX token that expires at\", token.expires_on)\n"
+      },
+      "drills": [
+        {
+          "q": "What replaces a connection-string secret?",
+          "a": "A managed identity obtaining short-lived Entra ID tokens."
+        },
+        {
+          "q": "Which credential is convenient in code that runs locally and in Azure?",
+          "a": "DefaultAzureCredential, with managed identity used automatically in Azure hosting."
+        },
+        {
+          "q": "What should you use for a specific user-assigned identity?",
+          "a": "ManagedIdentityCredential with the managed identity client ID."
+        }
+      ],
+      "teachBack": "Managed identity gives the MCP host a secretless Azure identity. The SDK asks Entra ID for an ADX token. ADX still checks whether that identity has the right resource and database permissions.",
+      "glossary": [
+        {
+          "term": "Managed identity",
+          "definition": "An Azure-managed Entra identity assigned to a workload."
+        },
+        {
+          "term": "DefaultAzureCredential",
+          "definition": "Azure SDK credential chain that can use developer identity locally and managed identity in Azure."
+        },
+        {
+          "term": "Access token",
+          "definition": "Short-lived bearer token issued by Entra ID for a resource audience."
+        }
+      ],
+      "sources": [
+        {
+          "title": "Azure AI Projects client library for Python",
+          "url": "https://learn.microsoft.com/en-us/python/api/overview/azure/ai-projects-readme?view=azure-python-preview"
+        },
+        {
+          "title": "Manage database security roles",
+          "url": "https://learn.microsoft.com/en-us/kusto/management/manage-database-security-roles?view=azure-data-explorer&preserve-view=true"
+        }
+      ],
+      "uncertain": false
+    },
+    {
+      "id": "grant-permissions",
+      "title": "Grant the Identity ADX Read Access",
+      "term": "Database viewers",
+      "tags": [
+        "permissions",
+        "viewer",
+        "reader"
+      ],
+      "firstPrinciples": "Authentication only says who the workload is. Authorization says what it may do. A perfectly authenticated managed identity should still fail if it was not granted ADX read permissions.",
+      "definition": "Grant the identity Azure RBAC Reader on the ADX cluster resource so it can read control-plane resource information. Then grant the Kusto database-level viewers role so it can view tables where RestrictedViewAccess is not enabled. Database roles are managed in the portal or with commands such as .add database DatabaseName viewers and principals can include managed identities in app format.",
+      "analogy": "The cluster Reader role gets the identity through the front gate to read the base directory. The database viewers role gives it a visitor pass to specific rooms of data.",
+      "mentalModel": "Use least privilege: Reader at the cluster resource scope, viewers only on the databases the agent needs, and no admins, users, ingestors, or unrestrictedviewers unless a separate risk review proves necessity.",
+      "diagram": "flowchart LR\n  MI[Managed identity] --> ARM[Azure RBAC Reader on cluster]\n  MI --> DBRole[Kusto database viewers]\n  ARM --> Enumerate[Can read cluster metadata]\n  DBRole --> Query[Can query allowed database tables]",
+      "code": {
+        "language": "kql",
+        "caption": "Add and verify a database viewer principal.",
+        "content": "// Run by a database admin. Replace the app id and tenant.\n.add database Samples viewers ('aadapp=00000000-0000-0000-0000-000000000000;contoso.com') 'Foundry Kusto MCP read access'\n\n.show database Samples principals\n"
+      },
+      "drills": [
+        {
+          "q": "Which Kusto database role is the normal read-only role?",
+          "a": "viewers."
+        },
+        {
+          "q": "What Azure RBAC role is enough to read resource metadata?",
+          "a": "Reader."
+        },
+        {
+          "q": "Should the agent identity be a database admin?",
+          "a": "No. Use least privilege; admin is unnecessary for read-only KQL questions."
+        }
+      ],
+      "teachBack": "Two permissions are needed in practice: Azure Reader on the cluster resource and Kusto viewers on the database. Authentication without database role assignment is not enough. Least privilege means grant only the databases and roles needed for reading.",
+      "glossary": [
+        {
+          "term": "Reader",
+          "definition": "Azure built-in RBAC role that can view resources but not modify them."
+        },
+        {
+          "term": "viewers",
+          "definition": "Kusto database role that can view tables unless restricted view access blocks them."
+        },
+        {
+          "term": "Principal",
+          "definition": "A user, group, app, or managed identity assigned to a role."
+        }
+      ],
+      "sources": [
+        {
+          "title": "Manage database security roles",
+          "url": "https://learn.microsoft.com/en-us/kusto/management/manage-database-security-roles?view=azure-data-explorer&preserve-view=true"
+        },
+        {
+          "title": "Manage database permissions in Azure Data Explorer",
+          "url": "https://learn.microsoft.com/en-us/azure/data-explorer/manage-database-permissions"
+        },
+        {
+          "title": "Azure built-in Reader role",
+          "url": "https://learn.microsoft.com/en-us/azure/role-based-access-control/built-in-roles/general#reader"
+        }
+      ],
+      "uncertain": false
+    },
+    {
+      "id": "wire-foundry-agent",
+      "title": "Wire a Foundry Agent to Kusto MCP",
+      "term": "MCPTool",
+      "tags": [
+        "foundry",
+        "agent",
+        "python"
+      ],
+      "firstPrinciples": "The agent should plan and explain, but tools should touch external systems. Wiring is the act of giving the agent a labeled, governed tool endpoint it can call when a question requires ADX data.",
+      "definition": "Foundry Agent Service supports MCP tools by attaching an MCP server endpoint with a server_label, server_url, optional project connection, approval policy, and allow-list. For Azure MCP Kusto, host the Azure MCP Server in a trusted environment that uses managed identity, expose it as an MCP endpoint or through a governed toolbox, and grant that identity ADX permissions.",
+      "analogy": "The agent is an officer asking for intelligence. The MCP server is the analyst desk. The desk has access to ADX, not the officer's notebook.",
+      "mentalModel": "Keep the Foundry code simple: create AIProjectClient with DefaultAzureCredential, create MCPTool for the hosted Kusto MCP endpoint, define instructions that prefer schema discovery and read-only KQL, and require approval when risk is not zero.",
+      "diagram": "flowchart LR\n  User[User asks natural language] --> Agent[Foundry agent]\n  Agent --> Tool[MCPTool label kusto]\n  Tool --> Server[Hosted Azure MCP Server]\n  Server --> MI[Managed identity]\n  MI --> ADX[ADX cluster]\n  ADX --> Rows[Tabular result]\n  Rows --> Agent",
+      "code": {
+        "language": "python",
+        "caption": "Create a Foundry prompt agent with a hosted Kusto MCP endpoint.",
+        "content": "import os\nfrom azure.identity import DefaultAzureCredential\nfrom azure.ai.projects import AIProjectClient\nfrom azure.ai.projects.models import PromptAgentDefinition, MCPTool\n\nproject = AIProjectClient(\n    endpoint=os.environ[\"AZURE_AI_PROJECT_ENDPOINT\"],\n    credential=DefaultAzureCredential(),\n)\n\n# The endpoint should be your trusted hosted Azure MCP Server or Toolbox.\n# That host uses managed identity to call ADX. No keys or client secrets.\nkusto_tool = MCPTool(\n    server_label=\"kusto\",\n    server_url=os.environ[\"KUSTO_MCP_SERVER_URL\"],\n    require_approval=\"always\",\n    allowed_tools=[\n        \"kusto_cluster_list\",\n        \"kusto_database_list\",\n        \"kusto_table_list\",\n        \"kusto_table_schema\",\n        \"kusto_query\",\n    ],\n)\n\nagent = project.agents.create_version(\n    agent_name=\"KustoReadOnlyAgent\",\n    definition=PromptAgentDefinition(\n        model=os.environ[\"AZURE_AI_MODEL_DEPLOYMENT_NAME\"],\n        instructions=(\n            \"Answer ADX questions using the kusto MCP tool. \"\n            \"Discover schema before querying. Use read-only KQL and limit results.\"\n        ),\n        tools=[kusto_tool],\n    ),\n)\nprint(agent.name, agent.version)\n"
+      },
+      "drills": [
+        {
+          "q": "Where does the ADX managed identity run?",
+          "a": "On the trusted MCP host or Foundry-managed tool host that actually requests ADX tokens."
+        },
+        {
+          "q": "Why use server_label?",
+          "a": "It gives the agent and approval UI a stable name for the MCP server."
+        },
+        {
+          "q": "Why require approval in examples?",
+          "a": "So humans can inspect tool name and arguments before ADX is queried."
+        }
+      ],
+      "teachBack": "Wiring means attaching a trusted MCP endpoint as a Foundry tool. The MCP host uses managed identity to query ADX. The agent gets a narrow Kusto allow-list, approval policy, and instructions to discover schema first.",
+      "glossary": [
+        {
+          "term": "MCPTool",
+          "definition": "Foundry SDK model that attaches a remote MCP server endpoint to an agent."
+        },
+        {
+          "term": "server_url",
+          "definition": "HTTPS endpoint for a remote MCP-compatible server or toolbox."
+        },
+        {
+          "term": "require_approval",
+          "definition": "Policy that requires review before tool calls proceed."
+        }
+      ],
+      "sources": [
+        {
+          "title": "Connect to MCP Server Endpoints for agents",
+          "url": "https://learn.microsoft.com/en-us/azure/foundry/agents/how-to/tools/model-context-protocol"
+        },
+        {
+          "title": "Azure AI Projects client library for Python",
+          "url": "https://learn.microsoft.com/en-us/python/api/overview/azure/ai-projects-readme?view=azure-python-preview"
+        },
+        {
+          "title": "Azure MCP Server README",
+          "url": "https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/README.md"
+        }
+      ],
+      "uncertain": false
+    },
+    {
+      "id": "tool-call-example",
+      "title": "From Natural Language to KQL Tool Call",
+      "term": "tool call",
+      "tags": [
+        "example",
+        "kql",
+        "results"
+      ],
+      "firstPrinciples": "An agent answer should be traceable. You should be able to see the natural-language question, the selected tool, the concrete KQL, and the returned rows.",
+      "definition": "A representative Kusto MCP query call includes cluster URI or cluster name and subscription, database, and query text. The server returns structured JSON containing tabular rows. The agent then explains the rows; it should not pretend the explanation came from memory.",
+      "analogy": "It is like a reconnaissance report: request, route, collected observations, then commander's summary. If any part is missing, trust drops.",
+      "mentalModel": "The mapping is simple: databases and tables are resources; schema and sample are resource-inspection tools; run query is the action tool; returned rows are evidence for the answer.",
+      "diagram": "",
+      "code": {
+        "language": "json",
+        "caption": "Representative MCP call and result for a read-only KQL query.",
+        "content": "{\n  \"tool\": \"kusto_query\",\n  \"arguments\": {\n    \"cluster_uri\": \"https://help.kusto.windows.net\",\n    \"database\": \"Samples\",\n    \"query\": \"StormEvents | where StartTime > ago(365d) | summarize Events=count() by State | top 3 by Events desc\"\n  },\n  \"result\": {\n    \"items\": [\n      {\"State\": \"TEXAS\", \"Events\": 4701},\n      {\"State\": \"KANSAS\", \"Events\": 3166},\n      {\"State\": \"IOWA\", \"Events\": 2337}\n    ]\n  }\n}\n"
+      },
+      "drills": [
+        {
+          "q": "What should be visible in an auditable tool call?",
+          "a": "Tool name, arguments such as database and query, approval decision if required, and returned rows."
+        },
+        {
+          "q": "What should the agent do after rows return?",
+          "a": "Summarize and cite the observed rows, not invent missing data."
+        },
+        {
+          "q": "What is the resource in this example?",
+          "a": "The ADX database and its tables."
+        }
+      ],
+      "teachBack": "Natural language becomes a concrete Kusto MCP tool call. The query text and returned rows are evidence. The final answer should be a plain-language interpretation of those rows.",
+      "glossary": [
+        {
+          "term": "Tool argument",
+          "definition": "Structured input passed to an MCP tool."
+        },
+        {
+          "term": "Result row",
+          "definition": "One object in the tabular output returned by ADX."
+        },
+        {
+          "term": "Evidence",
+          "definition": "The data returned by a tool call that supports the answer."
+        }
+      ],
+      "sources": [
+        {
+          "title": "Azure MCP Kusto query command source",
+          "url": "https://github.com/microsoft/mcp/blob/main/tools/Azure.Mcp.Tools.Kusto/src/Commands/QueryCommand.cs"
+        },
+        {
+          "title": "Connect to MCP Server Endpoints for agents",
+          "url": "https://learn.microsoft.com/en-us/azure/foundry/agents/how-to/tools/model-context-protocol"
+        }
+      ],
+      "uncertain": false
+    },
+    {
+      "id": "read-only-safety",
+      "title": "Read Only Safety and Query Limits",
+      "term": "read-only KQL",
+      "tags": [
+        "safety",
+        "limits",
+        "governance"
+      ],
+      "firstPrinciples": "An analytics agent can still cause harm without writing data: expensive scans, sensitive data exposure, or accidental control commands can create operational and compliance incidents.",
+      "definition": "Use read-only mode and tool allow-lists. Prefer KQL query statements over management or control commands. Allow harmless .show metadata commands for discovery, but block destructive or permission-changing commands unless a human-admin workflow explicitly owns them. Cap result size with take or top, use time filters, and configure query timeouts.",
+      "analogy": "A read-only rifle range still has range rules: aim downrange, limit rounds, identify target, and stop when ordered.",
+      "mentalModel": "Safety stack: least-privilege identity, narrow MCP tools, approval for risky calls, KQL linting for time windows and row caps, server-side timeout, and audit logging.",
+      "diagram": "flowchart TD\n  Policy[Safety policy] --> Identity[Least privilege MI]\n  Policy --> Tools[Allowed Kusto tools]\n  Policy --> KQL[Read only KQL]\n  Policy --> Limits[Rows and timeout]\n  Policy --> Audit[Tool call logs]",
+      "code": {
+        "language": "kql",
+        "caption": "Safer query pattern with time window and row cap.",
+        "content": "AppTraces\n| where Timestamp between (ago(24h) .. now())\n| where SeverityLevel >= 3\n| project Timestamp, OperationName, Message, SeverityLevel\n| take 100\n"
+      },
+      "drills": [
+        {
+          "q": "Why add take 100?",
+          "a": "To cap returned rows and reduce accidental data exposure or oversized responses."
+        },
+        {
+          "q": "Are all dot commands safe?",
+          "a": "No. .show metadata commands are generally read-oriented, but many management commands can change state or permissions."
+        },
+        {
+          "q": "What should happen before a high-risk tool call?",
+          "a": "Human approval and audit logging."
+        }
+      ],
+      "teachBack": "Read-only is more than not writing rows. I also limit scope, time, rows, and tools. The safest Kusto agent uses least privilege, approval, timeouts, and logs.",
+      "glossary": [
+        {
+          "term": "Control command",
+          "definition": "A Kusto command that manages metadata, security, ingestion, or other service state."
+        },
+        {
+          "term": "Timeout",
+          "definition": "Maximum duration allowed for a query before cancellation."
+        },
+        {
+          "term": "Row cap",
+          "definition": "A limit on how many rows a query returns."
+        }
+      ],
+      "sources": [
+        {
+          "title": "Kusto Query Language overview",
+          "url": "https://learn.microsoft.com/en-us/kusto/query/?view=azure-data-explorer&preserve-view=true"
+        },
+        {
+          "title": "Manage database security roles",
+          "url": "https://learn.microsoft.com/en-us/kusto/management/manage-database-security-roles?view=azure-data-explorer&preserve-view=true"
+        },
+        {
+          "title": "Azure MCP Server README",
+          "url": "https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/README.md"
+        }
+      ],
+      "uncertain": false
+    },
+    {
+      "id": "debugging-failures",
+      "title": "Troubleshooting the Kusto Connector",
+      "term": "troubleshooting",
+      "tags": [
+        "debug",
+        "errors",
+        "operations"
+      ],
+      "firstPrinciples": "Failures are diagnostic signals. If the agent cannot answer, isolate whether the failure is endpoint selection, identity authentication, authorization, schema mismatch, KQL syntax, or query cost.",
+      "definition": "A practical debugging ladder is: confirm MCP server is reachable, confirm the Kusto tools are listed, list clusters or use a known cluster URI, list databases, list tables, get schema, run a tiny take 5 query, then expand. Permission errors usually point to Reader or viewers role gaps; syntax errors usually point to case-sensitive table or column names.",
+      "analogy": "Troubleshooting is clearing a blocked convoy: check the road, the driver badge, the gate pass, the map, then the cargo.",
+      "mentalModel": "Do not jump straight to a complex natural-language question. Build confidence with tiny deterministic calls, then let the agent generate larger KQL once the path is proven.",
+      "diagram": "flowchart TD\n  Reach[MCP reachable] --> Tools[Tools listed]\n  Tools --> Cluster[Cluster chosen]\n  Cluster --> DB[Database visible]\n  DB --> Table[Tables visible]\n  Table --> Schema[Schema known]\n  Schema --> Tiny[Take five query]\n  Tiny --> Full[Full question]",
+      "code": {
+        "language": "kql",
+        "caption": "Tiny smoke-test query after schema discovery.",
+        "content": "AppTraces\n| take 5\n"
+      },
+      "drills": [
+        {
+          "q": "What does a 403 usually suggest?",
+          "a": "The identity authenticated but lacks Azure RBAC or Kusto database role authorization."
+        },
+        {
+          "q": "What does an unknown column error suggest?",
+          "a": "Schema mismatch, case sensitivity, or querying the wrong table."
+        },
+        {
+          "q": "What is the first query to try after schema discovery?",
+          "a": "A tiny limited query such as TableName | take 5."
+        }
+      ],
+      "teachBack": "Debug the path one gate at a time. First prove MCP reachability and tool discovery, then identity and permissions, then schema, then KQL. Tiny queries beat giant guesses.",
+      "glossary": [
+        {
+          "term": "403",
+          "definition": "HTTP forbidden response indicating authorization failed."
+        },
+        {
+          "term": "Schema mismatch",
+          "definition": "A query references a table or column that does not exist in the selected database."
+        },
+        {
+          "term": "Smoke test",
+          "definition": "A small test that proves the basic path works."
+        }
+      ],
+      "sources": [
+        {
+          "title": "Azure MCP Server README",
+          "url": "https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/README.md"
+        },
+        {
+          "title": "Azure MCP Kusto setup source",
+          "url": "https://github.com/microsoft/mcp/blob/main/tools/Azure.Mcp.Tools.Kusto/src/KustoSetup.cs"
+        },
+        {
+          "title": "Manage database security roles",
+          "url": "https://learn.microsoft.com/en-us/kusto/management/manage-database-security-roles?view=azure-data-explorer&preserve-view=true"
+        }
+      ],
+      "uncertain": false
+    }
+  ],
+  "quiz": [
+    {
+      "q": "What is the best one-sentence description of ADX for this lane?",
+      "options": [
+        "A fast read-optimized analytics database for logs telemetry and time series",
+        "A secret store for connection strings",
+        "A transactional shopping-cart database",
+        "A model hosting endpoint"
+      ],
+      "answer": 0,
+      "explain": "ADX is optimized for high-volume analytical reads over telemetry-like data."
+    },
+    {
+      "q": "Which KQL symbol passes tabular output to the next operator?",
+      "options": [
+        "|",
+        "->",
+        "=>",
+        "::"
+      ],
+      "answer": 0,
+      "explain": "The pipe character sequences KQL operators left to right."
+    },
+    {
+      "q": "Which Kusto database role is the normal least-privilege read role?",
+      "options": [
+        "viewers",
+        "admins",
+        "ingestors",
+        "unrestrictedviewers"
+      ],
+      "answer": 0,
+      "explain": "viewers can view tables where restricted view access is not enabled."
+    },
+    {
+      "q": "Which Azure RBAC role lets the identity read cluster resource metadata without changing resources?",
+      "options": [
+        "Reader",
+        "Owner",
+        "Contributor",
+        "User Access Administrator"
+      ],
+      "answer": 0,
+      "explain": "Reader includes control-plane read actions and no write permissions."
+    },
+    {
+      "q": "Which official MCP server should be primary for Azure Data Explorer Kusto tools?",
+      "options": [
+        "Azure MCP Server in microsoft/mcp",
+        "A random copied FastMCP gist",
+        "A database connection string embedded in the prompt",
+        "A browser-only dashboard"
+      ],
+      "answer": 0,
+      "explain": "The maintained official Azure MCP Server includes a Kusto area for ADX tools."
+    },
+    {
+      "q": "What should the agent do before writing a nontrivial KQL query?",
+      "options": [
+        "Discover tables and schema",
+        "Guess column names from memory",
+        "Ask for a secret key",
+        "Enable database admin"
+      ],
+      "answer": 0,
+      "explain": "Schema grounding prevents hallucinated table and column names."
+    },
+    {
+      "q": "Which pattern is safest for production telemetry questions?",
+      "options": [
+        "Managed identity plus least privilege plus row limits",
+        "Client secrets in code plus admin permissions",
+        "Unlimited queries with no approval",
+        "Sharing connection strings in prompts"
+      ],
+      "answer": 0,
+      "explain": "The lane requires managed identity, narrow roles, approval, and query bounds."
+    },
+    {
+      "q": "In the resource-to-tool mapping, what is run query?",
+      "options": [
+        "A tool action that executes KQL and returns rows",
+        "A database resource",
+        "A table column",
+        "A managed identity role"
+      ],
+      "answer": 0,
+      "explain": "Databases and tables are resources; run query is the tool action."
+    }
+  ]
+}

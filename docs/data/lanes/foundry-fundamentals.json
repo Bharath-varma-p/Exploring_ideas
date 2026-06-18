@@ -1,0 +1,972 @@
+{
+  "id": "foundry-fundamentals",
+  "title": "Azure AI Foundry Fundamentals",
+  "icon": "🏗️",
+  "order": 1,
+  "summary": "Master the first-principles map of Microsoft Foundry: what it is, how it evolved from Azure AI Studio and Azure AI Foundry, how subscriptions, resource groups, Foundry resources, hubs, and projects fit together, how Foundry compares with neighboring Azure AI services, and how regions, connections, dependent resources, interfaces, managed identity, RBAC, quotas, pricing, and core platform capabilities shape real-world AI application architecture.",
+  "concepts": [
+    {
+      "id": "what-is-foundry",
+      "title": "What Foundry Is",
+      "term": "Microsoft Foundry",
+      "tags": [
+        "portal",
+        "platform",
+        "overview"
+      ],
+      "firstPrinciples": "First principles: an AI app is not just a model. It needs a model, a safe place to call it, governance, identity, observability, evaluation, and a way for teams to reuse work without rebuilding infrastructure every sprint. Microsoft Foundry is the Azure platform layer that packages those needs so builders can focus on AI product behavior instead of hand wiring every cloud service.",
+      "definition": "Microsoft Foundry, formerly Azure AI Foundry and earlier Azure AI Studio, is a unified Azure platform as a service for building, managing, and operating enterprise AI applications, models, agents, tools, and projects. The primary browser entry point is https://ai.azure.com.",
+      "analogy": "Think of Foundry as an aircraft carrier for AI teams: models are aircraft, projects are mission bays, connections are supply lines, and Azure governance is the command structure keeping every mission controlled and auditable.",
+      "mentalModel": "Use Foundry when you need a governed AI application workspace, not just a raw model endpoint. The portal gives humans a cockpit; SDKs, CLI, and REST give automation a control stick. The big idea is one managed environment for model discovery, agents, evaluations, tracing, content safety, and project organization.",
+      "diagram": "graph TD\nLearner[Builder] --> Portal[Foundry portal]\nPortal --> Resource[Foundry resource]\nResource --> Project[Project]\nProject --> Assets[Agents evaluations files connections]\nProject --> Models[Model catalog and deployments]",
+      "code": {
+        "language": "bash",
+        "caption": "Open the official portal and keep work scoped to a project",
+        "content": "# Browser step: open the Foundry portal.\n# Sign in with your Microsoft Entra identity.\nopen https://ai.azure.com\n\n# CLI sanity check: confirm your active Azure subscription context.\n# This does not use keys or secrets.\naz account show --query \"{name:name,id:id,tenantId:tenantId}\" -o table\n"
+      },
+      "drills": [
+        {
+          "q": "Why is Foundry more than a model catalog?",
+          "a": "Because production AI also needs projects, identity, governance, deployments, agents, evaluations, observability, and safety controls."
+        },
+        {
+          "q": "What portal URL should a learner remember?",
+          "a": "https://ai.azure.com."
+        },
+        {
+          "q": "What older names might appear in docs or screenshots?",
+          "a": "Azure AI Foundry and Azure AI Studio."
+        }
+      ],
+      "teachBack": "Foundry is Azure's governed workspace for building AI applications, not merely a place to chat with a model. It gives teams a portal and APIs for projects, models, agents, evaluations, tracing, and safety. If a peer asks why it exists, say it turns scattered AI parts into an operable platform.",
+      "glossary": [
+        {
+          "term": "Microsoft Foundry",
+          "definition": "Unified Azure platform for enterprise AI app, model, and agent development."
+        },
+        {
+          "term": "Foundry portal",
+          "definition": "The browser experience at ai.azure.com."
+        },
+        {
+          "term": "Azure AI Studio",
+          "definition": "Earlier product name that evolved into Foundry experiences."
+        }
+      ],
+      "sources": [
+        {
+          "title": "Microsoft Learn: What is Microsoft Foundry?",
+          "url": "https://learn.microsoft.com/en-us/azure/foundry/what-is-foundry"
+        }
+      ],
+      "uncertain": false
+    },
+    {
+      "id": "foundry-resource-hierarchy",
+      "title": "Azure Resource Hierarchy",
+      "term": "Foundry resource hierarchy",
+      "tags": [
+        "architecture",
+        "governance",
+        "azure"
+      ],
+      "firstPrinciples": "First principles: Azure organizes everything by ownership and blast radius. A subscription pays and governs, a resource group groups lifecycle, a Foundry resource centralizes AI controls, and a project isolates a team's build artifacts. Each layer answers a different question: who pays, what gets managed together, what policies apply, and where developers work.",
+      "definition": "The modern hierarchy is subscription to resource group to Foundry resource to project. The Foundry resource is the top-level AI governance boundary; projects are development boundaries inside it.",
+      "analogy": "Picture a military base: the subscription is the national budget, the resource group is the base, the Foundry resource is the secure AI command building, and projects are locked rooms for individual missions.",
+      "mentalModel": "Do not flatten these layers in your head. A project is not the same as an Azure resource group, and a Foundry resource can contain multiple projects. Governance usually lives higher; experimentation usually lives lower.",
+      "diagram": "graph TD\nSub[Azure subscription] --> Rg[Resource group]\nRg --> Foundry[Foundry resource]\nFoundry --> ProjectA[Project alpha]\nFoundry --> ProjectB[Project beta]\nProjectA --> AssetsA[Files agents evaluations]\nProjectB --> AssetsB[Files agents evaluations]",
+      "code": {
+        "language": "python",
+        "caption": "Inspect the management plane shape using managed identity aware credentials",
+        "content": "# pip install azure-identity azure-mgmt-cognitiveservices\n# Run on an Azure host with managed identity, or locally after Azure CLI sign in.\nfrom azure.identity import DefaultAzureCredential\nfrom azure.mgmt.cognitiveservices import CognitiveServicesManagementClient\n\nsubscription_id = \"<subscription-id>\"\nresource_group = \"<resource-group>\"\nfoundry_resource = \"<foundry-resource-name>\"\n\ncredential = DefaultAzureCredential()\nclient = CognitiveServicesManagementClient(credential, subscription_id)\n\naccount = client.accounts.get(resource_group, foundry_resource)\nprint(\"Foundry resource:\", account.name, account.kind, account.location)\n\n# Projects are child resources under the Foundry account.\nfor project in client.projects.list(resource_group, foundry_resource):\n    print(\"Project:\", project.name, project.location)\n"
+      },
+      "drills": [
+        {
+          "q": "Which layer normally contains projects?",
+          "a": "The Foundry resource contains projects."
+        },
+        {
+          "q": "What is the resource group for?",
+          "a": "It groups Azure resources for lifecycle, access, policy, and cost management."
+        },
+        {
+          "q": "Why not put all teams in one project?",
+          "a": "Projects create development and access boundaries for separate apps, teams, or environments."
+        }
+      ],
+      "teachBack": "Start with the Azure stack: subscription, resource group, Foundry resource, project. The Foundry resource is where shared governance and deployments can live, while projects are where teams build. This hierarchy lets central teams control risk without blocking builders from moving fast.",
+      "glossary": [
+        {
+          "term": "Subscription",
+          "definition": "Azure billing and top-level administrative container."
+        },
+        {
+          "term": "Resource group",
+          "definition": "Lifecycle container for related Azure resources."
+        },
+        {
+          "term": "Foundry resource",
+          "definition": "Top-level Foundry Azure resource for governance and projects."
+        },
+        {
+          "term": "Project",
+          "definition": "Development boundary inside a Foundry resource."
+        }
+      ],
+      "sources": [
+        {
+          "title": "Microsoft Learn: Microsoft Foundry architecture",
+          "url": "https://learn.microsoft.com/en-us/azure/foundry/concepts/architecture"
+        },
+        {
+          "title": "Microsoft Learn: Create a project",
+          "url": "https://learn.microsoft.com/en-us/azure/foundry/how-to/create-projects"
+        }
+      ],
+      "uncertain": false
+    },
+    {
+      "id": "foundry-vs-neighbor-services",
+      "title": "Foundry Versus Neighbor Services",
+      "term": "Foundry compared with Azure OpenAI Azure Machine Learning and Azure AI Services",
+      "tags": [
+        "comparison",
+        "decision",
+        "services"
+      ],
+      "firstPrinciples": "First principles: choose the smallest tool that fits the job, but not smaller. A raw model endpoint is enough for simple model calls; a machine learning workspace is right for custom training workflows; prebuilt AI services solve specialized perception or language tasks; Foundry is best when generative AI apps need models plus projects, agents, evaluations, governance, and operations.",
+      "definition": "Foundry is the unified AI application platform. Azure OpenAI focuses on OpenAI model access. Azure Machine Learning focuses on broader custom ML lifecycle, training, and ML operations. Azure AI Services and Foundry Tools expose prebuilt capabilities such as Speech, Vision, Language, Content Safety, and related APIs.",
+      "analogy": "It is like transportation: a bicycle is Azure OpenAI for a short model trip, a factory is Azure Machine Learning for building engines, specialized trucks are AI Services, and Foundry is the logistics command center coordinating many vehicles for a mission.",
+      "mentalModel": "Ask: Am I only calling an OpenAI model, training custom ML, using a specific prebuilt AI capability, or building a governed AI app? Foundry becomes the default starting point for most new enterprise generative AI development because it combines app workspace, model access, agents, evaluations, and governance.",
+      "diagram": "graph TD\nNeed[Workload need] --> ModelOnly[Model call only]\nNeed --> CustomML[Custom training and ML ops]\nNeed --> Prebuilt[Speech vision language safety]\nNeed --> AppPlatform[Governed AI app platform]\nModelOnly --> AOAI[Azure OpenAI]\nCustomML --> AML[Azure Machine Learning]\nPrebuilt --> Tools[Azure AI Services and Foundry Tools]\nAppPlatform --> Foundry[Microsoft Foundry]",
+      "code": {
+        "language": "bash",
+        "caption": "Decision checklist before creating resources",
+        "content": "# Use this as a lightweight architecture checklist.\nprintf '%s\n'   '1 If I only need direct OpenAI model calls, evaluate Azure OpenAI or Foundry Models.'   '2 If I need agents, evaluations, tracing, and projects, start with Foundry.'   '3 If I need custom ML training and ML workspaces, evaluate Azure Machine Learning or hub based projects.'   '4 If I need Speech Vision Language or Content Safety APIs, use Foundry Tools or Azure AI Services.'\n"
+      },
+      "drills": [
+        {
+          "q": "When might standalone Azure OpenAI be sufficient?",
+          "a": "When the workload only needs Azure OpenAI completions or responses without Foundry project, agent, or evaluation features."
+        },
+        {
+          "q": "When does Azure Machine Learning fit better?",
+          "a": "When the center of gravity is custom ML training, ML workspaces, or classic managed compute model hosting."
+        },
+        {
+          "q": "What is the Foundry default use case?",
+          "a": "Governed generative AI application development with projects, models, agents, evaluations, and operations."
+        }
+      ],
+      "teachBack": "Foundry is not a replacement for every Azure AI service; it is the governed app platform around AI development. Azure OpenAI is narrower model access, Azure Machine Learning is deeper custom ML, and AI Services provide specialized APIs. Teach the decision by asking what job the learner is actually trying to do.",
+      "glossary": [
+        {
+          "term": "Azure OpenAI",
+          "definition": "Azure service and Foundry model capability for OpenAI models with Azure enterprise controls."
+        },
+        {
+          "term": "Azure Machine Learning",
+          "definition": "Azure platform for custom machine learning lifecycle and operations."
+        },
+        {
+          "term": "Azure AI Services",
+          "definition": "Prebuilt AI APIs such as Speech, Vision, Language, and Content Safety."
+        },
+        {
+          "term": "Foundry Tools",
+          "definition": "AI Services capabilities surfaced within the Foundry family."
+        }
+      ],
+      "sources": [
+        {
+          "title": "Microsoft Learn: What is Microsoft Foundry?",
+          "url": "https://learn.microsoft.com/en-us/azure/foundry/what-is-foundry"
+        },
+        {
+          "title": "Microsoft Learn: Microsoft Foundry architecture",
+          "url": "https://learn.microsoft.com/en-us/azure/foundry/concepts/architecture"
+        },
+        {
+          "title": "Microsoft Learn: Hubs and hub-based project overview classic",
+          "url": "https://learn.microsoft.com/en-us/azure/foundry-classic/concepts/ai-resources"
+        },
+        {
+          "title": "Microsoft Learn: Microsoft Foundry Models overview",
+          "url": "https://learn.microsoft.com/en-us/azure/foundry/concepts/foundry-models-overview"
+        }
+      ],
+      "uncertain": false
+    },
+    {
+      "id": "project-shapes-modern-and-hub",
+      "title": "Two Project Shapes",
+      "term": "Foundry project and hub based project",
+      "tags": [
+        "projects",
+        "classic",
+        "migration"
+      ],
+      "firstPrinciples": "First principles: project shape determines which backend resource model owns your workspace. Microsoft is moving new investment to Foundry projects on Foundry resources, while hub-based projects remain for selected classic and Azure Machine Learning oriented scenarios. Mixing them up causes SDK, portal, and feature confusion.",
+      "definition": "A Foundry project is the newer project type under a Foundry resource. A hub-based project is the classic project type under an Azure AI Hub, which is implemented with Azure Machine Learning workspace resources and associated with a Foundry resource.",
+      "analogy": "A modern Foundry project is like a new standardized command room. A hub-based project is like an older specialized hangar attached to the base for missions needing ML workshop equipment.",
+      "mentalModel": "For new learners, default to the modern Foundry resource plus Foundry project model unless a specific feature requires a hub-based project. Hub resources are accessible in the classic portal and Azure Machine Learning studio, and the official docs mark this as legacy support for selected use cases.",
+      "diagram": "graph TD\nChoice[Project shape] --> Modern[Foundry project]\nChoice --> Classic[Hub based project]\nModern --> FR[Foundry resource]\nClassic --> Hub[Azure AI Hub]\nHub --> AML[Azure Machine Learning workspace type]\nHub --> LinkedFR[Associated Foundry resource]",
+      "code": {
+        "language": "bash",
+        "caption": "CLI shape for a modern Foundry resource and project",
+        "content": "# Management plane illustration for modern Foundry projects.\n# It creates no secrets. Use only after choosing names and region deliberately.\naz cognitiveservices account create   --name <foundry-resource-name>   --resource-group <resource-group>   --kind AIServices   --sku s0   --location eastus   --allow-project-management   --assign-identity\n\naz cognitiveservices account project create   --name <foundry-resource-name>   --resource-group <resource-group>   --project-name <project-name>   --location eastus\n"
+      },
+      "drills": [
+        {
+          "q": "Which project shape should most new learners start with?",
+          "a": "A modern Foundry project on a Foundry resource."
+        },
+        {
+          "q": "Where do hub-based projects fit?",
+          "a": "Classic or selected scenarios needing hub capabilities such as Azure Machine Learning related features."
+        },
+        {
+          "q": "Why is this distinction practical?",
+          "a": "Because portal experiences, supported features, and SDK compatibility can differ by project type."
+        }
+      ],
+      "teachBack": "There are two shapes: modern Foundry projects and classic hub-based projects. New work generally starts with a Foundry project under a Foundry resource, while hub-based projects serve selected classic and ML-heavy cases. If a peer is lost, ask which resource owns the project: Foundry resource or AI Hub.",
+      "glossary": [
+        {
+          "term": "Foundry project",
+          "definition": "Newer project type under a Microsoft Foundry resource."
+        },
+        {
+          "term": "Hub-based project",
+          "definition": "Classic project type under an Azure AI Hub."
+        },
+        {
+          "term": "Azure AI Hub",
+          "definition": "Classic hub resource used for shared settings and selected Azure Machine Learning capabilities."
+        }
+      ],
+      "sources": [
+        {
+          "title": "Microsoft Learn: What is Microsoft Foundry?",
+          "url": "https://learn.microsoft.com/en-us/azure/foundry/what-is-foundry"
+        },
+        {
+          "title": "Microsoft Learn: Create a project",
+          "url": "https://learn.microsoft.com/en-us/azure/foundry/how-to/create-projects"
+        },
+        {
+          "title": "Microsoft Learn: Hubs and hub-based project overview classic",
+          "url": "https://learn.microsoft.com/en-us/azure/foundry-classic/concepts/ai-resources"
+        }
+      ],
+      "uncertain": false
+    },
+    {
+      "id": "hub-resource-concepts",
+      "title": "Hub Resource Concepts",
+      "term": "Azure AI Hub",
+      "tags": [
+        "hub",
+        "classic",
+        "shared-resources"
+      ],
+      "firstPrinciples": "First principles: when many projects need the same locked-down network, storage, compute, connections, and policy, centralizing those settings prevents drift. The classic hub pattern gives projects shared infrastructure and security posture instead of forcing each project to reinvent them.",
+      "definition": "A hub resource groups one or more hub-based projects with common security, data access, connections, compute, quota allocation, policy, and dependent Azure resources. It is legacy or selected-use-case territory, not the default modern Foundry project shape.",
+      "analogy": "A hub is a shared motor pool and armory: every project can use centrally approved vehicles, tools, and rules rather than buying its own unsafe equipment.",
+      "mentalModel": "Remember the hub as a sharing boundary. It can share security settings, managed virtual network behavior, connections, compute capacity, quota allocation, and dependent resources such as storage and key vault across hub-based projects.",
+      "diagram": "graph TD\nHub[Azure AI Hub] --> Security[Shared security]\nHub --> Connections[Shared connections]\nHub --> Compute[Shared compute and quota]\nHub --> Storage[Dependent storage]\nHub --> Vault[Dependent key vault]\nHub --> ProjectOne[Hub project one]\nHub --> ProjectTwo[Hub project two]",
+      "code": {
+        "language": "bash",
+        "caption": "Portal checklist for hub based projects",
+        "content": "# Portal steps for the classic shape.\n# 1 Open https://ai.azure.com and switch to the classic experience if required.\n# 2 Create or select an Azure AI Hub only when your scenario needs hub based capabilities.\n# 3 Confirm shared security, connections, compute, storage, and key vault settings before adding projects.\n# 4 Prefer managed identities for automation and resource access.\n"
+      },
+      "drills": [
+        {
+          "q": "What does a hub share across projects?",
+          "a": "Security configuration, connections, compute and quota allocation, policy, and dependent resources."
+        },
+        {
+          "q": "Is a hub the default for new Foundry projects?",
+          "a": "No. Modern Foundry projects on Foundry resources are the default starting point for most new work."
+        },
+        {
+          "q": "Why would a team still use a hub?",
+          "a": "For selected classic or Azure Machine Learning oriented capabilities such as certain open source model hosting or fine tuning scenarios."
+        }
+      ],
+      "teachBack": "A hub is the classic shared foundation for hub-based projects. Its job is to centralize security, connections, compute, quota, and dependent resources. Teach it as a legacy but still important architecture pattern for selected scenarios, not the first choice for every new learner.",
+      "glossary": [
+        {
+          "term": "Shared connection",
+          "definition": "A connection configured at hub scope for reuse by multiple hub-based projects."
+        },
+        {
+          "term": "Compute instance",
+          "definition": "Managed cloud workstation capacity used in some hub-based development experiences."
+        },
+        {
+          "term": "Managed virtual network",
+          "definition": "Network isolation configuration shared by projects under a hub."
+        }
+      ],
+      "sources": [
+        {
+          "title": "Microsoft Learn: Hubs and hub-based project overview classic",
+          "url": "https://learn.microsoft.com/en-us/azure/foundry-classic/concepts/ai-resources"
+        }
+      ],
+      "uncertain": false
+    },
+    {
+      "id": "project-workspace-boundary",
+      "title": "Project Workspace Boundary",
+      "term": "Foundry project",
+      "tags": [
+        "project",
+        "workspace",
+        "assets"
+      ],
+      "firstPrinciples": "First principles: builders need a safe sandbox where the assets for one app do not blur into another. A project draws that line around files, agents, evaluations, and related artifacts, while inheriting or reusing higher-level governance from the Foundry resource.",
+      "definition": "A Foundry project is the development workspace inside a Foundry resource where a team organizes AI app work such as agents, evaluations, files, connections, and project-scoped assets.",
+      "analogy": "A project is a mission folder with a locked workbench: the mission has its own documents, tests, agents, and build artifacts, but it still follows base security rules.",
+      "mentalModel": "Use separate projects for separate apps, teams, environments, or blast radii. A project should answer: what are we building, who can touch it, and which assets belong together?",
+      "diagram": "graph TD\nProject[Project] --> Agents[Agents]\nProject --> Evaluations[Evaluations]\nProject --> Files[Files]\nProject --> Connections[Project connections]\nProject --> Traces[Project metrics and traces]\nFoundry[Foundry resource] --> Project",
+      "code": {
+        "language": "python",
+        "caption": "List projects under a Foundry resource",
+        "content": "# pip install azure-identity azure-mgmt-cognitiveservices\nfrom azure.identity import DefaultAzureCredential\nfrom azure.mgmt.cognitiveservices import CognitiveServicesManagementClient\n\nsubscription_id = \"<subscription-id>\"\nresource_group = \"<resource-group>\"\nfoundry_resource = \"<foundry-resource-name>\"\n\nclient = CognitiveServicesManagementClient(DefaultAzureCredential(), subscription_id)\nfor project in client.projects.list(resource_group, foundry_resource):\n    print({\"name\": project.name, \"location\": project.location, \"id\": project.id})\n"
+      },
+      "drills": [
+        {
+          "q": "What belongs in a project?",
+          "a": "Assets for a specific AI app or team, such as agents, files, evaluations, and connections."
+        },
+        {
+          "q": "What should be separated into different projects?",
+          "a": "Different apps, teams, environments, or work with different access boundaries."
+        },
+        {
+          "q": "Does a project replace Azure RBAC?",
+          "a": "No. It is a scope where RBAC and project-level access can be applied."
+        }
+      ],
+      "teachBack": "A project is the builder workspace inside a Foundry resource. It keeps app assets together and helps isolate teams or environments. Explain it as the place where development happens under governance inherited from the resource.",
+      "glossary": [
+        {
+          "term": "Project assets",
+          "definition": "Files, agents, evaluations, and artifacts scoped to a project."
+        },
+        {
+          "term": "Development boundary",
+          "definition": "A workspace boundary that separates one team's build assets from another's."
+        },
+        {
+          "term": "Project managed identity",
+          "definition": "Managed identity associated with a project for secure Azure access and automation."
+        }
+      ],
+      "sources": [
+        {
+          "title": "Microsoft Learn: Microsoft Foundry architecture",
+          "url": "https://learn.microsoft.com/en-us/azure/foundry/concepts/architecture"
+        },
+        {
+          "title": "Microsoft Learn: Create a project",
+          "url": "https://learn.microsoft.com/en-us/azure/foundry/how-to/create-projects"
+        },
+        {
+          "title": "Microsoft Learn: Role-based access control for Microsoft Foundry",
+          "url": "https://learn.microsoft.com/en-us/azure/foundry/concepts/rbac-foundry"
+        }
+      ],
+      "uncertain": false
+    },
+    {
+      "id": "connections-conceptual",
+      "title": "Connections As Supply Lines",
+      "term": "Connection",
+      "tags": [
+        "connections",
+        "resources",
+        "identity"
+      ],
+      "firstPrinciples": "First principles: AI applications rarely live alone. They need search indexes, storage, monitoring, model resources, databases, and external systems. A connection is the named relationship that lets a Foundry project know where another resource is and how access is governed.",
+      "definition": "A connection is a Foundry configuration that lets a project authenticate to and consume Microsoft or external resources such as Azure AI Search, Azure Storage, Azure OpenAI, Application Insights, Key Vault, Foundry resources, and selected connector targets.",
+      "analogy": "A connection is a supply line on a battlefield map: it does not fight the battle, but it tells the mission how to reach fuel, maps, radios, and logistics safely.",
+      "mentalModel": "Keep connections conceptual in this lane: they are links between a project and other resources. Prefer Microsoft Entra and managed identity based access patterns; do not design new learning paths around copying secrets. Some connection types and creation methods are preview or code-only, so always check the current docs before production use.",
+      "diagram": "graph TD\nProject[Foundry project] --> Search[Azure AI Search]\nProject --> Storage[Azure Storage]\nProject --> Insights[Application Insights]\nProject --> Foundry[Other Foundry resource]\nProject --> Vault[Key Vault]",
+      "code": {
+        "language": "bash",
+        "caption": "Connection planning checklist",
+        "content": "# Before adding a connection in the portal or infrastructure code:\nprintf '%s\n'   '1 Identify the target Azure resource and its region.'   '2 Enable or confirm the project or app managed identity.'   '3 Grant only the required Azure RBAC role at the narrowest scope.'   '4 Add the Foundry connection and test from the project.'   '5 Document whether the connection type is generally available or preview.'\n"
+      },
+      "drills": [
+        {
+          "q": "What problem does a connection solve?",
+          "a": "It gives a project a managed link to another resource or external capability."
+        },
+        {
+          "q": "Name three common Azure connection targets.",
+          "a": "Azure AI Search, Azure Storage, and Application Insights."
+        },
+        {
+          "q": "What auth posture should this academy teach?",
+          "a": "Managed identity and Microsoft Entra based access, not copied secrets."
+        }
+      ],
+      "teachBack": "Connections are Foundry's named links to other resources. They let a project use things like search, storage, monitoring, and other Foundry or Azure resources. Teach them as supply lines, with managed identity and least privilege as the safety rules.",
+      "glossary": [
+        {
+          "term": "Connection",
+          "definition": "Project or resource configuration that links Foundry to another resource or service."
+        },
+        {
+          "term": "Azure AI Search",
+          "definition": "Azure search service commonly used for retrieval over text and vector indexes."
+        },
+        {
+          "term": "Application Insights",
+          "definition": "Azure monitoring service used for application telemetry and diagnostics."
+        }
+      ],
+      "sources": [
+        {
+          "title": "Microsoft Learn: Add a new connection to your project",
+          "url": "https://learn.microsoft.com/en-us/azure/foundry/how-to/connections-add"
+        },
+        {
+          "title": "Microsoft Learn: Role-based access control for Microsoft Foundry",
+          "url": "https://learn.microsoft.com/en-us/azure/foundry/concepts/rbac-foundry"
+        },
+        {
+          "title": "Microsoft Learn: Authenticate Azure hosted Python apps with managed identity",
+          "url": "https://learn.microsoft.com/en-us/azure/developer/python/sdk/authentication/system-assigned-managed-identity"
+        }
+      ],
+      "uncertain": false
+    },
+    {
+      "id": "dependent-azure-resources",
+      "title": "Dependent Azure Resources",
+      "term": "Dependent resources",
+      "tags": [
+        "architecture",
+        "storage",
+        "key-vault",
+        "monitoring"
+      ],
+      "firstPrinciples": "First principles: a platform feature often relies on ordinary infrastructure underneath. Files need storage, secrets need a vault, images may need a registry, logs need monitoring, and retrieval may need search. Foundry hides some wiring, but architects must still understand the dependent resources and their separate governance boundaries.",
+      "definition": "Dependent Azure resources are supporting services used by Foundry or hub-based projects, including Azure Storage, Azure Key Vault, Azure Container Registry, Application Insights, Log Analytics, Azure AI Search, and the Foundry resource itself depending on project shape.",
+      "analogy": "A project is the classroom; dependent resources are the lockers, safe, workshop, camera system, and library index that make the classroom usable.",
+      "mentalModel": "Do not assume connected or dependent resources inherit every setting automatically. The architecture docs state that connected resources such as Storage, Key Vault, and Azure AI Search are independent Azure resources with their own governance boundaries, networking, and access policies.",
+      "diagram": "graph TD\nFoundry[Foundry or hub project] --> Store[Storage account]\nFoundry --> Vault[Key Vault]\nFoundry --> Registry[Container Registry]\nFoundry --> Monitor[Application Insights]\nFoundry --> Logs[Log Analytics]\nFoundry --> Search[Azure AI Search]\nStore --> BoundaryA[Separate governance]\nVault --> BoundaryB[Separate governance]",
+      "code": {
+        "language": "bash",
+        "caption": "Inventory supporting resources in a resource group",
+        "content": "# Shows resource types so you can spot storage, vault, registry, insights, logs, and search.\n# Requires Azure RBAC read access. No keys or secrets are displayed.\naz resource list   --resource-group <resource-group>   --query \"[].{name:name,type:type,location:location}\"   -o table\n"
+      },
+      "drills": [
+        {
+          "q": "Why should a learner care about dependent resources?",
+          "a": "Because cost, networking, RBAC, and compliance can live on those resources separately from Foundry."
+        },
+        {
+          "q": "Name two typical dependent resources.",
+          "a": "Azure Storage and Azure Key Vault."
+        },
+        {
+          "q": "Are connected resources always governed by the Foundry resource?",
+          "a": "No. They are independent Azure resources with their own governance boundaries."
+        }
+      ],
+      "teachBack": "Foundry feels unified, but it can depend on separate Azure resources. Storage, Key Vault, Container Registry, Application Insights, Log Analytics, and Search may all matter. Teach peers to inspect the whole resource group and govern each dependency deliberately.",
+      "glossary": [
+        {
+          "term": "Azure Storage",
+          "definition": "Cloud storage service often used for project artifacts and files."
+        },
+        {
+          "term": "Azure Key Vault",
+          "definition": "Azure service for securely storing secrets, keys, and certificates."
+        },
+        {
+          "term": "Azure Container Registry",
+          "definition": "Registry for container images used by some custom runtime scenarios."
+        },
+        {
+          "term": "Log Analytics",
+          "definition": "Azure Monitor log workspace for querying telemetry."
+        }
+      ],
+      "sources": [
+        {
+          "title": "Microsoft Learn: Microsoft Foundry architecture",
+          "url": "https://learn.microsoft.com/en-us/azure/foundry/concepts/architecture"
+        },
+        {
+          "title": "Microsoft Learn: Hubs and hub-based project overview classic",
+          "url": "https://learn.microsoft.com/en-us/azure/foundry-classic/concepts/ai-resources"
+        },
+        {
+          "title": "Microsoft Learn: Add a new connection to your project",
+          "url": "https://learn.microsoft.com/en-us/azure/foundry/how-to/connections-add"
+        }
+      ],
+      "uncertain": false
+    },
+    {
+      "id": "regions-and-availability",
+      "title": "Regions And Availability",
+      "term": "Azure region",
+      "tags": [
+        "regions",
+        "availability",
+        "planning"
+      ],
+      "firstPrinciples": "First principles: cloud AI is physical. Models run on capacity in real datacenters, laws may restrict where data can be processed, and not every feature exists in every region at the same time. Region choice is an architecture decision, not a dropdown afterthought.",
+      "definition": "A region is the Azure geography location where a Foundry project and related resources are hosted. Foundry project support, specific models, Agent Service, Content Safety, quotas, and dependent services can vary by region.",
+      "analogy": "Choosing a region is like choosing an airfield: the runway may exist, but the aircraft, fuel, mechanics, and legal clearance for your mission may not all be available there.",
+      "mentalModel": "Before production, verify four things for the same subscription and tenant: the project region, model availability, quota, and dependent service availability. The docs explicitly warn that region support is a snapshot and feature-specific pages must be checked for current support.",
+      "diagram": "graph TD\nCandidate[Candidate region] --> ProjectSupport[Foundry project support]\nCandidate --> ModelSupport[Required model support]\nCandidate --> Quota[Available quota]\nCandidate --> Dependencies[Dependent services support]\nCandidate --> Compliance[Data residency and sovereign needs]\nAllClear[All yes] --> Deploy[Create resources]",
+      "code": {
+        "language": "bash",
+        "caption": "Region readiness checklist",
+        "content": "# This command lists Azure locations visible to your subscription.\n# Then use the official Foundry region docs and portal quota page for feature checks.\naz account list-locations --query \"[].{name:name,displayName:displayName}\" -o table\n\nprintf '%s\n'   'Confirm Foundry project support in the target region.'   'Confirm model and deployment type availability.'   'Confirm quota in Operate then Quota in the Foundry portal.'   'Confirm dependent services such as Content Safety or Agent Service.'\n"
+      },
+      "drills": [
+        {
+          "q": "Why can the same model fail in one region but work in another?",
+          "a": "Model availability and quota are regional and can differ by deployment type."
+        },
+        {
+          "q": "What should be checked before production rollout?",
+          "a": "Project support, model support, quota, dependent services, and compliance requirements."
+        },
+        {
+          "q": "Are docs the only source to validate availability?",
+          "a": "No. Also validate in the portal for the same subscription and tenant."
+        }
+      ],
+      "teachBack": "Region matters because AI capacity, features, quotas, and compliance are regional. Do not choose East US or West Europe blindly; verify the exact model, service, quota, and dependencies. Teach it as airfield selection for a mission.",
+      "glossary": [
+        {
+          "term": "Region",
+          "definition": "Azure datacenter geography where resources are hosted."
+        },
+        {
+          "term": "Regional quota",
+          "definition": "Usage capacity assigned per subscription, region, model, or deployment type."
+        },
+        {
+          "term": "Sovereign cloud",
+          "definition": "Cloud environment such as Azure Government with separate availability and compliance boundaries."
+        }
+      ],
+      "sources": [
+        {
+          "title": "Microsoft Learn: Feature availability across cloud regions",
+          "url": "https://learn.microsoft.com/en-us/azure/foundry/reference/region-support"
+        },
+        {
+          "title": "Microsoft Learn: Azure OpenAI in Microsoft Foundry Models quotas and limits",
+          "url": "https://learn.microsoft.com/en-us/azure/foundry/openai/quotas-limits"
+        }
+      ],
+      "uncertain": false
+    },
+    {
+      "id": "portal-sdk-cli-rest-and-planes",
+      "title": "Interfaces And Planes",
+      "term": "Control plane and data plane",
+      "tags": [
+        "portal",
+        "sdk",
+        "cli",
+        "rest",
+        "planes"
+      ],
+      "firstPrinciples": "First principles: cloud systems separate changing the factory from using what the factory produces. Creating a project, assigning roles, or configuring resources is control plane. Calling a model, running an agent, or uploading project data is data plane. Different interfaces can talk to either plane, but the intent is the key distinction.",
+      "definition": "The portal, SDK, Azure CLI, and REST APIs are interfaces. The control plane manages Azure resources through Azure Resource Manager, while the data plane uses service-specific endpoints to perform the resource's actual work.",
+      "analogy": "Control plane is the base commander issuing construction orders. Data plane is the trained crew flying missions from the base after it exists.",
+      "mentalModel": "Portal is best for learning and exploration. CLI is good for repeatable admin commands. SDK is good for application and automation code. REST is the universal protocol layer. Use managed identity capable credentials such as DefaultAzureCredential or ManagedIdentityCredential for code paths.",
+      "diagram": "graph TD\nHuman[Human or automation] --> Portal[Portal]\nHuman --> CLI[Azure CLI]\nHuman --> SDK[SDK]\nHuman --> REST[REST]\nPortal --> Control[Control plane]\nCLI --> Control\nSDK --> Control\nSDK --> Data[Data plane]\nREST --> Control\nREST --> Data\nControl --> ARM[Azure Resource Manager]\nData --> Endpoint[Project or service endpoint]",
+      "code": {
+        "language": "python",
+        "caption": "Get a control plane token with managed identity aware credentials",
+        "content": "# pip install azure-identity\nfrom azure.identity import DefaultAzureCredential, ManagedIdentityCredential\n\n# DefaultAzureCredential uses managed identity automatically when running on Azure hosts.\ncredential = DefaultAzureCredential()\nmanagement_token = credential.get_token(\"https://management.azure.com/.default\")\nprint(\"Control plane token acquired length:\", len(management_token.token))\n\n# If you want to require managed identity on an Azure host, use ManagedIdentityCredential directly.\nmi_credential = ManagedIdentityCredential()\n# token = mi_credential.get_token(\"https://management.azure.com/.default\")\n"
+      },
+      "drills": [
+        {
+          "q": "What is control plane?",
+          "a": "Operations that manage Azure resources, usually through Azure Resource Manager."
+        },
+        {
+          "q": "What is data plane?",
+          "a": "Operations that use a resource's capabilities through its service endpoint."
+        },
+        {
+          "q": "Which interface should automation prefer for repeatable code?",
+          "a": "SDK, CLI, REST, or infrastructure templates depending on the task, with managed identity aware credentials."
+        }
+      ],
+      "teachBack": "Interfaces are how you talk; planes are what kind of action you are taking. Control plane changes resources, while data plane uses them. Portal, CLI, SDK, and REST can all matter, but production automation should use identity based access rather than copied credentials.",
+      "glossary": [
+        {
+          "term": "Control plane",
+          "definition": "Azure management operations for creating, updating, or deleting resources."
+        },
+        {
+          "term": "Data plane",
+          "definition": "Service operations that use an existing resource's functionality."
+        },
+        {
+          "term": "Azure Resource Manager",
+          "definition": "Azure control plane service endpoint and deployment system."
+        },
+        {
+          "term": "DefaultAzureCredential",
+          "definition": "Azure Identity credential chain that supports managed identity and developer sign in flows."
+        },
+        {
+          "term": "ManagedIdentityCredential",
+          "definition": "Azure Identity credential that obtains tokens from an Azure managed identity."
+        }
+      ],
+      "sources": [
+        {
+          "title": "Microsoft Learn: Control plane and data plane operations",
+          "url": "https://learn.microsoft.com/en-us/azure/azure-resource-manager/management/control-plane-and-data-plane"
+        },
+        {
+          "title": "Microsoft Learn: Azure Identity client library for Python",
+          "url": "https://learn.microsoft.com/en-us/python/api/overview/azure/identity-readme?view=azure-python"
+        },
+        {
+          "title": "Microsoft Learn: Authenticate Azure hosted Python apps with managed identity",
+          "url": "https://learn.microsoft.com/en-us/azure/developer/python/sdk/authentication/system-assigned-managed-identity"
+        },
+        {
+          "title": "Microsoft Learn: What is Microsoft Foundry?",
+          "url": "https://learn.microsoft.com/en-us/azure/foundry/what-is-foundry"
+        }
+      ],
+      "uncertain": false
+    },
+    {
+      "id": "capabilities-overview",
+      "title": "Core Capability Map",
+      "term": "Foundry capabilities",
+      "tags": [
+        "models",
+        "agents",
+        "evaluations",
+        "observability",
+        "safety"
+      ],
+      "firstPrinciples": "First principles: a serious AI platform needs a supply of models, a way to host or call them, a way to build multi-step actors, a way to measure quality, a way to see what happened, and a way to reduce harm. Foundry groups these capabilities so teams can move from idea to operated system.",
+      "definition": "Foundry capabilities include model catalog, model deployments, Agent Service, evaluations, tracing and observability, and content safety controls. This lane names each capability at a high level; later lanes can go deep on SDK usage, inference, deployment, or MCP.",
+      "analogy": "Think of the capability map as a flight operations board: catalog chooses aircraft, deployments place aircraft on runways, agents plan missions, evaluations grade drills, tracing records the black box, and content safety is the rules of engagement.",
+      "mentalModel": "High level map: the model catalog helps you discover and compare models; deployments or project endpoints make models usable; Agent Service provides managed agent runtime and tools; evaluations measure behavior and quality; observability and tracing explain what happened; Content Safety detects harmful user or AI-generated content. Hosted agents and some tools are preview, so verify status before production.",
+      "diagram": "graph TD\nFoundry[Foundry] --> Catalog[Model catalog]\nFoundry --> Deployments[Deployments]\nFoundry --> Agents[Agent Service]\nFoundry --> Eval[Evaluations]\nFoundry --> Observe[Tracing and observability]\nFoundry --> Safety[Content Safety]",
+      "code": {
+        "language": "bash",
+        "caption": "Capability learning map",
+        "content": "printf '%s\n'   'Catalog: choose and compare models.'   'Deployments: make selected models available to projects or endpoints.'   'Agent Service: run agents with models, instructions, and tools.'   'Evaluations: measure quality and safety before trusting changes.'   'Tracing: inspect steps, latency, errors, and decisions.'   'Content Safety: detect harmful text or images and support safer apps.'\n"
+      },
+      "drills": [
+        {
+          "q": "What does the model catalog solve?",
+          "a": "Discovery, comparison, and selection of models."
+        },
+        {
+          "q": "What does tracing solve?",
+          "a": "It helps explain runs, decisions, latency, errors, and behavior for debugging and operations."
+        },
+        {
+          "q": "Why are evaluations needed?",
+          "a": "They provide evidence about quality and safety instead of relying on vibes from a few prompts."
+        }
+      ],
+      "teachBack": "Foundry's capability map covers the lifecycle around a model. Catalog, deployments, agents, evaluations, tracing, and safety each answer a different production question. Teach this as the minimum operations board for responsible AI apps.",
+      "glossary": [
+        {
+          "term": "Model catalog",
+          "definition": "Foundry experience for discovering, comparing, and selecting AI models."
+        },
+        {
+          "term": "Deployment",
+          "definition": "Configured availability of a model for use through Foundry or related endpoints."
+        },
+        {
+          "term": "Agent Service",
+          "definition": "Managed platform for building, deploying, and scaling AI agents."
+        },
+        {
+          "term": "Evaluation",
+          "definition": "Measurement process for assessing model or app quality and safety."
+        },
+        {
+          "term": "Tracing",
+          "definition": "Telemetry that records steps and behavior across model or agent runs."
+        },
+        {
+          "term": "Content Safety",
+          "definition": "Azure AI service for detecting harmful user generated and AI generated content."
+        }
+      ],
+      "sources": [
+        {
+          "title": "Microsoft Learn: What is Microsoft Foundry?",
+          "url": "https://learn.microsoft.com/en-us/azure/foundry/what-is-foundry"
+        },
+        {
+          "title": "Microsoft Learn: Microsoft Foundry Models overview",
+          "url": "https://learn.microsoft.com/en-us/azure/foundry/concepts/foundry-models-overview"
+        },
+        {
+          "title": "Microsoft Learn: What is Microsoft Foundry Agent Service?",
+          "url": "https://learn.microsoft.com/en-us/azure/foundry/agents/overview"
+        },
+        {
+          "title": "Microsoft Learn: Microsoft Foundry architecture",
+          "url": "https://learn.microsoft.com/en-us/azure/foundry/concepts/architecture"
+        },
+        {
+          "title": "Microsoft Learn: What is Azure AI Content Safety?",
+          "url": "https://learn.microsoft.com/en-us/azure/ai-services/content-safety/overview"
+        }
+      ],
+      "uncertain": true
+    },
+    {
+      "id": "rbac-and-managed-identity-posture",
+      "title": "Managed Identity Posture",
+      "term": "Managed identity and Foundry RBAC",
+      "tags": [
+        "identity",
+        "rbac",
+        "security"
+      ],
+      "firstPrinciples": "First principles: software should not carry human passwords or copied keys. Azure gives workloads managed identities, and Azure RBAC grants those identities only the actions they need at a specific scope. Foundry follows this same identity and scope discipline for secure automation and team access.",
+      "definition": "Managed identity is an Azure provided identity for a workload. Foundry RBAC assigns roles such as Foundry User, Foundry Project Manager, Foundry Account Owner, or Foundry Owner at Foundry resource or project scopes.",
+      "analogy": "A managed identity is a soldier's badge issued by the base, not a sticky note with the gate code. RBAC is the guard roster saying which doors that badge can open.",
+      "mentalModel": "Use managed identities for Azure-hosted automation and project access. Assign least privilege at the narrowest practical scope. The official RBAC docs recommend Foundry User as a starter role for users and project managed identities, while more privileged roles should be reserved for management duties.",
+      "diagram": "graph TD\nWorkload[Azure hosted workload] --> MI[Managed identity]\nMI --> Role[RBAC role assignment]\nRole --> Scope[Foundry resource or project scope]\nScope --> Allowed[Allowed actions]\nScope --> Denied[Denied actions]",
+      "code": {
+        "language": "bash",
+        "caption": "Assign Foundry User to a managed identity at a Foundry resource scope",
+        "content": "# Replace placeholders. This uses Azure RBAC and managed identity, not copied credentials.\nFOUNDry_RESOURCE_ID=\"/subscriptions/<sub>/resourceGroups/<rg>/providers/Microsoft.CognitiveServices/accounts/<foundry-resource>\"\nMANAGED_IDENTITY_PRINCIPAL_ID=\"<principal-id>\"\n\naz role assignment create   --assignee-object-id \"$MANAGED_IDENTITY_PRINCIPAL_ID\"   --assignee-principal-type ServicePrincipal   --role \"Foundry User\"   --scope \"$FOUNDry_RESOURCE_ID\"\n"
+      },
+      "drills": [
+        {
+          "q": "Why use managed identity?",
+          "a": "It lets Azure-hosted workloads authenticate without storing application secrets."
+        },
+        {
+          "q": "What does RBAC add?",
+          "a": "It grants specific permissions at a chosen scope."
+        },
+        {
+          "q": "Which Foundry role is a common least privilege starter?",
+          "a": "Foundry User."
+        }
+      ],
+      "teachBack": "Foundry security starts with identity, role, and scope. Managed identity gives workloads an Azure issued identity, and RBAC decides what that identity can do. Teach peers to avoid copied credentials and grant the smallest useful role at the smallest useful scope.",
+      "glossary": [
+        {
+          "term": "Managed identity",
+          "definition": "Azure managed workload identity that obtains Microsoft Entra tokens without app secrets."
+        },
+        {
+          "term": "RBAC",
+          "definition": "Role based access control assigning permissions to identities at scopes."
+        },
+        {
+          "term": "Foundry User",
+          "definition": "Least privilege built-in Foundry role for building and using project data actions."
+        },
+        {
+          "term": "Scope",
+          "definition": "The Azure resource boundary where a role assignment applies."
+        }
+      ],
+      "sources": [
+        {
+          "title": "Microsoft Learn: Role-based access control for Microsoft Foundry",
+          "url": "https://learn.microsoft.com/en-us/azure/foundry/concepts/rbac-foundry"
+        },
+        {
+          "title": "Microsoft Learn: Authenticate Azure hosted Python apps with managed identity",
+          "url": "https://learn.microsoft.com/en-us/azure/developer/python/sdk/authentication/system-assigned-managed-identity"
+        },
+        {
+          "title": "Microsoft Learn: Azure Identity client library for Python",
+          "url": "https://learn.microsoft.com/en-us/python/api/overview/azure/identity-readme?view=azure-python"
+        }
+      ],
+      "uncertain": false
+    },
+    {
+      "id": "quotas-and-pricing-basics",
+      "title": "Quotas And Pricing Basics",
+      "term": "Quota and cost management",
+      "tags": [
+        "quota",
+        "pricing",
+        "cost"
+      ],
+      "firstPrinciples": "First principles: every cloud system has two governors: capacity and money. Quota says how much you are allowed to consume; pricing says what consumption costs. Production AI planning must model both before traffic arrives.",
+      "definition": "Quota is the service limit or capacity allocation, often scoped by subscription, region, model, and deployment type. Pricing is the cost model for the Azure services and models you use, commonly based on tokens, requests, hosting, committed tiers, or dependent services.",
+      "analogy": "Quota is the size of your fuel tank and runway schedule; pricing is the bill for fuel, maintenance, and hangar time.",
+      "mentalModel": "Do not memorize exact prices in a fundamentals lane because they change. Learn the cost drivers: model family, deployment type, tokens or requests, hosted resources, evaluations, search, storage, monitoring, region, and commitment choices. Use Azure pricing pages, Cost Management, budgets, and Foundry quota views for current numbers.",
+      "diagram": "graph TD\nWorkload[AI workload] --> Tokens[Token usage]\nWorkload --> Requests[Request rate]\nWorkload --> Hosting[Hosted capacity]\nWorkload --> Dependencies[Search storage monitoring]\nTokens --> Cost[Cost]\nRequests --> Quota[Quota]\nHosting --> Cost\nDependencies --> Cost",
+      "code": {
+        "language": "python",
+        "caption": "Check quota tier with DefaultAzureCredential",
+        "content": "# pip install azure-identity requests\nimport json\nimport requests\nfrom azure.identity import DefaultAzureCredential\n\nsubscription_id = \"<subscription-id>\"\napi_version = \"2025-10-01-preview\"\nurl = (\n    f\"https://management.azure.com/subscriptions/{subscription_id}\"\n    f\"/providers/Microsoft.CognitiveServices/quotaTiers?api-version={api_version}\"\n)\n\ncredential = DefaultAzureCredential()\ntoken = credential.get_token(\"https://management.azure.com/.default\")\nresponse = requests.get(url, headers={\"Authorization\": f\"Bearer {token.token}\"}, timeout=30)\nprint(json.dumps(response.json(), indent=2))\n"
+      },
+      "drills": [
+        {
+          "q": "What dimensions commonly scope Azure OpenAI quota in Foundry Models?",
+          "a": "Per region, per subscription, and per model or deployment type."
+        },
+        {
+          "q": "Why avoid exact prices in core lessons?",
+          "a": "Prices change and depend on service, model, region, and deployment type."
+        },
+        {
+          "q": "Which Azure tool helps monitor spend?",
+          "a": "Microsoft Cost Management, budgets, and alerts."
+        }
+      ],
+      "teachBack": "Quota is capacity permission; pricing is the bill for usage. Foundry costs come from the services and models you actually use, not from a single magic number. Teach peers to verify quota and estimate costs before production traffic.",
+      "glossary": [
+        {
+          "term": "Quota",
+          "definition": "Allocated usage capacity or service limit."
+        },
+        {
+          "term": "TPM",
+          "definition": "Tokens per minute, a common model throughput quota unit."
+        },
+        {
+          "term": "RPM",
+          "definition": "Requests per minute, a common rate quota unit."
+        },
+        {
+          "term": "Cost Management",
+          "definition": "Azure tooling for viewing costs, budgets, and spending alerts."
+        },
+        {
+          "term": "Token",
+          "definition": "Unit of text or multimodal processing used for model metering."
+        }
+      ],
+      "sources": [
+        {
+          "title": "Microsoft Learn: Plan and Manage Costs",
+          "url": "https://learn.microsoft.com/en-us/azure/foundry/concepts/manage-costs"
+        },
+        {
+          "title": "Microsoft Learn: Azure OpenAI in Microsoft Foundry Models quotas and limits",
+          "url": "https://learn.microsoft.com/en-us/azure/foundry/openai/quotas-limits"
+        },
+        {
+          "title": "Microsoft Learn: Feature availability across cloud regions",
+          "url": "https://learn.microsoft.com/en-us/azure/foundry/reference/region-support"
+        }
+      ],
+      "uncertain": false
+    }
+  ],
+  "quiz": [
+    {
+      "q": "What is the best first description of Microsoft Foundry?",
+      "options": [
+        "A governed Azure platform for building and operating AI apps",
+        "Only a place to store API keys",
+        "Only a replacement for Python notebooks",
+        "Only an Azure billing report"
+      ],
+      "answer": 0,
+      "explain": "Foundry unifies models, agents, projects, evaluations, observability, and governance for AI apps."
+    },
+    {
+      "q": "What is the modern Foundry hierarchy?",
+      "options": [
+        "Subscription then resource group then Foundry resource then project",
+        "Project then subscription then resource group then model",
+        "Key Vault then project then subscription then hub",
+        "Model then agent then subscription then region"
+      ],
+      "answer": 0,
+      "explain": "Azure governance starts at subscription and resource group, then the Foundry resource contains projects."
+    },
+    {
+      "q": "When is standalone Azure OpenAI potentially enough?",
+      "options": [
+        "When you only need direct model calls without broader Foundry project features",
+        "When you need multiple projects and evaluations",
+        "When you need classic hub shared compute",
+        "When you need a resource group"
+      ],
+      "answer": 0,
+      "explain": "The architecture docs note standalone Azure OpenAI can be sufficient for simple completions style workloads."
+    },
+    {
+      "q": "What does a connection represent in Foundry?",
+      "options": [
+        "A configured link from a project to another Azure or external resource",
+        "A replacement for Azure subscriptions",
+        "A model benchmark score",
+        "A billing invoice"
+      ],
+      "answer": 0,
+      "explain": "Connections let projects authenticate to and consume resources such as Search, Storage, Foundry resources, and monitoring."
+    },
+    {
+      "q": "Why does region matter?",
+      "options": [
+        "Feature, model, quota, compliance, and dependent service availability can vary by region",
+        "Only the portal language changes by region",
+        "Regions affect only UI color",
+        "Regions are irrelevant once a project exists"
+      ],
+      "answer": 0,
+      "explain": "Microsoft documents regional differences and recommends checking model, quota, and dependent feature support."
+    },
+    {
+      "q": "What is the control plane used for?",
+      "options": [
+        "Managing Azure resources",
+        "Writing documents to blob storage",
+        "Sending user prompts to a model",
+        "Rendering a chat message"
+      ],
+      "answer": 0,
+      "explain": "Control plane operations create and manage resources through Azure Resource Manager."
+    },
+    {
+      "q": "What is the recommended authentication posture for this academy?",
+      "options": [
+        "Managed identity with Azure RBAC",
+        "Hardcoded secrets in code",
+        "Shared personal credentials",
+        "Long lived copied tokens"
+      ],
+      "answer": 0,
+      "explain": "Managed identities avoid application secrets and RBAC grants least privilege at a scope."
+    },
+    {
+      "q": "What is quota?",
+      "options": [
+        "A capacity or rate limit allocated by dimensions such as region subscription model or deployment type",
+        "The display name of a project",
+        "A Mermaid diagram type",
+        "A portal theme"
+      ],
+      "answer": 0,
+      "explain": "Quota controls how much capacity or rate your workload may consume."
+    }
+  ]
+}

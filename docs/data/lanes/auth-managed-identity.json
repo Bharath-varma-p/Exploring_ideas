@@ -1,0 +1,1141 @@
+{
+  "id": "auth-managed-identity",
+  "title": "Authentication — Managed Identity ONLY",
+  "icon": "🔐",
+  "order": 3,
+  "summary": "Master authentication and authorization for Microsoft Foundry, Azure AI, and MCP targets using managed identity only: Entra tokens, Azure Identity, RBAC, roles, keyless flows, and troubleshooting.",
+  "concepts": [
+    {
+      "id": "authn-vs-authz",
+      "title": "Authentication vs Authorization",
+      "term": "AuthN and AuthZ",
+      "tags": [
+        "first-principles",
+        "identity",
+        "security"
+      ],
+      "firstPrinciples": "A secure system must answer two separate questions: who is calling, and what may that caller do. If you mix them, you either trust unknown callers or overgrant known callers. Authentication proves identity; authorization evaluates permissions for an action on a resource.",
+      "definition": "Authentication is proof of identity, usually by obtaining a token from Microsoft Entra ID. Authorization is the target service checking that identity's role assignments, policy, or app permissions before allowing the request.",
+      "analogy": "A base guard checks your ID card; a room guard checks whether your badge is cleared for this room. The same soldier can enter the base but still be denied the armory.",
+      "mentalModel": "Never debug access by saying auth failed until you know which gate failed. A 401 normally means no acceptable identity token. A 403 normally means the token was accepted but the identity lacks permission.",
+      "diagram": "flowchart LR\n  Caller --> AuthN[AuthN prove who]\n  AuthN --> Token[Entra token]\n  Token --> AuthZ[AuthZ check permission]\n  AuthZ --> Resource[Target resource]",
+      "code": {
+        "language": "python",
+        "caption": "Classify an HTTP failure without secrets.",
+        "content": "def classify_auth_failure(status_code: int) -> str:\n    # 401 means the service did not accept your identity proof.\n    if status_code == 401:\n        return \"AuthN problem: missing, expired, wrong-audience, or malformed token\"\n    # 403 means identity proof was accepted but permission was missing.\n    if status_code == 403:\n        return \"AuthZ problem: role assignment, scope, or data-plane permission missing\"\n    return \"Not a primary authentication or authorization failure\"\n\nfor code in [401, 403, 404]:\n    print(code, classify_auth_failure(code))\n"
+      },
+      "drills": [
+        {
+          "q": "A token is valid but the call returns 403. Which gate failed?",
+          "a": "Authorization. The service recognized the caller but denied the action."
+        },
+        {
+          "q": "Can a caller be authenticated but unauthorized?",
+          "a": "Yes. Knowing who you are is separate from allowing what you want to do."
+        },
+        {
+          "q": "Why is 401 different from 403?",
+          "a": "401 is identity proof rejected or absent; 403 is permission rejected."
+        }
+      ],
+      "teachBack": "Authentication says who I am. Authorization says what this proven identity can do. In Azure, Entra tokens usually solve the first question and RBAC or service-specific permissions solve the second.",
+      "glossary": [
+        {
+          "term": "AuthN",
+          "definition": "Authentication: proving caller identity."
+        },
+        {
+          "term": "AuthZ",
+          "definition": "Authorization: deciding allowed actions."
+        },
+        {
+          "term": "401",
+          "definition": "HTTP status for missing or unacceptable authentication."
+        },
+        {
+          "term": "403",
+          "definition": "HTTP status for authenticated but forbidden requests."
+        },
+        {
+          "term": "Token",
+          "definition": "Signed proof issued by an identity provider."
+        }
+      ],
+      "sources": [
+        {
+          "title": "Authentication fundamentals in Microsoft identity platform",
+          "url": "https://learn.microsoft.com/en-us/entra/identity-platform/authentication-vs-authorization"
+        },
+        {
+          "title": "Managed identities for Azure resources",
+          "url": "https://learn.microsoft.com/en-us/entra/identity/managed-identities-azure-resources/overview"
+        }
+      ],
+      "uncertain": false
+    },
+    {
+      "id": "entra-tenants-identities",
+      "title": "Microsoft Entra ID: Tenants, Identities, Tokens",
+      "term": "Microsoft Entra ID",
+      "tags": [
+        "entra",
+        "tenant",
+        "tokens"
+      ],
+      "firstPrinciples": "A cloud resource cannot trust a random process. It trusts an identity provider. In Azure, that provider is Microsoft Entra ID, which keeps a directory of identities and issues signed tokens that resource services can validate.",
+      "definition": "A tenant is an Entra directory boundary. An identity is a user, group, workload identity, or managed identity represented in that directory. A token is a time-limited signed statement about one identity for one audience.",
+      "analogy": "Think of a tenant as a military personnel office, identities as personnel records, and tokens as mission orders signed for one destination. Orders for the hangar do not unlock the medical bay.",
+      "mentalModel": "Your code does not invent trust. It asks Entra for a token. The target checks issuer, tenant, audience, expiry, and then permissions. The token is portable proof, but only to the audience it names.",
+      "diagram": "flowchart TD\n  Tenant[Entra tenant] --> Identity[Managed identity]\n  Identity --> Token[Access token]\n  Token --> Audience[One target audience]\n  Audience --> Service[Azure service]",
+      "code": {
+        "language": "python",
+        "caption": "Decode non-secret JWT claims for learning. Do not trust decoded text without signature validation.",
+        "content": "import base64\nimport json\n\ndef decode_jwt_payload_without_verifying(token: str) -> dict:\n    # This is for inspection only. Services validate signatures before trusting claims.\n    payload = token.split(\".\")[1]\n    payload += \"=\" * (-len(payload) % 4)\n    return json.loads(base64.urlsafe_b64decode(payload))\n\nsample = \"eyJhbGciOiJub25lIn0.eyJ0aWQiOiJ0ZW5hbnQiLCJhdWQiOiJodHRwczovL2V4YW1wbGUvLmRlZmF1bHQiLCJleHAiOjQxMDI0NDQ4MDB9.\"\nprint(decode_jwt_payload_without_verifying(sample))\n"
+      },
+      "drills": [
+        {
+          "q": "What is a tenant?",
+          "a": "The Entra directory boundary that owns identities, groups, apps, and policy."
+        },
+        {
+          "q": "Why does audience matter?",
+          "a": "A token is minted for a target API; a different API should reject it."
+        },
+        {
+          "q": "What is token expiry for?",
+          "a": "It limits blast radius and forces periodic re-evaluation."
+        }
+      ],
+      "teachBack": "Entra ID is the authority that issues signed, time-limited identity proof. A tenant is the directory boundary, and an identity lives inside it. A token is useful only for the audience it was issued to.",
+      "glossary": [
+        {
+          "term": "Microsoft Entra ID",
+          "definition": "Microsoft cloud identity platform, formerly Azure AD."
+        },
+        {
+          "term": "Tenant",
+          "definition": "Directory boundary for identities and policy."
+        },
+        {
+          "term": "Identity",
+          "definition": "A user or workload object that can be authenticated."
+        },
+        {
+          "term": "Access token",
+          "definition": "Bearer token used to call an API."
+        },
+        {
+          "term": "Audience",
+          "definition": "The intended recipient API of a token."
+        },
+        {
+          "term": "Claim",
+          "definition": "A statement inside a token, such as tenant or audience."
+        }
+      ],
+      "sources": [
+        {
+          "title": "Managed identities for Azure resources",
+          "url": "https://learn.microsoft.com/en-us/entra/identity/managed-identities-azure-resources/overview"
+        },
+        {
+          "title": "Azure Identity client library for Python",
+          "url": "https://learn.microsoft.com/en-us/python/api/overview/azure/identity-readme?view=azure-python"
+        }
+      ],
+      "uncertain": false
+    },
+    {
+      "id": "oauth-oidc-token-exchange",
+      "title": "OAuth2, OIDC, Audiences, and Scopes",
+      "term": "Token exchange",
+      "tags": [
+        "oauth2",
+        "oidc",
+        "scopes",
+        "audience"
+      ],
+      "firstPrinciples": "Distributed systems need delegated proof. Instead of sharing a long-lived credential with every service, the workload obtains a short-lived bearer token for exactly the API it will call. OAuth2 defines this delegation pattern; OIDC adds identity-layer sign-in concepts.",
+      "definition": "A scope is the requested permission surface for a token. In Azure SDK data-plane calls, the scope is often the resource identifier plus /.default, such as https://cognitiveservices.azure.com/.default.",
+      "analogy": "A scope is like writing the destination and mission type on a convoy pass. The checkpoint validates the pass was issued for that checkpoint, not merely that it looks official.",
+      "mentalModel": "For managed identity, code asks the local Azure host for a token for a scope. The host proves the workload identity to Entra. Entra returns a token. The code sends it to the target resource.",
+      "diagram": "sequenceDiagram\n  participant App as App with managed identity\n  participant Host as Azure host identity endpoint\n  participant Entra as Microsoft Entra ID\n  participant API as Target Azure API\n  App->>Host: request token for target scope\n  Host->>Entra: prove managed identity\n  Entra-->>Host: access token for audience\n  Host-->>App: token no credential in code\n  App->>API: HTTPS request with bearer token\n  API-->>App: response after AuthN and AuthZ",
+      "code": {
+        "language": "python",
+        "caption": "Ask Azure Identity for an access token for one audience.",
+        "content": "import os\nfrom azure.identity import DefaultAzureCredential\n\n# Use az login locally or managed identity in Azure. No application credential is stored in code.\nSCOPE = os.getenv(\"AZURE_TOKEN_SCOPE\", \"https://cognitiveservices.azure.com/.default\")\ncredential = DefaultAzureCredential(exclude_environment_credential=True)\naccess_token = credential.get_token(SCOPE)\n\nprint(\"Token acquired for\", SCOPE)\nprint(\"Expires at Unix time\", access_token.expires_on)\n"
+      },
+      "drills": [
+        {
+          "q": "What scope is common for Azure OpenAI token auth?",
+          "a": "https://cognitiveservices.azure.com/.default"
+        },
+        {
+          "q": "Why not reuse a management token for inference?",
+          "a": "Its audience is wrong; the inference endpoint expects a data-plane audience."
+        },
+        {
+          "q": "Who issues the token?",
+          "a": "Microsoft Entra ID, reached through Azure Identity or the managed identity endpoint."
+        }
+      ],
+      "teachBack": "OAuth2 is a token exchange system. The workload asks for a token scoped to a target audience, then presents that bearer token to the API. If the audience is wrong, the API should reject it even if the identity is real.",
+      "glossary": [
+        {
+          "term": "OAuth2",
+          "definition": "Authorization framework for delegated access tokens."
+        },
+        {
+          "term": "OIDC",
+          "definition": "Identity layer built on OAuth2 for sign-in claims."
+        },
+        {
+          "term": "Scope",
+          "definition": "Requested token permission or resource surface."
+        },
+        {
+          "term": "/.default",
+          "definition": "Azure convention requesting configured permissions for a resource audience."
+        },
+        {
+          "term": "Bearer token",
+          "definition": "Token usable by whoever presents it until expiry."
+        }
+      ],
+      "sources": [
+        {
+          "title": "Azure Identity client library for Python",
+          "url": "https://learn.microsoft.com/en-us/python/api/overview/azure/identity-readme?view=azure-python"
+        },
+        {
+          "title": "Azure AI Inference client library for Python",
+          "url": "https://learn.microsoft.com/en-us/python/api/overview/azure/ai-inference-readme?view=azure-python-preview"
+        }
+      ],
+      "uncertain": false
+    },
+    {
+      "id": "managed-identity-imds",
+      "title": "Managed Identity and IMDS",
+      "term": "Managed Identity",
+      "tags": [
+        "managed-identity",
+        "imds",
+        "no-secrets"
+      ],
+      "firstPrinciples": "The hard problem is not how to store a credential safely; the better problem framing is how to avoid having a credential to store at all. Managed identity moves credential custody to Azure and lets the host mint tokens only for the attached workload identity.",
+      "definition": "A managed identity is an Entra-backed workload identity assigned to an Azure resource. Code running on that resource requests tokens through a local identity endpoint, commonly the Instance Metadata Service on VMs, without embedding credentials.",
+      "analogy": "It is like a vehicle transponder welded to a registered military vehicle. The driver does not carry a master password; the gate recognizes the vehicle and issues a time-limited pass for a destination.",
+      "mentalModel": "Managed identity authenticates the compute environment, not a file. Your app calls Azure Identity; Azure Identity talks to the local identity endpoint; the endpoint and Entra complete the exchange; your app receives only the access token.",
+      "diagram": "flowchart LR\n  Code[App code] --> SDK[Azure Identity]\n  SDK --> IMDS[Managed identity endpoint]\n  IMDS --> Entra[Microsoft Entra ID]\n  Entra --> Token[Short lived token]\n  Token --> Code",
+      "code": {
+        "language": "python",
+        "caption": "Use ManagedIdentityCredential directly on Azure compute.",
+        "content": "import os\nfrom azure.identity import ManagedIdentityCredential\n\n# System-assigned managed identity: do not pass client_id.\n# User-assigned managed identity: set AZURE_CLIENT_ID to that identity's client ID.\nclient_id = os.getenv(\"AZURE_CLIENT_ID\")\ncredential = ManagedIdentityCredential(client_id=client_id) if client_id else ManagedIdentityCredential()\n\ntoken = credential.get_token(\"https://management.azure.com/.default\")\nprint(\"Managed identity token acquired. Expires:\", token.expires_on)\n"
+      },
+      "drills": [
+        {
+          "q": "Does managed identity put a credential in your code?",
+          "a": "No. The code asks the Azure host identity endpoint for tokens."
+        },
+        {
+          "q": "Can code use managed identity from any laptop?",
+          "a": "No. Direct ManagedIdentityCredential works only where the managed identity endpoint exists."
+        },
+        {
+          "q": "What does IMDS commonly provide on VMs?",
+          "a": "Metadata and managed identity token access through a local endpoint."
+        }
+      ],
+      "teachBack": "Managed identity removes credential custody from my application. The app requests a token from the Azure host identity endpoint and receives a short-lived Entra token. No credential file, environment credential, or connection string secret is needed.",
+      "glossary": [
+        {
+          "term": "Managed Identity",
+          "definition": "Azure-managed workload identity assigned to a resource."
+        },
+        {
+          "term": "IMDS",
+          "definition": "Instance Metadata Service, a local endpoint used by Azure VMs for metadata and identity tokens."
+        },
+        {
+          "term": "Credential custody",
+          "definition": "Responsibility for storing and protecting long-lived authentication material."
+        },
+        {
+          "term": "Client ID",
+          "definition": "Identifier used to select a user-assigned managed identity."
+        }
+      ],
+      "sources": [
+        {
+          "title": "Managed identities for Azure resources",
+          "url": "https://learn.microsoft.com/en-us/entra/identity/managed-identities-azure-resources/overview"
+        },
+        {
+          "title": "Azure Identity client library for Python",
+          "url": "https://learn.microsoft.com/en-us/python/api/overview/azure/identity-readme?view=azure-python"
+        }
+      ],
+      "uncertain": false
+    },
+    {
+      "id": "system-vs-user-assigned",
+      "title": "System-assigned vs User-assigned Managed Identity",
+      "term": "Managed identity type",
+      "tags": [
+        "managed-identity",
+        "architecture",
+        "lifecycle"
+      ],
+      "firstPrinciples": "Identity has lifecycle. If the identity exists only because one compute resource exists, bind its lifecycle to that resource. If many resources need the same preauthorized identity, give the identity its own lifecycle.",
+      "definition": "A system-assigned managed identity is enabled directly on one Azure resource and is deleted when that resource is deleted. A user-assigned managed identity is a standalone Azure resource that can be attached to one or more workloads.",
+      "analogy": "System-assigned is a badge printed on one soldier's uniform. User-assigned is a reusable mission badge issued to a squad that may rotate vehicles but keep the same access plan.",
+      "mentalModel": "Use system-assigned for a single workload with simple lifecycle. Use user-assigned for blue-green deployments, multiple replicas, preauthorization before compute exists, or stable identity across resource replacement.",
+      "diagram": "flowchart TD\n  SA[System assigned] --> One[One Azure resource]\n  One --> SameLife[Deleted with resource]\n  UA[User assigned] --> Many[Many Azure resources]\n  UA --> OwnLife[Independent lifecycle]",
+      "code": {
+        "language": "bash",
+        "caption": "Create and attach a user-assigned managed identity with Azure CLI placeholders.",
+        "content": "# Create a reusable managed identity resource.\naz identity create   --name <uami-name>   --resource-group <resource-group>\n\n# Capture IDs for later role assignment and app configuration.\naz identity show   --name <uami-name>   --resource-group <resource-group>   --query '{clientId:clientId, principalId:principalId, id:id}'   --output json\n\n# Example: attach the identity to a VM.\naz vm identity assign   --name <vm-name>   --resource-group <resource-group>   --identities <managed-identity-resource-id>\n"
+      },
+      "drills": [
+        {
+          "q": "Which type disappears with the compute resource?",
+          "a": "System-assigned managed identity."
+        },
+        {
+          "q": "Which type supports preauthorization before compute exists?",
+          "a": "User-assigned managed identity."
+        },
+        {
+          "q": "What value selects a user-assigned identity in code?",
+          "a": "The managed identity client ID."
+        }
+      ],
+      "teachBack": "System-assigned identity is simplest when one resource owns one identity. User-assigned identity is better when identity must outlive, precede, or be shared across compute. The user-assigned client ID is how code selects the intended identity.",
+      "glossary": [
+        {
+          "term": "System-assigned MI",
+          "definition": "Managed identity tied to one Azure resource lifecycle."
+        },
+        {
+          "term": "User-assigned MI",
+          "definition": "Standalone managed identity resource attachable to multiple workloads."
+        },
+        {
+          "term": "Principal ID",
+          "definition": "Object ID used for role assignments."
+        },
+        {
+          "term": "Resource ID",
+          "definition": "Azure Resource Manager path of a resource."
+        }
+      ],
+      "sources": [
+        {
+          "title": "Managed identities for Azure resources",
+          "url": "https://learn.microsoft.com/en-us/entra/identity/managed-identities-azure-resources/overview"
+        }
+      ],
+      "uncertain": false
+    },
+    {
+      "id": "azure-identity-managedidentitycredential",
+      "title": "ManagedIdentityCredential in azure-identity",
+      "term": "ManagedIdentityCredential",
+      "tags": [
+        "python",
+        "azure-identity",
+        "sdk"
+      ],
+      "firstPrinciples": "SDK clients need a common interface for asking for tokens. Azure Identity provides credential classes that implement token acquisition once, so every Azure SDK client can authenticate the same way.",
+      "definition": "ManagedIdentityCredential is the Azure Identity Python class that authenticates with the managed identity assigned to the host. Pass no client_id for system-assigned identity; pass client_id for a specific user-assigned identity.",
+      "analogy": "It is the universal adapter plug between your Python code and Azure's identity socket. You do not hand the app a secret; you hand it a token-acquiring object.",
+      "mentalModel": "Construct a credential, pass it to SDK clients, or call get_token directly. If more than one user-assigned identity is attached, client_id removes ambiguity.",
+      "diagram": "flowchart LR\n  ManagedIdentityCredential --> System[No client id selects system assigned]\n  ManagedIdentityCredential --> User[client id selects user assigned]\n  System --> Token\n  User --> Token",
+      "code": {
+        "language": "python",
+        "caption": "Build a credential helper that supports system-assigned or user-assigned MI.",
+        "content": "import os\nfrom azure.identity import ManagedIdentityCredential\n\n\ndef managed_identity_credential() -> ManagedIdentityCredential:\n    # Set AZURE_CLIENT_ID only when selecting a user-assigned managed identity.\n    client_id = os.getenv(\"AZURE_CLIENT_ID\")\n    if client_id:\n        return ManagedIdentityCredential(client_id=client_id)\n    return ManagedIdentityCredential()\n\ncredential = managed_identity_credential()\nprint(type(credential).__name__)\n"
+      },
+      "drills": [
+        {
+          "q": "What constructor argument selects user-assigned MI?",
+          "a": "client_id."
+        },
+        {
+          "q": "What do you pass for system-assigned MI?",
+          "a": "Nothing; use ManagedIdentityCredential()."
+        },
+        {
+          "q": "Why prefer a credential object over manual token plumbing?",
+          "a": "It is reusable across Azure SDK clients and handles token acquisition details."
+        }
+      ],
+      "teachBack": "ManagedIdentityCredential is the direct managed identity tool in Python. System-assigned uses the default constructor. User-assigned uses the managed identity client ID so the host knows which identity should mint the token.",
+      "glossary": [
+        {
+          "term": "ManagedIdentityCredential",
+          "definition": "Azure Identity credential for managed identities."
+        },
+        {
+          "term": "get_token",
+          "definition": "Method that returns an access token for requested scopes."
+        },
+        {
+          "term": "TokenCredential",
+          "definition": "Azure SDK interface accepted by many clients."
+        },
+        {
+          "term": "client_id",
+          "definition": "Identifier to select user-assigned managed identity."
+        }
+      ],
+      "sources": [
+        {
+          "title": "Azure Identity client library for Python",
+          "url": "https://learn.microsoft.com/en-us/python/api/overview/azure/identity-readme?view=azure-python"
+        },
+        {
+          "title": "Managed identities for Azure resources",
+          "url": "https://learn.microsoft.com/en-us/entra/identity/managed-identities-azure-resources/overview"
+        }
+      ],
+      "uncertain": false
+    },
+    {
+      "id": "defaultazurecredential-local-to-prod",
+      "title": "DefaultAzureCredential: Local Dev to Production",
+      "term": "DefaultAzureCredential",
+      "tags": [
+        "python",
+        "local-dev",
+        "production"
+      ],
+      "firstPrinciples": "Good auth code should not change between laptop and production. The environment changes, not the source. A credential chain lets local development use a developer login while Azure production uses managed identity.",
+      "definition": "DefaultAzureCredential is an ordered chain. Current Python docs list Environment, Workload Identity, Managed Identity, Shared Token Cache, Visual Studio Code, Azure CLI, Azure PowerShell, Azure Developer CLI, optional Interactive Browser, and Broker. In this lane, disable environment credential in samples to preserve managed-identity-only production discipline.",
+      "analogy": "It is a ranked radio scan. In Azure, the managed identity frequency answers. On your laptop, after az login, the Azure CLI frequency answers. Your code stays unchanged.",
+      "mentalModel": "Local: az login provides developer identity for learning. Production: managed identity endpoint provides workload identity. Same constructor, same client code, different runtime source.",
+      "diagram": "flowchart TD\n  DAC[DefaultAzureCredential] --> Env[Environment disabled in lane]\n  DAC --> WI[Workload identity]\n  DAC --> MI[Managed identity]\n  DAC --> CLI[Azure CLI az login]\n  DAC --> VS[VS Code and developer tools]\n  MI --> Prod[Azure production]\n  CLI --> Local[Local development]",
+      "code": {
+        "language": "python",
+        "caption": "Use one credential locally and in Azure while avoiding environment credential in this lane.",
+        "content": "from azure.identity import DefaultAzureCredential\n\n# Local development: run az login before this script.\n# Azure production: enable managed identity on the hosting resource.\n# We exclude environment credential to keep this lane free of app credential variables.\ncredential = DefaultAzureCredential(exclude_environment_credential=True)\n\ntoken = credential.get_token(\"https://management.azure.com/.default\")\nprint(\"DefaultAzureCredential acquired a token expiring at\", token.expires_on)\n"
+      },
+      "drills": [
+        {
+          "q": "What changes between local and prod?",
+          "a": "The runtime credential source, not the code."
+        },
+        {
+          "q": "Why exclude environment credential here?",
+          "a": "To prevent accidental use of application credential variables in a managed-identity-only lane."
+        },
+        {
+          "q": "What local command usually enables Azure CLI credential?",
+          "a": "az login."
+        }
+      ],
+      "teachBack": "DefaultAzureCredential is the bridge from laptop to Azure. The same code can use az login locally and managed identity in production. For strict secretless training, I disable environment credential in examples.",
+      "glossary": [
+        {
+          "term": "DefaultAzureCredential",
+          "definition": "Preconfigured Azure Identity credential chain."
+        },
+        {
+          "term": "Credential chain",
+          "definition": "Ordered list of token acquisition methods."
+        },
+        {
+          "term": "AzureCliCredential",
+          "definition": "Developer credential that uses az login state."
+        },
+        {
+          "term": "WorkloadIdentityCredential",
+          "definition": "Credential for federated workload identity, common in AKS."
+        },
+        {
+          "term": "Broker",
+          "definition": "OS account broker credential path supported by Azure Identity."
+        }
+      ],
+      "sources": [
+        {
+          "title": "Credential chains in Azure Identity for Python",
+          "url": "https://learn.microsoft.com/en-us/azure/developer/python/sdk/authentication/credential-chains"
+        },
+        {
+          "title": "Azure Identity client library for Python",
+          "url": "https://learn.microsoft.com/en-us/python/api/overview/azure/identity-readme?view=azure-python"
+        }
+      ],
+      "uncertain": false
+    },
+    {
+      "id": "workload-identity-aks",
+      "title": "Workload Identity for AKS and Kubernetes",
+      "term": "WorkloadIdentityCredential",
+      "tags": [
+        "aks",
+        "workload-identity",
+        "kubernetes"
+      ],
+      "firstPrinciples": "Kubernetes pods are not Azure VMs, so they need a safe way to prove which pod identity is running without mounting a reusable credential. Workload identity federation lets a Kubernetes service account exchange its projected token for an Entra access token.",
+      "definition": "WorkloadIdentityCredential supports Microsoft Entra Workload ID. In AKS, a pod's Kubernetes service account is federated with an Entra identity, and Azure Identity can acquire Azure tokens from that federation.",
+      "analogy": "The pod carries a tamper-resistant deployment order signed by the cluster. Entra trusts that order because an administrator pre-registered the trust relationship.",
+      "mentalModel": "Use managed identity for Azure-hosted resources with identity endpoints. Use workload identity for Kubernetes-style projected identity. DefaultAzureCredential can try WorkloadIdentityCredential before ManagedIdentityCredential.",
+      "diagram": "sequenceDiagram\n  participant Pod as AKS pod\n  participant KSA as Kubernetes service account\n  participant Entra as Microsoft Entra ID\n  participant API as Azure API\n  Pod->>KSA: reads projected federated token\n  Pod->>Entra: exchange token through WorkloadIdentityCredential\n  Entra-->>Pod: Azure access token\n  Pod->>API: bearer token call",
+      "code": {
+        "language": "python",
+        "caption": "Let DefaultAzureCredential pick workload identity in AKS or MI in Azure hosts.",
+        "content": "from azure.identity import DefaultAzureCredential\n\n# In AKS with workload identity configured, this can use WorkloadIdentityCredential.\n# In Azure hosts with managed identity, it can use ManagedIdentityCredential.\ncredential = DefaultAzureCredential(exclude_environment_credential=True)\n\ntoken = credential.get_token(\"https://management.azure.com/.default\")\nprint(\"Token acquired through the best available secretless workload path\", token.expires_on)\n"
+      },
+      "drills": [
+        {
+          "q": "Which credential class is specific to Entra Workload ID?",
+          "a": "WorkloadIdentityCredential."
+        },
+        {
+          "q": "Why mention AKS in a managed identity lane?",
+          "a": "It is the Kubernetes-native secretless workload auth pattern and appears in DefaultAzureCredential before MI."
+        },
+        {
+          "q": "Is it a reason to put a credential into a pod?",
+          "a": "No. The pod exchanges federated identity proof for a short-lived token."
+        }
+      ],
+      "teachBack": "AKS often uses workload identity rather than IMDS-style managed identity. The idea is the same: no stored application credential, just short-lived token exchange. DefaultAzureCredential understands both workload identity and managed identity paths.",
+      "glossary": [
+        {
+          "term": "AKS",
+          "definition": "Azure Kubernetes Service."
+        },
+        {
+          "term": "Workload identity",
+          "definition": "Federated identity pattern for Kubernetes and similar hosts."
+        },
+        {
+          "term": "Federated token",
+          "definition": "Token from one authority exchanged for another authority's token."
+        },
+        {
+          "term": "Service account",
+          "definition": "Kubernetes identity assigned to pods."
+        }
+      ],
+      "sources": [
+        {
+          "title": "Azure Identity client library for Python",
+          "url": "https://learn.microsoft.com/en-us/python/api/overview/azure/identity-readme?view=azure-python"
+        },
+        {
+          "title": "Credential chains in Azure Identity for Python",
+          "url": "https://learn.microsoft.com/en-us/azure/developer/python/sdk/authentication/credential-chains"
+        }
+      ],
+      "uncertain": false
+    },
+    {
+      "id": "azure-rbac-scope-principal",
+      "title": "Azure RBAC: Roles, Assignments, Scopes, Principals",
+      "term": "Azure RBAC",
+      "tags": [
+        "rbac",
+        "least-privilege",
+        "authorization"
+      ],
+      "firstPrinciples": "Permission should be explicit, explainable, and bounded. RBAC accomplishes this by combining who, what, and where: a principal receives a role definition at a scope.",
+      "definition": "A role definition is a named set of allowed actions. A role assignment attaches that role to a principal at a scope. Scopes form a hierarchy: management group, subscription, resource group, and resource. Child scopes inherit assignments from parents.",
+      "analogy": "RBAC is a written duty roster. It says this identity may perform these duties in this area of the base. A duty granted at headquarters flows downward unless narrowed by design.",
+      "mentalModel": "For managed identity authorization, the principal is the MI's principal ID. Assign the smallest role at the narrowest scope that lets the agent do its job.",
+      "diagram": "flowchart TD\n  MG[Management group] --> Sub[Subscription]\n  Sub --> RG[Resource group]\n  RG --> Res[Resource]\n  Principal[MI principal ID] --> Assignment[Role assignment]\n  Role[Role definition] --> Assignment\n  Assignment --> Res",
+      "code": {
+        "language": "bash",
+        "caption": "Inspect a managed identity and list its RBAC assignments.",
+        "content": "# Principal ID is the object used in Azure role assignments.\nMI_PRINCIPAL_ID=$(az identity show   --name <uami-name>   --resource-group <resource-group>   --query principalId   --output tsv)\n\n# List assignments, including inherited assignments from parent scopes.\naz role assignment list   --assignee-object-id \"$MI_PRINCIPAL_ID\"   --include-inherited   --output table\n"
+      },
+      "drills": [
+        {
+          "q": "What are the three parts of a role assignment?",
+          "a": "Principal, role definition, and scope."
+        },
+        {
+          "q": "Where should you assign a role for least privilege?",
+          "a": "At the narrowest scope that still works."
+        },
+        {
+          "q": "What ID do you use for MI role assignments?",
+          "a": "The managed identity principal ID or object ID."
+        }
+      ],
+      "teachBack": "RBAC answers who can do what where. A managed identity is the who, a role definition is the what, and scope is the where. Least privilege means choose the smallest role and narrowest scope that works.",
+      "glossary": [
+        {
+          "term": "Azure RBAC",
+          "definition": "Azure role-based access control system."
+        },
+        {
+          "term": "Role definition",
+          "definition": "Named set of permissions."
+        },
+        {
+          "term": "Role assignment",
+          "definition": "Binding of role to principal at scope."
+        },
+        {
+          "term": "Scope",
+          "definition": "Resource boundary where an assignment applies."
+        },
+        {
+          "term": "Principal",
+          "definition": "Identity receiving permissions."
+        },
+        {
+          "term": "Least privilege",
+          "definition": "Grant only the required permissions."
+        }
+      ],
+      "sources": [
+        {
+          "title": "az role assignment create",
+          "url": "https://learn.microsoft.com/en-us/cli/azure/role/assignment?view=azure-cli-latest#az-role-assignment-create"
+        },
+        {
+          "title": "Role-based access control for Microsoft Foundry",
+          "url": "https://learn.microsoft.com/en-us/azure/foundry/concepts/rbac-foundry"
+        }
+      ],
+      "uncertain": false
+    },
+    {
+      "id": "grant-managed-identity-access",
+      "title": "Grant Access to a Managed Identity",
+      "term": "Role assignment",
+      "tags": [
+        "cli",
+        "portal",
+        "bicep",
+        "rbac"
+      ],
+      "firstPrinciples": "Authentication creates a caller; it does not create permission. After enabling a managed identity, you must explicitly grant it access to each target resource or scope.",
+      "definition": "Granting access means creating a role assignment for the MI principal ID at a resource, resource group, subscription, or service-specific data scope. Azure CLI uses az role assignment create with --role, --scope, and --assignee-object-id or --assignee.",
+      "analogy": "Issuing an identity badge does not put someone on the access roster. You still need to write their badge number on the roster for the exact building.",
+      "mentalModel": "Portal flow: target resource Access control IAM Add role assignment Managed identity. CLI flow: look up MI principal ID, choose role, choose scope, create assignment. Infrastructure-as-code flow: define Microsoft.Authorization/roleAssignments with a stable GUID name.",
+      "diagram": "flowchart LR\n  EnableMI[Enable managed identity] --> FindID[Find principal ID]\n  FindID --> PickRole[Pick least privilege role]\n  PickRole --> PickScope[Pick narrow scope]\n  PickScope --> Assign[Create role assignment]",
+      "code": {
+        "language": "bash",
+        "caption": "Assign a Foundry role to a managed identity at a Foundry resource scope.",
+        "content": "# Prefer role definition ID during Foundry role rename rollout.\nFOUNDRY_USER_ROLE_ID=\"53ca6127-db72-4b80-b1b0-d745d6d5456d\"\nMI_PRINCIPAL_ID=\"<managed-identity-principal-id>\"\nSCOPE=\"/subscriptions/<subscription-id>/resourceGroups/<resource-group>/providers/Microsoft.CognitiveServices/accounts/<foundry-account>\"\n\naz role assignment create   --assignee-object-id \"$MI_PRINCIPAL_ID\"   --role \"$FOUNDRY_USER_ROLE_ID\"   --scope \"$SCOPE\"\n"
+      },
+      "drills": [
+        {
+          "q": "Does enabling MI grant access automatically?",
+          "a": "No. You still assign roles."
+        },
+        {
+          "q": "Why use --assignee-object-id?",
+          "a": "It avoids needing a directory lookup and uses the principal ID directly."
+        },
+        {
+          "q": "Which Foundry role ID is Foundry User?",
+          "a": "53ca6127-db72-4b80-b1b0-d745d6d5456d."
+        }
+      ],
+      "teachBack": "To grant managed identity access, bind its principal ID to a role at a target scope. Use the narrowest workable scope. For Foundry roles during renames, role definition IDs are more stable than display names.",
+      "glossary": [
+        {
+          "term": "az role assignment create",
+          "definition": "Azure CLI command that creates RBAC assignments."
+        },
+        {
+          "term": "--assignee-object-id",
+          "definition": "CLI argument for the principal object ID."
+        },
+        {
+          "term": "--assignee-principal-type",
+          "definition": "CLI hint that reduces directory propagation issues."
+        },
+        {
+          "term": "Foundry User",
+          "definition": "Least-privilege Microsoft Foundry role for project building and data actions."
+        }
+      ],
+      "sources": [
+        {
+          "title": "az role assignment create",
+          "url": "https://learn.microsoft.com/en-us/cli/azure/role/assignment?view=azure-cli-latest#az-role-assignment-create"
+        },
+        {
+          "title": "Role-based access control for Microsoft Foundry",
+          "url": "https://learn.microsoft.com/en-us/azure/foundry/concepts/rbac-foundry"
+        }
+      ],
+      "uncertain": false
+    },
+    {
+      "id": "foundry-ai-role-map",
+      "title": "Current Foundry and AI Role Map",
+      "term": "Foundry User",
+      "tags": [
+        "foundry",
+        "roles",
+        "current"
+      ],
+      "firstPrinciples": "The right role depends on the target. Foundry project access, direct Azure OpenAI access, and Azure Machine Learning workspace access are different authorization surfaces. Names that sound similar can be wrong.",
+      "definition": "Current Foundry docs say use Foundry User, Foundry Project Manager, Foundry Account Owner, or Foundry Owner for Foundry resources and projects. Foundry User was previously Azure AI User. Docs explicitly say not to use Cognitive Services roles or Azure AI Developer for Foundry project work. For direct Azure AI Services or Azure OpenAI resources, roles such as Cognitive Services User and Cognitive Services OpenAI User remain relevant.",
+      "analogy": "Do not issue a flight-line badge to enter the cyber range just because both are on the same base. Match the badge to the resource's authorization system.",
+      "mentalModel": "Foundry agent or project: Foundry User for build/data-plane usage; Foundry Project Manager for project management and publishing agents; Foundry Owner for broad build and management. Direct Azure OpenAI: Cognitive Services OpenAI User for token-based usage. Azure ML workspace: Azure AI Developer is for Azure ML workspaces and Foundry hubs, not Foundry projects.",
+      "diagram": "flowchart TD\n  Workload[Managed identity] --> Target{Target}\n  Target --> Foundry[Foundry project]\n  Foundry --> FU[Foundry User]\n  Target --> AOAI[Direct Azure OpenAI]\n  AOAI --> CSOU[Cognitive Services OpenAI User]\n  Target --> AML[Azure ML workspace]\n  AML --> AID[Azure AI Developer]",
+      "code": {
+        "language": "bash",
+        "caption": "Assign least-privilege Foundry User by role ID to avoid rename drift.",
+        "content": "# Foundry RBAC roles were renamed; role IDs stayed stable.\n# Foundry User role ID from Microsoft Foundry RBAC docs.\naz role assignment create   --assignee-object-id <managed-identity-principal-id>   --role 53ca6127-db72-4b80-b1b0-d745d6d5456d   --scope /subscriptions/<sub>/resourceGroups/<rg>/providers/Microsoft.CognitiveServices/accounts/<foundry-account>\n"
+      },
+      "drills": [
+        {
+          "q": "What is the minimum Foundry build/data-plane role?",
+          "a": "Foundry User."
+        },
+        {
+          "q": "Should Azure AI Developer be used for Foundry projects?",
+          "a": "No. Current docs say use Foundry User or Foundry Owner for Foundry project access."
+        },
+        {
+          "q": "Why use role IDs in automation?",
+          "a": "Display names may change during role rename rollout."
+        }
+      ],
+      "teachBack": "Role names are not interchangeable. Foundry project work uses Foundry roles, especially Foundry User for least privilege. Cognitive Services and Azure AI Developer roles are for other surfaces, so I match the role to the target service.",
+      "glossary": [
+        {
+          "term": "Foundry User",
+          "definition": "Least-privilege Foundry role for building in projects and data actions; formerly Azure AI User."
+        },
+        {
+          "term": "Foundry Project Manager",
+          "definition": "Foundry role for project management and publishing agents."
+        },
+        {
+          "term": "Foundry Owner",
+          "definition": "Broad Foundry management and build role."
+        },
+        {
+          "term": "Cognitive Services OpenAI User",
+          "definition": "Direct Azure OpenAI resource role for model usage scenarios."
+        },
+        {
+          "term": "Azure AI Developer",
+          "definition": "Role for Azure Machine Learning workspaces and Foundry hubs, not Foundry projects."
+        },
+        {
+          "term": "Reader",
+          "definition": "Azure role for read-only control-plane visibility."
+        }
+      ],
+      "sources": [
+        {
+          "title": "Role-based access control for Microsoft Foundry",
+          "url": "https://learn.microsoft.com/en-us/azure/foundry/concepts/rbac-foundry"
+        },
+        {
+          "title": "Azure built-in roles for AI and machine learning",
+          "url": "https://learn.microsoft.com/en-us/azure/role-based-access-control/built-in-roles/ai-machine-learning"
+        }
+      ],
+      "uncertain": false
+    },
+    {
+      "id": "mcp-target-access",
+      "title": "MCP Target Access: ADX, Azure DevOps, and ICM",
+      "term": "Target-specific authorization",
+      "tags": [
+        "mcp",
+        "adx",
+        "azure-devops",
+        "icm"
+      ],
+      "firstPrinciples": "MCP is a tool bridge, not an authorization bypass. Each backing system still checks its own authorization model after the managed identity gets a token for that system.",
+      "definition": "For Azure Data Explorer, grant the managed identity a Kusto data role such as Database Viewer at database scope for read-only query. For Azure DevOps, access is governed by Azure DevOps organization, project, repository, and pipeline permissions rather than normal Azure RBAC; the managed identity's Entra-backed app identity must be admitted to the relevant DevOps permission surface. ICM access details are not confirmed in public Microsoft Learn docs, so treat ICM as uncertain and verify with your tenant's ICM owner.",
+      "analogy": "An MCP server is a translator at a checkpoint. The translator can carry your token, but the destination commander still decides whether your identity is on that system's roster.",
+      "mentalModel": "Pattern: same managed identity, different audience, different authorization system. Foundry token does not grant ADX query; ADX Database Viewer does not grant Azure DevOps repo read; ICM likely has its own internal access controls.",
+      "diagram": "flowchart LR\n  Agent[Agent with MI] --> MCP[MCP server]\n  MCP --> ADX[Azure Data Explorer Database Viewer]\n  MCP --> ADO[Azure DevOps org project permissions]\n  MCP --> ICM[ICM access verify locally]\n  ADX --> Query[Read query]\n  ADO --> Boards[Work items repos pipelines]",
+      "code": {
+        "language": "bash",
+        "caption": "Grant Azure Data Explorer database read access to the MI principal.",
+        "content": "# In Kusto, data-plane roles are managed at cluster or database scope.\n# Run this management command as a Kusto admin for the database.\n# Replace the object ID with the managed identity principal ID.\n.add database <DatabaseName> viewers ('aadapp=<managed-identity-principal-id>')\n\n# Then your Python MCP tool should request an ADX token with scope:\n# https://kusto.kusto.windows.net/.default\n"
+      },
+      "drills": [
+        {
+          "q": "Which ADX role is read-only for all database data and metadata except restricted tables?",
+          "a": "Database Viewer."
+        },
+        {
+          "q": "Does Azure RBAC Reader on a Kusto cluster automatically grant query data?",
+          "a": "No. ADX data access uses Kusto RBAC roles like Database Viewer."
+        },
+        {
+          "q": "What is uncertain here?",
+          "a": "Exact ICM managed-identity role and public documentation details; verify with internal ICM owners."
+        }
+      ],
+      "teachBack": "MCP targets keep their own authorization gates. For ADX, grant Database Viewer to the managed identity in Kusto. Azure DevOps and ICM require target-specific admission, and ICM details are uncertain from public docs.",
+      "glossary": [
+        {
+          "term": "MCP",
+          "definition": "Model Context Protocol, a tool interface between agents and external systems."
+        },
+        {
+          "term": "ADX",
+          "definition": "Azure Data Explorer, also known as Kusto."
+        },
+        {
+          "term": "Database Viewer",
+          "definition": "Kusto database role for read-only query and metadata access except restricted tables."
+        },
+        {
+          "term": "Azure DevOps permissions",
+          "definition": "DevOps-specific access model for organizations, projects, repos, pipelines, and work items."
+        },
+        {
+          "term": "ICM",
+          "definition": "Incident management system; exact managed identity access pattern must be tenant-verified."
+        },
+        {
+          "term": "Target audience",
+          "definition": "The API resource for which a token is issued."
+        }
+      ],
+      "sources": [
+        {
+          "title": "Role-based access control - Kusto",
+          "url": "https://learn.microsoft.com/en-us/kusto/access-control/role-based-access-control?view=azure-data-explorer&preserve-view=true"
+        },
+        {
+          "title": "Use Azure service connections and managed identities in Azure Pipelines",
+          "url": "https://learn.microsoft.com/en-us/azure/devops/pipelines/library/connect-to-azure?view=azure-devops"
+        }
+      ],
+      "uncertain": true
+    },
+    {
+      "id": "end-to-end-keyless-foundry",
+      "title": "End-to-end Keyless Foundry and MCP Pattern",
+      "term": "Keyless token flow",
+      "tags": [
+        "foundry",
+        "inference",
+        "mcp",
+        "code"
+      ],
+      "firstPrinciples": "The complete system is a chain of bounded trust. The agent runs under a managed identity, requests a token for a target audience, sends the token to Foundry or an MCP target, and the target enforces roles.",
+      "definition": "The keyless pattern is: app or agent has managed identity; Azure Identity obtains an Entra access token; the SDK or HTTP client sends Bearer token; the target service authorizes by RBAC or service-specific roles.",
+      "analogy": "It is a mission route with stamped orders at every gate. You do not carry master credentials; each gate checks a fresh pass issued for that gate and your assigned role.",
+      "mentalModel": "Use one identity per workload boundary. Grant Foundry User at the Foundry scope, ADX Database Viewer at the Kusto database, and DevOps or ICM-specific access only where needed. Separate token audiences per target.",
+      "diagram": "sequenceDiagram\n  participant Agent as Agent app with MI\n  participant Identity as Azure Identity\n  participant Entra as Microsoft Entra ID\n  participant Foundry as Foundry inference\n  participant MCP as MCP target\n  Agent->>Identity: get token for Foundry scope\n  Identity->>Entra: managed identity exchange\n  Entra-->>Identity: Foundry token\n  Agent->>Foundry: call model with bearer token\n  Agent->>Identity: get token for MCP target scope\n  Entra-->>Identity: target token\n  Agent->>MCP: call tool with bearer token",
+      "code": {
+        "language": "python",
+        "caption": "Call Azure AI Inference with DefaultAzureCredential.",
+        "content": "import os\nfrom azure.identity import DefaultAzureCredential\nfrom azure.ai.inference import ChatCompletionsClient\nfrom azure.ai.inference.models import UserMessage\n\nendpoint = os.environ[\"AZURE_AI_INFERENCE_ENDPOINT\"]\nmodel = os.getenv(\"AZURE_AI_MODEL\", \"gpt-4o-mini\")\n\n# Local: az login. Azure: managed identity. No endpoint credential in code.\ncredential = DefaultAzureCredential(exclude_environment_credential=True)\n\nclient = ChatCompletionsClient(\n    endpoint=endpoint,\n    credential=credential,\n    # Azure OpenAI endpoints require this scope; managed compute endpoints may infer it.\n    credential_scopes=[\"https://cognitiveservices.azure.com/.default\"],\n)\n\nresponse = client.complete(\n    messages=[UserMessage(content=\"Explain managed identity in one sentence.\")],\n    model=model,\n)\nprint(response.choices[0].message.content)\n"
+      },
+      "drills": [
+        {
+          "q": "What identity does the agent run as in Azure?",
+          "a": "Its managed identity."
+        },
+        {
+          "q": "Do MCP tools bypass target roles?",
+          "a": "No. They call targets that still authorize the identity."
+        },
+        {
+          "q": "Why request different tokens for different targets?",
+          "a": "Each target expects its own audience."
+        }
+      ],
+      "teachBack": "The end-to-end pattern is app with managed identity to Entra token to target API to RBAC decision. Every target gets a token for its own audience. No stored endpoint credential is required in app code.",
+      "glossary": [
+        {
+          "term": "Keyless",
+          "definition": "No stored shared credential in application code or config."
+        },
+        {
+          "term": "Foundry inference",
+          "definition": "Model invocation through Microsoft Foundry or Azure AI inference endpoints."
+        },
+        {
+          "term": "Bearer",
+          "definition": "HTTP Authorization scheme carrying an access token."
+        },
+        {
+          "term": "Data plane",
+          "definition": "Runtime API surface such as inference or query."
+        },
+        {
+          "term": "Control plane",
+          "definition": "Management API surface such as creating resources."
+        }
+      ],
+      "sources": [
+        {
+          "title": "Azure AI Inference client library for Python",
+          "url": "https://learn.microsoft.com/en-us/python/api/overview/azure/ai-inference-readme?view=azure-python-preview"
+        },
+        {
+          "title": "Role-based access control for Microsoft Foundry",
+          "url": "https://learn.microsoft.com/en-us/azure/foundry/concepts/rbac-foundry"
+        },
+        {
+          "title": "Azure Identity client library for Python",
+          "url": "https://learn.microsoft.com/en-us/python/api/overview/azure/identity-readme?view=azure-python"
+        }
+      ],
+      "uncertain": false
+    },
+    {
+      "id": "troubleshooting-authz",
+      "title": "Troubleshooting 401 and 403",
+      "term": "Auth troubleshooting",
+      "tags": [
+        "troubleshooting",
+        "401",
+        "403"
+      ],
+      "firstPrinciples": "Most access failures are deterministic. The system is telling you which invariant broke: no acceptable token, wrong audience, expired token, no role, wrong scope, role not propagated, or wrong managed identity selected.",
+      "definition": "Troubleshooting is the disciplined process of isolating authentication from authorization, then checking audience, tenant, identity, scope, role, and propagation delay. User-assigned identity failures often come from using the wrong or missing client_id.",
+      "analogy": "Debug it like range safety: verify weapon, shooter, lane, target, and authorization card in order. Do not change five things at once.",
+      "mentalModel": "Checklist: 1 401 means token problem; verify scope and expiry. 2 403 means permission problem; verify role and scope. 3 Check principal ID matches the MI you granted. 4 For user-assigned MI, set client_id. 5 Wait for RBAC propagation and retry.",
+      "diagram": "flowchart TD\n  Fail[Request failed] --> Code{Status}\n  Code -->|401| TokenCheck[Check token audience expiry tenant]\n  Code -->|403| RoleCheck[Check role scope principal propagation]\n  RoleCheck --> UAMI[Check user assigned client id]\n  TokenCheck --> Retry[Acquire fresh token]",
+      "code": {
+        "language": "python",
+        "caption": "Print token audience and expiry for a requested scope.",
+        "content": "import base64\nimport json\nimport os\nfrom datetime import datetime, timezone\nfrom azure.identity import DefaultAzureCredential\n\nscope = os.getenv(\"AZURE_TOKEN_SCOPE\", \"https://cognitiveservices.azure.com/.default\")\ncredential = DefaultAzureCredential(exclude_environment_credential=True)\ntoken = credential.get_token(scope)\n\npayload = token.token.split(\".\")[1]\npayload += \"=\" * (-len(payload) % 4)\nclaims = json.loads(base64.urlsafe_b64decode(payload))\n\nprint(\"requested_scope\", scope)\nprint(\"audience\", claims.get(\"aud\"))\nprint(\"tenant\", claims.get(\"tid\"))\nprint(\"expires_utc\", datetime.fromtimestamp(token.expires_on, timezone.utc).isoformat())\n"
+      },
+      "drills": [
+        {
+          "q": "A user-assigned MI has access but code still fails. First setting to check?",
+          "a": "client_id / AZURE_CLIENT_ID selection."
+        },
+        {
+          "q": "Role was assigned seconds ago and 403 persists. Possible cause?",
+          "a": "RBAC propagation delay."
+        },
+        {
+          "q": "A Foundry call uses a management.azure.com token and gets 401. Why?",
+          "a": "Wrong audience for the data-plane endpoint."
+        }
+      ],
+      "teachBack": "Troubleshooting auth is a sequence, not a guess. I separate 401 from 403, then verify audience, tenant, selected identity, role, scope, and propagation. For user-assigned MI, wrong client ID is a common root cause.",
+      "glossary": [
+        {
+          "term": "Propagation delay",
+          "definition": "Time before a new role assignment is enforced everywhere."
+        },
+        {
+          "term": "Wrong audience",
+          "definition": "Token minted for a different API than the one called."
+        },
+        {
+          "term": "Selected identity",
+          "definition": "The particular MI used when multiple identities are available."
+        },
+        {
+          "term": "Fresh token",
+          "definition": "Newly acquired access token after role or scope changes."
+        }
+      ],
+      "sources": [
+        {
+          "title": "az role assignment create",
+          "url": "https://learn.microsoft.com/en-us/cli/azure/role/assignment?view=azure-cli-latest#az-role-assignment-create"
+        },
+        {
+          "title": "Credential chains in Azure Identity for Python",
+          "url": "https://learn.microsoft.com/en-us/azure/developer/python/sdk/authentication/credential-chains"
+        },
+        {
+          "title": "Azure Identity client library for Python",
+          "url": "https://learn.microsoft.com/en-us/python/api/overview/azure/identity-readme?view=azure-python"
+        }
+      ],
+      "uncertain": false
+    },
+    {
+      "id": "why-not-secrets-or-sps",
+      "title": "Anti-pattern We Avoid: Secrets, Keys, and Service Principals",
+      "term": "Anti-pattern",
+      "tags": [
+        "anti-pattern",
+        "security",
+        "rotation"
+      ],
+      "firstPrinciples": "The best leaked credential is the one that never existed in your app. Long-lived secrets create rotation work, storage risk, accidental logging risk, and copy-paste sprawl. This lane deliberately avoids them.",
+      "definition": "The avoided pattern is authenticating workloads with keys, connection-string secrets, certificates, or service principals that require stored credentials. Managed identity replaces that with Azure-managed token issuance tied to the hosting resource.",
+      "analogy": "A shared master key is like leaving a base skeleton key in every truck glove box. Managed identity is like each vehicle receiving short-lived gate passes from the base gate only when needed.",
+      "mentalModel": "Use managed identity for deployed Azure workloads. Use az login only for local developer learning. If a library sample shows AzureKeyCredential or client secrets, translate it to DefaultAzureCredential or ManagedIdentityCredential whenever the service supports Entra authentication.",
+      "diagram": "flowchart LR\n  Bad[Stored secret anti pattern] --> Risks[Leak rotate sprawl outage]\n  Good[Managed identity pattern] --> Tokens[Short lived Entra tokens]\n  Tokens --> RBAC[Least privilege RBAC]",
+      "code": {
+        "language": "python",
+        "caption": "Positive replacement pattern for samples that show non-MI credential styles.",
+        "content": "from azure.identity import DefaultAzureCredential\n\n# Replacement pattern: pass a TokenCredential to SDK clients that support Entra auth.\n# Local development uses az login; Azure production uses managed identity.\ncredential = DefaultAzureCredential(exclude_environment_credential=True)\n\n# Example usage shape:\n# client = SomeAzureClient(endpoint=\"https://example.azure.com\", credential=credential)\nprint(\"Use this TokenCredential pattern instead of stored credential material.\")\n"
+      },
+      "drills": [
+        {
+          "q": "Why avoid long-lived application credentials?",
+          "a": "They can leak, require rotation, and spread across configs and teams."
+        },
+        {
+          "q": "What replaces them in Azure production?",
+          "a": "Managed identity plus Entra access tokens plus RBAC."
+        },
+        {
+          "q": "When is az login acceptable in this lane?",
+          "a": "Local development only, as a developer identity source for DefaultAzureCredential."
+        }
+      ],
+      "teachBack": "This lane treats stored workload credentials as the anti-pattern. Managed identity removes credential storage and rotation from the app. Local az login is only a development bridge, not the production authentication design.",
+      "glossary": [
+        {
+          "term": "Anti-pattern",
+          "definition": "A tempting design choice that creates recurring risk."
+        },
+        {
+          "term": "Rotation",
+          "definition": "Periodic replacement of credential material."
+        },
+        {
+          "term": "Credential sprawl",
+          "definition": "Copies of credentials spreading across files, systems, and people."
+        },
+        {
+          "term": "Connection-string secret",
+          "definition": "Connection text containing credential material; avoided in this lane."
+        }
+      ],
+      "sources": [
+        {
+          "title": "Managed identities for Azure resources",
+          "url": "https://learn.microsoft.com/en-us/entra/identity/managed-identities-azure-resources/overview"
+        },
+        {
+          "title": "Azure Identity client library for Python",
+          "url": "https://learn.microsoft.com/en-us/python/api/overview/azure/identity-readme?view=azure-python"
+        },
+        {
+          "title": "Role-based access control for Microsoft Foundry",
+          "url": "https://learn.microsoft.com/en-us/azure/foundry/concepts/rbac-foundry"
+        }
+      ],
+      "uncertain": false
+    }
+  ],
+  "quiz": [
+    {
+      "q": "What is the cleanest distinction between AuthN and AuthZ?",
+      "options": [
+        "AuthN proves who; AuthZ decides allowed actions",
+        "AuthN grants RBAC; AuthZ issues tokens",
+        "AuthN is only for users; AuthZ is only for apps",
+        "They are synonyms in Azure"
+      ],
+      "answer": 0,
+      "explain": "Authentication proves identity; authorization checks permissions."
+    },
+    {
+      "q": "What is the primary security value of managed identity?",
+      "options": [
+        "No stored workload credential to leak or rotate",
+        "It grants Owner automatically",
+        "It works without Entra ID",
+        "It removes the need for authorization"
+      ],
+      "answer": 0,
+      "explain": "Managed identity lets Azure manage identity and token issuance while you assign least-privilege roles."
+    },
+    {
+      "q": "How do you select a user-assigned managed identity in Python?",
+      "options": [
+        "Pass client_id to ManagedIdentityCredential or managed_identity_client_id to DefaultAzureCredential",
+        "Pass the principal display name as a password",
+        "Use the subscription ID as the token",
+        "Set the endpoint URL as the tenant"
+      ],
+      "answer": 0,
+      "explain": "The client ID disambiguates which user-assigned managed identity should be used."
+    },
+    {
+      "q": "Which current role is the least-privilege Foundry build/data-plane role?",
+      "options": [
+        "Foundry User",
+        "Azure AI Developer",
+        "Owner",
+        "Cognitive Services Contributor"
+      ],
+      "answer": 0,
+      "explain": "Current Foundry docs identify Foundry User as the least-privilege Foundry role; Azure AI Developer is not for Foundry projects."
+    },
+    {
+      "q": "A call returns 403 after a valid token is accepted. What should you inspect first?",
+      "options": [
+        "Role assignment, scope, principal ID, and propagation",
+        "Python indentation",
+        "Whether JSON is pretty printed",
+        "Whether the model name has uppercase letters"
+      ],
+      "answer": 0,
+      "explain": "403 indicates authorization failure, commonly missing role or wrong scope/principal."
+    },
+    {
+      "q": "What scope string is commonly used for Azure Cognitive Services or Azure OpenAI data-plane tokens?",
+      "options": [
+        "https://cognitiveservices.azure.com/.default",
+        "https://management.azure.com/.default",
+        "https://graph.microsoft.com/User.Read",
+        "https://kusto.kusto.windows.net/.default"
+      ],
+      "answer": 0,
+      "explain": "Azure OpenAI token-auth examples use the Cognitive Services audience scope."
+    },
+    {
+      "q": "What ADX role grants read-only query access at database scope except restricted tables?",
+      "options": [
+        "Database Viewer",
+        "Subscription Reader",
+        "Foundry User",
+        "Azure AI Developer"
+      ],
+      "answer": 0,
+      "explain": "ADX data-plane query authorization uses Kusto roles such as Database Viewer."
+    },
+    {
+      "q": "Why can DefaultAzureCredential support local-to-prod without code changes?",
+      "options": [
+        "It tries an ordered credential chain suitable to the runtime",
+        "It embeds a credential during build",
+        "It disables Entra ID",
+        "It automatically assigns RBAC roles"
+      ],
+      "answer": 0,
+      "explain": "Locally it can use developer tooling such as Azure CLI; in Azure it can use managed identity."
+    },
+    {
+      "q": "What are the three essential pieces of an Azure role assignment?",
+      "options": [
+        "Principal, role definition, scope",
+        "Tenant, region, invoice",
+        "Model, prompt, temperature",
+        "Endpoint, port, subnet"
+      ],
+      "answer": 0,
+      "explain": "RBAC binds who gets which permissions at which resource boundary."
+    },
+    {
+      "q": "Which topic in this lane is explicitly uncertain and must be verified in your environment?",
+      "options": [
+        "Exact ICM managed-identity access pattern",
+        "ManagedIdentityCredential class name",
+        "Foundry User role ID",
+        "az role assignment create syntax"
+      ],
+      "answer": 0,
+      "explain": "Public docs did not confirm exact ICM role/access details, so verify with the ICM owner."
+    }
+  ]
+}

@@ -1,0 +1,1077 @@
+{
+  "id": "mcp-fundamentals",
+  "title": "MCP Fundamentals",
+  "icon": "🔌",
+  "order": 6,
+  "summary": "Master the Model Context Protocol from first principles: why it exists, the host-client-server architecture, JSON-RPC wire format, lifecycle, stdio and Streamable HTTP transports, server primitives, client primitives, tool-calling bridge, security model, and runnable Python SDK examples.",
+  "concepts": [
+    {
+      "id": "why-mcp-exists",
+      "title": "Why MCP Exists",
+      "term": "Model Context Protocol",
+      "tags": [
+        "overview",
+        "problem",
+        "standard"
+      ],
+      "firstPrinciples": "First principles: a model without external context is like a radio operator with no maps, no tools, and no permission to act. Before MCP, every AI app had to custom-integrate every data source and action system, creating an N times M explosion: N hosts times M integrations. A protocol collapses that grid into one common contract.",
+      "definition": "MCP is an open protocol for connecting AI applications to external systems such as data sources, tools, and reusable workflows. The official docs describe it as a USB-C port for AI applications: one standard connector instead of a custom cable for every pairing.",
+      "analogy": "Imagine every phone needing a different charger for every wall outlet. MCP is the common socket: hosts know how to plug in, and servers know what shape to expose.",
+      "mentalModel": "Think in three questions. What does the model need to know? That is context. What may it do? Those are tools. How do independent products agree on this safely? That is the protocol. MCP does not replace the LLM; it standardizes the layer around the LLM that exposes capabilities and context.",
+      "diagram": "graph TD\nBefore[Many hosts] --> Custom[Custom connectors]\nCustom --> Sources[Many data and tool systems]\nAfter[MCP hosts] --> Protocol[MCP standard]\nProtocol --> Servers[MCP servers]\nServers --> Sources",
+      "code": {
+        "language": "json",
+        "caption": "The N by M integration problem in one picture",
+        "content": "{\n  \"before_mcp\": \"Every AI host builds a custom connector to every external system.\",\n  \"after_mcp\": \"Every host speaks MCP and every server exposes MCP.\",\n  \"result\": \"Less glue code, more reusable integrations.\"\n}\n"
+      },
+      "drills": [
+        {
+          "q": "What explosion does MCP reduce?",
+          "a": "The N times M integration problem between many AI hosts and many external systems."
+        },
+        {
+          "q": "Does MCP define a model provider?",
+          "a": "No. MCP defines how applications exchange context, tools, prompts, and client capabilities around LLM use."
+        },
+        {
+          "q": "Why is USB-C a good analogy?",
+          "a": "Because many devices can use one standard connection instead of custom adapters for every pair."
+        }
+      ],
+      "teachBack": "MCP exists because AI apps need a standard way to connect to external data and actions. It turns many one-off integrations into a reusable protocol boundary. If you remember one phrase, remember USB-C for AI applications.",
+      "glossary": [
+        {
+          "term": "MCP",
+          "definition": "Open protocol for connecting LLM applications with external context, tools, and workflows."
+        },
+        {
+          "term": "N times M integration",
+          "definition": "The combinatorial cost of custom connectors between many hosts and many systems."
+        },
+        {
+          "term": "Host",
+          "definition": "The AI application a user interacts with, such as an IDE or chat app."
+        }
+      ],
+      "sources": [
+        {
+          "title": "MCP Introduction",
+          "url": "https://modelcontextprotocol.io/docs/getting-started/intro.md"
+        },
+        {
+          "title": "MCP Specification 2025-11-25",
+          "url": "https://modelcontextprotocol.io/specification/2025-11-25.md"
+        },
+        {
+          "title": "MCP Architecture overview",
+          "url": "https://modelcontextprotocol.io/docs/learn/architecture.md"
+        }
+      ],
+      "uncertain": false
+    },
+    {
+      "id": "host-client-server",
+      "title": "Host Client Server Architecture",
+      "term": "Host Client Server",
+      "tags": [
+        "architecture",
+        "host",
+        "client",
+        "server"
+      ],
+      "firstPrinciples": "First principles: a conversation app has two jobs that should not be mixed. The host owns user experience and LLM orchestration. A protocol client owns one connection. A server owns one slice of external capability. Separating them limits complexity and makes each connection independently negotiable and auditable.",
+      "definition": "MCP uses a client-server architecture. The host is the AI application; it creates one MCP client for each MCP server connection. Each server exposes capabilities such as tools, resources, and prompts to its corresponding client.",
+      "analogy": "Picture a commander, radio operators, and specialist units. The host is the commander, each client is one radio channel, and each server is a specialist unit like maps, weather, or logistics.",
+      "mentalModel": "Never collapse host and client in your mental model. The user sees the host. The host embeds clients. Each client maintains a dedicated connection to exactly one server. A remote server may serve many clients, but each client-server relationship is still a distinct protocol session.",
+      "diagram": "graph TD\nHost[AI host application]\nHost --> ClientA[MCP client one]\nHost --> ClientB[MCP client two]\nHost --> ClientC[MCP client three]\nClientA --> ServerA[Filesystem server]\nClientB --> ServerB[Calendar server]\nClientC --> ServerC[Remote knowledge server]\nClientB --> UX[Host consent UI]\nUX --> User[User]",
+      "code": {
+        "language": "python",
+        "caption": "Host creates one client connection per server",
+        "content": "# Pseudocode: real hosts hide most of this behind their MCP manager.\nconfigured_servers = [\"filesystem\", \"calendar\", \"knowledge\"]\n\nfor server_name in configured_servers:\n    # One MCP client object per server connection.\n    client = create_mcp_client_for(server_name)\n    initialize_result = client.initialize()\n    print(server_name, initialize_result.capabilities)\n"
+      },
+      "drills": [
+        {
+          "q": "Who owns the user experience?",
+          "a": "The host application."
+        },
+        {
+          "q": "How many server connections does one MCP client maintain?",
+          "a": "One dedicated connection to one MCP server."
+        },
+        {
+          "q": "Can one host connect to many servers?",
+          "a": "Yes. The host creates separate clients for separate server connections."
+        }
+      ],
+      "teachBack": "An MCP host is the app, not the same thing as an MCP client. The host embeds clients, and each client talks to one server. Servers are capability providers, while the host decides how those capabilities enter the user experience.",
+      "glossary": [
+        {
+          "term": "MCP Host",
+          "definition": "AI application that coordinates users, LLMs, and one or more MCP clients."
+        },
+        {
+          "term": "MCP Client",
+          "definition": "Protocol component inside a host that maintains one server connection."
+        },
+        {
+          "term": "MCP Server",
+          "definition": "Program exposing context and capabilities through MCP."
+        }
+      ],
+      "sources": [
+        {
+          "title": "MCP Architecture overview",
+          "url": "https://modelcontextprotocol.io/docs/learn/architecture.md"
+        },
+        {
+          "title": "Understanding MCP clients",
+          "url": "https://modelcontextprotocol.io/docs/learn/client-concepts.md"
+        },
+        {
+          "title": "Understanding MCP servers",
+          "url": "https://modelcontextprotocol.io/docs/learn/server-concepts.md"
+        }
+      ],
+      "uncertain": false
+    },
+    {
+      "id": "json-rpc-wire-protocol",
+      "title": "JSON RPC Wire Protocol",
+      "term": "JSON-RPC 2.0",
+      "tags": [
+        "wire",
+        "json-rpc",
+        "messages"
+      ],
+      "firstPrinciples": "First principles: distributed systems need a precise envelope so both sides can tell a question from an answer from an announcement. MCP uses JSON-RPC 2.0 because it already defines requests with ids, responses that match ids, and notifications that require no response.",
+      "definition": "MCP data-layer messages are JSON-RPC 2.0 requests, responses, and notifications. Requests include a method and usually an id. Responses echo the id and contain either result or error. Notifications have a method but no id and expect no reply.",
+      "analogy": "Think of a military message form. A request has a tracking number, a response quotes that tracking number, and a notification is a bulletin posted for awareness only.",
+      "mentalModel": "The transport moves bytes; JSON-RPC gives those bytes meaning. If you can identify jsonrpc, id, method, params, result, and error, you can read the protocol even before learning an SDK. MCP method names such as tools/list and resources/read live inside that JSON-RPC envelope.",
+      "diagram": "sequenceDiagram\nparticipant Client\nparticipant Server\nClient->>Server: Request with id and method\nServer-->>Client: Response with same id\nServer--)Client: Notification with no id",
+      "code": {
+        "language": "json",
+        "caption": "Request response and notification shapes",
+        "content": "{\n  \"request\": {\n    \"jsonrpc\": \"2.0\",\n    \"id\": 7,\n    \"method\": \"tools/list\",\n    \"params\": {}\n  },\n  \"response\": {\n    \"jsonrpc\": \"2.0\",\n    \"id\": 7,\n    \"result\": {\n      \"tools\": []\n    }\n  },\n  \"notification\": {\n    \"jsonrpc\": \"2.0\",\n    \"method\": \"notifications/initialized\"\n  }\n}\n"
+      },
+      "drills": [
+        {
+          "q": "What field lets a client match a response to a request?",
+          "a": "The id field."
+        },
+        {
+          "q": "What is different about a notification?",
+          "a": "It has no id and does not expect a response."
+        },
+        {
+          "q": "Where does tools/list appear?",
+          "a": "As the JSON-RPC method name."
+        }
+      ],
+      "teachBack": "MCP messages are JSON-RPC 2.0 envelopes. Requests ask, responses answer by id, and notifications announce without requiring a reply. The method name tells you which MCP operation is being performed.",
+      "glossary": [
+        {
+          "term": "Request",
+          "definition": "JSON-RPC message with an id that expects a response."
+        },
+        {
+          "term": "Response",
+          "definition": "JSON-RPC message with the same id and either result or error."
+        },
+        {
+          "term": "Notification",
+          "definition": "JSON-RPC message without an id that expects no response."
+        }
+      ],
+      "sources": [
+        {
+          "title": "MCP Specification 2025-11-25",
+          "url": "https://modelcontextprotocol.io/specification/2025-11-25.md"
+        },
+        {
+          "title": "MCP Architecture overview",
+          "url": "https://modelcontextprotocol.io/docs/learn/architecture.md"
+        }
+      ],
+      "uncertain": false
+    },
+    {
+      "id": "connection-lifecycle",
+      "title": "Connection Lifecycle",
+      "term": "Initialize handshake",
+      "tags": [
+        "lifecycle",
+        "capabilities",
+        "negotiation"
+      ],
+      "firstPrinciples": "First principles: before two systems cooperate, they must agree on language version, identity, and allowed moves. MCP makes that explicit: initialize first, operate only within negotiated capabilities, then shut down through the transport.",
+      "definition": "The MCP lifecycle has initialization, operation, and shutdown phases. The client sends initialize with protocolVersion, capabilities, and clientInfo. The server replies with its protocolVersion, capabilities, serverInfo, and optional instructions. Then the client sends notifications/initialized.",
+      "analogy": "It is like two radios performing a comms check before a mission: frequency, call signs, and supported procedures are confirmed before operational traffic begins.",
+      "mentalModel": "Treat initialize as a contract, not a greeting. If the server did not declare tools, do not call tools/list. If the client did not declare roots, the server should not ask roots/list. Version negotiation prevents silent mismatches.",
+      "diagram": "sequenceDiagram\nparticipant Client\nparticipant Server\nClient->>Server: initialize\nServer-->>Client: initialize result\nClient--)Server: notifications initialized\nClient->>Server: normal operations\nClient--)Server: transport shutdown",
+      "code": {
+        "language": "json",
+        "caption": "Initialize handshake with capability negotiation",
+        "content": "{\n  \"jsonrpc\": \"2.0\",\n  \"id\": 1,\n  \"method\": \"initialize\",\n  \"params\": {\n    \"protocolVersion\": \"2025-11-25\",\n    \"capabilities\": {\n      \"roots\": { \"listChanged\": true },\n      \"sampling\": {},\n      \"elicitation\": { \"form\": {}, \"url\": {} }\n    },\n    \"clientInfo\": { \"name\": \"academy-client\", \"version\": \"1.0.0\" }\n  }\n}\n"
+      },
+      "drills": [
+        {
+          "q": "What must be the first interaction?",
+          "a": "The initialize request."
+        },
+        {
+          "q": "What does capability negotiation prevent?",
+          "a": "Using operations one side never said it supports."
+        },
+        {
+          "q": "What notification follows a successful initialize response?",
+          "a": "notifications/initialized."
+        }
+      ],
+      "teachBack": "MCP starts with an initialize handshake. Client and server exchange protocol versions, identities, and capabilities before normal work. After initialization, both sides must stay inside what was negotiated.",
+      "glossary": [
+        {
+          "term": "initialize",
+          "definition": "First request in an MCP session that negotiates version and capabilities."
+        },
+        {
+          "term": "capability",
+          "definition": "A declared protocol feature such as tools, resources, prompts, roots, sampling, or elicitation."
+        },
+        {
+          "term": "protocolVersion",
+          "definition": "Date-stamped MCP specification version used for compatibility."
+        }
+      ],
+      "sources": [
+        {
+          "title": "MCP Lifecycle",
+          "url": "https://modelcontextprotocol.io/specification/2025-11-25/basic/lifecycle.md"
+        },
+        {
+          "title": "MCP Specification 2025-11-25",
+          "url": "https://modelcontextprotocol.io/specification/2025-11-25.md"
+        }
+      ],
+      "uncertain": false
+    },
+    {
+      "id": "transports",
+      "title": "Transports",
+      "term": "stdio and Streamable HTTP",
+      "tags": [
+        "transport",
+        "stdio",
+        "http"
+      ],
+      "firstPrinciples": "First principles: a protocol needs a way to move messages, but the message semantics should not depend on whether bytes travel through pipes or HTTP. MCP separates the JSON-RPC data layer from transports so the same operations can run locally or remotely.",
+      "definition": "The current standard MCP transports are stdio and Streamable HTTP. stdio launches a local server subprocess and exchanges newline-delimited JSON-RPC over stdin and stdout. Streamable HTTP uses a single MCP endpoint with HTTP POST and optional GET plus Server-Sent Events for streaming. The older HTTP plus SSE transport from protocol version 2024-11-05 is deprecated and replaced by Streamable HTTP.",
+      "analogy": "stdio is a direct field telephone between two people in the same room. Streamable HTTP is a dispatch center reachable over the network, able to handle many callers.",
+      "mentalModel": "Use stdio for local tools such as filesystem or developer utilities where the host starts the server process. Use Streamable HTTP for remote services, multi-client servers, and standard HTTP auth. Remember the name: Streamable HTTP, not simply SSE. SSE is optional streaming inside that transport.",
+      "diagram": "graph TD\nMessages[JSON RPC messages]\nMessages --> Stdio[stdio local subprocess]\nMessages --> Http[Streamable HTTP remote endpoint]\nHttp --> Post[POST client messages]\nHttp --> Get[GET optional server stream]\nHttp --> Sse[Optional SSE events]\nOld[HTTP plus SSE old transport] --> Deprecated[Deprecated path]",
+      "code": {
+        "language": "json",
+        "caption": "Streamable HTTP request headers concept",
+        "content": "{\n  \"method\": \"POST\",\n  \"url\": \"https://example.com/mcp\",\n  \"headers\": {\n    \"Accept\": \"application/json, text/event-stream\",\n    \"Content-Type\": \"application/json\",\n    \"MCP-Protocol-Version\": \"2025-11-25\"\n  },\n  \"body\": {\n    \"jsonrpc\": \"2.0\",\n    \"id\": 1,\n    \"method\": \"tools/list\"\n  }\n}\n"
+      },
+      "drills": [
+        {
+          "q": "Which transport is common for local subprocess servers?",
+          "a": "stdio."
+        },
+        {
+          "q": "What is the current remote standard transport called?",
+          "a": "Streamable HTTP."
+        },
+        {
+          "q": "Is HTTP plus SSE the current name?",
+          "a": "No. The older HTTP plus SSE transport is deprecated; Streamable HTTP replaced it."
+        }
+      ],
+      "teachBack": "MCP transport is how JSON-RPC messages move. stdio is for local subprocesses; Streamable HTTP is for remote or multi-client servers. The old HTTP plus SSE transport is legacy, while SSE remains an optional streaming mechanism inside Streamable HTTP.",
+      "glossary": [
+        {
+          "term": "stdio",
+          "definition": "Transport where the client launches a local server and exchanges messages over stdin and stdout."
+        },
+        {
+          "term": "Streamable HTTP",
+          "definition": "Current HTTP transport using POST and optional SSE streams on a single MCP endpoint."
+        },
+        {
+          "term": "HTTP plus SSE",
+          "definition": "Older deprecated transport from protocol version 2024-11-05."
+        }
+      ],
+      "sources": [
+        {
+          "title": "MCP Transports",
+          "url": "https://modelcontextprotocol.io/specification/2025-11-25/basic/transports.md"
+        },
+        {
+          "title": "MCP Architecture overview",
+          "url": "https://modelcontextprotocol.io/docs/learn/architecture.md"
+        }
+      ],
+      "uncertain": false
+    },
+    {
+      "id": "server-primitives",
+      "title": "Server Primitives",
+      "term": "Tools Resources Prompts",
+      "tags": [
+        "tools",
+        "resources",
+        "prompts",
+        "control"
+      ],
+      "firstPrinciples": "First principles: context systems expose three different kinds of power. Some things are actions, some are data, and some are reusable instructions. Mixing them causes unsafe mental models, so MCP names and separates them.",
+      "definition": "MCP servers can expose tools, resources, and prompts. Tools are executable functions and are model-controlled. Resources are contextual data sources and are application-controlled. Prompts are reusable templates and are user-controlled.",
+      "analogy": "A workshop has power tools, shelves of reference manuals, and laminated procedure cards. The model may choose a power tool, the app selects reference material, and the user chooses a procedure card.",
+      "mentalModel": "Ask who controls it. Model-controlled means the LLM may decide to request a tool call. Application-controlled means the host decides when and how resource data enters context. User-controlled means the user explicitly selects a prompt template or command.",
+      "diagram": "graph LR\nServer[MCP server]\nServer --> Tools[Tools model controlled actions]\nServer --> Resources[Resources app controlled data]\nServer --> Prompts[Prompts user controlled templates]\nTools --> Call[tools call]\nResources --> Read[resources read]\nPrompts --> Get[prompts get]",
+      "code": {
+        "language": "json",
+        "caption": "Three server primitive descriptors",
+        "content": "{\n  \"tool\": { \"name\": \"search_docs\", \"description\": \"Search documents\", \"inputSchema\": { \"type\": \"object\" } },\n  \"resource\": { \"uri\": \"docs://handbook\", \"name\": \"handbook\", \"mimeType\": \"text/markdown\" },\n  \"prompt\": { \"name\": \"summarize_incident\", \"description\": \"Template for incident summaries\" }\n}\n"
+      },
+      "drills": [
+        {
+          "q": "Which primitive is model-controlled?",
+          "a": "Tools."
+        },
+        {
+          "q": "Which primitive is application-controlled?",
+          "a": "Resources."
+        },
+        {
+          "q": "Which primitive is user-controlled?",
+          "a": "Prompts."
+        }
+      ],
+      "teachBack": "MCP server primitives are the heart of the protocol. Tools are actions, resources are data, and prompts are templates. Remember the control model: model controls tools, application controls resources, user controls prompts.",
+      "glossary": [
+        {
+          "term": "Tool",
+          "definition": "Model-controlled executable function exposed by an MCP server."
+        },
+        {
+          "term": "Resource",
+          "definition": "Application-controlled data or context identified by a URI."
+        },
+        {
+          "term": "Prompt",
+          "definition": "User-controlled reusable template or workflow exposed by a server."
+        }
+      ],
+      "sources": [
+        {
+          "title": "Understanding MCP servers",
+          "url": "https://modelcontextprotocol.io/docs/learn/server-concepts.md"
+        },
+        {
+          "title": "MCP Tools",
+          "url": "https://modelcontextprotocol.io/specification/2025-11-25/server/tools.md"
+        },
+        {
+          "title": "MCP Resources",
+          "url": "https://modelcontextprotocol.io/specification/2025-11-25/server/resources.md"
+        },
+        {
+          "title": "MCP Prompts",
+          "url": "https://modelcontextprotocol.io/specification/2025-11-25/server/prompts.md"
+        }
+      ],
+      "uncertain": false
+    },
+    {
+      "id": "tool-discovery-invocation",
+      "title": "Tool Discovery and Invocation",
+      "term": "tools/list and tools/call",
+      "tags": [
+        "tools",
+        "schema",
+        "invocation"
+      ],
+      "firstPrinciples": "First principles: an LLM cannot safely call arbitrary code by guessing. It needs a catalog of available operations, typed inputs, and predictable results. MCP makes tool discovery explicit before invocation.",
+      "definition": "Clients discover tools with tools/list and invoke a tool with tools/call. A tool definition includes a name, optional title, description, inputSchema as JSON Schema, optional outputSchema, annotations, and result content. Structured results are returned in structuredContent while content carries model-visible blocks such as text.",
+      "analogy": "A tool catalog is like a weapons checklist: name, purpose, required inputs, expected output, and authorization before use.",
+      "mentalModel": "The bridge is: server advertises tool schemas, host presents them to the model as provider-specific tools or functions, model chooses one, host asks the user if needed, client sends tools/call, server returns result, host feeds the result back to the model.",
+      "diagram": "sequenceDiagram\nparticipant LLM\nparticipant Host\nparticipant Client\nparticipant Server\nClient->>Server: tools list\nServer-->>Client: tool schemas\nHost->>LLM: available tools\nLLM-->>Host: selected tool and arguments\nHost->>Client: approved invocation\nClient->>Server: tools call\nServer-->>Client: tool result\nClient-->>Host: result\nHost-->>LLM: result for reasoning",
+      "code": {
+        "language": "json",
+        "caption": "Tool definition and call result",
+        "content": "{\n  \"listResponse\": {\n    \"tools\": [\n      {\n        \"name\": \"calculate_sum\",\n        \"description\": \"Add two numbers\",\n        \"inputSchema\": {\n          \"type\": \"object\",\n          \"properties\": {\n            \"a\": { \"type\": \"number\" },\n            \"b\": { \"type\": \"number\" }\n          },\n          \"required\": [\"a\", \"b\"]\n        },\n        \"outputSchema\": {\n          \"type\": \"object\",\n          \"properties\": { \"result\": { \"type\": \"number\" } },\n          \"required\": [\"result\"]\n        }\n      }\n    ]\n  },\n  \"callRequest\": {\n    \"jsonrpc\": \"2.0\",\n    \"id\": 2,\n    \"method\": \"tools/call\",\n    \"params\": { \"name\": \"calculate_sum\", \"arguments\": { \"a\": 2, \"b\": 3 } }\n  },\n  \"callResult\": {\n    \"content\": [{ \"type\": \"text\", \"text\": \"{\\\"result\\\":5}\" }],\n    \"structuredContent\": { \"result\": 5 },\n    \"isError\": false\n  }\n}\n"
+      },
+      "drills": [
+        {
+          "q": "Which method lists available tools?",
+          "a": "tools/list."
+        },
+        {
+          "q": "Which method invokes a tool?",
+          "a": "tools/call."
+        },
+        {
+          "q": "Why does inputSchema matter?",
+          "a": "It lets clients, models, and servers agree on valid arguments before execution."
+        }
+      ],
+      "teachBack": "Tools are discovered before they are invoked. The server publishes names, descriptions, and JSON Schemas; the host bridges those schemas into the model's tool-calling interface. When the model chooses a tool, MCP carries the actual call and result.",
+      "glossary": [
+        {
+          "term": "tools/list",
+          "definition": "Request method for discovering available MCP tools."
+        },
+        {
+          "term": "tools/call",
+          "definition": "Request method for invoking a named MCP tool with arguments."
+        },
+        {
+          "term": "inputSchema",
+          "definition": "JSON Schema describing allowed tool arguments."
+        },
+        {
+          "term": "structuredContent",
+          "definition": "Machine-readable JSON object returned by a tool result."
+        }
+      ],
+      "sources": [
+        {
+          "title": "MCP Tools",
+          "url": "https://modelcontextprotocol.io/specification/2025-11-25/server/tools.md"
+        },
+        {
+          "title": "Understanding MCP servers",
+          "url": "https://modelcontextprotocol.io/docs/learn/server-concepts.md"
+        }
+      ],
+      "uncertain": false
+    },
+    {
+      "id": "resources-context",
+      "title": "Resources and Context",
+      "term": "Resources",
+      "tags": [
+        "resources",
+        "uris",
+        "subscriptions"
+      ],
+      "firstPrinciples": "First principles: models need evidence, but not every piece of evidence is an action. Some context should be readable, typed, addressable, and refreshable without granting mutation power. MCP resources provide that passive context layer.",
+      "definition": "Resources are server-exposed data identified by URIs. Clients use resources/list to discover fixed resources, resources/templates/list for URI templates, resources/read to retrieve contents, and optionally resources/subscribe plus notifications/resources/updated for change tracking.",
+      "analogy": "Resources are library books with call numbers. A catalog tells you what exists, a URI is the call number, reading fetches pages, and subscriptions tell you when a book changed.",
+      "mentalModel": "Do not treat a resource URI as a shell command or raw file permission. It is an MCP identifier. The host decides how to include resource content in the model context, often through UI selection, search, or heuristics.",
+      "diagram": "sequenceDiagram\nparticipant Client\nparticipant Server\nClient->>Server: resources list\nServer-->>Client: resource URIs\nClient->>Server: resources read uri\nServer-->>Client: contents\nClient->>Server: resources subscribe uri\nServer--)Client: notifications resources updated",
+      "code": {
+        "language": "json",
+        "caption": "Resource discovery read and subscription",
+        "content": "{\n  \"list\": { \"jsonrpc\": \"2.0\", \"id\": 1, \"method\": \"resources/list\" },\n  \"read\": {\n    \"jsonrpc\": \"2.0\",\n    \"id\": 2,\n    \"method\": \"resources/read\",\n    \"params\": { \"uri\": \"file:///project/README.md\" }\n  },\n  \"subscribe\": {\n    \"jsonrpc\": \"2.0\",\n    \"id\": 3,\n    \"method\": \"resources/subscribe\",\n    \"params\": { \"uri\": \"file:///project/README.md\" }\n  }\n}\n"
+      },
+      "drills": [
+        {
+          "q": "What uniquely identifies a resource?",
+          "a": "A URI."
+        },
+        {
+          "q": "Which method reads resource contents?",
+          "a": "resources/read."
+        },
+        {
+          "q": "What optional feature notifies clients of resource changes?",
+          "a": "Resource subscriptions with notifications/resources/updated."
+        }
+      ],
+      "teachBack": "Resources are passive context, not actions. They are discovered, addressed by URI, read by the client, and optionally subscribed to for updates. The host decides how resource content becomes model context.",
+      "glossary": [
+        {
+          "term": "URI",
+          "definition": "Unique identifier for an MCP resource, such as file, https, git, or a custom scheme."
+        },
+        {
+          "term": "resources/read",
+          "definition": "Request method that retrieves resource contents."
+        },
+        {
+          "term": "resource template",
+          "definition": "Parameterized URI template for dynamic resource lookup."
+        },
+        {
+          "term": "subscription",
+          "definition": "Optional mechanism for update notifications on a resource."
+        }
+      ],
+      "sources": [
+        {
+          "title": "MCP Resources",
+          "url": "https://modelcontextprotocol.io/specification/2025-11-25/server/resources.md"
+        },
+        {
+          "title": "Understanding MCP servers",
+          "url": "https://modelcontextprotocol.io/docs/learn/server-concepts.md"
+        }
+      ],
+      "uncertain": false
+    },
+    {
+      "id": "prompts-templates",
+      "title": "Prompts as Templates",
+      "term": "Prompts",
+      "tags": [
+        "prompts",
+        "templates",
+        "user-controlled"
+      ],
+      "firstPrinciples": "First principles: repeated expert workflows should not rely on users remembering perfect phrasing. A prompt primitive packages a reusable instruction pattern with named arguments so users can intentionally start a known workflow.",
+      "definition": "Prompts are user-controlled templates exposed by servers. Clients discover them with prompts/list and retrieve a specific prompt with prompts/get, optionally providing arguments. The response contains structured messages such as user or assistant content blocks.",
+      "analogy": "A prompt is a mission briefing form. The user selects the form, fills in variables, and the resulting briefing becomes messages for the model.",
+      "mentalModel": "Prompts are not hidden system takeovers. They are meant to be discoverable and explicitly selected, often as slash commands or command-palette entries. They can reference resources or guide use of tools, but the host remains responsible for presentation and consent.",
+      "diagram": "sequenceDiagram\nparticipant User\nparticipant Host\nparticipant Client\nparticipant Server\nUser->>Host: select prompt\nClient->>Server: prompts list\nServer-->>Client: prompt descriptors\nClient->>Server: prompts get with arguments\nServer-->>Client: prompt messages\nHost-->>User: show or run template",
+      "code": {
+        "language": "json",
+        "caption": "Prompt list and get methods",
+        "content": "{\n  \"listRequest\": { \"jsonrpc\": \"2.0\", \"id\": 1, \"method\": \"prompts/list\" },\n  \"getRequest\": {\n    \"jsonrpc\": \"2.0\",\n    \"id\": 2,\n    \"method\": \"prompts/get\",\n    \"params\": {\n      \"name\": \"code_review\",\n      \"arguments\": { \"code\": \"def hello(): print('world')\" }\n    }\n  }\n}\n"
+      },
+      "drills": [
+        {
+          "q": "Who controls prompt invocation in MCP's interaction model?",
+          "a": "The user."
+        },
+        {
+          "q": "Which method discovers prompts?",
+          "a": "prompts/list."
+        },
+        {
+          "q": "What does prompts/get return?",
+          "a": "Prompt content, usually structured messages, customized with arguments."
+        }
+      ],
+      "teachBack": "Prompts are reusable templates, not model-selected actions. The user chooses a prompt, the client retrieves its messages, and the host decides how to present or run them. Use prompts to encode repeatable workflows clearly.",
+      "glossary": [
+        {
+          "term": "prompts/list",
+          "definition": "Request method for discovering prompt templates."
+        },
+        {
+          "term": "prompts/get",
+          "definition": "Request method for retrieving a named prompt with arguments."
+        },
+        {
+          "term": "PromptMessage",
+          "definition": "A role plus content block returned by prompts/get."
+        }
+      ],
+      "sources": [
+        {
+          "title": "MCP Prompts",
+          "url": "https://modelcontextprotocol.io/specification/2025-11-25/server/prompts.md"
+        },
+        {
+          "title": "Understanding MCP servers",
+          "url": "https://modelcontextprotocol.io/docs/learn/server-concepts.md"
+        }
+      ],
+      "uncertain": false
+    },
+    {
+      "id": "client-primitives",
+      "title": "Client Primitives",
+      "term": "Sampling Roots Elicitation",
+      "tags": [
+        "client",
+        "sampling",
+        "roots",
+        "elicitation"
+      ],
+      "firstPrinciples": "First principles: servers sometimes need help from the host side: model access, user input, or workspace boundaries. Instead of servers stealing credentials, guessing file paths, or inventing UI, MCP lets clients expose controlled capabilities back to servers.",
+      "definition": "Client primitives include Sampling, Roots, and Elicitation. Sampling lets servers request LLM generations through the client using sampling/createMessage. Roots lets servers request filesystem boundaries using roots/list. Elicitation lets servers ask the user for additional information through elicitation/create. Current elicitation includes form mode and URL mode; URL mode is marked new in the 2025-11-25 spec and may change in future revisions.",
+      "analogy": "The server is a field unit asking headquarters for support: ask the HQ model to think, ask which base areas are in bounds, or ask the user a clarifying question through HQ's approved channel.",
+      "mentalModel": "Client primitives reverse the usual direction. The server sends requests to the client, but only after the client declared support during initialization. This keeps the host in control of model access, filesystem scope, and user interaction.",
+      "diagram": "graph TD\nClient[MCP client]\nClient --> Sampling[Sampling LLM generation]\nClient --> Roots[Roots filesystem scope]\nClient --> Elicitation[Elicitation user input]\nServer[MCP server] --> Client\nClient --> User[User consent UI]\nClient --> LLM[Host LLM]",
+      "code": {
+        "language": "json",
+        "caption": "Client primitive request method names",
+        "content": "{\n  \"sampling\": { \"method\": \"sampling/createMessage\", \"direction\": \"server_to_client\" },\n  \"roots\": { \"method\": \"roots/list\", \"direction\": \"server_to_client\" },\n  \"elicitation\": { \"method\": \"elicitation/create\", \"direction\": \"server_to_client\" }\n}\n"
+      },
+      "drills": [
+        {
+          "q": "What does sampling let a server request?",
+          "a": "An LLM generation through the client and host."
+        },
+        {
+          "q": "What do roots communicate?",
+          "a": "Filesystem boundaries the server should operate within."
+        },
+        {
+          "q": "What method starts elicitation?",
+          "a": "elicitation/create."
+        }
+      ],
+      "teachBack": "Client primitives are capabilities the client offers to servers. Sampling gives controlled model access, roots communicate filesystem scope, and elicitation gathers user input through host UI. The server must only use client primitives negotiated during initialization.",
+      "glossary": [
+        {
+          "term": "Sampling",
+          "definition": "Client capability allowing server-initiated LLM generation requests."
+        },
+        {
+          "term": "Roots",
+          "definition": "Client capability exposing file URI workspace boundaries to servers."
+        },
+        {
+          "term": "Elicitation",
+          "definition": "Client capability allowing servers to request user input through the client."
+        },
+        {
+          "term": "URL mode elicitation",
+          "definition": "New 2025-11-25 elicitation mode for out-of-band sensitive interactions; noted by the spec as subject to change."
+        }
+      ],
+      "sources": [
+        {
+          "title": "MCP Sampling",
+          "url": "https://modelcontextprotocol.io/specification/2025-11-25/client/sampling.md"
+        },
+        {
+          "title": "MCP Roots",
+          "url": "https://modelcontextprotocol.io/specification/2025-11-25/client/roots.md"
+        },
+        {
+          "title": "MCP Elicitation",
+          "url": "https://modelcontextprotocol.io/specification/2025-11-25/client/elicitation.md"
+        },
+        {
+          "title": "Understanding MCP clients",
+          "url": "https://modelcontextprotocol.io/docs/learn/client-concepts.md"
+        }
+      ],
+      "uncertain": true
+    },
+    {
+      "id": "function-calling-bridge",
+      "title": "Relationship to LLM Tool Calling",
+      "term": "Function calling bridge",
+      "tags": [
+        "llm",
+        "tool-calling",
+        "bridge"
+      ],
+      "firstPrinciples": "First principles: the model provider and the integration protocol solve different halves of the problem. Provider tool calling lets a model express intent to call a function. MCP standardizes where those functions come from, how they are discovered, and how calls cross the app-server boundary.",
+      "definition": "MCP does not replace LLM function calling. The host typically translates MCP tool definitions into the model provider's tool or function format, lets the model choose a call, then translates that choice into MCP tools/call. MCP standardizes the tool layer across servers; the model still emits tool-use intent through its own API.",
+      "analogy": "Provider tool calling is the pilot saying which instrument to use. MCP is the standardized avionics bay that tells the aircraft what instruments are installed and how to operate them.",
+      "mentalModel": "Separate three layers: MCP server schema, host bridge, model API call. Bugs happen when learners think the server talks directly to the model. Usually it does not. The host mediates the model, user consent, and protocol client.",
+      "diagram": "graph TD\nServer[MCP server tool schemas]\nServer --> Client[MCP client]\nClient --> Host[Host bridge]\nHost --> ModelTools[Provider tool definitions]\nLLM[LLM] --> ToolIntent[Tool call intent]\nToolIntent --> Host\nHost --> Client\nClient --> ServerCall[tools call]",
+      "code": {
+        "language": "python",
+        "caption": "Conceptual bridge from MCP tools to provider tools",
+        "content": "def mcp_tool_to_provider_tool(mcp_tool: dict) -> dict:\n    \"\"\"Illustrative only: each LLM provider has its own exact shape.\"\"\"\n    return {\n        \"name\": mcp_tool[\"name\"],\n        \"description\": mcp_tool.get(\"description\", \"\"),\n        \"parameters\": mcp_tool[\"inputSchema\"],\n    }\n\n# Flow: list MCP tools, present provider tools to the model, then map\n# the model's chosen name and arguments back to MCP tools/call.\n"
+      },
+      "drills": [
+        {
+          "q": "Does MCP itself decide which tool the model should call?",
+          "a": "No. The model emits tool-use intent; the host bridges that intent to MCP."
+        },
+        {
+          "q": "What does MCP standardize in this bridge?",
+          "a": "Tool discovery, schemas, invocation, and results between host clients and servers."
+        },
+        {
+          "q": "Who usually mediates consent?",
+          "a": "The host application."
+        }
+      ],
+      "teachBack": "LLM tool calling and MCP are complementary. The model expresses a desired function call; MCP defines the interoperable source and invocation path for tools. The host bridges between provider-specific model APIs and protocol-standard MCP servers.",
+      "glossary": [
+        {
+          "term": "Function calling",
+          "definition": "Provider feature where an LLM emits a structured request to call a function or tool."
+        },
+        {
+          "term": "Host bridge",
+          "definition": "Host logic that maps MCP tool schemas and calls to the model provider's tool-calling format and back."
+        },
+        {
+          "term": "Tool-use intent",
+          "definition": "The model's structured choice of a tool name and arguments."
+        }
+      ],
+      "sources": [
+        {
+          "title": "MCP Tools",
+          "url": "https://modelcontextprotocol.io/specification/2025-11-25/server/tools.md"
+        },
+        {
+          "title": "MCP Sampling",
+          "url": "https://modelcontextprotocol.io/specification/2025-11-25/client/sampling.md"
+        },
+        {
+          "title": "MCP Architecture overview",
+          "url": "https://modelcontextprotocol.io/docs/learn/architecture.md"
+        }
+      ],
+      "uncertain": false
+    },
+    {
+      "id": "security-trust",
+      "title": "Security and Trust",
+      "term": "Consent and confused deputy defense",
+      "tags": [
+        "security",
+        "consent",
+        "managed-identity"
+      ],
+      "firstPrinciples": "First principles: MCP can expose data access and code execution. That means the safe default is not trust; it is explicit consent, least privilege, validation, audit, and clear boundaries. Any server connected to cloud resources becomes part of the user's security chain.",
+      "definition": "MCP security guidance emphasizes user consent and control, data privacy, tool safety, sampling controls, and robust authorization. Tool annotations are untrusted unless from trusted servers. Known risks include prompt injection, accidental data exfiltration, confused deputy problems, token passthrough, SSRF, and overbroad tool permissions. When an MCP server calls Azure resources, prefer managed identity so Azure issues scoped tokens to the workload instead of embedding keys or secrets.",
+      "analogy": "Treat each MCP server like a contractor entering a secure facility. It needs a badge, a job-specific area, an escort for dangerous actions, and a logbook.",
+      "mentalModel": "Security is shared. The server validates inputs and enforces access controls. The client shows what tools and data are being exposed. The host asks for consent on sensitive operations. Azure managed identity fits this model because identity is assigned to the running workload and governed by RBAC, reducing secret sprawl.",
+      "diagram": "graph TD\nUser[User consent]\nHost[Host UI]\nClient[MCP client]\nServer[MCP server]\nAzure[Azure resource]\nUser --> Host\nHost --> Client\nClient --> Server\nServer --> MI[Managed identity token]\nMI --> Azure\nServer --> Audit[Audit log]\nHost --> Confirm[Tool confirmation]",
+      "code": {
+        "language": "python",
+        "caption": "Azure access concept using managed identity aware credentials",
+        "content": "# Conceptual Azure-side pattern for a remote MCP server.\n# Do not put API keys, secrets, or service principal credentials in MCP config.\n# In Azure, assign a managed identity to the server workload and grant only\n# the exact RBAC role it needs on the target resource.\n\nfrom azure.identity import DefaultAzureCredential\n\ncredential = DefaultAzureCredential()  # Uses managed identity when running in Azure.\n# Example: pass credential to an Azure SDK client for the specific resource.\n# client = SomeAzureClient(endpoint=\"https://resource.example\", credential=credential)\n"
+      },
+      "drills": [
+        {
+          "q": "Why should hosts show tool inputs before sensitive calls?",
+          "a": "To prevent malicious or accidental data exfiltration and preserve user control."
+        },
+        {
+          "q": "Why are tool annotations not automatically trusted?",
+          "a": "A malicious server could misdescribe behavior, so clients must treat annotations as untrusted unless the server is trusted."
+        },
+        {
+          "q": "When a server calls Azure, what auth pattern should you prefer?",
+          "a": "Managed identity with least-privilege RBAC, not embedded keys or secrets."
+        }
+      ],
+      "teachBack": "MCP security starts with consent and least privilege. Tools can run code, resources can reveal data, and prompts can influence behavior, so hosts and servers must validate, disclose, and audit. For Azure-facing servers, managed identity is the forward path because it avoids storing secrets and supports RBAC-scoped access.",
+      "glossary": [
+        {
+          "term": "Prompt injection",
+          "definition": "Malicious instructions in data or tool output that try to override intended behavior."
+        },
+        {
+          "term": "Confused deputy",
+          "definition": "Attack where a trusted component is tricked into using its authority for an attacker."
+        },
+        {
+          "term": "Managed identity",
+          "definition": "Azure workload identity that obtains tokens without application-managed secrets."
+        },
+        {
+          "term": "Token passthrough",
+          "definition": "Forbidden pattern where a server accepts and forwards tokens not issued for that server."
+        }
+      ],
+      "sources": [
+        {
+          "title": "MCP Specification 2025-11-25",
+          "url": "https://modelcontextprotocol.io/specification/2025-11-25.md"
+        },
+        {
+          "title": "MCP Tools",
+          "url": "https://modelcontextprotocol.io/specification/2025-11-25/server/tools.md"
+        },
+        {
+          "title": "MCP Security Best Practices",
+          "url": "https://modelcontextprotocol.io/docs/tutorials/security/security_best_practices.md"
+        },
+        {
+          "title": "MCP Transports",
+          "url": "https://modelcontextprotocol.io/specification/2025-11-25/basic/transports.md"
+        }
+      ],
+      "uncertain": false
+    },
+    {
+      "id": "minimal-python-server",
+      "title": "Minimal Python MCP Server",
+      "term": "Python mcp server",
+      "tags": [
+        "sdk",
+        "python",
+        "server"
+      ],
+      "firstPrinciples": "First principles: an MCP server is just a program that declares capabilities and responds to protocol methods. The SDK removes JSON-RPC plumbing so you can focus on useful tools, resources, and prompts.",
+      "definition": "The official Python SDK package is mcp. Its FastMCP interface can define tools with decorators, resources with URI patterns, and prompts with prompt decorators, then run over stdio or Streamable HTTP.",
+      "analogy": "The SDK is a protocol radio kit. You still decide what messages and tools exist, but the kit handles the wiring, framing, and dispatch.",
+      "mentalModel": "Start small: one pure tool, one read-only resource, one prompt. Avoid cloud credentials in code. If the server later needs Azure access, deploy it with managed identity and least-privilege RBAC rather than embedding secrets.",
+      "diagram": "graph TD\nPython[server py]\nPython --> FastMCP[FastMCP]\nFastMCP --> Tool[add tool]\nFastMCP --> Resource[greeting resource]\nFastMCP --> Prompt[greet prompt]\nFastMCP --> Transport[stdio or streamable http]",
+      "code": {
+        "language": "python",
+        "caption": "Runnable minimal server using the official Python mcp SDK",
+        "content": "# server.py\n# Install in a project environment: python -m pip install mcp\n# Run locally over stdio: python server.py\n\nfrom mcp.server.fastmcp import FastMCP\n\nmcp = FastMCP(\"academy-demo\")\n\n@mcp.tool()\ndef add(a: int, b: int) -> int:\n    \"\"\"Add two integers. The docstring becomes tool description metadata.\"\"\"\n    return a + b\n\n@mcp.resource(\"greeting://{name}\")\ndef greeting(name: str) -> str:\n    \"\"\"Read-only context returned as a resource.\"\"\"\n    return f\"Hello, {name}. Welcome to MCP.\"\n\n@mcp.prompt()\ndef explain_term(term: str) -> str:\n    \"\"\"Reusable prompt template selected by a user.\"\"\"\n    return f\"Explain {term} using first principles and one analogy.\"\n\nif __name__ == \"__main__\":\n    # stdio is ideal when a host launches this as a local subprocess.\n    mcp.run(transport=\"stdio\")\n"
+      },
+      "drills": [
+        {
+          "q": "What package name does the Python SDK use?",
+          "a": "mcp."
+        },
+        {
+          "q": "What decorator defines a tool in FastMCP?",
+          "a": "@mcp.tool()."
+        },
+        {
+          "q": "Why start with stdio?",
+          "a": "It is simple for local subprocess servers and avoids deploying a remote service while learning."
+        }
+      ],
+      "teachBack": "A Python MCP server can be tiny. FastMCP lets you declare tools, resources, and prompts with decorators, then run them over a transport. Keep server code free of secrets; use managed identity later when cloud resources are needed.",
+      "glossary": [
+        {
+          "term": "FastMCP",
+          "definition": "High-level Python SDK interface for building MCP servers."
+        },
+        {
+          "term": "Decorator",
+          "definition": "Python syntax used by FastMCP to register tools, resources, and prompts."
+        },
+        {
+          "term": "stdio server",
+          "definition": "Local server process launched by the host and connected through standard streams."
+        }
+      ],
+      "sources": [
+        {
+          "title": "modelcontextprotocol Python SDK",
+          "url": "https://github.com/modelcontextprotocol/python-sdk"
+        },
+        {
+          "title": "Official MCP SDKs",
+          "url": "https://modelcontextprotocol.io/docs/sdk.md"
+        },
+        {
+          "title": "MCP Transports",
+          "url": "https://modelcontextprotocol.io/specification/2025-11-25/basic/transports.md"
+        }
+      ],
+      "uncertain": false
+    },
+    {
+      "id": "minimal-python-client",
+      "title": "Minimal Python MCP Client",
+      "term": "Python mcp client",
+      "tags": [
+        "sdk",
+        "python",
+        "client"
+      ],
+      "firstPrinciples": "First principles: a client is a disciplined protocol peer. It starts the transport, performs initialize, discovers capabilities, then calls only what the server advertised.",
+      "definition": "The Python SDK can build clients with ClientSession and transports such as stdio_client. A minimal client launches a local server process, initializes the MCP session, lists tools, and calls one tool with arguments.",
+      "analogy": "The client is a radio operator following procedure: open channel, perform comms check, ask for the catalog, then send a numbered request.",
+      "mentalModel": "Learn the client flow before relying on a host UI. It reveals the protocol sequence underneath: transport, ClientSession, initialize, list_tools, call_tool. Real hosts add model orchestration and user consent on top.",
+      "diagram": "sequenceDiagram\nparticipant Script as client py\nparticipant Server as server py\nScript->>Server: launch via stdio\nScript->>Server: initialize\nServer-->>Script: capabilities\nScript->>Server: tools list\nServer-->>Script: add tool\nScript->>Server: tools call add\nServer-->>Script: result five",
+      "code": {
+        "language": "python",
+        "caption": "Runnable minimal client for the server example",
+        "content": "# client.py\n# Install in a project environment: python -m pip install mcp\n# Place next to server.py, then run: python client.py\n\nimport asyncio\nfrom mcp import ClientSession, StdioServerParameters\nfrom mcp.client.stdio import stdio_client\n\nasync def main() -> None:\n    server = StdioServerParameters(command=\"python\", args=[\"server.py\"])\n\n    async with stdio_client(server) as (read, write):\n        async with ClientSession(read, write) as session:\n            await session.initialize()\n\n            tools = await session.list_tools()\n            print(\"tools:\", [tool.name for tool in tools.tools])\n\n            result = await session.call_tool(\"add\", {\"a\": 2, \"b\": 3})\n            print(\"result:\", result)\n\nif __name__ == \"__main__\":\n    asyncio.run(main())\n"
+      },
+      "drills": [
+        {
+          "q": "What call begins normal protocol use?",
+          "a": "session.initialize()."
+        },
+        {
+          "q": "What does list_tools map to at the protocol layer?",
+          "a": "tools/list."
+        },
+        {
+          "q": "What does call_tool map to?",
+          "a": "tools/call."
+        }
+      ],
+      "teachBack": "A Python MCP client opens a transport, creates a session, initializes, then uses advertised capabilities. The SDK hides JSON-RPC details but preserves the same lifecycle. This is the simplest way to test a local server without a full host application.",
+      "glossary": [
+        {
+          "term": "ClientSession",
+          "definition": "Python SDK object representing an initialized MCP client session."
+        },
+        {
+          "term": "StdioServerParameters",
+          "definition": "Python SDK configuration for launching a local stdio server."
+        },
+        {
+          "term": "stdio_client",
+          "definition": "Python SDK helper that connects to a stdio MCP server."
+        }
+      ],
+      "sources": [
+        {
+          "title": "modelcontextprotocol Python SDK",
+          "url": "https://github.com/modelcontextprotocol/python-sdk"
+        },
+        {
+          "title": "Official MCP SDKs",
+          "url": "https://modelcontextprotocol.io/docs/sdk.md"
+        },
+        {
+          "title": "MCP Lifecycle",
+          "url": "https://modelcontextprotocol.io/specification/2025-11-25/basic/lifecycle.md"
+        }
+      ],
+      "uncertain": false
+    },
+    {
+      "id": "official-sdks",
+      "title": "Official SDKs",
+      "term": "MCP SDKs",
+      "tags": [
+        "sdk",
+        "ecosystem",
+        "languages"
+      ],
+      "firstPrinciples": "First principles: a protocol becomes useful when many builders can implement it correctly without hand-writing every wire detail. SDKs package the schema, message routing, transports, and ergonomic language patterns.",
+      "definition": "Official MCP SDKs are available for multiple languages. The docs list TypeScript, Python, C Sharp, Go, Java, Rust, Swift, Ruby, PHP, and Kotlin with tier classifications. The TypeScript and Python repositories are official implementations; their READMEs note stable v1 lines and in-development v2 work as of the current docs.",
+      "analogy": "The spec is the military standard; SDKs are approved toolkits that help units implement the standard without machining every part by hand.",
+      "mentalModel": "Prefer official SDKs for production and learning. Read the spec for truth, use SDKs for implementation. Watch version notes carefully because SDK major versions may track new protocol releases at different speeds.",
+      "diagram": "graph TD\nSpec[MCP specification]\nSpec --> Python[Python SDK]\nSpec --> TypeScript[TypeScript SDK]\nSpec --> CSharp[C Sharp SDK]\nSpec --> Go[Go SDK]\nSpec --> Other[Java Rust Swift Ruby PHP Kotlin]\nPython --> Servers[Servers]\nPython --> Clients[Clients]",
+      "code": {
+        "language": "python",
+        "caption": "Check an installed Python SDK version",
+        "content": "# Run inside your project environment after installing mcp.\n# This avoids global package installation.\nimport importlib.metadata\n\nprint(importlib.metadata.version(\"mcp\"))\n"
+      },
+      "drills": [
+        {
+          "q": "Should you hand-roll JSON-RPC before trying the SDK?",
+          "a": "Usually no. Use the official SDK, then inspect JSON-RPC to understand behavior."
+        },
+        {
+          "q": "Name two Tier 1 SDK languages listed by official docs.",
+          "a": "TypeScript and Python. C Sharp and Go are also listed as Tier 1."
+        },
+        {
+          "q": "Why watch SDK version notes?",
+          "a": "Because SDK stable and pre-release branches can differ while specs evolve."
+        }
+      ],
+      "teachBack": "The spec defines MCP; SDKs make it practical. Python and TypeScript are official, widely used SDKs, with several other language SDKs listed by the docs. Use SDKs to build, and use the spec to verify protocol semantics.",
+      "glossary": [
+        {
+          "term": "SDK",
+          "definition": "Software development kit that implements MCP protocol details for a language."
+        },
+        {
+          "term": "Tier",
+          "definition": "Official classification for SDK feature completeness and maintenance commitment."
+        },
+        {
+          "term": "Version line",
+          "definition": "A stable or pre-release SDK branch that may target different protocol maturity."
+        }
+      ],
+      "sources": [
+        {
+          "title": "Official MCP SDKs",
+          "url": "https://modelcontextprotocol.io/docs/sdk.md"
+        },
+        {
+          "title": "modelcontextprotocol Python SDK",
+          "url": "https://github.com/modelcontextprotocol/python-sdk"
+        },
+        {
+          "title": "modelcontextprotocol TypeScript SDK",
+          "url": "https://github.com/modelcontextprotocol/typescript-sdk"
+        }
+      ],
+      "uncertain": false
+    }
+  ],
+  "quiz": [
+    {
+      "q": "What problem does MCP primarily solve?",
+      "options": [
+        "The N times M integration explosion between AI hosts and external systems",
+        "Replacing all LLM APIs with one model",
+        "Encrypting every prompt automatically",
+        "Deploying Azure resources without identity"
+      ],
+      "answer": 0,
+      "explain": "MCP standardizes host to server integrations so every host does not need a custom connector to every system."
+    },
+    {
+      "q": "In MCP architecture, what does the host create for each server connection?",
+      "options": [
+        "One MCP client",
+        "One model checkpoint",
+        "One Azure subscription",
+        "One prompt injection filter"
+      ],
+      "answer": 0,
+      "explain": "The host embeds one MCP client per MCP server connection."
+    },
+    {
+      "q": "Which JSON-RPC message expects no response?",
+      "options": [
+        "Notification",
+        "Request",
+        "Response",
+        "Error"
+      ],
+      "answer": 0,
+      "explain": "A notification has no id and expects no response."
+    },
+    {
+      "q": "What is the current remote standard transport name?",
+      "options": [
+        "Streamable HTTP",
+        "HTTP plus SSE",
+        "WebSocket only",
+        "gRPC stream"
+      ],
+      "answer": 0,
+      "explain": "The current standard remote transport is Streamable HTTP; HTTP plus SSE is the older deprecated transport."
+    },
+    {
+      "q": "Which MCP server primitive is model-controlled?",
+      "options": [
+        "Tools",
+        "Resources",
+        "Prompts",
+        "Roots"
+      ],
+      "answer": 0,
+      "explain": "Tools are designed so the model can discover and invoke them, subject to host consent and policy."
+    },
+    {
+      "q": "Which methods are used for tool discovery and invocation?",
+      "options": [
+        "tools/list and tools/call",
+        "resources/list and resources/read",
+        "prompts/list and prompts/get",
+        "roots/list and sampling/createMessage"
+      ],
+      "answer": 0,
+      "explain": "Clients discover tools with tools/list and invoke them with tools/call."
+    },
+    {
+      "q": "What identifies an MCP resource?",
+      "options": [
+        "A URI",
+        "A secret key",
+        "A model name",
+        "A git branch only"
+      ],
+      "answer": 0,
+      "explain": "Resources are uniquely identified by URIs."
+    },
+    {
+      "q": "What should an Azure-facing MCP server prefer for Azure resource access?",
+      "options": [
+        "Managed identity with least privilege RBAC",
+        "Hard-coded API keys",
+        "Checked-in service principal secrets",
+        "User passwords collected by elicitation form"
+      ],
+      "answer": 0,
+      "explain": "Managed identity avoids application-managed secrets and supports Azure RBAC-scoped access."
+    },
+    {
+      "q": "How does MCP relate to LLM function calling?",
+      "options": [
+        "MCP standardizes the tool layer while the model still emits tool-call intent",
+        "MCP eliminates all model tool calling",
+        "MCP requires every server to call the model directly",
+        "MCP only supports prompts and not tools"
+      ],
+      "answer": 0,
+      "explain": "Hosts bridge MCP tool schemas and calls to provider-specific function or tool calling APIs."
+    }
+  ]
+}

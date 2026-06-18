@@ -1,0 +1,828 @@
+{
+  "id": "mcp-icm",
+  "title": "ICM MCP Connector",
+  "icon": "🚨",
+  "order": 8,
+  "summary": "Learn the transferable A to Z pattern for connecting a Foundry agent to an incident-management system like Microsoft IcM through an MCP server using managed identity only, with honest uncertainty where public IcM APIs are not verifiable, human approval for writes, least privilege, auditability, and representative code you can adapt to a real internal contract.",
+  "concepts": [
+    {
+      "id": "what-is-icm",
+      "title": "What IcM Means in This Lane",
+      "term": "IcM incident management",
+      "tags": [
+        "incident-management",
+        "icm",
+        "domain"
+      ],
+      "firstPrinciples": "First principles: reliable services fail in real life. When failure affects customers, engineers need one shared record of truth, clear ownership, urgency, escalation, mitigation work, and learning afterward. Incident management is the operating system for that emergency response.",
+      "definition": "IcM, often written ICM or IcM inside Microsoft contexts, refers to incident management tooling and process for on-call engineering. Public Microsoft documents describe incident management practices, on-call response, containment, recovery, and postmortems, but a public official IcM MCP API surface was not verified for this lesson.",
+      "analogy": "Think of IcM as an emergency dispatch center for cloud services: alarms become cases, dispatchers route them to the right crew, responders acknowledge, commanders track severity, and everyone records what happened so the next emergency is handled faster.",
+      "mentalModel": "Treat every incident as a living operational record: who owns it, what broke, how bad it is, what is being done, whether customers are still impacted, and what must be learned after resolution. In this lane, IcM-specific implementation details are internal or representative; the transferable pattern works for any incident backend with MCP and managed identity.",
+      "diagram": "graph TD\nAlert[Monitor alert] --> Incident[Incident record]\nIncident --> Owner[Owning team]\nOwner --> Responder[On call responder]\nResponder --> Mitigation[Mitigation work]\nMitigation --> Learning[Post incident learning]",
+      "code": {
+        "language": "python",
+        "caption": "Representative incident record shape",
+        "content": "# Representative domain object. This is not an official IcM API model.\nincident = {\n    \"id\": \"INC123456\",\n    \"title\": \"Checkout latency above threshold\",\n    \"severity\": \"Sev2\",\n    \"owning_team\": \"Payments OnCall\",\n    \"status\": \"acknowledged\",\n    \"customer_impact\": \"Some checkouts exceed 5 seconds\",\n    \"current_mitigation\": \"Rolling back last deployment\",\n}\nprint(f\"{incident['severity']} {incident['status']}: {incident['title']}\")\n"
+      },
+      "drills": [
+        {
+          "q": "What is the core job of an incident system?",
+          "a": "Maintain a shared, auditable record of urgent service disruption work: ownership, severity, status, actions, and learning."
+        },
+        {
+          "q": "Why is this concept marked uncertain?",
+          "a": "Because IcM is largely Microsoft-internal and a public official IcM MCP server or API surface was not verified."
+        },
+        {
+          "q": "What transfers to other tools like PagerDuty or ServiceNow?",
+          "a": "The lifecycle, permissions, MCP connector shape, approval controls, and managed-identity token pattern."
+        }
+      ],
+      "teachBack": "IcM is best understood as incident command software for engineering teams. Public docs confirm Microsoft incident-management practices, but not a public IcM MCP API. Therefore, learn the incident-system pattern and mark IcM-specific examples as representative.",
+      "glossary": [
+        {
+          "term": "Incident",
+          "definition": "A tracked operational event that disrupts, degrades, or threatens a service."
+        },
+        {
+          "term": "Severity",
+          "definition": "A priority level indicating customer impact and urgency."
+        },
+        {
+          "term": "On-call",
+          "definition": "The engineer or team currently responsible for urgent response."
+        }
+      ],
+      "sources": [
+        {
+          "title": "Microsoft Service Assurance: Security incident management overview",
+          "url": "https://learn.microsoft.com/en-us/compliance/assurance/assurance-incident-management"
+        },
+        {
+          "title": "Microsoft Well-Architected Framework: Develop an incident management practice",
+          "url": "https://github.com/MicrosoftDocs/well-architected/blob/main/well-architected/design-guides/incident-management.md"
+        }
+      ],
+      "uncertain": true
+    },
+    {
+      "id": "incident-vocabulary",
+      "title": "Incident Domain Vocabulary",
+      "term": "incident vocabulary",
+      "tags": [
+        "severity",
+        "on-call",
+        "postmortem"
+      ],
+      "firstPrinciples": "First principles: emergencies punish vague language. If responders disagree about words like acknowledged, mitigated, resolved, severity, or escalation, they waste time when minutes matter. A shared vocabulary creates speed and safety.",
+      "definition": "Incident vocabulary names the control points of response: severity expresses impact, service or team owns the problem, on-call identifies the first responder, escalation brings more authority or expertise, mitigation reduces impact, resolution closes active response, and postmortem captures learning.",
+      "analogy": "It is like radio procedure in a fire department. Everyone knows the difference between dispatched, on scene, contained, all clear, and after-action review, so the team coordinates without long explanations.",
+      "mentalModel": "Read an incident record like a cockpit panel. Severity tells altitude loss, status tells flight phase, owner tells who has the controls, discussion tells what was tried, and postmortem tells how the aircraft design or checklist must improve.",
+      "diagram": "graph TD\nSeverity[Severity] --> Urgency[Response urgency]\nOwner[Owning team] --> Accountability[Accountability]\nOnCall[On call] --> FirstResponse[First response]\nEscalation[Escalation] --> Experts[More help]\nPostmortem[Postmortem] --> Learning[Future prevention]",
+      "code": {
+        "language": "python",
+        "caption": "Representative status vocabulary",
+        "content": "# Representative normalization table for an incident MCP connector.\n# A real backend may use different names and values.\nSTATUS_MEANING = {\n    \"new\": \"Created but not yet owned by a responder\",\n    \"acknowledged\": \"A responder accepted responsibility\",\n    \"mitigated\": \"Customer impact is reduced or stopped\",\n    \"resolved\": \"Active response is complete\",\n    \"postmortem\": \"Learning and follow-up actions are being captured\",\n}\nfor status, meaning in STATUS_MEANING.items():\n    print(f\"{status}: {meaning}\")\n"
+      },
+      "drills": [
+        {
+          "q": "What does mitigation mean?",
+          "a": "Reducing or stopping customer impact, even if the final root-cause fix is not complete."
+        },
+        {
+          "q": "Why separate mitigated from resolved?",
+          "a": "Because service impact can be stopped before cleanup, validation, and final closure are complete."
+        },
+        {
+          "q": "What is escalation?",
+          "a": "Bringing in more authority, expertise, or management attention when the current responder cannot finish safely or quickly."
+        }
+      ],
+      "teachBack": "Incident vocabulary is the shared language of emergency engineering. Severity, owner, on-call, escalation, mitigation, resolution, and postmortem each answer a different operational question. Knowing those words lets an agent summarize and act without confusing response phases.",
+      "glossary": [
+        {
+          "term": "Mitigation",
+          "definition": "Action that reduces current customer or service impact."
+        },
+        {
+          "term": "Resolution",
+          "definition": "Closure of active incident response after validation."
+        },
+        {
+          "term": "Postmortem",
+          "definition": "A structured review of causes, response, and prevention work."
+        }
+      ],
+      "sources": [
+        {
+          "title": "Microsoft Service Assurance: Security incident management overview",
+          "url": "https://learn.microsoft.com/en-us/compliance/assurance/assurance-incident-management"
+        },
+        {
+          "title": "Microsoft Well-Architected Framework: Develop an incident management practice",
+          "url": "https://github.com/MicrosoftDocs/well-architected/blob/main/well-architected/design-guides/incident-management.md"
+        }
+      ],
+      "uncertain": false
+    },
+    {
+      "id": "incident-lifecycle",
+      "title": "Incident Lifecycle Mental Model",
+      "term": "incident lifecycle",
+      "tags": [
+        "lifecycle",
+        "workflow",
+        "diagram"
+      ],
+      "firstPrinciples": "First principles: an incident is not a single event; it is a state machine. The system must move from uncertainty to ownership, from ownership to impact reduction, from impact reduction to closure, and from closure to learning.",
+      "definition": "A practical lifecycle is new to acknowledged to mitigated to resolved to postmortem. Some organizations add detected, triaged, contained, recovered, or closed, but the core shape remains ownership, action, stabilization, closure, and learning.",
+      "analogy": "Picture a hospital emergency room: patient arrives, triage accepts the case, doctors stabilize the patient, discharge happens when safe, and a review improves future care.",
+      "mentalModel": "Every MCP write tool should respect the lifecycle. Acknowledge moves ownership, update adds evidence, mitigate records impact reduction, resolve closes active response, and postmortem records preventive work. Do not let an agent skip states without policy.",
+      "diagram": "stateDiagram-v2\nNew --> Acknowledged\nAcknowledged --> Mitigated\nMitigated --> Resolved\nResolved --> Postmortem\nAcknowledged --> Escalated\nEscalated --> Mitigated",
+      "code": {
+        "language": "python",
+        "caption": "Representative incident state machine",
+        "content": "# Representative lifecycle guardrail for an incident MCP connector.\nALLOWED_TRANSITIONS = {\n    \"new\": {\"acknowledged\"},\n    \"acknowledged\": {\"mitigated\", \"escalated\"},\n    \"escalated\": {\"mitigated\"},\n    \"mitigated\": {\"resolved\"},\n    \"resolved\": {\"postmortem\"},\n}\n\ndef can_transition(current: str, desired: str) -> bool:\n    return desired in ALLOWED_TRANSITIONS.get(current, set())\n\nprint(can_transition(\"new\", \"resolved\"))       # False: too much authority for one jump.\nprint(can_transition(\"new\", \"acknowledged\"))  # True: normal first response.\n"
+      },
+      "drills": [
+        {
+          "q": "Why model incidents as a state machine?",
+          "a": "It prevents ambiguous status changes and makes approvals, audit, and automation safer."
+        },
+        {
+          "q": "Which transition proves a human responder accepted ownership?",
+          "a": "New to acknowledged."
+        },
+        {
+          "q": "What phase turns pain into future reliability?",
+          "a": "Postmortem."
+        }
+      ],
+      "teachBack": "The incident lifecycle is a state machine for emergency response. New means no one owns it yet, acknowledged means a responder accepted it, mitigated means impact is reduced, resolved means response is done, and postmortem means learning is captured. Agents must honor that flow rather than improvising unsafe jumps.",
+      "glossary": [
+        {
+          "term": "Acknowledged",
+          "definition": "A responder has accepted responsibility for the incident."
+        },
+        {
+          "term": "Escalated",
+          "definition": "The incident has been raised to additional responders or authority."
+        },
+        {
+          "term": "State machine",
+          "definition": "A controlled set of states and allowed transitions."
+        }
+      ],
+      "sources": [
+        {
+          "title": "Microsoft Service Assurance: Security incident management overview",
+          "url": "https://learn.microsoft.com/en-us/compliance/assurance/assurance-incident-management"
+        },
+        {
+          "title": "Model Context Protocol: Tools",
+          "url": "https://modelcontextprotocol.io/specification/2025-06-18/server/tools"
+        }
+      ],
+      "uncertain": false
+    },
+    {
+      "id": "mcp-connector-pattern",
+      "title": "MCP Connector Pattern for Incidents",
+      "term": "incident MCP connector",
+      "tags": [
+        "mcp",
+        "tools",
+        "connector"
+      ],
+      "firstPrinciples": "First principles: an LLM cannot safely act on an incident system by guessing URLs or database queries. It needs a contract. MCP provides that contract: the server advertises tools and schemas, the client asks to call one, and the host can require approval.",
+      "definition": "An incident MCP connector is a server that exposes incident-management capabilities as MCP tools. Representative tools include query_incidents, get_incident, create_incident, update_incident, add_discussion, acknowledge_incident, and get_on_call. This tool surface is representative, not a verified public IcM API.",
+      "analogy": "MCP is a universal adapter. The agent speaks MCP; the server translates to the incident backend; the backend remains protected behind identity, policy, and audit.",
+      "mentalModel": "Separate three layers: the Foundry agent decides intent, the MCP protocol carries structured calls, and the incident connector enforces backend permissions. The model does not receive raw credentials and does not bypass the connector.",
+      "diagram": "sequenceDiagram\nparticipant User\nparticipant Agent\nparticipant MCP\nparticipant IncidentSystem\nUser->>Agent: Show Sev2 incidents for payments\nAgent->>MCP: tools call query incidents\nMCP->>IncidentSystem: Authorized backend request\nIncidentSystem-->>MCP: Incident results\nMCP-->>Agent: Structured tool result\nAgent-->>User: Summary and next steps",
+      "code": {
+        "language": "python",
+        "caption": "Representative incident MCP tool catalog",
+        "content": "# Representative MCP tool definitions. Not an official IcM schema.\nincident_tools = [\n    {\n        \"name\": \"query_incidents\",\n        \"description\": \"Find incidents by service, severity, status, or time range.\",\n        \"inputSchema\": {\n            \"type\": \"object\",\n            \"properties\": {\n                \"service\": {\"type\": \"string\"},\n                \"severity\": {\"type\": \"string\"},\n                \"status\": {\"type\": \"string\"},\n            },\n        },\n    },\n    {\n        \"name\": \"acknowledge_incident\",\n        \"description\": \"Mark an incident as acknowledged by the current authorized identity.\",\n        \"inputSchema\": {\"type\": \"object\", \"required\": [\"incident_id\"]},\n    },\n]\nprint([tool[\"name\"] for tool in incident_tools])\n"
+      },
+      "drills": [
+        {
+          "q": "What does MCP add between an agent and incident system?",
+          "a": "A structured, discoverable, auditable tool contract."
+        },
+        {
+          "q": "Are the listed IcM tool names official?",
+          "a": "No. They are representative of a likely incident-management connector surface."
+        },
+        {
+          "q": "Where should backend-specific rules live?",
+          "a": "Inside the MCP server and the incident system authorization layer, not in prompt text alone."
+        }
+      ],
+      "teachBack": "An incident MCP connector exposes safe incident operations as tools. Foundry can attach that server so the agent selects tools from schemas instead of guessing APIs. The tool names here are representative because no public official IcM MCP server was verified.",
+      "glossary": [
+        {
+          "term": "MCP server",
+          "definition": "A service that exposes resources, prompts, or tools to MCP clients."
+        },
+        {
+          "term": "Tool schema",
+          "definition": "JSON Schema describing the arguments a tool accepts."
+        },
+        {
+          "term": "Connector",
+          "definition": "An adapter that translates a standard interface into backend-specific calls."
+        }
+      ],
+      "sources": [
+        {
+          "title": "Model Context Protocol Specification",
+          "url": "https://modelcontextprotocol.io/specification/2025-06-18"
+        },
+        {
+          "title": "Model Context Protocol: Tools",
+          "url": "https://modelcontextprotocol.io/specification/2025-06-18/server/tools"
+        },
+        {
+          "title": "Microsoft Learn: Connect to MCP Server Endpoints for agents",
+          "url": "https://learn.microsoft.com/en-us/azure/foundry/agents/how-to/tools/model-context-protocol"
+        }
+      ],
+      "uncertain": true
+    },
+    {
+      "id": "mapping-icm-to-mcp",
+      "title": "Map Incident Concepts to MCP Primitives",
+      "term": "incident MCP mapping",
+      "tags": [
+        "resources",
+        "tools",
+        "mapping"
+      ],
+      "firstPrinciples": "First principles: not every piece of backend data should become a write action. Context should be read as resources or returned by tools; changes should be explicit tools; reusable workflows can be prompts.",
+      "definition": "In a representative incident connector, incidents are resources or structured tool results, write operations are tools, and response playbooks are prompts. For example, an incident detail page is context, acknowledge_incident is an action, and summarize_current_incident could be a prompt template.",
+      "analogy": "A mechanic's shop has manuals, tools, and checklists. Manuals are resources, wrenches are tools, and checklists are prompts. Mixing them up causes unsafe work.",
+      "mentalModel": "Use MCP resources for things the model reads, tools for things that call backend behavior, and prompts for repeatable incident workflows. In an incident domain, this distinction is a safety boundary.",
+      "diagram": "graph TD\nIncidentRecord[Incident record] --> Resource[Resource or result]\nAcknowledge[Acknowledge action] --> Tool[Tool]\nPostmortemTemplate[Postmortem template] --> Prompt[Prompt]\nDiscussion[Discussion thread] --> Resource[Resource or result]",
+      "code": {
+        "language": "python",
+        "caption": "Representative mapping from incident domain to MCP",
+        "content": "# Representative mapping table for designing an incident MCP server.\n# This is a design aid, not an official IcM contract.\nmapping = {\n    \"incident details\": \"resource or get_incident tool result\",\n    \"incident search\": \"query_incidents tool\",\n    \"acknowledge\": \"acknowledge_incident tool requiring approval\",\n    \"discussion\": \"add_discussion tool plus discussion resource\",\n    \"postmortem outline\": \"prompt template\",\n}\nfor concept, primitive in mapping.items():\n    print(f\"{concept} -> {primitive}\")\n"
+      },
+      "drills": [
+        {
+          "q": "Which MCP primitive should change incident state?",
+          "a": "A tool, because state changes are explicit actions."
+        },
+        {
+          "q": "What primitive fits a postmortem checklist?",
+          "a": "A prompt, because it is a reusable workflow template."
+        },
+        {
+          "q": "Why not make every incident field a tool?",
+          "a": "Read-only context is safer as resources or structured results; tools should represent intentional operations."
+        }
+      ],
+      "teachBack": "MCP design starts by sorting backend concepts into resources, tools, and prompts. Incident records are context, lifecycle changes are tools, and playbooks are prompts. This mapping is representative for IcM because the official public IcM MCP contract was not found.",
+      "glossary": [
+        {
+          "term": "Resource",
+          "definition": "Contextual data exposed by an MCP server."
+        },
+        {
+          "term": "Prompt",
+          "definition": "A reusable message or workflow template exposed by an MCP server."
+        },
+        {
+          "term": "Write tool",
+          "definition": "A tool that changes backend state and therefore needs stronger controls."
+        }
+      ],
+      "sources": [
+        {
+          "title": "Model Context Protocol Specification",
+          "url": "https://modelcontextprotocol.io/specification/2025-06-18"
+        },
+        {
+          "title": "Model Context Protocol: Tools",
+          "url": "https://modelcontextprotocol.io/specification/2025-06-18/server/tools"
+        }
+      ],
+      "uncertain": true
+    },
+    {
+      "id": "foundry-agent-attach",
+      "title": "Attach the MCP Server to a Foundry Agent",
+      "term": "Foundry MCP tool attachment",
+      "tags": [
+        "foundry",
+        "agent",
+        "mcp"
+      ],
+      "firstPrinciples": "First principles: the model should not know how to authenticate to every backend. Foundry hosts the agent, attaches an MCP endpoint as a tool, and mediates tool approval and execution.",
+      "definition": "Microsoft Foundry Agent Service supports connecting agents to remote MCP server endpoints. The agent receives a server label, server URL, optional project connection for authentication, and approval policy. The agent can then discover and call MCP tools through Foundry.",
+      "analogy": "Attaching an MCP server is like adding a specialized radio channel to a command center. The commander can request information or actions over that channel, but the channel still has call signs, permissions, and approval rules.",
+      "mentalModel": "Use the generic MCP attach pattern: create an AIProjectClient with DefaultAzureCredential, define an MCPTool with server_label and server_url, require approval for risky calls, and add the tool to the agent definition. The incident server URL is representative until your organization provides the real endpoint.",
+      "diagram": "graph TD\nProject[Foundry project] --> Agent[Agent]\nAgent --> MCPTool[MCP tool attachment]\nMCPTool --> Server[Incident MCP server]\nServer --> Backend[Incident backend]",
+      "code": {
+        "language": "python",
+        "caption": "Representative Foundry agent with an incident MCP tool",
+        "content": "# Representative Foundry SDK wiring. The MCP mechanics are documented by Microsoft;\n# the incident server URL and tool names are representative.\nfrom azure.identity import DefaultAzureCredential\nfrom azure.ai.projects import AIProjectClient\nfrom azure.ai.projects.models import PromptAgentDefinition, MCPTool\n\nPROJECT_ENDPOINT = \"https://YOUR-RESOURCE.services.ai.azure.com/api/projects/YOUR-PROJECT\"\nINCIDENT_MCP_URL = \"https://incident-mcp.contoso.internal/mcp\"  # representative\n\nproject = AIProjectClient(\n    endpoint=PROJECT_ENDPOINT,\n    credential=DefaultAzureCredential(),  # managed identity when running in Azure\n)\n\nincident_mcp = MCPTool(\n    server_label=\"incident-management\",\n    server_url=INCIDENT_MCP_URL,\n    require_approval=\"always\",  # safest default for incident write-capable tools\n    # project_connection_id may be used when your Foundry project stores the MCP auth setup.\n)\n\nagent = project.agents.create_version(\n    agent_name=\"IncidentHelper\",\n    definition=PromptAgentDefinition(\n        model=\"gpt-5-mini\",\n        instructions=\"Help responders read incidents. Ask approval before writes.\",\n        tools=[incident_mcp],\n    ),\n)\nprint(agent.name, agent.version)\n"
+      },
+      "drills": [
+        {
+          "q": "What are the two key MCP attachment fields?",
+          "a": "server_label and server_url."
+        },
+        {
+          "q": "Why set require_approval to always in this lane?",
+          "a": "Incident tools can change operational records, so human approval should be the default."
+        },
+        {
+          "q": "What credential object is used by the Foundry client?",
+          "a": "DefaultAzureCredential."
+        }
+      ],
+      "teachBack": "Foundry attaches an MCP server to an agent as a tool. The agent can then discover and call server tools through Foundry's orchestration path. For incident systems, attach with managed identity and require approval for write actions.",
+      "glossary": [
+        {
+          "term": "AIProjectClient",
+          "definition": "Python SDK client for a Foundry project endpoint."
+        },
+        {
+          "term": "MCPTool",
+          "definition": "Foundry SDK model describing a remote MCP server attached to an agent."
+        },
+        {
+          "term": "Approval policy",
+          "definition": "Configuration controlling whether tool calls require human confirmation."
+        }
+      ],
+      "sources": [
+        {
+          "title": "Microsoft Learn: Connect to MCP Server Endpoints for agents",
+          "url": "https://learn.microsoft.com/en-us/azure/foundry/agents/how-to/tools/model-context-protocol"
+        },
+        {
+          "title": "Microsoft Learn: Set Up MCP Server Authentication",
+          "url": "https://learn.microsoft.com/en-us/azure/foundry/agents/how-to/mcp-authentication"
+        }
+      ],
+      "uncertain": false
+    },
+    {
+      "id": "managed-identity-auth-flow",
+      "title": "Managed Identity Authentication Flow",
+      "term": "managed identity to incident backend",
+      "tags": [
+        "managed-identity",
+        "entra",
+        "auth"
+      ],
+      "firstPrinciples": "First principles: secrets leak, expire badly, and get copied into places they do not belong. Managed identity replaces stored credentials with a Microsoft Entra identity assigned to the workload. The workload asks Entra for a short-lived token for a specific audience.",
+      "definition": "For an incident MCP connector, the Foundry agent or project managed identity authenticates to the MCP server or backend with Microsoft Entra. The token audience should match the incident service or MCP server application ID URI. Permissions are granted in the incident system and Entra; no keys, client secrets, or service-principal passwords are used.",
+      "analogy": "Managed identity is a government badge issued to the machine. The responder does not carry a reusable master key; each doorway checks the badge and grants only the rooms authorized for that badge.",
+      "mentalModel": "Flow: agent identity exists, role assignment is granted, Foundry requests a token, MCP server validates the token audience and issuer, then backend authorization decides read or write. Authentication proves who the workload is; authorization decides what it may do.",
+      "diagram": "sequenceDiagram\nparticipant Agent\nparticipant Entra\nparticipant MCP\nparticipant IncidentBackend\nAgent->>Entra: Request token for incident audience\nEntra-->>Agent: Short lived access token\nAgent->>MCP: MCP request with bearer token\nMCP->>MCP: Validate issuer audience signature\nMCP->>IncidentBackend: Authorized incident request\nIncidentBackend-->>MCP: Result",
+      "code": {
+        "language": "python",
+        "caption": "Managed identity token acquisition for a representative incident audience",
+        "content": "# Managed identity only. No keys, no client secrets, no service principal password.\nfrom azure.identity import DefaultAzureCredential\n\ncredential = DefaultAzureCredential()\n\n# Representative audience. Your organization must provide the real application ID URI\n# or scope for the incident MCP server or incident backend.\nINCIDENT_AUDIENCE_SCOPE = \"api://incident-mcp/.default\"  # representative\n\ntoken = credential.get_token(INCIDENT_AUDIENCE_SCOPE)\nprint(\"Got token expiring at\", token.expires_on)\n# Send token.token as Authorization: Bearer to the trusted MCP server if your design\n# requires the client to call the server directly. Foundry-managed connections may\n# perform this token acquisition inside Agent Service instead.\n"
+      },
+      "drills": [
+        {
+          "q": "What does managed identity remove?",
+          "a": "Stored secrets such as keys, passwords, and certificates for the workload."
+        },
+        {
+          "q": "What is the token audience?",
+          "a": "The intended recipient of the token, such as the incident MCP server or incident backend application."
+        },
+        {
+          "q": "Is authentication the same as authorization?",
+          "a": "No. Authentication proves identity; authorization grants allowed actions."
+        }
+      ],
+      "teachBack": "Managed identity lets the agent or project obtain Entra tokens without secrets. The token is scoped to an audience, then the MCP server and backend enforce permissions. This is the required pattern for this lane: no keys, no secrets, no service-principal credentials.",
+      "glossary": [
+        {
+          "term": "Managed identity",
+          "definition": "An Entra workload identity assigned to an Azure resource so code can obtain tokens without managing credentials."
+        },
+        {
+          "term": "Audience",
+          "definition": "The service for which an access token is intended."
+        },
+        {
+          "term": "DefaultAzureCredential",
+          "definition": "Azure SDK credential chain that uses managed identity in Azure-hosted environments."
+        }
+      ],
+      "sources": [
+        {
+          "title": "Microsoft Learn: Set Up MCP Server Authentication",
+          "url": "https://learn.microsoft.com/en-us/azure/foundry/agents/how-to/mcp-authentication"
+        },
+        {
+          "title": "Microsoft Entra: Managed identities for Azure resources",
+          "url": "https://learn.microsoft.com/en-us/entra/identity/managed-identities-azure-resources/overview"
+        },
+        {
+          "title": "Microsoft Learn: Authenticate Azure-hosted Python apps using system-assigned managed identity",
+          "url": "https://learn.microsoft.com/en-us/azure/developer/python/sdk/authentication/system-assigned-managed-identity"
+        }
+      ],
+      "uncertain": false
+    },
+    {
+      "id": "least-privilege-rbac",
+      "title": "Least Privilege for Incident Tools",
+      "term": "incident RBAC",
+      "tags": [
+        "rbac",
+        "least-privilege",
+        "permissions"
+      ],
+      "firstPrinciples": "First principles: identity without least privilege is just a safer way to do too much damage. An incident-reading agent should not be able to create, acknowledge, or resolve incidents unless that is explicitly required and approved.",
+      "definition": "Least privilege means granting the managed identity only the incident-system actions it needs: read incidents, read on-call schedules, add discussion, acknowledge, create, update, or resolve. Separate read-only and write-capable agents or identities when possible.",
+      "analogy": "A hospital volunteer may read a room number, a nurse may update vitals, and a doctor may discharge the patient. All have badges, but badges do not grant identical powers.",
+      "mentalModel": "Build a permission matrix before writing code. Map each MCP tool to the minimum role. Prefer read-only by default; put create, acknowledge, update, and resolve behind approval and stronger roles. Audit every write with identity, arguments, and approval record.",
+      "diagram": "graph TD\nReadOnly[Read only identity] --> Query[query incidents]\nReadOnly --> GetOnCall[get on call]\nWriter[Write identity] --> AddDiscussion[add discussion]\nWriter --> Acknowledge[acknowledge]\nCommander[Commander identity] --> Resolve[resolve incident]",
+      "code": {
+        "language": "python",
+        "caption": "Representative RBAC gate for MCP incident tools",
+        "content": "# Representative policy matrix. Enforce this in the MCP server before backend calls.\nTOOL_ROLES = {\n    \"query_incidents\": {\"Incident.Reader\"},\n    \"get_incident\": {\"Incident.Reader\"},\n    \"get_on_call\": {\"Incident.Reader\"},\n    \"add_discussion\": {\"Incident.Commenter\"},\n    \"acknowledge_incident\": {\"Incident.Responder\"},\n    \"create_incident\": {\"Incident.Creator\"},\n    \"update_incident\": {\"Incident.Responder\"},\n}\n\ndef allowed(tool_name: str, caller_roles: set[str]) -> bool:\n    return bool(TOOL_ROLES.get(tool_name, set()) & caller_roles)\n\nprint(allowed(\"query_incidents\", {\"Incident.Reader\"}))\nprint(allowed(\"acknowledge_incident\", {\"Incident.Reader\"}))\n"
+      },
+      "drills": [
+        {
+          "q": "Why separate read and write roles?",
+          "a": "So normal question answering cannot accidentally mutate operational records."
+        },
+        {
+          "q": "Which tools need stronger controls?",
+          "a": "create, acknowledge, update, resolve, and any discussion or annotation write."
+        },
+        {
+          "q": "Where should the permission check run?",
+          "a": "In the MCP server and backend authorization layer, not only in the agent prompt."
+        }
+      ],
+      "teachBack": "Managed identity must be paired with least privilege. Give read tools read roles and write tools only to identities that truly need them. Approval protects user intent, while RBAC protects the backend regardless of prompt behavior.",
+      "glossary": [
+        {
+          "term": "RBAC",
+          "definition": "Role-based access control, where permissions are grouped into roles assigned to identities."
+        },
+        {
+          "term": "Least privilege",
+          "definition": "Grant only the minimum permissions required for the task."
+        },
+        {
+          "term": "Permission matrix",
+          "definition": "A table mapping tools or actions to required roles."
+        }
+      ],
+      "sources": [
+        {
+          "title": "Microsoft Learn: Set Up MCP Server Authentication",
+          "url": "https://learn.microsoft.com/en-us/azure/foundry/agents/how-to/mcp-authentication"
+        },
+        {
+          "title": "Microsoft Entra: Managed identities for Azure resources",
+          "url": "https://learn.microsoft.com/en-us/entra/identity/managed-identities-azure-resources/overview"
+        },
+        {
+          "title": "Model Context Protocol: Tools",
+          "url": "https://modelcontextprotocol.io/specification/2025-06-18/server/tools"
+        }
+      ],
+      "uncertain": false
+    },
+    {
+      "id": "representative-tool-calls",
+      "title": "Representative Tool Call Examples",
+      "term": "incident tool call JSON",
+      "tags": [
+        "json",
+        "examples",
+        "agent-flow"
+      ],
+      "firstPrinciples": "First principles: natural language is ambiguous, but tool calls must be exact. The agent converts a user's intent into a tool name plus validated arguments, then the MCP server returns structured results.",
+      "definition": "Representative incident MCP calls include querying active incidents, fetching one incident, and adding a discussion note. These examples are intentionally labeled representative because no public official IcM MCP tool schema was verified.",
+      "analogy": "The user says, 'Find the payments fire.' The agent fills out the dispatch form: service equals payments, severity equals Sev2, status equals active. The form, not the casual sentence, is what the backend receives.",
+      "mentalModel": "For every interaction, trace four steps: user request, agent tool selection, MCP tools/call JSON, and tool result. If a call writes data, pause for approval before executing.",
+      "diagram": "graph LR\nNaturalLanguage[Natural language] --> ToolChoice[Tool choice]\nToolChoice --> Arguments[Validated arguments]\nArguments --> Result[Structured result]\nResult --> Answer[Grounded answer]",
+      "code": {
+        "language": "python",
+        "caption": "Representative natural language to MCP tool call payloads",
+        "content": "# Representative MCP tools/call payloads. Not official IcM JSON.\nexamples = [\n    {\n        \"jsonrpc\": \"2.0\",\n        \"id\": 1,\n        \"method\": \"tools/call\",\n        \"params\": {\n            \"name\": \"query_incidents\",\n            \"arguments\": {\"service\": \"payments\", \"severity\": \"Sev2\", \"status\": \"active\"},\n        },\n    },\n    {\n        \"jsonrpc\": \"2.0\",\n        \"id\": 2,\n        \"method\": \"tools/call\",\n        \"params\": {\"name\": \"get_incident\", \"arguments\": {\"incident_id\": \"INC123456\"}},\n    },\n    {\n        \"jsonrpc\": \"2.0\",\n        \"id\": 3,\n        \"method\": \"tools/call\",\n        \"params\": {\n            \"name\": \"add_discussion\",\n            \"arguments\": {\n                \"incident_id\": \"INC123456\",\n                \"message\": \"Representative note: rollback started after human approval.\",\n            },\n        },\n    },\n]\nfor payload in examples:\n    print(payload[\"params\"][\"name\"], payload[\"params\"][\"arguments\"])\n"
+      },
+      "drills": [
+        {
+          "q": "What transforms natural language into backend action?",
+          "a": "The agent selects an MCP tool and supplies schema-validated arguments."
+        },
+        {
+          "q": "Which example needs approval?",
+          "a": "add_discussion, because it writes to the incident record."
+        },
+        {
+          "q": "Why are these examples uncertain?",
+          "a": "They model a transferable incident connector but are not verified official IcM MCP schemas."
+        }
+      ],
+      "teachBack": "A tool call is the precise bridge from user intent to backend operation. Read calls can answer questions; write calls must wait for approval and authorization. These JSON examples teach the pattern, not an official IcM contract.",
+      "glossary": [
+        {
+          "term": "tools/call",
+          "definition": "MCP JSON-RPC method used by a client to invoke a server tool."
+        },
+        {
+          "term": "Arguments",
+          "definition": "Structured input values passed to a tool."
+        },
+        {
+          "term": "Structured result",
+          "definition": "Machine-readable data returned by a tool."
+        }
+      ],
+      "sources": [
+        {
+          "title": "Model Context Protocol: Tools",
+          "url": "https://modelcontextprotocol.io/specification/2025-06-18/server/tools"
+        }
+      ],
+      "uncertain": true
+    },
+    {
+      "id": "write-safety-approval",
+      "title": "Human Approval for Incident Writes",
+      "term": "human in the loop",
+      "tags": [
+        "safety",
+        "approval",
+        "audit"
+      ],
+      "firstPrinciples": "First principles: incident systems are command records during real operational events. A bad automated write can mislead responders, hide impact, page the wrong team, or prematurely close an emergency. Therefore authority must remain human-centered.",
+      "definition": "Human-in-the-loop approval means the agent may propose a create, acknowledge, update, resolve, or discussion action, but a human reviews the tool name and arguments before execution. MCP and Foundry documentation both emphasize approval and review for tools, especially risky operations.",
+      "analogy": "The agent is a staff officer drafting an order. The commander still signs before troops move. The draft is useful; the signature is the safety boundary.",
+      "mentalModel": "Classify tools into read, low-risk write, and high-risk write. Read tools can often run without approval. Any tool that mutates incident state should show the exact incident ID, old state, new state, message text, caller identity, and expected impact before approval.",
+      "diagram": "graph TD\nProposed[Proposed write] --> Review[Human review]\nReview --> Approve[Approve]\nReview --> Deny[Deny]\nApprove --> Execute[Execute tool]\nExecute --> Audit[Audit log]\nDeny --> NoChange[No backend change]",
+      "code": {
+        "language": "python",
+        "caption": "Representative write approval gate",
+        "content": "# Representative approval gate around a write action.\ndef require_approval(tool_name: str) -> bool:\n    write_tools = {\"create_incident\", \"update_incident\", \"add_discussion\", \"acknowledge_incident\", \"resolve_incident\"}\n    return tool_name in write_tools\n\nproposed_call = {\n    \"tool\": \"acknowledge_incident\",\n    \"arguments\": {\"incident_id\": \"INC123456\"},\n    \"reason\": \"User asked me to acknowledge the active payments incident.\",\n}\n\nif require_approval(proposed_call[\"tool\"]):\n    print(\"Show this exact call to a human approver before execution:\")\n    print(proposed_call)\nelse:\n    print(\"Read-only call may proceed under policy.\")\n"
+      },
+      "drills": [
+        {
+          "q": "Why do write tools need approval?",
+          "a": "They change operational records and can affect real response behavior."
+        },
+        {
+          "q": "What should the approver inspect?",
+          "a": "Tool name, incident ID, arguments, identity, old and new state, and reason."
+        },
+        {
+          "q": "What happens when approval is denied?",
+          "a": "No backend mutation should occur, and the denial should be logged if policy requires."
+        }
+      ],
+      "teachBack": "Incident write safety keeps humans in command. Agents may draft actions, but create, acknowledge, update, resolve, and discussion writes should be reviewed before execution. The audit trail must show who approved what and why.",
+      "glossary": [
+        {
+          "term": "Human in the loop",
+          "definition": "A control where a person reviews and approves or denies an automated action."
+        },
+        {
+          "term": "Audit log",
+          "definition": "Tamper-resistant record of important actions and approvals."
+        },
+        {
+          "term": "High-risk operation",
+          "definition": "An action that can materially affect systems, users, responders, or records."
+        }
+      ],
+      "sources": [
+        {
+          "title": "Microsoft Learn: Connect to MCP Server Endpoints for agents",
+          "url": "https://learn.microsoft.com/en-us/azure/foundry/agents/how-to/tools/model-context-protocol"
+        },
+        {
+          "title": "Model Context Protocol Specification",
+          "url": "https://modelcontextprotocol.io/specification/2025-06-18"
+        },
+        {
+          "title": "Model Context Protocol: Tools",
+          "url": "https://modelcontextprotocol.io/specification/2025-06-18/server/tools"
+        }
+      ],
+      "uncertain": false
+    },
+    {
+      "id": "agent-interaction-traces",
+      "title": "End-to-End Interaction Traces",
+      "term": "agent incident trace",
+      "tags": [
+        "examples",
+        "trace",
+        "workflow"
+      ],
+      "firstPrinciples": "First principles: to trust an agent, you must be able to replay why it answered or acted. A trace links the user's sentence, selected tool, arguments, result, approval, and final answer.",
+      "definition": "An interaction trace is a step-by-step record of a user request through Foundry, MCP, the incident connector, and the final response. For incident systems, traces are essential for audit, debugging, and responder confidence.",
+      "analogy": "It is like a flight data recorder. After the mission, you can see each input, instrument reading, command, and outcome instead of relying on memory.",
+      "mentalModel": "Record read traces and write traces differently. Read trace: request, tool, result, answer. Write trace: request, proposed tool, approval request, approval decision, execution result, final answer. This makes safety visible.",
+      "diagram": "sequenceDiagram\nparticipant User\nparticipant FoundryAgent\nparticipant Approval\nparticipant MCPServer\nUser->>FoundryAgent: Acknowledge incident INC123456\nFoundryAgent->>Approval: Request approval for acknowledge\nApproval-->>FoundryAgent: Approved\nFoundryAgent->>MCPServer: tools call acknowledge incident\nMCPServer-->>FoundryAgent: Acknowledged result\nFoundryAgent-->>User: Confirmed with audit reference",
+      "code": {
+        "language": "python",
+        "caption": "Representative trace for an approved incident write",
+        "content": "# Representative trace events for a write interaction.\ntrace = []\ntrace.append({\"step\": \"user_request\", \"text\": \"Acknowledge INC123456\"})\ntrace.append({\"step\": \"tool_selected\", \"tool\": \"acknowledge_incident\", \"arguments\": {\"incident_id\": \"INC123456\"}})\ntrace.append({\"step\": \"approval\", \"decision\": \"approved\", \"approver\": \"human-responder\"})\ntrace.append({\"step\": \"tool_result\", \"status\": \"acknowledged\", \"audit_id\": \"AUDIT789\"})\ntrace.append({\"step\": \"agent_answer\", \"text\": \"Incident INC123456 is acknowledged. Audit AUDIT789.\"})\n\nfor event in trace:\n    print(event)\n"
+      },
+      "drills": [
+        {
+          "q": "What should a read trace contain?",
+          "a": "User request, selected tool, arguments, result, and final answer."
+        },
+        {
+          "q": "What extra events should a write trace contain?",
+          "a": "Approval request, approval decision, executor identity, and audit reference."
+        },
+        {
+          "q": "Why are traces valuable during incidents?",
+          "a": "They let responders verify what the agent did and reconstruct decisions later."
+        }
+      ],
+      "teachBack": "An agent trace is the evidence chain for a response. It proves which tool was selected, what arguments were used, what result came back, and who approved writes. In incident management, traceability is a safety feature, not a luxury.",
+      "glossary": [
+        {
+          "term": "Trace",
+          "definition": "Ordered record of events in an agent interaction."
+        },
+        {
+          "term": "Approval request",
+          "definition": "A prompt asking a human to approve or deny a proposed tool invocation."
+        },
+        {
+          "term": "Audit reference",
+          "definition": "Identifier linking an action to a durable audit record."
+        }
+      ],
+      "sources": [
+        {
+          "title": "Microsoft Learn: Connect to MCP Server Endpoints for agents",
+          "url": "https://learn.microsoft.com/en-us/azure/foundry/agents/how-to/tools/model-context-protocol"
+        },
+        {
+          "title": "Model Context Protocol: Tools",
+          "url": "https://modelcontextprotocol.io/specification/2025-06-18/server/tools"
+        }
+      ],
+      "uncertain": true
+    },
+    {
+      "id": "build-checklist",
+      "title": "Build Checklist for a Real Connector",
+      "term": "incident MCP build checklist",
+      "tags": [
+        "checklist",
+        "implementation",
+        "operations"
+      ],
+      "firstPrinciples": "First principles: a connector is production integration code, not a demo script. It must validate identity, enforce authorization, constrain tools, handle failures, log actions, and degrade safely during the exact moments when systems are already stressed.",
+      "definition": "A real incident MCP connector should document its public endpoint, Entra audience, managed identity assignment, RBAC matrix, allowed tools, approval policy, audit log destination, networking boundary, retry behavior, and tested incident lifecycle transitions.",
+      "analogy": "Before attaching a rescue helicopter to command operations, you inspect fuel, pilot credentials, radio frequencies, mission rules, landing zones, and black box logging. The connector deserves the same discipline.",
+      "mentalModel": "Use this order: verify public documentation, get the real internal API contract from the incident-system owner, register or identify the MCP server audience, grant managed identity roles, implement read tools first, add write tools with approval, then run tabletop drills before production use.",
+      "diagram": "graph TD\nDocs[Verify docs] --> Contract[Backend contract]\nContract --> Identity[Managed identity]\nIdentity --> Roles[RBAC roles]\nRoles --> Tools[Allowed tools]\nTools --> Approval[Approval policy]\nApproval --> Audit[Audit and drills]",
+      "code": {
+        "language": "python",
+        "caption": "Representative readiness checklist for an incident MCP connector",
+        "content": "# Representative preflight checklist encoded as testable items.\nchecklist = {\n    \"official_or_internal_contract_reviewed\": False,\n    \"managed_identity_enabled\": True,\n    \"entra_audience_known\": False,\n    \"least_privilege_roles_assigned\": False,\n    \"write_tools_require_approval\": True,\n    \"audit_logging_enabled\": True,\n    \"tabletop_drill_passed\": False,\n}\n\nnot_ready = [name for name, ok in checklist.items() if not ok]\nif not_ready:\n    print(\"Do not go live. Missing:\", not_ready)\nelse:\n    print(\"Connector is ready for controlled rollout.\")\n"
+      },
+      "drills": [
+        {
+          "q": "What should happen before using internal IcM details?",
+          "a": "Verify the real internal contract with the service owner instead of relying on representative examples."
+        },
+        {
+          "q": "Why start with read tools?",
+          "a": "They provide value with lower operational risk while identity, logging, and schemas mature."
+        },
+        {
+          "q": "What is a tabletop drill?",
+          "a": "A simulated incident exercise used to test people, process, and tooling before a real emergency."
+        }
+      ],
+      "teachBack": "A production incident MCP connector needs more than tool names. It needs verified contracts, managed identity, least privilege, approval, auditing, network design, and drills. Because IcM specifics are internal, validate them with the system owner before going live.",
+      "glossary": [
+        {
+          "term": "Preflight",
+          "definition": "Readiness checks completed before rollout."
+        },
+        {
+          "term": "Allowed tools",
+          "definition": "A configured subset of MCP tools an agent is permitted to use."
+        },
+        {
+          "term": "Tabletop drill",
+          "definition": "A rehearsal of incident response scenarios without a real outage."
+        }
+      ],
+      "sources": [
+        {
+          "title": "Microsoft Learn: Connect to MCP Server Endpoints for agents",
+          "url": "https://learn.microsoft.com/en-us/azure/foundry/agents/how-to/tools/model-context-protocol"
+        },
+        {
+          "title": "Microsoft Learn: Set Up MCP Server Authentication",
+          "url": "https://learn.microsoft.com/en-us/azure/foundry/agents/how-to/mcp-authentication"
+        },
+        {
+          "title": "Microsoft Service Assurance: Security incident management overview",
+          "url": "https://learn.microsoft.com/en-us/compliance/assurance/assurance-incident-management"
+        },
+        {
+          "title": "Microsoft Entra: Managed identities for Azure resources",
+          "url": "https://learn.microsoft.com/en-us/entra/identity/managed-identities-azure-resources/overview"
+        }
+      ],
+      "uncertain": true
+    }
+  ],
+  "quiz": [
+    {
+      "q": "Why are IcM-specific MCP tool names in this lane marked representative?",
+      "options": [
+        "Because a public official IcM MCP API surface was not verified",
+        "Because MCP cannot expose tools",
+        "Because managed identity requires API keys",
+        "Because incident systems cannot be automated"
+      ],
+      "answer": 0,
+      "explain": "IcM is largely internal, so the lesson teaches the transferable incident MCP pattern instead of inventing official APIs."
+    },
+    {
+      "q": "Which incident lifecycle order is the best mental model?",
+      "options": [
+        "new, acknowledged, mitigated, resolved, postmortem",
+        "postmortem, new, resolved, acknowledged, mitigated",
+        "resolved, new, mitigated, acknowledged, postmortem",
+        "acknowledged, postmortem, new, resolved, mitigated"
+      ],
+      "answer": 0,
+      "explain": "The practical flow is ownership, impact reduction, closure, and learning."
+    },
+    {
+      "q": "What credential pattern is allowed in this lane?",
+      "options": [
+        "DefaultAzureCredential or ManagedIdentityCredential with managed identity",
+        "A hard-coded client secret",
+        "A personal access token in source code",
+        "A shared admin password"
+      ],
+      "answer": 0,
+      "explain": "The hard constraint is managed identity only: no keys, secrets, service-principal passwords, or PATs."
+    },
+    {
+      "q": "Which MCP primitive should represent an action like acknowledge_incident?",
+      "options": [
+        "Tool",
+        "Resource only",
+        "Static image",
+        "Model deployment"
+      ],
+      "answer": 0,
+      "explain": "State-changing operations are explicit MCP tools with schemas and approval controls."
+    },
+    {
+      "q": "What should happen before an agent adds a discussion note to an incident?",
+      "options": [
+        "A human should review and approve the exact tool name and arguments",
+        "The model should silently write the note",
+        "The MCP server should disable authentication",
+        "The agent should use a stored password"
+      ],
+      "answer": 0,
+      "explain": "Adding discussion changes the operational record, so approval and audit are required."
+    },
+    {
+      "q": "What does the token audience identify in managed-identity auth?",
+      "options": [
+        "The intended receiving service for the access token",
+        "The human reader of the final answer",
+        "The severity of the incident",
+        "The number of available MCP tools"
+      ],
+      "answer": 0,
+      "explain": "The audience tells Entra and the receiver which service the token is meant for."
+    },
+    {
+      "q": "Where should least-privilege enforcement happen?",
+      "options": [
+        "In the MCP server and backend authorization layer, with prompt guidance as an additional control",
+        "Only in the model prompt",
+        "Only in the user's memory",
+        "Nowhere if managed identity is enabled"
+      ],
+      "answer": 0,
+      "explain": "Prompts are not security boundaries. The connector and backend must enforce authorization."
+    }
+  ]
+}
