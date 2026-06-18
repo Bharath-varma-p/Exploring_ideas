@@ -1,0 +1,67 @@
+{
+  "id": "fdy-config-versioning",
+  "title": "Configuration and Versioning Discipline",
+  "lane": "foundry-core",
+  "type": "concept",
+  "order": 212,
+  "summary": "Read endpoint and deployment names from environment variables such as FOUNDRY PROJECT ENDPOINT and FOUNDRY MODEL NAME. Pin package versions in requirements files for course runs.",
+  "tags": [
+    "config",
+    "versioning",
+    "changelog"
+  ],
+  "analogy": "Version pinning is freezing the training range before a live-fire exercise. Everyone fires at the same targets with the same equipment, so misses teach skill rather than chaos.",
+  "diagram": "flowchart LR\nEnvVars[Environment variables] --> Code[Same code]\nPinnedReq[requirements pin] --> Install[Repeatable install]\nChangelog[Changelog review] --> Upgrade[Intentional upgrade]",
+  "body": "## First principles\n\nA learning site rots when code examples silently drift from the installed SDK. Versioning discipline turns moving cloud APIs into reproducible lessons.\n\n## Definition\n\nRead endpoint and deployment names from environment variables such as FOUNDRY_PROJECT_ENDPOINT and FOUNDRY_MODEL_NAME. Pin package versions in requirements files for course runs. Use the PyPI page to see releases and the Azure SDK for Python changelog to detect GA versus preview changes, renamed environment variables, and breaking changes.\n\n## How it fits together\n\nUse constraints like azure-ai-projects>=2.2.0,<3.0.0 for a course cohort, then intentionally review and update the changelog before widening versions.\n\n## Worked example\n\n```python\nimport os\n\nrequired = [\"FOUNDRY_PROJECT_ENDPOINT\"]\nmissing = [name for name in required if not os.environ.get(name)]\nif missing:\n    raise SystemExit(f\"Missing config: {', '.join(missing)}\")\n\nrequirements = [\n    \"azure-ai-projects>=2.2.0,<3.0.0\",\n    \"azure-identity>=1.25.0,<2.0.0\",\n    \"azure-ai-inference>=1.0.0b9,<2.0.0\",\n]\nprint(\"Suggested course constraints:\")\nprint(\"\\n\".join(requirements))\n```\n\n*Parse required configuration and show a sample requirements set.*",
+  "drills": [
+    {
+      "q": "Why pin versions for lessons?",
+      "a": "So every learner sees the same API behavior while learning."
+    },
+    {
+      "q": "Where do you check SDK release changes?",
+      "a": "The Azure SDK for Python changelog and PyPI release history."
+    },
+    {
+      "q": "Why store FOUNDRY_PROJECT_ENDPOINT in the environment?",
+      "a": "It keeps deployment-specific configuration out of source code."
+    }
+  ],
+  "teachItBack": "Teach it back as: Configuration belongs in environment variables, not literals. SDK versions belong in a pinned requirements file when teaching or deploying. Before upgrading, I read the changelog because preview and GA surfaces can rename methods, environment variables, and operation groups.",
+  "glossary": [
+    {
+      "term": "pinning",
+      "definition": "Restricting installed package versions to a known compatible range."
+    },
+    {
+      "term": "GA",
+      "definition": "Generally available release stage intended for production use under normal support expectations."
+    },
+    {
+      "term": "changelog",
+      "definition": "A release history file describing added features, fixes, and breaking changes."
+    }
+  ],
+  "sources": [
+    {
+      "title": "azure-ai-projects on PyPI",
+      "url": "https://pypi.org/project/azure-ai-projects/",
+      "verified": true
+    },
+    {
+      "title": "azure-ai-projects changelog",
+      "url": "https://github.com/Azure/azure-sdk-for-python/blob/main/sdk/ai/azure-ai-projects/CHANGELOG.md",
+      "verified": true
+    },
+    {
+      "title": "Azure AI Projects client library for Python",
+      "url": "https://learn.microsoft.com/en-us/python/api/overview/azure/ai-projects-readme?view=azure-python",
+      "verified": true
+    },
+    {
+      "title": "Usage patterns with the Azure libraries for Python",
+      "url": "https://learn.microsoft.com/en-us/azure/developer/python/sdk/azure-sdk-library-usage-patterns",
+      "verified": true
+    }
+  ]
+}

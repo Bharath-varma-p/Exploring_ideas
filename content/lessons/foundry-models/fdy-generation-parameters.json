@@ -1,0 +1,69 @@
+{
+  "id": "fdy-generation-parameters",
+  "title": "Controlling Output with Parameters",
+  "lane": "foundry-models",
+  "type": "concept",
+  "order": 205,
+  "summary": "Core parameters include temperature for randomness, top p for nucleus sampling, max tokens for output budget, stop for stop strings, frequency penalty for reducing repeated tokens, presence penalty for encouraging new topics, seed for best-effort repeatability, and model for deployment selection.",
+  "tags": [
+    "parameters",
+    "sampling",
+    "control"
+  ],
+  "analogy": "Think of the model as a skilled musician improvising. Temperature controls how adventurous the solo is. max_tokens is the time limit. stop is the conductor's cutoff gesture. Penalties tell the musician not to keep repeating the same riff.",
+  "diagram": "flowchart LR\n  Prompt[Messages] --> Distribution[Next token probabilities]\n  Distribution --> Temp[Temperature]\n  Distribution --> TopP[Top p]\n  Temp --> Sample[Chosen tokens]\n  TopP --> Sample\n  Sample --> Limits[Max tokens and stop]\n  Limits --> Answer[Final answer]",
+  "body": "## First principles\n\nA model predicts next tokens with probabilities. Parameters do not change what the model knows; they change how the next-token probability distribution is sampled, constrained, or penalized.\n\n## Definition\n\nCore parameters include temperature for randomness, top_p for nucleus sampling, max_tokens for output budget, stop for stop strings, frequency_penalty for reducing repeated tokens, presence_penalty for encouraging new topics, seed for best-effort repeatability, and model for deployment selection.\n\n## How it fits together\n\nChange one knob at a time. For deterministic extraction, lower temperature and set max_tokens. For brainstorming, raise temperature modestly. Avoid tuning temperature and top_p together until you can explain the tradeoff.\n\n## Worked example\n\n```python\nimport os\nfrom azure.identity import DefaultAzureCredential\nfrom azure.ai.inference import ChatCompletionsClient\nfrom azure.ai.inference.models import SystemMessage, UserMessage\n\nclient = ChatCompletionsClient(\n    endpoint=os.environ[\"AZURE_AI_CHAT_ENDPOINT\"],\n    credential=DefaultAzureCredential(),\n)\n\nresponse = client.complete(\n    model=os.getenv(\"AZURE_AI_MODEL_DEPLOYMENT_NAME\"),\n    messages=[\n        SystemMessage(\"Return a practical checklist.\"),\n        UserMessage(\"Checklist for calling a Foundry model safely from code.\"),\n    ],\n    temperature=0.2,          # Lower means more focused and repeatable.\n    max_tokens=250,           # Caps generated output length.\n    top_p=1.0,                # Usually leave at default when tuning temperature.\n    stop=[\"END_OF_CHECKLIST\"],# Stop if this text appears.\n    frequency_penalty=0.0,    # Positive values reduce repeated wording.\n    presence_penalty=0.0,     # Positive values encourage new topics.\n    seed=1234,                # Best effort determinism, not a guarantee.\n)\nprint(response.choices[0].message.content)\n```\n\n*One request showing the main generation controls.*",
+  "drills": [
+    {
+      "q": "Which knob caps output length?",
+      "a": "max_tokens."
+    },
+    {
+      "q": "Should you usually change temperature and top_p together?",
+      "a": "No. Docs recommend not modifying both for the same request because interaction is hard to predict."
+    },
+    {
+      "q": "Does seed guarantee identical output?",
+      "a": "No. It is best effort deterministic sampling."
+    }
+  ],
+  "teachItBack": "Parameters shape sampling and boundaries. Temperature and top_p affect probability selection, while max_tokens and stop bound length. Penalties and seed are useful but not substitutes for clear prompts.",
+  "glossary": [
+    {
+      "term": "temperature",
+      "definition": "Sampling setting where higher values make output more random."
+    },
+    {
+      "term": "top_p",
+      "definition": "Nucleus sampling limit by probability mass."
+    },
+    {
+      "term": "max_tokens",
+      "definition": "Maximum generated tokens."
+    },
+    {
+      "term": "seed",
+      "definition": "Best-effort deterministic sampling value."
+    }
+  ],
+  "sources": [
+    {
+      "title": "ChatCompletionsClient class",
+      "url": "https://learn.microsoft.com/en-us/python/api/azure-ai-inference/azure.ai.inference.chatcompletionsclient?view=azure-python-preview",
+      "verified": true
+    }
+  ],
+  "quiz": [
+    {
+      "q": "What is the correct raw function-calling loop?",
+      "choices": [
+        "Define tools, receive tool_calls, execute validated functions, send ToolMessage results",
+        "Let the model execute local Python directly",
+        "Send API keys in the tool schema",
+        "Use embeddings to run tools"
+      ],
+      "answer": 0,
+      "explanation": "The model requests tool calls; your code validates and executes them, then sends results back."
+    }
+  ]
+}

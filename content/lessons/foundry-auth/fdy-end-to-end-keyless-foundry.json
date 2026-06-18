@@ -1,0 +1,71 @@
+{
+  "id": "fdy-end-to-end-keyless-foundry",
+  "title": "End-to-end Keyless Foundry and MCP Pattern",
+  "lane": "foundry-auth",
+  "type": "concept",
+  "order": 113,
+  "summary": "The keyless pattern is: app or agent has managed identity; Azure Identity obtains an Entra access token; the SDK or HTTP client sends Bearer token; the target service authorizes by RBAC or service-specific roles.",
+  "tags": [
+    "foundry",
+    "inference",
+    "mcp",
+    "code"
+  ],
+  "analogy": "It is a mission route with stamped orders at every gate. You do not carry master credentials; each gate checks a fresh pass issued for that gate and your assigned role.",
+  "diagram": "sequenceDiagram\n  participant Agent as Agent app with MI\n  participant Identity as Azure Identity\n  participant Entra as Microsoft Entra ID\n  participant Foundry as Foundry inference\n  participant MCP as MCP target\n  Agent->>Identity: get token for Foundry scope\n  Identity->>Entra: managed identity exchange\n  Entra-->>Identity: Foundry token\n  Agent->>Foundry: call model with bearer token\n  Agent->>Identity: get token for MCP target scope\n  Entra-->>Identity: target token\n  Agent->>MCP: call tool with bearer token",
+  "body": "## First principles\n\nThe complete system is a chain of bounded trust. The agent runs under a managed identity, requests a token for a target audience, sends the token to Foundry or an MCP target, and the target enforces roles.\n\n## Definition\n\nThe keyless pattern is: app or agent has managed identity; Azure Identity obtains an Entra access token; the SDK or HTTP client sends Bearer token; the target service authorizes by RBAC or service-specific roles.\n\n## How it fits together\n\nUse one identity per workload boundary. Grant Foundry User at the Foundry scope, ADX Database Viewer at the Kusto database, and DevOps or ICM-specific access only where needed. Separate token audiences per target.\n\n## Worked example\n\n```python\nimport os\nfrom azure.identity import DefaultAzureCredential\nfrom azure.ai.inference import ChatCompletionsClient\nfrom azure.ai.inference.models import UserMessage\n\nendpoint = os.environ[\"AZURE_AI_INFERENCE_ENDPOINT\"]\nmodel = os.getenv(\"AZURE_AI_MODEL\", \"gpt-4o-mini\")\n\n# Local: az login. Azure: managed identity. No endpoint credential in code.\ncredential = DefaultAzureCredential(exclude_environment_credential=True)\n\nclient = ChatCompletionsClient(\n    endpoint=endpoint,\n    credential=credential,\n    # Azure OpenAI endpoints require this scope; managed compute endpoints may infer it.\n    credential_scopes=[\"https://cognitiveservices.azure.com/.default\"],\n)\n\nresponse = client.complete(\n    messages=[UserMessage(content=\"Explain managed identity in one sentence.\")],\n    model=model,\n)\nprint(response.choices[0].message.content)\n```\n\n*Call Azure AI Inference with DefaultAzureCredential.*",
+  "drills": [
+    {
+      "q": "What identity does the agent run as in Azure?",
+      "a": "Its managed identity."
+    },
+    {
+      "q": "Do MCP tools bypass target roles?",
+      "a": "No. They call targets that still authorize the identity."
+    },
+    {
+      "q": "Why request different tokens for different targets?",
+      "a": "Each target expects its own audience."
+    }
+  ],
+  "teachItBack": "The end-to-end pattern is app with managed identity to Entra token to target API to RBAC decision. Every target gets a token for its own audience. No stored endpoint credential is required in app code.",
+  "glossary": [
+    {
+      "term": "Keyless",
+      "definition": "No stored shared credential in application code or config."
+    },
+    {
+      "term": "Foundry inference",
+      "definition": "Model invocation through Microsoft Foundry or Azure AI inference endpoints."
+    },
+    {
+      "term": "Bearer",
+      "definition": "HTTP Authorization scheme carrying an access token."
+    },
+    {
+      "term": "Data plane",
+      "definition": "Runtime API surface such as inference or query."
+    },
+    {
+      "term": "Control plane",
+      "definition": "Management API surface such as creating resources."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Azure AI Inference client library for Python",
+      "url": "https://learn.microsoft.com/en-us/python/api/overview/azure/ai-inference-readme?view=azure-python-preview",
+      "verified": true
+    },
+    {
+      "title": "Role-based access control for Microsoft Foundry",
+      "url": "https://learn.microsoft.com/en-us/azure/foundry/concepts/rbac-foundry",
+      "verified": true
+    },
+    {
+      "title": "Azure Identity client library for Python",
+      "url": "https://learn.microsoft.com/en-us/python/api/overview/azure/identity-readme?view=azure-python",
+      "verified": true
+    }
+  ]
+}

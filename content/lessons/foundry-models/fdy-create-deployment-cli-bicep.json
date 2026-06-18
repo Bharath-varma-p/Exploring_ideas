@@ -1,0 +1,80 @@
+{
+  "id": "fdy-create-deployment-cli-bicep",
+  "title": "Creating deployments with managed identity",
+  "lane": "foundry-models",
+  "type": "concept",
+  "order": 105,
+  "summary": "You can create deployments in the portal, with Azure CLI, or with infrastructure as code such as Bicep. In automation, use managed identity only: az login --identity for CLI or DefaultAzureCredential for SDK code.",
+  "tags": [
+    "cli",
+    "bicep",
+    "managed-identity",
+    "runnable"
+  ],
+  "analogy": "The portal is hand-placing a machine on a line. CLI and Bicep are sending a signed work order from a robot with an employee badge, not a shared password.",
+  "diagram": "flowchart TD\n  MI[managed identity] --> RBAC[RBAC role]\n  RBAC --> CLI[az deployment create]\n  RBAC --> Bicep[Bicep apply]\n  CLI --> Deployment[model deployment]\n  Bicep --> Deployment",
+  "body": "## First principles\n\nCreating a model deployment is a control-plane action: authenticate, select the resource, choose model name and version, set deployment type and capacity, then ask Azure Resource Manager to create the child resource.\n\n## Definition\n\nYou can create deployments in the portal, with Azure CLI, or with infrastructure as code such as Bicep. In automation, use managed identity only: az login --identity for CLI or DefaultAzureCredential for SDK code. For Azure OpenAI and many Foundry model deployments, az cognitiveservices account deployment create accepts deployment name, model format, model name, model version, SKU name, and capacity.\n\n## How it fits together\n\nPortal path: Discover Models, select model card, Deploy, choose default or custom settings, accept Marketplace terms if needed, choose deployment type, name, and quota, then verify Succeeded. CLI path: managed identity login, create deployment, show deployment. Bicep path: declare Microsoft.CognitiveServices/accounts/deployments and apply with managed identity.\n\n## Worked example\n\n```bash\n#!/usr/bin/env bash\nset -euo pipefail\n\n# Run on an Azure host with a managed identity granted deployment permissions.\naz login --identity\n\nRESOURCE_GROUP=\"<resource-group>\"\nACCOUNT_NAME=\"<foundry-or-openai-account-name>\"\nDEPLOYMENT_NAME=\"prod-gpt-4o-mini\"\nMODEL_NAME=\"gpt-4o-mini\"\nMODEL_VERSION=\"<model-version-from-model-card>\"\nSKU_NAME=\"GlobalStandard\"   # Or DataZoneStandard or Standard if supported.\nCAPACITY=\"10\"              # Capacity maps to quota and rate limits for the model/SKU.\n\naz cognitiveservices account deployment create   --resource-group \"$RESOURCE_GROUP\"   --name \"$ACCOUNT_NAME\"   --deployment-name \"$DEPLOYMENT_NAME\"   --model-format \"OpenAI\"   --model-name \"$MODEL_NAME\"   --model-version \"$MODEL_VERSION\"   --sku-name \"$SKU_NAME\"   --sku-capacity \"$CAPACITY\"\n\naz cognitiveservices account deployment show   --resource-group \"$RESOURCE_GROUP\"   --name \"$ACCOUNT_NAME\"   --deployment-name \"$DEPLOYMENT_NAME\"   --query \"{name:name, sku:sku, model:properties.model, state:properties.provisioningState}\"\n```\n\n*Runnable CLI create path using managed identity only.*",
+  "drills": [
+    {
+      "q": "Why use az login --identity?",
+      "a": "It authenticates with managed identity and avoids keys, secrets, and service principals."
+    },
+    {
+      "q": "What is SKU_NAME?",
+      "a": "The deployment type code, such as GlobalStandard."
+    },
+    {
+      "q": "What role is needed?",
+      "a": "A role with permission to create and manage deployments, such as Cognitive Services Contributor or equivalent."
+    }
+  ],
+  "teachItBack": "Deployment creation is an Azure management operation. The managed identity supplies authentication and RBAC supplies authorization. The model name, version, deployment alias, SKU, and capacity define what Azure creates.",
+  "glossary": [
+    {
+      "term": "Managed identity",
+      "definition": "An Azure-managed Microsoft Entra identity assigned to a resource."
+    },
+    {
+      "term": "RBAC",
+      "definition": "Role-based access control."
+    },
+    {
+      "term": "SKU name",
+      "definition": "The code for deployment type or capacity class."
+    },
+    {
+      "term": "Bicep",
+      "definition": "Azure infrastructure as code language."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Deploy Microsoft Foundry Models in the Foundry portal",
+      "url": "https://learn.microsoft.com/en-us/azure/foundry/foundry-models/how-to/deploy-foundry-models",
+      "verified": true
+    },
+    {
+      "title": "Understanding deployment types in Microsoft Foundry Models",
+      "url": "https://learn.microsoft.com/en-us/azure/foundry/foundry-models/concepts/deployment-types",
+      "verified": true
+    },
+    {
+      "title": "Manage Azure OpenAI quota",
+      "url": "https://learn.microsoft.com/en-us/azure/foundry-classic/openai/how-to/quota",
+      "verified": true
+    }
+  ],
+  "quiz": [
+    {
+      "q": "What does current stable AIProjectClient.deployments document?",
+      "choices": [
+        "list and get",
+        "create and delete only",
+        "rotate keys",
+        "inference streaming"
+      ],
+      "answer": 0,
+      "explanation": "The stable DeploymentsOperations docs list list and get."
+    }
+  ]
+}

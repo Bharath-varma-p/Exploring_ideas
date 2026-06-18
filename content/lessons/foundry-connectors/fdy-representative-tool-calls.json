@@ -1,0 +1,67 @@
+{
+  "id": "fdy-representative-tool-calls",
+  "title": "Representative MCP Tool Calls",
+  "lane": "foundry-connectors",
+  "type": "concept",
+  "order": 309,
+  "summary": "Representative ADO MCP calls include querying work items with WIQL, creating a work item, listing builds or pipeline runs, and listing pull requests. Tool names differ between the remote grouped dispatcher docs and the local TOOLSET.",
+  "tags": [
+    "tools",
+    "examples",
+    "mcp"
+  ],
+  "analogy": "A tool call is a standardized radio message: call sign, payload, and response. Different radios may use slightly different call signs, but the mission content is the same.",
+  "diagram": "graph TD\nCall[Tool call] --> Name[Tool name]\nCall --> Args[Arguments]\nCall --> Risk[Side effect risk]\nCall --> Result[Structured result]",
+  "body": "## First principles\n\nFirst principles: learners master integrations by seeing shape. A tool call has a name, arguments, a result, and side effects. If those are clear, the agent path becomes inspectable instead of magical.\n\n## Definition\n\nRepresentative ADO MCP calls include querying work items with WIQL, creating a work item, listing builds or pipeline runs, and listing pull requests. Tool names differ between the remote grouped dispatcher docs and the local TOOLSET.md names, so treat these as representative and inspect the server's advertised tools at runtime.\n\n## How it fits together\n\nTeach by showing both the request and the expected result shape. For WIQL, expect IDs first. For create, expect a new ID and fields. For pipelines, expect run IDs and status. For PRs, expect pullRequestId, source, target, and status.\n\n## Worked example\n\n```python\n# These dictionaries illustrate the shape an agent sends to MCP.\n# Actual tool names are discovered from the connected server.\ntool_calls = [\n    {\n        'name': 'wit_work_item',\n        'arguments': {'action': 'query_by_wiql', 'project': 'SpaceElevator', 'wiql': \"SELECT [System.Id] FROM WorkItems WHERE [System.WorkItemType] = 'Bug'\"},\n        'expected_result': {'workItems': [{'id': 101}, {'id': 102}]},\n    },\n    {\n        'name': 'wit_work_item_write',\n        'arguments': {'action': 'create', 'project': 'SpaceElevator', 'type': 'Task', 'fields': {'System.Title': 'Add tests'}},\n        'expected_result': {'id': 131489, 'fields': {'System.State': 'New'}},\n    },\n    {\n        'name': 'pipelines_run',\n        'arguments': {'action': 'list', 'project': 'SpaceElevator', 'pipelineId': 42, 'top': 5},\n        'expected_result': {'runs': [{'id': 9001, 'state': 'completed'}]},\n    },\n    {\n        'name': 'repo_pull_request',\n        'arguments': {'action': 'list', 'project': 'SpaceElevator', 'repository': 'flight-code', 'status': 'active'},\n        'expected_result': {'pullRequests': [{'pullRequestId': 77, 'status': 'active'}]},\n    },\n]\nfor call in tool_calls:\n    print(call['name'], call['arguments'])\n```\n\n*Representative MCP calls and result shapes*",
+  "drills": [
+    {
+      "q": "Why are these called representative?",
+      "a": "Because exact names can vary between local and remote MCP versions, so clients should inspect advertised tools."
+    },
+    {
+      "q": "What result shape does WIQL return first?",
+      "a": "Work item IDs or references."
+    },
+    {
+      "q": "Which listed call is definitely write?",
+      "a": "wit_work_item_write create."
+    }
+  ],
+  "teachItBack": "MCP calls are inspectable structures, not magic. The learner should recognize names, arguments, risk, and result shape. Because the official server is evolving, runtime tool discovery is part of correctness.",
+  "glossary": [
+    {
+      "term": "Tool discovery",
+      "definition": "MCP client step that reads the server's currently available tools."
+    },
+    {
+      "term": "Arguments",
+      "definition": "Structured inputs passed to a tool."
+    },
+    {
+      "term": "Result shape",
+      "definition": "The fields a successful tool result returns."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Microsoft Learn: Remote Azure DevOps MCP Server",
+      "url": "https://learn.microsoft.com/en-us/azure/devops/mcp-server/remote-mcp-server?view=azure-devops",
+      "verified": false
+    },
+    {
+      "title": "Azure DevOps MCP TOOLSET",
+      "url": "https://raw.githubusercontent.com/microsoft/azure-devops-mcp/main/docs/TOOLSET.md",
+      "verified": false
+    },
+    {
+      "title": "Microsoft Learn REST: Query by WIQL",
+      "url": "https://learn.microsoft.com/en-us/rest/api/azure/devops/wit/wiql/query-by-wiql?view=azure-devops-rest-7.1",
+      "verified": false
+    },
+    {
+      "title": "Microsoft Learn REST: Create work item",
+      "url": "https://learn.microsoft.com/en-us/rest/api/azure/devops/wit/work-items/create?view=azure-devops-rest-7.1",
+      "verified": false
+    }
+  ]
+}

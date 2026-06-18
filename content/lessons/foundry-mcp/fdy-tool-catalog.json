@@ -1,0 +1,74 @@
+{
+  "id": "fdy-tool-catalog",
+  "title": "Agent Tool Types",
+  "lane": "foundry-mcp",
+  "type": "concept",
+  "order": 205,
+  "summary": "Foundry Agent Service supports built-in tools such as Code Interpreter, File Search with vector stores, Function tools executed by your code, web search and Bing grounding, plus custom tools such as MCP servers, OpenAPI tools, Azure Functions, and agent-to-agent connections.",
+  "tags": [
+    "tools",
+    "catalog",
+    "capabilities"
+  ],
+  "analogy": "Tools are like mission equipment in an armory. A medic kit, drone, map database, and radio each solve a different job, and the commander decides which equipment the mission is allowed to carry.",
+  "diagram": "graph TD\nAgent[Agent] --> BuiltIn[Built in tools]\nBuiltIn --> Code[Code interpreter]\nBuiltIn --> Files[File search]\nBuiltIn --> Web[Web search]\nBuiltIn --> Bing[Bing grounding]\nAgent --> Custom[Custom tools]\nCustom --> Function[Function tools]\nCustom --> OpenAPI[OpenAPI tools]\nCustom --> Functions[Azure Functions]\nCustom --> MCP[MCP servers]",
+  "body": "## First principles\n\nFirst principles: a language model cannot know fresh private data or modify systems by itself. Tools are controlled capabilities that let the agent observe or act outside the model context window.\n\n## Definition\n\nFoundry Agent Service supports built-in tools such as Code Interpreter, File Search with vector stores, Function tools executed by your code, web search and Bing grounding, plus custom tools such as MCP servers, OpenAPI tools, Azure Functions, and agent-to-agent connections. This lane focuses on MCP as the generic bridge to any MCP-compatible server.\n\n## How it fits together\n\nPick the smallest tool that fits. Use Code Interpreter for sandboxed Python, File Search for vector-grounded documents, Function tools for your app code, Bing or web grounding for current public information, OpenAPI or Azure Functions for HTTP and serverless APIs, and MCP when a team wants to expose a reusable multi-tool server to many clients.\n\n## Worked example\n\n```python\n# pip install azure-ai-projects>=2.0.0 azure-identity\n# Built-in tools need less plumbing because Foundry hosts the execution path.\nimport os\nfrom azure.identity import DefaultAzureCredential\nfrom azure.ai.projects import AIProjectClient\nfrom azure.ai.projects.models import PromptAgentDefinition, WebSearchTool\n\nproject = AIProjectClient(endpoint=os.environ[\"PROJECT_ENDPOINT\"], credential=DefaultAzureCredential())\nagent = project.agents.create_version(\n    agent_name=\"tool-catalog-web-search\",\n    definition=PromptAgentDefinition(\n        model=os.environ.get(\"MODEL_DEPLOYMENT_NAME\", \"gpt-5-mini\"),\n        instructions=\"Use web search only when current public information is required.\",\n        tools=[WebSearchTool()],\n    ),\n)\nprint(\"Created\", agent.name, agent.version)\n```\n\n*Create a web-search agent to contrast built-in tools with MCP*",
+  "drills": [
+    {
+      "q": "Which tool is best for private document grounding?",
+      "a": "File Search with vector stores."
+    },
+    {
+      "q": "Which tool is best when your own Python code must execute in your app?",
+      "a": "Function tools if your app executes the function, or Code Interpreter if the agent needs sandboxed analysis."
+    },
+    {
+      "q": "Why choose MCP?",
+      "a": "It packages external tools behind a reusable standard endpoint that many agents or clients can consume."
+    }
+  ],
+  "teachItBack": "Tools are the agent's controlled senses and hands. Choose built-ins when Foundry already provides the capability. Choose MCP when you need a reusable external tool server rather than one-off app functions.",
+  "glossary": [
+    {
+      "term": "Code Interpreter",
+      "definition": "Built-in sandboxed Python execution tool."
+    },
+    {
+      "term": "File Search",
+      "definition": "Tool for retrieving from uploaded files or vector stores."
+    },
+    {
+      "term": "MCP tool",
+      "definition": "Agent tool that connects to a remote Model Context Protocol server endpoint."
+    },
+    {
+      "term": "Bing grounding",
+      "definition": "Tooling that grounds an agent in current public web results through Bing powered capabilities."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Microsoft Learn: Agent tools overview",
+      "url": "https://learn.microsoft.com/en-us/azure/foundry/agents/concepts/tool-catalog",
+      "verified": true
+    },
+    {
+      "title": "Microsoft Learn: What is Microsoft Foundry Agent Service",
+      "url": "https://learn.microsoft.com/en-us/azure/foundry/agents/overview",
+      "verified": true
+    }
+  ],
+  "quiz": [
+    {
+      "q": "In the thread-run model, what is a RunStep?",
+      "choices": [
+        "A detailed action within a run, such as a model or tool call step",
+        "A region where the model is deployed",
+        "An Azure subscription",
+        "A model price tier"
+      ],
+      "answer": 0,
+      "explanation": "Run steps expose the internal sequence of work inside a run."
+    }
+  ]
+}

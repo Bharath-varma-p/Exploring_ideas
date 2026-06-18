@@ -1,0 +1,74 @@
+{
+  "id": "fdy-foundry-resource-hierarchy",
+  "title": "Azure Resource Hierarchy",
+  "lane": "foundry-core",
+  "type": "concept",
+  "order": 102,
+  "summary": "The modern hierarchy is subscription to resource group to Foundry resource to project. The Foundry resource is the top-level AI governance boundary; projects are development boundaries inside it.",
+  "tags": [
+    "architecture",
+    "governance",
+    "azure"
+  ],
+  "analogy": "Picture a military base: the subscription is the national budget, the resource group is the base, the Foundry resource is the secure AI command building, and projects are locked rooms for individual missions.",
+  "diagram": "graph TD\nSub[Azure subscription] --> Rg[Resource group]\nRg --> Foundry[Foundry resource]\nFoundry --> ProjectA[Project alpha]\nFoundry --> ProjectB[Project beta]\nProjectA --> AssetsA[Files agents evaluations]\nProjectB --> AssetsB[Files agents evaluations]",
+  "body": "## First principles\n\nFirst principles: Azure organizes everything by ownership and blast radius. A subscription pays and governs, a resource group groups lifecycle, a Foundry resource centralizes AI controls, and a project isolates a team's build artifacts. Each layer answers a different question: who pays, what gets managed together, what policies apply, and where developers work.\n\n## Definition\n\nThe modern hierarchy is subscription to resource group to Foundry resource to project. The Foundry resource is the top-level AI governance boundary; projects are development boundaries inside it.\n\n## How it fits together\n\nDo not flatten these layers in your head. A project is not the same as an Azure resource group, and a Foundry resource can contain multiple projects. Governance usually lives higher; experimentation usually lives lower.\n\n## Worked example\n\n```python\n# pip install azure-identity azure-mgmt-cognitiveservices\n# Run on an Azure host with managed identity, or locally after Azure CLI sign in.\nfrom azure.identity import DefaultAzureCredential\nfrom azure.mgmt.cognitiveservices import CognitiveServicesManagementClient\n\nsubscription_id = \"<subscription-id>\"\nresource_group = \"<resource-group>\"\nfoundry_resource = \"<foundry-resource-name>\"\n\ncredential = DefaultAzureCredential()\nclient = CognitiveServicesManagementClient(credential, subscription_id)\n\naccount = client.accounts.get(resource_group, foundry_resource)\nprint(\"Foundry resource:\", account.name, account.kind, account.location)\n\n# Projects are child resources under the Foundry account.\nfor project in client.projects.list(resource_group, foundry_resource):\n    print(\"Project:\", project.name, project.location)\n```\n\n*Inspect the management plane shape using managed identity aware credentials*",
+  "drills": [
+    {
+      "q": "Which layer normally contains projects?",
+      "a": "The Foundry resource contains projects."
+    },
+    {
+      "q": "What is the resource group for?",
+      "a": "It groups Azure resources for lifecycle, access, policy, and cost management."
+    },
+    {
+      "q": "Why not put all teams in one project?",
+      "a": "Projects create development and access boundaries for separate apps, teams, or environments."
+    }
+  ],
+  "teachItBack": "Start with the Azure stack: subscription, resource group, Foundry resource, project. The Foundry resource is where shared governance and deployments can live, while projects are where teams build. This hierarchy lets central teams control risk without blocking builders from moving fast.",
+  "glossary": [
+    {
+      "term": "Subscription",
+      "definition": "Azure billing and top-level administrative container."
+    },
+    {
+      "term": "Resource group",
+      "definition": "Lifecycle container for related Azure resources."
+    },
+    {
+      "term": "Foundry resource",
+      "definition": "Top-level Foundry Azure resource for governance and projects."
+    },
+    {
+      "term": "Project",
+      "definition": "Development boundary inside a Foundry resource."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Microsoft Learn: Microsoft Foundry architecture",
+      "url": "https://learn.microsoft.com/en-us/azure/foundry/concepts/architecture",
+      "verified": true
+    },
+    {
+      "title": "Microsoft Learn: Create a project",
+      "url": "https://learn.microsoft.com/en-us/azure/foundry/how-to/create-projects",
+      "verified": true
+    }
+  ],
+  "quiz": [
+    {
+      "q": "What is the modern Foundry hierarchy?",
+      "choices": [
+        "Subscription then resource group then Foundry resource then project",
+        "Project then subscription then resource group then model",
+        "Key Vault then project then subscription then hub",
+        "Model then agent then subscription then region"
+      ],
+      "answer": 0,
+      "explanation": "Azure governance starts at subscription and resource group, then the Foundry resource contains projects."
+    }
+  ]
+}

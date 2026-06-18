@@ -1,0 +1,75 @@
+{
+  "id": "fdy-mcp-attachment-shape",
+  "title": "Attaching Any MCP Server",
+  "lane": "foundry-mcp",
+  "type": "concept",
+  "order": 206,
+  "summary": "The documented MCP tool shape includes a server label, server URL, optional allowed tools list, approval requirements, and authentication through project connection or headers. Current docs show MCPTool in azure.",
+  "tags": [
+    "mcp",
+    "tools",
+    "attachment"
+  ],
+  "analogy": "Attaching an MCP server is like adding a named radio channel to the mission plan, then listing which commands may be sent over that channel and who must approve them.",
+  "diagram": "graph TD\nAgent[Foundry agent] --> Tool[MCP tool definition]\nTool --> Label[Server label]\nTool --> Url[Server URL]\nTool --> Allow[Allowed tools]\nTool --> Approval[Approval policy]\nTool --> Auth[Managed identity auth]\nUrl --> Server[MCP server]",
+  "body": "## First principles\n\nFirst principles: an agent should not be handed the internet with unlimited powers. It needs a named server endpoint, a narrow allow list, an authentication plan, and an approval policy before model reasoning can become external action.\n\n## Definition\n\nThe documented MCP tool shape includes a server label, server URL, optional allowed tools list, approval requirements, and authentication through project connection or headers. Current docs show MCPTool in azure.ai.projects.models for prompt agents and McpTool in azure.ai.agents.models for thread-run samples.\n\n## How it fits together\n\nUse server_label as the stable human-readable name, server_url as the remote endpoint, allowed_tools as least privilege, require_approval for risky calls, and identity-backed headers or project connections for authentication. Do not give the agent every tool on a server just because discovery makes it easy.\n\n## Worked example\n\n```python\n# pip install azure-ai-projects>=2.0.0 azure-identity\n# This follows the Microsoft Learn prompt-agent MCP shape.\nimport os\nfrom azure.identity import DefaultAzureCredential\nfrom azure.ai.projects import AIProjectClient\nfrom azure.ai.projects.models import PromptAgentDefinition, MCPTool\n\nproject = AIProjectClient(endpoint=os.environ[\"PROJECT_ENDPOINT\"], credential=DefaultAzureCredential())\n\nmcp_tool = MCPTool(\n    server_label=os.environ.get(\"MCP_SERVER_LABEL\", \"docs\"),\n    server_url=os.environ[\"MCP_SERVER_URL\"],\n    # Empty or omitted can expose every server tool. Prefer a narrow allow list.\n    allowed_tools=[name.strip() for name in os.environ.get(\"MCP_ALLOWED_TOOLS\", \"search_docs\").split(\",\")],\n    require_approval=\"always\",\n    # If you configured a managed-identity or OAuth project connection in Foundry, set its name or id here.\n    project_connection_id=os.environ.get(\"MCP_PROJECT_CONNECTION_ID\"),\n)\n\nagent = project.agents.create_version(\n    agent_name=os.environ.get(\"AGENT_NAME\", \"mcp-attached-agent\"),\n    definition=PromptAgentDefinition(\n        model=os.environ.get(\"MODEL_DEPLOYMENT_NAME\", \"gpt-5-mini\"),\n        instructions=\"Use MCP tools only when needed. Explain which external source was used.\",\n        tools=[mcp_tool],\n    ),\n)\nprint(agent.name, agent.version)\n```\n\n*Attach a remote MCP server to a prompt agent*",
+  "drills": [
+    {
+      "q": "What does server_label do?",
+      "a": "It names the MCP server in tool calls and approval requests."
+    },
+    {
+      "q": "Why set allowed_tools?",
+      "a": "It limits the agent to a deliberate subset of server tools."
+    },
+    {
+      "q": "When should require_approval be always?",
+      "a": "For high-risk, write, delete, privileged, or poorly understood tools."
+    }
+  ],
+  "teachItBack": "An MCP attachment is not just a URL. It is a contract that names the server, restricts tools, authenticates safely, and defines approval. If you cannot explain each of those four parts, the agent is over-permissioned.",
+  "glossary": [
+    {
+      "term": "server_label",
+      "definition": "Short label identifying one MCP server to the agent and approval UI."
+    },
+    {
+      "term": "allowed_tools",
+      "definition": "Allow list of MCP tool names the agent may call."
+    },
+    {
+      "term": "require_approval",
+      "definition": "Policy that decides whether MCP tool calls require human or application approval."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Microsoft Learn: Connect to MCP server endpoints for agents",
+      "url": "https://learn.microsoft.com/en-us/azure/foundry/agents/how-to/tools/model-context-protocol",
+      "verified": false
+    },
+    {
+      "title": "Azure SDK for Python: MCP create and process sample",
+      "url": "https://github.com/Azure/azure-sdk-for-python/blob/main/sdk/ai/azure-ai-agents/samples/agents_tools/sample_agents_mcp_in_create_and_process.py",
+      "verified": false
+    },
+    {
+      "title": "Azure SDK for Python: azure-ai-agents models patch",
+      "url": "https://github.com/Azure/azure-sdk-for-python/blob/main/sdk/ai/azure-ai-agents/azure/ai/agents/models/_patch.py",
+      "verified": false
+    }
+  ],
+  "quiz": [
+    {
+      "q": "What is the preferred authentication style in this lane?",
+      "choices": [
+        "DefaultAzureCredential or ManagedIdentityCredential with Entra and RBAC",
+        "Hard-coded API keys",
+        "Client secrets stored in source code",
+        "Shared personal access tokens in prompts"
+      ],
+      "answer": 0,
+      "explanation": "The lane requires managed identity only and avoids keys and secrets."
+    }
+  ]
+}

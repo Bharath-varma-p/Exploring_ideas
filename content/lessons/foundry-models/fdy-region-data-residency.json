@@ -1,0 +1,66 @@
+{
+  "id": "fdy-region-data-residency",
+  "title": "Region and data residency",
+  "lane": "foundry-models",
+  "type": "concept",
+  "order": 109,
+  "summary": "Foundry docs state data stored at rest remains in the designated Azure geography, while inference processing depends on deployment type: Global may process in any Azure region, DataZone processes only within the Microsoft-specified US or EU zone, and Standard regional processes in the deployment...",
+  "tags": [
+    "region",
+    "data-residency",
+    "compliance"
+  ],
+  "analogy": "Data residency is a travel permission slip. Global can travel widely, Data Zone can travel inside a defined US or EU area, and regional must stay in one city.",
+  "diagram": "flowchart TD\n  Requirement[residency requirement] --> Global[Any Azure region]\n  Requirement --> Zone[US or EU data zone]\n  Requirement --> Regional[one Azure region]\n  Zone --> Availability[model availability]\n  Regional --> Quota[regional quota]",
+  "body": "## First principles\n\nPrompts and responses are processed somewhere. Data residency requirements decide which deployment types and regions are even allowed before cost or latency optimization begins.\n\n## Definition\n\nFoundry docs state data stored at rest remains in the designated Azure geography, while inference processing depends on deployment type: Global may process in any Azure region, DataZone processes only within the Microsoft-specified US or EU zone, and Standard regional processes in the deployment region. Model availability and quota vary by region, version, and deployment type.\n\n## How it fits together\n\nChoose compliance boundary first, then verify the model, version, deployment type, region, and quota. If unavailable, change model, deployment type, or region; do not silently relax residency requirements.\n\n## Worked example\n\n```bash\nCOMPLIANCE_BOUNDARY=\"EU data zone\"       # global allowed, US data zone, EU data zone, or single region\nPREFERRED_REGION=\"swedencentral\"         # Must support model and deployment type\nDEPLOYMENT_TYPE=\"DataZoneStandard\"       # Must match compliance boundary\nMODEL_NAME=\"<model-name>\"\nMODEL_VERSION=\"<model-version>\"\n\necho \"Plan: $MODEL_NAME $MODEL_VERSION as $DEPLOYMENT_TYPE in $PREFERRED_REGION for $COMPLIANCE_BOUNDARY\"\n```\n\n*Region planning variables to fill before deployment.*",
+  "drills": [
+    {
+      "q": "Can Global Standard process outside the resource region?",
+      "a": "Yes, global types may process in any Azure region."
+    },
+    {
+      "q": "Which types are for US or EU zone processing?",
+      "a": "DataZone deployment types."
+    },
+    {
+      "q": "What if a required model is unavailable in region?",
+      "a": "Choose another supported region, deployment type, or model, or request capacity where supported."
+    }
+  ],
+  "teachItBack": "Region is an architecture decision, not a cosmetic dropdown. Deployment type defines where inference can be processed. I verify model availability and quota inside the required boundary.",
+  "glossary": [
+    {
+      "term": "Data at rest",
+      "definition": "Stored data retained in an Azure geography."
+    },
+    {
+      "term": "Inference processing",
+      "definition": "Where prompts and responses are processed during requests."
+    },
+    {
+      "term": "Data Zone",
+      "definition": "Microsoft-defined US or EU processing boundary."
+    },
+    {
+      "term": "Regional deployment",
+      "definition": "Deployment whose processing stays in the selected region."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Understanding deployment types in Microsoft Foundry Models",
+      "url": "https://learn.microsoft.com/en-us/azure/foundry/foundry-models/concepts/deployment-types",
+      "verified": true
+    },
+    {
+      "title": "Microsoft Foundry Models quotas and limits",
+      "url": "https://learn.microsoft.com/en-us/azure/foundry/foundry-models/quotas-limits",
+      "verified": true
+    },
+    {
+      "title": "Foundry Models lifecycle and support policy",
+      "url": "https://learn.microsoft.com/en-us/azure/foundry/openai/concepts/model-retirements",
+      "verified": true
+    }
+  ]
+}

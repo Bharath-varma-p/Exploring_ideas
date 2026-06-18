@@ -1,0 +1,57 @@
+{
+  "id": "fdy-capstone-self-test",
+  "title": "Capstone Self-Test (Teach-It-Back)",
+  "order": 300,
+  "tags": [
+    "capstone",
+    "self-test",
+    "review"
+  ],
+  "summary": "The final exam. For each prompt, explain it OUT LOUD from memory as if teaching a peer, then reveal the model answer to check yourself. If you can do all 10 cleanly, you have hit the mission bar.",
+  "body": "The final exam. For each prompt, explain it OUT LOUD from memory as if teaching a peer, then reveal the model answer to check yourself. If you can do all 10 cleanly, you have hit the mission bar.\n\nWork through the prompts below (also available as flashcards). Say each answer out loud before revealing it.",
+  "drills": [
+    {
+      "q": "Explain what Azure AI Foundry is and how subscription → resource group → Foundry resource → project fit together.",
+      "a": "Foundry is a **governed Azure platform** for building and operating AI apps — models, agents, evaluations, tracing, and safety in one managed workspace. A **subscription** is the billing/isolation boundary; a **resource group** holds related resources; a **Foundry resource** provides shared security, connections, and compute; a **project** is the actual workspace where deployments, agents, and connections live. You scope work to a project and let Foundry handle governance."
+    },
+    {
+      "q": "Deploy a model and call it from code — name every moving part.",
+      "a": "Pick a model from the **catalog**, create a **deployment** (a named alias, e.g. `gpt-4o-prod`, decoupled from the model version). Construct an `AIProjectClient(endpoint, credential)`, get a chat client via `project.inference.get_chat_completions_client()`, and call `.complete(model='gpt-4o-prod', messages=[...])`. You read `choices[0].message.content` and watch `usage` for token counts. The endpoint is non-secret config; the credential is a managed identity."
+    },
+    {
+      "q": "Why managed identity only — and how does DefaultAzureCredential make it seamless?",
+      "a": "Keys and service-principal secrets must be stored, rotated, and inevitably leak; a **managed identity has no secret** — the platform issues and rotates Entra tokens for it via the IMDS endpoint. `DefaultAzureCredential` walks a chain: in Azure it finds the managed identity; on your laptop it falls back to `az login`. **Same code, no secrets, prod and dev.** For a user-assigned identity you pass its `client_id`."
+    },
+    {
+      "q": "Walk the token flow from workload to a protected Azure resource.",
+      "a": "The workload calls `credential.get_token(scope)`; azure-identity hits the **IMDS** endpoint, which returns a short-lived **Entra access token** minted for that resource's **audience**. The SDK attaches it as a Bearer token on the request. The resource validates the token's issuer, audience, and the identity's **RBAC role assignments**, then allows or denies. No password ever exists."
+    },
+    {
+      "q": "What is MCP, and what are its three server primitives?",
+      "a": "**MCP (Model Context Protocol)** is an open standard — the 'USB-C for AI' — that standardizes how apps give models tools and context over **JSON-RPC**. A **Host** embeds **Clients**; each Client connects to one **Server**. Servers expose **Tools** (model-controlled actions), **Resources** (app-controlled data), and **Prompts** (user-controlled templates). This kills the N×M integration problem."
+    },
+    {
+      "q": "How does a Foundry agent use an attached MCP server during a run?",
+      "a": "An **agent** = model + instructions + tools + state. You create a **thread**, add a **message**, and start a **run**. The model reasons and emits a **tool call**; the agent invokes the matching **MCP tool** — carrying the **managed-identity token** for that target — gets a structured result, and feeds it back to the model until the run completes. Writes are gated behind human approval."
+    },
+    {
+      "q": "Connect to ICM via MCP with managed identity — describe the flow and safety model.",
+      "a": "An **ICM MCP server** exposes tools like `query_incidents`, `get_incident`, `acknowledge`, `create_incident`. The agent's managed identity presents an **Entra token for the incident backend's audience**; RBAC grants read vs write. Natural-language request → model picks a tool → MCP call with the token → result. **Reads flow automatically; acks/creates/updates require approval and are audited.** (ICM specifics are internal — verify with your tenant owner.)"
+    },
+    {
+      "q": "Query Kusto through MCP — what access does the identity need and what's the safety posture?",
+      "a": "Kusto/**Azure Data Explorer** is a read-optimized analytics store queried with **KQL** (`Table | where ... | summarize ... | project ...`). The Azure MCP server exposes ADX tools (list clusters/databases/tables, run query, get schema). Grant the managed identity **Database Viewer** (read) on the database — via `.add database viewers` or RBAC — and Reader on the cluster. Posture is **read-only**: queries, not control commands, mindful of result size and timeouts."
+    },
+    {
+      "q": "Reach Azure DevOps via MCP — what's the auth reality vs the managed-identity target?",
+      "a": "**Azure DevOps** = orgs/projects with Boards, Repos, Pipelines, Test Plans, Artifacts; work items are queried with **WIQL**. The official ADO MCP server exposes those tool groups. ADO supports **Microsoft Entra tokens** (resource GUID `499b84ac-1321-427f-aa17-267ca6975798/.default`), and a managed identity/service principal can be **added as an org member** with least-privilege scopes. If current tooling still expects a PAT or `az login`, that's a **gap/anti-pattern** — the target is the Entra/managed-identity token, never a stored PAT."
+    },
+    {
+      "q": "Draw the end-to-end architecture in three sentences anyone could follow.",
+      "a": "A workload runs with **one managed identity** and fetches **Entra tokens** for whatever it needs to reach. It calls a **deployed Foundry model** directly, or drives a **Foundry agent** that reaches **ICM, Kusto, and ADO** through **MCP servers** — each tool call carrying the right token for that target's audience. **Managed identity proves who, RBAC decides what, MCP standardizes how** — and not one secret exists anywhere in the system."
+    }
+  ],
+  "teachItBack": "A workload runs with **one managed identity** and fetches **Entra tokens** for whatever it needs to reach. It calls a **deployed Foundry model** directly, or drives a **Foundry agent** that reaches **ICM, Kusto, and ADO** through **MCP servers** — each tool call carrying the right token for that target's audience. **Managed identity proves who, RBAC decides what, MCP standardizes how** — and not one secret exists anywhere in the system.",
+  "lane": "foundry-capstone",
+  "type": "concept"
+}

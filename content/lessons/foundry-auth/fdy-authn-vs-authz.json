@@ -1,0 +1,78 @@
+{
+  "id": "fdy-authn-vs-authz",
+  "title": "Authentication vs Authorization",
+  "lane": "foundry-auth",
+  "type": "concept",
+  "order": 101,
+  "summary": "Authentication is proof of identity, usually by obtaining a token from Microsoft Entra ID. Authorization is the target service checking that identity's role assignments, policy, or app permissions before allowing the request.",
+  "tags": [
+    "first-principles",
+    "identity",
+    "security"
+  ],
+  "analogy": "A base guard checks your ID card; a room guard checks whether your badge is cleared for this room. The same soldier can enter the base but still be denied the armory.",
+  "diagram": "flowchart LR\n  Caller --> AuthN[AuthN prove who]\n  AuthN --> Token[Entra token]\n  Token --> AuthZ[AuthZ check permission]\n  AuthZ --> Resource[Target resource]",
+  "body": "## First principles\n\nA secure system must answer two separate questions: who is calling, and what may that caller do. If you mix them, you either trust unknown callers or overgrant known callers. Authentication proves identity; authorization evaluates permissions for an action on a resource.\n\n## Definition\n\nAuthentication is proof of identity, usually by obtaining a token from Microsoft Entra ID. Authorization is the target service checking that identity's role assignments, policy, or app permissions before allowing the request.\n\n## How it fits together\n\nNever debug access by saying auth failed until you know which gate failed. A 401 normally means no acceptable identity token. A 403 normally means the token was accepted but the identity lacks permission.\n\n## Worked example\n\n```python\ndef classify_auth_failure(status_code: int) -> str:\n    # 401 means the service did not accept your identity proof.\n    if status_code == 401:\n        return \"AuthN problem: missing, expired, wrong-audience, or malformed token\"\n    # 403 means identity proof was accepted but permission was missing.\n    if status_code == 403:\n        return \"AuthZ problem: role assignment, scope, or data-plane permission missing\"\n    return \"Not a primary authentication or authorization failure\"\n\nfor code in [401, 403, 404]:\n    print(code, classify_auth_failure(code))\n```\n\n*Classify an HTTP failure without secrets.*",
+  "drills": [
+    {
+      "q": "A token is valid but the call returns 403. Which gate failed?",
+      "a": "Authorization. The service recognized the caller but denied the action."
+    },
+    {
+      "q": "Can a caller be authenticated but unauthorized?",
+      "a": "Yes. Knowing who you are is separate from allowing what you want to do."
+    },
+    {
+      "q": "Why is 401 different from 403?",
+      "a": "401 is identity proof rejected or absent; 403 is permission rejected."
+    }
+  ],
+  "teachItBack": "Authentication says who I am. Authorization says what this proven identity can do. In Azure, Entra tokens usually solve the first question and RBAC or service-specific permissions solve the second.",
+  "glossary": [
+    {
+      "term": "AuthN",
+      "definition": "Authentication: proving caller identity."
+    },
+    {
+      "term": "AuthZ",
+      "definition": "Authorization: deciding allowed actions."
+    },
+    {
+      "term": "401",
+      "definition": "HTTP status for missing or unacceptable authentication."
+    },
+    {
+      "term": "403",
+      "definition": "HTTP status for authenticated but forbidden requests."
+    },
+    {
+      "term": "Token",
+      "definition": "Signed proof issued by an identity provider."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Authentication fundamentals in Microsoft identity platform",
+      "url": "https://learn.microsoft.com/en-us/entra/identity-platform/authentication-vs-authorization",
+      "verified": true
+    },
+    {
+      "title": "Managed identities for Azure resources",
+      "url": "https://learn.microsoft.com/en-us/entra/identity/managed-identities-azure-resources/overview",
+      "verified": true
+    }
+  ],
+  "quiz": [
+    {
+      "q": "What is the cleanest distinction between AuthN and AuthZ?",
+      "choices": [
+        "AuthN proves who; AuthZ decides allowed actions",
+        "AuthN grants RBAC; AuthZ issues tokens",
+        "AuthN is only for users; AuthZ is only for apps",
+        "They are synonyms in Azure"
+      ],
+      "answer": 0,
+      "explanation": "Authentication proves identity; authorization checks permissions."
+    }
+  ]
+}

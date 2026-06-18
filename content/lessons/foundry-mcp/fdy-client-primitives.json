@@ -1,0 +1,72 @@
+{
+  "id": "fdy-client-primitives",
+  "title": "Client Primitives",
+  "lane": "foundry-mcp",
+  "type": "concept",
+  "order": 110,
+  "summary": "Client primitives include Sampling, Roots, and Elicitation. Sampling lets servers request LLM generations through the client using sampling/createMessage. Roots lets servers request filesystem boundaries using roots/list.",
+  "tags": [
+    "client",
+    "sampling",
+    "roots",
+    "elicitation"
+  ],
+  "analogy": "The server is a field unit asking headquarters for support: ask the HQ model to think, ask which base areas are in bounds, or ask the user a clarifying question through HQ's approved channel.",
+  "diagram": "graph TD\nClient[MCP client]\nClient --> Sampling[Sampling LLM generation]\nClient --> Roots[Roots filesystem scope]\nClient --> Elicitation[Elicitation user input]\nServer[MCP server] --> Client\nClient --> User[User consent UI]\nClient --> LLM[Host LLM]",
+  "body": "## First principles\n\nFirst principles: servers sometimes need help from the host side: model access, user input, or workspace boundaries. Instead of servers stealing credentials, guessing file paths, or inventing UI, MCP lets clients expose controlled capabilities back to servers.\n\n## Definition\n\nClient primitives include Sampling, Roots, and Elicitation. Sampling lets servers request LLM generations through the client using sampling/createMessage. Roots lets servers request filesystem boundaries using roots/list. Elicitation lets servers ask the user for additional information through elicitation/create. Current elicitation includes form mode and URL mode; URL mode is marked new in the 2025-11-25 spec and may change in future revisions.\n\n## How it fits together\n\nClient primitives reverse the usual direction. The server sends requests to the client, but only after the client declared support during initialization. This keeps the host in control of model access, filesystem scope, and user interaction.\n\n## Worked example\n\n```json\n{\n  \"sampling\": { \"method\": \"sampling/createMessage\", \"direction\": \"server_to_client\" },\n  \"roots\": { \"method\": \"roots/list\", \"direction\": \"server_to_client\" },\n  \"elicitation\": { \"method\": \"elicitation/create\", \"direction\": \"server_to_client\" }\n}\n```\n\n*Client primitive request method names*",
+  "drills": [
+    {
+      "q": "What does sampling let a server request?",
+      "a": "An LLM generation through the client and host."
+    },
+    {
+      "q": "What do roots communicate?",
+      "a": "Filesystem boundaries the server should operate within."
+    },
+    {
+      "q": "What method starts elicitation?",
+      "a": "elicitation/create."
+    }
+  ],
+  "teachItBack": "Client primitives are capabilities the client offers to servers. Sampling gives controlled model access, roots communicate filesystem scope, and elicitation gathers user input through host UI. The server must only use client primitives negotiated during initialization.",
+  "glossary": [
+    {
+      "term": "Sampling",
+      "definition": "Client capability allowing server-initiated LLM generation requests."
+    },
+    {
+      "term": "Roots",
+      "definition": "Client capability exposing file URI workspace boundaries to servers."
+    },
+    {
+      "term": "Elicitation",
+      "definition": "Client capability allowing servers to request user input through the client."
+    },
+    {
+      "term": "URL mode elicitation",
+      "definition": "New 2025-11-25 elicitation mode for out-of-band sensitive interactions; noted by the spec as subject to change."
+    }
+  ],
+  "sources": [
+    {
+      "title": "MCP Sampling",
+      "url": "https://modelcontextprotocol.io/specification/2025-11-25/client/sampling.md",
+      "verified": false
+    },
+    {
+      "title": "MCP Roots",
+      "url": "https://modelcontextprotocol.io/specification/2025-11-25/client/roots.md",
+      "verified": false
+    },
+    {
+      "title": "MCP Elicitation",
+      "url": "https://modelcontextprotocol.io/specification/2025-11-25/client/elicitation.md",
+      "verified": false
+    },
+    {
+      "title": "Understanding MCP clients",
+      "url": "https://modelcontextprotocol.io/docs/learn/client-concepts.md",
+      "verified": false
+    }
+  ]
+}

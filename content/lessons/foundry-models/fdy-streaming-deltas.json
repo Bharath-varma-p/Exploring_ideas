@@ -1,0 +1,62 @@
+{
+  "id": "fdy-streaming-deltas",
+  "title": "Streaming Responses",
+  "lane": "foundry-models",
+  "type": "concept",
+  "order": 208,
+  "summary": "ChatCompletionsClient.complete accepts stream=True. The result is an iterable StreamingChatCompletions object. Each update can contain choices[0].delta.content, and some updates may contain usage.",
+  "tags": [
+    "streaming",
+    "latency",
+    "deltas"
+  ],
+  "analogy": "A normal response is receiving a finished book. Streaming is watching the author type line by line. You still need to bind the pages together at the end if your application needs the full text.",
+  "diagram": "sequenceDiagram\n  participant App as Python app\n  participant SDK as ChatCompletionsClient\n  participant Service as Inference service\n  participant UI as User interface\n  App->>SDK: complete stream true\n  SDK->>Service: streaming request\n  Service-->>SDK: delta one\n  SDK-->>UI: print token text\n  Service-->>SDK: delta two\n  SDK-->>UI: append token text\n  Service-->>SDK: final usage\n  SDK-->>App: stream ends",
+  "body": "## First principles\n\nWithout streaming, your user waits until the whole answer exists. With streaming, the service sends small updates as tokens are produced, reducing perceived latency and enabling progress displays.\n\n## Definition\n\nChatCompletionsClient.complete accepts stream=True. The result is an iterable StreamingChatCompletions object. Each update can contain choices[0].delta.content, and some updates may contain usage.\n\n## How it fits together\n\nStream for chat UIs, long answers, and progress-sensitive work. Accumulate deltas into a buffer if later code needs the complete answer. Remember that not every streaming event contains content.\n\n## Worked example\n\n```python\nimport os\nfrom azure.identity import DefaultAzureCredential\nfrom azure.ai.inference import ChatCompletionsClient\nfrom azure.ai.inference.models import SystemMessage, UserMessage\n\nclient = ChatCompletionsClient(\n    endpoint=os.environ[\"AZURE_AI_CHAT_ENDPOINT\"],\n    credential=DefaultAzureCredential(),\n)\n\nstream = client.complete(\n    stream=True,\n    model=os.getenv(\"AZURE_AI_MODEL_DEPLOYMENT_NAME\"),\n    messages=[\n        SystemMessage(\"Write in short sentences.\"),\n        UserMessage(\"Teach me what streaming means for LLMs.\"),\n    ],\n)\n\nparts = []\nfor update in stream:\n    if update.choices and update.choices[0].delta:\n        text = update.choices[0].delta.content or \"\"\n        print(text, end=\"\", flush=True)\n        parts.append(text)\n    if update.usage:\n        print(f\"\nusage: {update.usage}\")\n\nfull_answer = \"\".join(parts)\nprint(\"\nreceived characters:\", len(full_answer))\n```\n\n*Consume streaming deltas and assemble the final answer.*",
+  "drills": [
+    {
+      "q": "What flag enables streaming?",
+      "a": "stream=True."
+    },
+    {
+      "q": "Where is streamed text usually found?",
+      "a": "update.choices[0].delta.content."
+    },
+    {
+      "q": "Why check for missing choices or delta?",
+      "a": "Some stream events carry metadata or usage instead of text."
+    }
+  ],
+  "teachItBack": "Streaming sends partial updates instead of waiting for the final object. Read delta.content carefully and accumulate if needed. It improves perceived latency but requires event-loop style thinking.",
+  "glossary": [
+    {
+      "term": "delta",
+      "definition": "Partial message update in a streaming response."
+    },
+    {
+      "term": "StreamingChatCompletions",
+      "definition": "Iterable stream of chat completion updates."
+    },
+    {
+      "term": "perceived latency",
+      "definition": "How long the user feels they waited before seeing progress."
+    }
+  ],
+  "sources": [
+    {
+      "title": "ChatCompletionsClient class",
+      "url": "https://learn.microsoft.com/en-us/python/api/azure-ai-inference/azure.ai.inference.chatcompletionsclient?view=azure-python-preview",
+      "verified": true
+    },
+    {
+      "title": "Azure AI Inference client library for Python",
+      "url": "https://learn.microsoft.com/en-us/python/api/overview/azure/ai-inference-readme?view=azure-python-preview",
+      "verified": true
+    },
+    {
+      "title": "Azure SDK Python streaming sample",
+      "url": "https://github.com/Azure/azure-sdk-for-python/blob/main/sdk/ai/azure-ai-inference/samples/sample_chat_completions_streaming.py",
+      "verified": true
+    }
+  ]
+}

@@ -1,0 +1,74 @@
+{
+  "id": "fdy-tool-discovery-invocation",
+  "title": "Tool Discovery and Invocation",
+  "lane": "foundry-mcp",
+  "type": "concept",
+  "order": 107,
+  "summary": "Clients discover tools with tools/list and invoke a tool with tools/call. A tool definition includes a name, optional title, description, inputSchema as JSON Schema, optional outputSchema, annotations, and result content.",
+  "tags": [
+    "tools",
+    "schema",
+    "invocation"
+  ],
+  "analogy": "A tool catalog is like a weapons checklist: name, purpose, required inputs, expected output, and authorization before use.",
+  "diagram": "sequenceDiagram\nparticipant LLM\nparticipant Host\nparticipant Client\nparticipant Server\nClient->>Server: tools list\nServer-->>Client: tool schemas\nHost->>LLM: available tools\nLLM-->>Host: selected tool and arguments\nHost->>Client: approved invocation\nClient->>Server: tools call\nServer-->>Client: tool result\nClient-->>Host: result\nHost-->>LLM: result for reasoning",
+  "body": "## First principles\n\nFirst principles: an LLM cannot safely call arbitrary code by guessing. It needs a catalog of available operations, typed inputs, and predictable results. MCP makes tool discovery explicit before invocation.\n\n## Definition\n\nClients discover tools with tools/list and invoke a tool with tools/call. A tool definition includes a name, optional title, description, inputSchema as JSON Schema, optional outputSchema, annotations, and result content. Structured results are returned in structuredContent while content carries model-visible blocks such as text.\n\n## How it fits together\n\nThe bridge is: server advertises tool schemas, host presents them to the model as provider-specific tools or functions, model chooses one, host asks the user if needed, client sends tools/call, server returns result, host feeds the result back to the model.\n\n## Worked example\n\n```json\n{\n  \"listResponse\": {\n    \"tools\": [\n      {\n        \"name\": \"calculate_sum\",\n        \"description\": \"Add two numbers\",\n        \"inputSchema\": {\n          \"type\": \"object\",\n          \"properties\": {\n            \"a\": { \"type\": \"number\" },\n            \"b\": { \"type\": \"number\" }\n          },\n          \"required\": [\"a\", \"b\"]\n        },\n        \"outputSchema\": {\n          \"type\": \"object\",\n          \"properties\": { \"result\": { \"type\": \"number\" } },\n          \"required\": [\"result\"]\n        }\n      }\n    ]\n  },\n  \"callRequest\": {\n    \"jsonrpc\": \"2.0\",\n    \"id\": 2,\n    \"method\": \"tools/call\",\n    \"params\": { \"name\": \"calculate_sum\", \"arguments\": { \"a\": 2, \"b\": 3 } }\n  },\n  \"callResult\": {\n    \"content\": [{ \"type\": \"text\", \"text\": \"{\\\"result\\\":5}\" }],\n    \"structuredContent\": { \"result\": 5 },\n    \"isError\": false\n  }\n}\n```\n\n*Tool definition and call result*",
+  "drills": [
+    {
+      "q": "Which method lists available tools?",
+      "a": "tools/list."
+    },
+    {
+      "q": "Which method invokes a tool?",
+      "a": "tools/call."
+    },
+    {
+      "q": "Why does inputSchema matter?",
+      "a": "It lets clients, models, and servers agree on valid arguments before execution."
+    }
+  ],
+  "teachItBack": "Tools are discovered before they are invoked. The server publishes names, descriptions, and JSON Schemas; the host bridges those schemas into the model's tool-calling interface. When the model chooses a tool, MCP carries the actual call and result.",
+  "glossary": [
+    {
+      "term": "tools/list",
+      "definition": "Request method for discovering available MCP tools."
+    },
+    {
+      "term": "tools/call",
+      "definition": "Request method for invoking a named MCP tool with arguments."
+    },
+    {
+      "term": "inputSchema",
+      "definition": "JSON Schema describing allowed tool arguments."
+    },
+    {
+      "term": "structuredContent",
+      "definition": "Machine-readable JSON object returned by a tool result."
+    }
+  ],
+  "sources": [
+    {
+      "title": "MCP Tools",
+      "url": "https://modelcontextprotocol.io/specification/2025-11-25/server/tools.md",
+      "verified": true
+    },
+    {
+      "title": "Understanding MCP servers",
+      "url": "https://modelcontextprotocol.io/docs/learn/server-concepts.md",
+      "verified": true
+    }
+  ],
+  "quiz": [
+    {
+      "q": "What identifies an MCP resource?",
+      "choices": [
+        "A URI",
+        "A secret key",
+        "A model name",
+        "A git branch only"
+      ],
+      "answer": 0,
+      "explanation": "Resources are uniquely identified by URIs."
+    }
+  ]
+}

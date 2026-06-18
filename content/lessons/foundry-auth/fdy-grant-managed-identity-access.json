@@ -1,0 +1,75 @@
+{
+  "id": "fdy-grant-managed-identity-access",
+  "title": "Grant Access to a Managed Identity",
+  "lane": "foundry-auth",
+  "type": "concept",
+  "order": 110,
+  "summary": "Granting access means creating a role assignment for the MI principal ID at a resource, resource group, subscription, or service-specific data scope.",
+  "tags": [
+    "cli",
+    "portal",
+    "bicep",
+    "rbac"
+  ],
+  "analogy": "Issuing an identity badge does not put someone on the access roster. You still need to write their badge number on the roster for the exact building.",
+  "diagram": "flowchart LR\n  EnableMI[Enable managed identity] --> FindID[Find principal ID]\n  FindID --> PickRole[Pick least privilege role]\n  PickRole --> PickScope[Pick narrow scope]\n  PickScope --> Assign[Create role assignment]",
+  "body": "## First principles\n\nAuthentication creates a caller; it does not create permission. After enabling a managed identity, you must explicitly grant it access to each target resource or scope.\n\n## Definition\n\nGranting access means creating a role assignment for the MI principal ID at a resource, resource group, subscription, or service-specific data scope. Azure CLI uses az role assignment create with --role, --scope, and --assignee-object-id or --assignee.\n\n## How it fits together\n\nPortal flow: target resource Access control IAM Add role assignment Managed identity. CLI flow: look up MI principal ID, choose role, choose scope, create assignment. Infrastructure-as-code flow: define Microsoft.Authorization/roleAssignments with a stable GUID name.\n\n## Worked example\n\n```bash\n# Prefer role definition ID during Foundry role rename rollout.\nFOUNDRY_USER_ROLE_ID=\"53ca6127-db72-4b80-b1b0-d745d6d5456d\"\nMI_PRINCIPAL_ID=\"<managed-identity-principal-id>\"\nSCOPE=\"/subscriptions/<subscription-id>/resourceGroups/<resource-group>/providers/Microsoft.CognitiveServices/accounts/<foundry-account>\"\n\naz role assignment create   --assignee-object-id \"$MI_PRINCIPAL_ID\"   --role \"$FOUNDRY_USER_ROLE_ID\"   --scope \"$SCOPE\"\n```\n\n*Assign a Foundry role to a managed identity at a Foundry resource scope.*",
+  "drills": [
+    {
+      "q": "Does enabling MI grant access automatically?",
+      "a": "No. You still assign roles."
+    },
+    {
+      "q": "Why use --assignee-object-id?",
+      "a": "It avoids needing a directory lookup and uses the principal ID directly."
+    },
+    {
+      "q": "Which Foundry role ID is Foundry User?",
+      "a": "53ca6127-db72-4b80-b1b0-d745d6d5456d."
+    }
+  ],
+  "teachItBack": "To grant managed identity access, bind its principal ID to a role at a target scope. Use the narrowest workable scope. For Foundry roles during renames, role definition IDs are more stable than display names.",
+  "glossary": [
+    {
+      "term": "az role assignment create",
+      "definition": "Azure CLI command that creates RBAC assignments."
+    },
+    {
+      "term": "--assignee-object-id",
+      "definition": "CLI argument for the principal object ID."
+    },
+    {
+      "term": "--assignee-principal-type",
+      "definition": "CLI hint that reduces directory propagation issues."
+    },
+    {
+      "term": "Foundry User",
+      "definition": "Least-privilege Microsoft Foundry role for project building and data actions."
+    }
+  ],
+  "sources": [
+    {
+      "title": "az role assignment create",
+      "url": "https://learn.microsoft.com/en-us/cli/azure/role/assignment?view=azure-cli-latest#az-role-assignment-create",
+      "verified": true
+    },
+    {
+      "title": "Role-based access control for Microsoft Foundry",
+      "url": "https://learn.microsoft.com/en-us/azure/foundry/concepts/rbac-foundry",
+      "verified": true
+    }
+  ],
+  "quiz": [
+    {
+      "q": "Which topic in this lane is explicitly uncertain and must be verified in your environment?",
+      "choices": [
+        "Exact ICM managed-identity access pattern",
+        "ManagedIdentityCredential class name",
+        "Foundry User role ID",
+        "az role assignment create syntax"
+      ],
+      "answer": 0,
+      "explanation": "Public docs did not confirm exact ICM role/access details, so verify with the ICM owner."
+    }
+  ]
+}

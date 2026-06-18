@@ -1,0 +1,62 @@
+{
+  "id": "fdy-model-extras-passthrough",
+  "title": "Model-Specific Extra Parameters",
+  "lane": "foundry-models",
+  "type": "concept",
+  "order": 214,
+  "summary": "ChatCompletionsClient and EmbeddingsClient accept model extras, a dictionary added as-is to the root JSON request body.",
+  "tags": [
+    "advanced",
+    "model-extras",
+    "passthrough"
+  ],
+  "analogy": "Standard parameters are dashboard controls installed in every car. model_extras is a manufacturer-specific hidden switch. It may work beautifully on one vehicle and do nothing or fail on another.",
+  "diagram": "flowchart LR\n  Standard[Standard parameters] --> Body[Request body]\n  Extras[model extras] --> Body\n  Body --> Header[extra parameters pass through]\n  Header --> Model[Provider specific handling]",
+  "body": "## First principles\n\nThe common inference schema cannot know every special knob every model provider invents. Extra parameters are an escape hatch: useful, powerful, and dangerous if you forget they are model-specific.\n\n## Definition\n\nChatCompletionsClient and EmbeddingsClient accept model_extras, a dictionary added as-is to the root JSON request body. The SDK docs state that when model_extras is included, the client automatically adds the extra-parameters pass-through header; service behavior depends on that header and model support.\n\n## How it fits together\n\nUse model_extras only after reading the target model's docs. Keep it isolated in configuration, add tests, and log model/version. If portability matters, prefer standard parameters first.\n\n## Worked example\n\n```python\nimport os\nfrom azure.identity import DefaultAzureCredential\nfrom azure.ai.inference import ChatCompletionsClient\nfrom azure.ai.inference.models import UserMessage\n\nclient = ChatCompletionsClient(\n    endpoint=os.environ[\"AZURE_AI_CHAT_ENDPOINT\"],\n    credential=DefaultAzureCredential(),\n)\n\n# Example only: replace these with parameters documented by your model provider.\nprovider_specific = {\n    \"safe_prompt\": True,\n    \"custom_generation_mode\": \"balanced\",\n}\n\nresponse = client.complete(\n    model=os.getenv(\"AZURE_AI_MODEL_DEPLOYMENT_NAME\"),\n    messages=[UserMessage(\"Give one tip for portable inference code.\")],\n    temperature=0.3,\n    model_extras=provider_specific,\n)\nprint(response.choices[0].message.content)\n```\n\n*Pass provider-specific options separately from standard options.*",
+  "drills": [
+    {
+      "q": "Where are model_extras inserted?",
+      "a": "At the root of the JSON request body."
+    },
+    {
+      "q": "Are model_extras portable across all models?",
+      "a": "No. They are model-specific."
+    },
+    {
+      "q": "What does the SDK add when model_extras is present?",
+      "a": "The extra-parameters pass-through header, according to the docs."
+    }
+  ],
+  "teachItBack": "model_extras is the escape hatch for provider-specific knobs. Use standard parameters first. When you need extras, isolate them and document the exact model that supports them.",
+  "glossary": [
+    {
+      "term": "model_extras",
+      "definition": "Dictionary of model-specific request fields added to the root payload."
+    },
+    {
+      "term": "pass-through",
+      "definition": "Service behavior that allows extra parameters through to the model."
+    },
+    {
+      "term": "portability",
+      "definition": "Ability for code to work across models or providers."
+    }
+  ],
+  "sources": [
+    {
+      "title": "ChatCompletionsClient class",
+      "url": "https://learn.microsoft.com/en-us/python/api/azure-ai-inference/azure.ai.inference.chatcompletionsclient?view=azure-python-preview",
+      "verified": true
+    },
+    {
+      "title": "EmbeddingsClient class",
+      "url": "https://learn.microsoft.com/en-us/python/api/azure-ai-inference/azure.ai.inference.embeddingsclient?view=azure-python-preview",
+      "verified": true
+    },
+    {
+      "title": "Azure AI Inference client library for Python",
+      "url": "https://learn.microsoft.com/en-us/python/api/overview/azure/ai-inference-readme?view=azure-python-preview",
+      "verified": true
+    }
+  ]
+}

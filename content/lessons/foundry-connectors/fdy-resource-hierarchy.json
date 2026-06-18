@@ -1,0 +1,69 @@
+{
+  "id": "fdy-resource-hierarchy",
+  "title": "Clusters Databases Tables Columns",
+  "lane": "foundry-connectors",
+  "type": "concept",
+  "order": 203,
+  "summary": "An ADX cluster is the top-level compute and service endpoint. A database is a named container inside the cluster. A table is a typed collection of rows inside a database. Columns define the names and data types KQL can use.",
+  "tags": [
+    "schema",
+    "resources"
+  ],
+  "analogy": "Think of a military base: the cluster is the base, the database is a building, the table is a room, and columns are labeled shelves in that room.",
+  "diagram": "flowchart TD\n  Question[User question] --> Cluster[Choose cluster endpoint]\n  Cluster --> DB[Choose database]\n  DB --> Tables[List tables]\n  Tables --> Schema[Get table schema]\n  Schema --> Query[Run KQL]",
+  "body": "## First principles\n\nAn agent cannot query safely if it does not know where data lives. Names and scopes matter because permissions, schemas, and query costs attach to different levels.\n\n## Definition\n\nAn ADX cluster is the top-level compute and service endpoint. A database is a named container inside the cluster. A table is a typed collection of rows inside a database. Columns define the names and data types KQL can use.\n\n## How it fits together\n\nNatural language must be grounded into this hierarchy: choose cluster, choose database, discover tables, inspect columns, then run KQL. Skipping schema discovery is how agents hallucinate table names.\n\n## Worked example\n\n```kql\n.show databases\n\n.show tables\n\n.show table AppTraces schema\n```\n\n*Discover databases, tables, and schema with management commands.*",
+  "drills": [
+    {
+      "q": "What is the cluster URI used for?",
+      "a": "It identifies the ADX cluster endpoint, such as https://name.region.kusto.windows.net."
+    },
+    {
+      "q": "Why inspect schema first?",
+      "a": "Because KQL is case-sensitive and table or column guesses often fail."
+    },
+    {
+      "q": "Where does table data live?",
+      "a": "Inside a database in an ADX cluster."
+    }
+  ],
+  "teachItBack": "The hierarchy is cluster to database to table to column. The MCP server should help the agent enumerate that map before querying. Schema grounding prevents made-up KQL.",
+  "glossary": [
+    {
+      "term": "Cluster",
+      "definition": "ADX service endpoint and compute boundary."
+    },
+    {
+      "term": "Database",
+      "definition": "Named data container within a cluster."
+    },
+    {
+      "term": "Table schema",
+      "definition": "The table's columns and their data types."
+    }
+  ],
+  "sources": [
+    {
+      "title": "What is Azure Data Explorer?",
+      "url": "https://learn.microsoft.com/en-us/azure/data-explorer/data-explorer-overview",
+      "verified": true
+    },
+    {
+      "title": "Kusto Query Language overview",
+      "url": "https://learn.microsoft.com/en-us/kusto/query/?view=azure-data-explorer&preserve-view=true",
+      "verified": true
+    }
+  ],
+  "quiz": [
+    {
+      "q": "Which Kusto database role is the normal least-privilege read role?",
+      "choices": [
+        "viewers",
+        "admins",
+        "ingestors",
+        "unrestrictedviewers"
+      ],
+      "answer": 0,
+      "explanation": "viewers can view tables where restricted view access is not enabled."
+    }
+  ]
+}

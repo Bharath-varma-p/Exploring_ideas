@@ -1,0 +1,62 @@
+{
+  "id": "fdy-paging-and-lro",
+  "title": "Paging and Long Running Operations",
+  "lane": "foundry-core",
+  "type": "concept",
+  "order": 210,
+  "summary": "ItemPaged is azure-core's iterator-like paging type; you can iterate item by item or by page with continuation tokens.",
+  "tags": [
+    "paging",
+    "lro",
+    "azure-core"
+  ],
+  "analogy": "Paging is reading a thick dossier one folder at a time. A long-running operation is dropping off a work order, taking a receipt, and checking back until the shop says the job is done.",
+  "diagram": "flowchart LR\nListCall[list call] --> Page1[page one]\nPage1 --> Page2[page two]\nBeginCall[begin operation] --> Poller[poller]\nPoller --> Result[result]",
+  "body": "## First principles\n\nCloud services protect themselves and clients by splitting large result sets into pages and by turning slow operations into pollable jobs. The SDK makes both patterns feel Pythonic, but the mental model matters for cost, latency, and retries.\n\n## Definition\n\nItemPaged is azure-core's iterator-like paging type; you can iterate item by item or by_page with continuation tokens. Long-running operations in azure-core-based libraries typically use begin_ methods returning pollers whose result method waits for completion. In this lane, know the pattern; deep operation-specific LROs belong to the feature lanes that create resources.\n\n## How it fits together\n\nFor list operations, stream results and stop when you have enough. For begin_ operations, keep the poller and call result only when you are ready to wait.\n\n## Worked example\n\n```python\nimport os\nfrom azure.identity import DefaultAzureCredential\nfrom azure.ai.projects import AIProjectClient\n\nwith DefaultAzureCredential() as credential, AIProjectClient(\n    endpoint=os.environ[\"FOUNDRY_PROJECT_ENDPOINT\"],\n    credential=credential,\n) as project_client:\n    paged = project_client.connections.list()\n    for page_number, page in enumerate(paged.by_page(), start=1):\n        print(f\"Page {page_number}\")\n        for connection in page:\n            print(\" \", connection.name)\n        break\n```\n\n*Iterate connection results by page to make paging visible.*",
+  "drills": [
+    {
+      "q": "Why do list operations page results?",
+      "a": "To avoid returning huge responses and to let clients stream through results safely."
+    },
+    {
+      "q": "How do you inspect pages explicitly?",
+      "a": "Call by_page on an ItemPaged result."
+    },
+    {
+      "q": "What naming pattern often marks a long-running operation in azure-core-based libraries?",
+      "a": "A begin_ prefix returning a poller."
+    }
+  ],
+  "teachItBack": "Teach it back as: Azure SDK lists often return ItemPaged, so I can iterate naturally or page by page. Long operations often return a poller from a begin_ method and I call result when I want to wait. These are azure-core patterns I will meet across Foundry SDK work.",
+  "glossary": [
+    {
+      "term": "ItemPaged",
+      "definition": "An iterator-like azure-core type for paged service results."
+    },
+    {
+      "term": "continuation token",
+      "definition": "An opaque token that tells the service where to continue listing results."
+    },
+    {
+      "term": "poller",
+      "definition": "An object representing a long-running operation that can be waited on for a final result."
+    }
+  ],
+  "sources": [
+    {
+      "title": "ItemPaged class reference",
+      "url": "https://learn.microsoft.com/en-us/python/api/azure-core/azure.core.paging.itempaged?view=azure-python",
+      "verified": true
+    },
+    {
+      "title": "Usage patterns with the Azure libraries for Python",
+      "url": "https://learn.microsoft.com/en-us/azure/developer/python/sdk/azure-sdk-library-usage-patterns",
+      "verified": true
+    },
+    {
+      "title": "Azure Core shared client library for Python",
+      "url": "https://learn.microsoft.com/en-us/python/api/overview/azure/core-readme?view=azure-python",
+      "verified": true
+    }
+  ]
+}

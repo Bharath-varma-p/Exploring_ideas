@@ -1,0 +1,80 @@
+{
+  "id": "fdy-venv-install-stack",
+  "title": "Install the SDK Stack",
+  "lane": "foundry-core",
+  "type": "concept",
+  "order": 202,
+  "summary": "Use a virtual environment and pip to install azure-ai-projects for Foundry project operations, azure-identity for managed identity and DefaultAzureCredential, and azure-ai-inference when you need the separate preview inference clients.",
+  "tags": [
+    "install",
+    "pip",
+    "venv"
+  ],
+  "analogy": "A venv is a clean field kit. You pack exactly the tools for this mission instead of borrowing random tools from the operating system garage.",
+  "diagram": "flowchart TD\nVenv[Create venv] --> Pip[Install packages]\nPip --> Verify[Verify versions]\nVerify --> Run[Run SDK examples]",
+  "body": "## First principles\n\nA Python process imports exactly the packages available in its environment. If project code depends on Azure SDK packages, those packages must be installed into an isolated environment so your lesson does not depend on whatever happens to be installed globally.\n\n## Definition\n\nUse a virtual environment and pip to install azure-ai-projects for Foundry project operations, azure-identity for managed identity and DefaultAzureCredential, and azure-ai-inference when you need the separate preview inference clients. Async project clients also need an async transport such as aiohttp.\n\n## How it fits together\n\nCreate .venv, install pinned packages, verify with pip show, and run examples from that activated environment. Keep requirements in source control when building a real course app.\n\n## Worked example\n\n```python\ncommands = [\n    \"python3 -m venv .venv\",\n    \"source .venv/bin/activate\",\n    \"python -m pip install --upgrade pip\",\n    \"python -m pip install azure-ai-projects azure-identity azure-ai-inference\",\n    \"python -m pip show azure-ai-projects azure-identity azure-ai-inference\",\n]\nfor command in commands:\n    print(command)\n```\n\n*Runnable helper that prints the exact install commands for this lane.*",
+  "drills": [
+    {
+      "q": "Why use a venv?",
+      "a": "To isolate package versions so examples are reproducible and do not depend on global Python state."
+    },
+    {
+      "q": "Which package contains AIProjectClient?",
+      "a": "azure-ai-projects."
+    },
+    {
+      "q": "Which package supplies DefaultAzureCredential and ManagedIdentityCredential?",
+      "a": "azure-identity."
+    }
+  ],
+  "teachItBack": "Teach it back as: Before writing SDK code, I create a clean Python environment. I install azure-ai-projects for the project client, azure-identity for token credentials, and azure-ai-inference only when I need the separate inference-preview clients. Then I verify versions before debugging code.",
+  "glossary": [
+    {
+      "term": "venv",
+      "definition": "Python's built-in virtual environment mechanism for isolated package installs."
+    },
+    {
+      "term": "pip",
+      "definition": "The standard Python package installer used to install Azure SDK libraries into the active environment."
+    },
+    {
+      "term": "azure-ai-inference",
+      "definition": "A separate preview client library for model inference clients such as chat completions and embeddings."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Azure AI Projects client library for Python",
+      "url": "https://learn.microsoft.com/en-us/python/api/overview/azure/ai-projects-readme?view=azure-python",
+      "verified": true
+    },
+    {
+      "title": "Azure AI Inference client library for Python",
+      "url": "https://learn.microsoft.com/en-us/python/api/overview/azure/ai-inference-readme?view=azure-python-preview",
+      "verified": true
+    },
+    {
+      "title": "Usage patterns with the Azure libraries for Python",
+      "url": "https://learn.microsoft.com/en-us/azure/developer/python/sdk/azure-sdk-library-usage-patterns",
+      "verified": true
+    },
+    {
+      "title": "azure-ai-projects on PyPI",
+      "url": "https://pypi.org/project/azure-ai-projects/",
+      "verified": true
+    }
+  ],
+  "quiz": [
+    {
+      "q": "What is the current documented constructor shape for the synchronous AIProjectClient?",
+      "choices": [
+        "AIProjectClient(endpoint, credential, allow_preview=False)",
+        "AIProjectClient(static_token, deployment)",
+        "AIProjectClient(subscription_id, tenant_id)",
+        "AIProjectClient.from_secret(secret)"
+      ],
+      "answer": 0,
+      "explanation": "The reference shows endpoint and TokenCredential, with allow_preview as an optional keyword-only flag."
+    }
+  ]
+}

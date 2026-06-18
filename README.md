@@ -2,10 +2,12 @@
 
 # ◆ Agentic Design Academy
 
-### An interactive, extensible curriculum for **context-aware & platform-aware** agentic AI system design.
+### An interactive, extensible curriculum for **context-aware & platform-aware** agentic AI system design — now with a full **Azure AI Foundry SDK + MCP** track.
 
 Learn how the best teams build agents that sense the screen, the app, and even the cursor —
-then design your own. Patterns · real product teardowns · a system-design framework · quizzes · flashcards.
+then design your own. Then go deeper: deploy a model in **Azure AI Foundry**, call it from code,
+and wire a Foundry agent to **ICM**, **Kusto**, and **Azure DevOps** over **MCP**, authenticated
+with **managed identity only — never keys**.
 
 **▶ Live site:** `https://bharath-varma-p.github.io/Exploring_ideas/` *(after you enable Pages — see below)*
 
@@ -17,22 +19,34 @@ then design your own. Patterns · real product teardowns · a system-design fram
 
 | | |
 |---|---|
-| **54 lessons** across 5 lanes | Every concept taught from first principles → analogy → diagram → real example → drill → "teach it back" |
-| **136-term glossary** | Every term defined before it's used; A–Z index of everything |
+| **189 lessons** across 11 lanes | Every concept taught from first principles → analogy → diagram → real example → drill → "teach it back" |
+| **501-term glossary** | Every term defined before it's used; A–Z index of everything |
 | **10 product teardowns** | Whoop, Gemini, Claude, Cursor, Perplexity, ChatGPT, Copilot, Arc/Dia, Raycast, Notion AI |
-| **102 quiz questions** | Instant-feedback drills + a 15-question final self-test |
+| **182 quiz questions** | Instant-feedback drills, per-lane quizzes, and a final self-test |
 | **Flashcard drill mode** | Auto-generated from every lesson's drills, filterable by lane |
 | **Progress tracking** | Mark concepts learned; persists in `localStorage` |
-| **Command palette** | `⌘K` / `Ctrl+K` global search across patterns, teardowns, and terms |
+| **Command palette** | `⌘K` / `Ctrl+K` global search across patterns, teardowns, terms, and the Foundry track |
 
-### The five lanes
+### The lanes
+
+**Agentic design (the original 5):**
 1. 🧩 **Agentic Architecture & Patterns** — ReAct, planner-executor, multi-agent, tool use, RAG, memory, reflection, routing, guardrails, HITL.
 2. 🛰️ **Context & Platform Awareness** — sensing cursor/selection/screen/app/history/OS, accessibility APIs, permissions, and deciding "where to go and what to search."
 3. ✨ **UI/UX & Engagement** — streaming, motion, microinteractions, latency masking, trust, onboarding, and the *ethical* Hook model.
 4. 🔍 **Real-World Teardowns** — product → context signals → patterns → UX moves → sources.
 5. 📐 **System-Design Framework & Blueprint** — a repeatable method, applied to a full cursor/context/platform-aware desktop-agent build blueprint.
 
-> Built by **5 specialized AI subagents** (one per lane, different models — see [`CREDITS`](#how-this-was-built)), each researching the real world and writing into one shared schema.
+**Azure AI Foundry SDK + MCP (the 6 new lanes — managed identity only, never keys):**
+6. 🏗️ **Azure AI Foundry & SDK** — hubs, projects, resources, portal vs SDK, `AIProjectClient`, connections, config.
+7. 🔐 **Managed Identity (Keyless Auth)** — Entra tokens, IMDS, system- vs user-assigned identity, `DefaultAzureCredential`, RBAC, zero secrets.
+8. 🚀 **Model Deployment & Inference** — model catalog, deployments, endpoints, versions, chat completions, streaming, tokens, error handling.
+9. 🔌 **MCP & Foundry Agents** — the Model Context Protocol (servers, tools, transports, JSON-RPC) and the Foundry Agent Service (threads, runs, tool calling).
+10. 🛠️ **MCP Connectors: ICM, Kusto, ADO** — wire agents to real systems: ICM incidents, Kusto/ADX KQL, and Azure DevOps work items/pipelines/repos.
+11. 🎖️ **Reference Architecture & Teaching Kit** — the whole stack on one page (end-to-end diagram), a present-it deck, and a teach-it-back capstone self-test.
+
+> The Foundry track was built by **10 specialized subagents** (one per domain, no overlap), each
+> teaching its lane from first principles, then integrated into this academy's shared content schema
+> so the sidebar, search, A–Z index, glossary, flashcards, and quizzes all pick it up automatically.
 
 ---
 
@@ -67,15 +81,21 @@ To add a whole new **lane**, add one entry to the `LANES` array in `tools/build.
 ```
 content/
 ├── lessons/
-│   ├── architecture/      ← drop pattern/concept lessons here
+│   ├── architecture/         ← agentic pattern/concept lessons
 │   ├── context-awareness/
 │   ├── uiux/
 │   ├── teardowns/
-│   └── framework/
-├── glossary.json          ← optional standalone terms
-├── quizzes/               ← optional curated quiz banks (e.g. final-exam.json)
-├── data.json              ← GENERATED bundle the site loads (don't hand-edit)
-└── manifest.json          ← GENERATED index
+│   ├── framework/
+│   ├── foundry-core/         ← Azure AI Foundry & SDK
+│   ├── foundry-auth/         ← managed identity (keyless auth)
+│   ├── foundry-models/       ← deployment & inference
+│   ├── foundry-mcp/          ← MCP & Foundry agents
+│   ├── foundry-connectors/   ← ICM · Kusto · ADO over MCP
+│   └── foundry-capstone/     ← reference architecture, teaching kit, self-test
+├── glossary.json             ← optional standalone terms
+├── quizzes/                  ← optional curated quiz banks (e.g. final-exam.json)
+├── data.json                 ← GENERATED bundle the site loads (don't hand-edit)
+└── manifest.json             ← GENERATED index
 ```
 
 ---
@@ -125,7 +145,10 @@ You can also trigger a deploy manually from the **Actions** tab → *Deploy to G
 
 ## How this was built
 
-Five specialized subagents, one per lane, each given the shared content schema and a research+writing brief:
+The original 5 agentic-design lanes were written by 5 specialized subagents (one per lane, different models).
+The 6 Foundry lanes were written by 10 more subagents — one per domain (Foundry fundamentals, SDK core,
+managed identity, model deployment, inference, MCP fundamentals, Foundry agents, and the ICM/Kusto/ADO
+connectors) — then converted into this academy's lesson schema so everything lives in one site.
 
 | Lane | Model | Why |
 |---|---|---|
@@ -134,8 +157,10 @@ Five specialized subagents, one per lane, each given the shared content schema a
 | UI/UX & engagement | Gemini 3.1 Pro | Design & motion sensibility, UX breadth |
 | Real-world teardowns | GPT-5.5 | Broad, source-grounded research synthesis |
 | Framework & blueprint | Claude Opus 4.8 | Synthesis & end-to-end design rigor |
+| Azure AI Foundry SDK + MCP (×10 lanes) | Claude Opus 4.8 | First-principles teaching, managed-identity-only, A–Z coverage |
 
-Sources are linked on every lesson and flagged `verified` / `unverified` for honesty.
+Sources are linked on every lesson and flagged `verified` / `unverified` for honesty. Foundry features that
+are preview or internal are called out as such rather than guessed.
 
 ## License
 

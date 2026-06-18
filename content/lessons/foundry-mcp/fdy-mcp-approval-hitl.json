@@ -1,0 +1,66 @@
+{
+  "id": "fdy-mcp-approval-hitl",
+  "title": "Approval and Human Control",
+  "lane": "foundry-mcp",
+  "type": "concept",
+  "order": 207,
+  "summary": "MCP approval flow pauses execution and emits an approval request containing the server, tool name, and arguments. The client reviews the request and returns an approval or denial so the agent can continue or safely stop.",
+  "tags": [
+    "mcp",
+    "security",
+    "human-in-the-loop"
+  ],
+  "analogy": "It is like a weapons release protocol: the pilot can recommend the action, but command checks target, rules of engagement, and collateral risk before authorizing it.",
+  "diagram": "sequenceDiagram\nparticipant Agent as Agent\nparticipant App as App policy\nparticipant Human as Reviewer\nparticipant MCP as MCP server\nAgent-->>App: approval request\nApp-->>Human: show server tool args\nHuman-->>App: approve or deny\nApp-->>Agent: approval response\nAgent->>MCP: call tool if approved\nMCP-->>Agent: result",
+  "body": "## First principles\n\nFirst principles: model intent is not authorization. Before an agent writes data, reads sensitive scopes, or calls an unfamiliar endpoint, a deterministic human or policy gate should decide whether the action is allowed.\n\n## Definition\n\nMCP approval flow pauses execution and emits an approval request containing the server, tool name, and arguments. The client reviews the request and returns an approval or denial so the agent can continue or safely stop.\n\n## How it fits together\n\nApproval is a policy hook. Start strict, log every request, auto-approve only low-risk read tools with bounded arguments, and route write operations to an explicit user approval UX.\n\n## Worked example\n\n```python\n# pip install azure-ai-projects azure-ai-agents>=1.2.0b3 azure-identity --pre\n# The SDK sample exposes RunHandler.submit_mcp_tool_approval for MCP approvals.\nfrom typing import Any\nfrom azure.ai.agents.models import RunHandler, RequiredMcpToolCall, ThreadRun, ToolApproval\n\nREAD_ONLY_PREFIXES = (\"get_\", \"list_\", \"search_\", \"read_\")\n\nclass LeastPrivilegeMcpRunHandler(RunHandler):\n    def __init__(self, headers: dict[str, str] | None = None):\n        self.headers = headers or {}\n\n    def submit_mcp_tool_approval(\n        self, *, run: ThreadRun, tool_call: RequiredMcpToolCall, **kwargs: Any\n    ) -> ToolApproval:\n        name = getattr(tool_call, \"name\", \"\") or \"\"\n        approve = name.startswith(READ_ONLY_PREFIXES)\n        print({\"run_id\": run.id, \"tool_call_id\": tool_call.id, \"tool\": name, \"approved\": approve})\n        return ToolApproval(tool_call_id=tool_call.id, approve=approve, headers=self.headers)\n```\n\n*Policy based approval handler for azure-ai-agents MCP runs*",
+  "drills": [
+    {
+      "q": "Is model confidence the same as authorization?",
+      "a": "No. Authorization must come from identity, RBAC, allow lists, and approval policy."
+    },
+    {
+      "q": "What should be logged for an approval?",
+      "a": "Run or response ID, server, tool name, arguments, decision, approver, and timestamp."
+    },
+    {
+      "q": "What calls are safest to auto-approve?",
+      "a": "Narrow, read-only calls with bounded inputs and no sensitive data expansion."
+    }
+  ],
+  "teachItBack": "Human-in-the-loop is where agent autonomy meets accountability. The model proposes a tool call, but your policy approves it. Treat every approval as an auditable security decision.",
+  "glossary": [
+    {
+      "term": "Human-in-the-loop",
+      "definition": "A control where a person or deterministic policy reviews an agent action before execution."
+    },
+    {
+      "term": "ToolApproval",
+      "definition": "SDK object that approves or denies a requested MCP tool call."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Microsoft Learn: Connect to MCP server endpoints for agents",
+      "url": "https://learn.microsoft.com/en-us/azure/foundry/agents/how-to/tools/model-context-protocol",
+      "verified": true
+    },
+    {
+      "title": "Azure SDK for Python: MCP create and process sample",
+      "url": "https://github.com/Azure/azure-sdk-for-python/blob/main/sdk/ai/azure-ai-agents/samples/agents_tools/sample_agents_mcp_in_create_and_process.py",
+      "verified": true
+    }
+  ],
+  "quiz": [
+    {
+      "q": "Why enable tracing for agent runs?",
+      "choices": [
+        "To inspect inputs, outputs, tool use, latency, retries, token use, and failures",
+        "To remove the need for RBAC",
+        "To make MCP unauthenticated",
+        "To hide tool calls from operators"
+      ],
+      "answer": 0,
+      "explanation": "Tracing provides operational visibility for multi-step agent behavior."
+    }
+  ]
+}

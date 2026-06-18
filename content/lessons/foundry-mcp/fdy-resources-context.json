@@ -1,0 +1,74 @@
+{
+  "id": "fdy-resources-context",
+  "title": "Resources and Context",
+  "lane": "foundry-mcp",
+  "type": "concept",
+  "order": 108,
+  "summary": "Resources are server-exposed data identified by URIs.",
+  "tags": [
+    "resources",
+    "uris",
+    "subscriptions"
+  ],
+  "analogy": "Resources are library books with call numbers. A catalog tells you what exists, a URI is the call number, reading fetches pages, and subscriptions tell you when a book changed.",
+  "diagram": "sequenceDiagram\nparticipant Client\nparticipant Server\nClient->>Server: resources list\nServer-->>Client: resource URIs\nClient->>Server: resources read uri\nServer-->>Client: contents\nClient->>Server: resources subscribe uri\nServer--)Client: notifications resources updated",
+  "body": "## First principles\n\nFirst principles: models need evidence, but not every piece of evidence is an action. Some context should be readable, typed, addressable, and refreshable without granting mutation power. MCP resources provide that passive context layer.\n\n## Definition\n\nResources are server-exposed data identified by URIs. Clients use resources/list to discover fixed resources, resources/templates/list for URI templates, resources/read to retrieve contents, and optionally resources/subscribe plus notifications/resources/updated for change tracking.\n\n## How it fits together\n\nDo not treat a resource URI as a shell command or raw file permission. It is an MCP identifier. The host decides how to include resource content in the model context, often through UI selection, search, or heuristics.\n\n## Worked example\n\n```json\n{\n  \"list\": { \"jsonrpc\": \"2.0\", \"id\": 1, \"method\": \"resources/list\" },\n  \"read\": {\n    \"jsonrpc\": \"2.0\",\n    \"id\": 2,\n    \"method\": \"resources/read\",\n    \"params\": { \"uri\": \"file:///project/README.md\" }\n  },\n  \"subscribe\": {\n    \"jsonrpc\": \"2.0\",\n    \"id\": 3,\n    \"method\": \"resources/subscribe\",\n    \"params\": { \"uri\": \"file:///project/README.md\" }\n  }\n}\n```\n\n*Resource discovery read and subscription*",
+  "drills": [
+    {
+      "q": "What uniquely identifies a resource?",
+      "a": "A URI."
+    },
+    {
+      "q": "Which method reads resource contents?",
+      "a": "resources/read."
+    },
+    {
+      "q": "What optional feature notifies clients of resource changes?",
+      "a": "Resource subscriptions with notifications/resources/updated."
+    }
+  ],
+  "teachItBack": "Resources are passive context, not actions. They are discovered, addressed by URI, read by the client, and optionally subscribed to for updates. The host decides how resource content becomes model context.",
+  "glossary": [
+    {
+      "term": "URI",
+      "definition": "Unique identifier for an MCP resource, such as file, https, git, or a custom scheme."
+    },
+    {
+      "term": "resources/read",
+      "definition": "Request method that retrieves resource contents."
+    },
+    {
+      "term": "resource template",
+      "definition": "Parameterized URI template for dynamic resource lookup."
+    },
+    {
+      "term": "subscription",
+      "definition": "Optional mechanism for update notifications on a resource."
+    }
+  ],
+  "sources": [
+    {
+      "title": "MCP Resources",
+      "url": "https://modelcontextprotocol.io/specification/2025-11-25/server/resources.md",
+      "verified": true
+    },
+    {
+      "title": "Understanding MCP servers",
+      "url": "https://modelcontextprotocol.io/docs/learn/server-concepts.md",
+      "verified": true
+    }
+  ],
+  "quiz": [
+    {
+      "q": "What should an Azure-facing MCP server prefer for Azure resource access?",
+      "choices": [
+        "Managed identity with least privilege RBAC",
+        "Hard-coded API keys",
+        "Checked-in service principal secrets",
+        "User passwords collected by elicitation form"
+      ],
+      "answer": 0,
+      "explanation": "Managed identity avoids application-managed secrets and supports Azure RBAC-scoped access."
+    }
+  ]
+}

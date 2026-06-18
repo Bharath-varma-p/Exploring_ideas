@@ -1,0 +1,75 @@
+{
+  "id": "fdy-official-mcp-server-current",
+  "title": "Official ADO MCP Server Current Shape",
+  "lane": "foundry-connectors",
+  "type": "concept",
+  "order": 304,
+  "summary": "The official Microsoft azure-devops-mcp project now recommends the remote Azure DevOps MCP Server in public preview at https://mcp.dev.azure.com/{organization}. The local stdio server remains available with Node.",
+  "tags": [
+    "mcp",
+    "official",
+    "toolsets"
+  ],
+  "analogy": "The MCP server is a bilingual dispatcher. The agent speaks tool calls; the dispatcher speaks Azure DevOps APIs.",
+  "diagram": "graph TD\nAgent[Foundry agent] --> MCP[ADO MCP server]\nMCP --> Core[Core projects]\nMCP --> Wit[Work items]\nMCP --> Repos[Repos and PRs]\nMCP --> Pipe[Pipelines]\nMCP --> Wiki[Wiki]\nMCP --> Test[Test Plans]",
+  "body": "## First principles\n\nFirst principles: an MCP server is an adapter. It exposes Azure DevOps operations as named tools so an agent does not invent REST URLs or payloads. Current shape matters because agents must bind to what actually exists today.\n\n## Definition\n\nThe official Microsoft azure-devops-mcp project now recommends the remote Azure DevOps MCP Server in public preview at https://mcp.dev.azure.com/{organization}. The local stdio server remains available with Node.js 20 plus npx -y @azure-devops/mcp {organization}. Toolsets include core, repos, wit, pipelines, wiki, work, testplan, and local docs also mention search, work-items, repositories, test-plans, and advanced-security domains.\n\n## How it fits together\n\nPrefer remote HTTP when the client supports it because there is no local process to maintain. Use local stdio only when the client needs stdio or when the remote preview does not support the environment.\n\n## Worked example\n\n```python\n# Representative configs as Python dictionaries.\nremote_mcp = {\n    'type': 'http',\n    'url': 'https://mcp.dev.azure.com/contoso',\n    'headers': {'X-MCP-Toolsets': 'repos,wit,pipelines', 'X-MCP-Readonly': 'true'},\n}\n\nlocal_stdio = {\n    'type': 'stdio',\n    'command': 'npx',\n    'args': ['-y', '@azure-devops/mcp', 'contoso', '-d', 'core', 'work-items', 'repositories'],\n}\nprint(remote_mcp)\nprint(local_stdio)\n```\n\n*Represent remote and local MCP configuration*",
+  "drills": [
+    {
+      "q": "What endpoint does the remote preview use?",
+      "a": "https://mcp.dev.azure.com/{organization}."
+    },
+    {
+      "q": "How do you run the local official server?",
+      "a": "With npx, for example npx -y @azure-devops/mcp contoso."
+    },
+    {
+      "q": "Why filter toolsets?",
+      "a": "To reduce blast radius, agent confusion, and accidental writes."
+    }
+  ],
+  "teachItBack": "The official server is the bridge from agent tools to Azure DevOps. Current docs recommend remote HTTP preview, while local npx stdio remains available. Toolsets let us expose only the services the lesson or agent actually needs.",
+  "glossary": [
+    {
+      "term": "Remote MCP Server",
+      "definition": "Azure DevOps hosted MCP endpoint using streamable HTTP transport."
+    },
+    {
+      "term": "Local MCP Server",
+      "definition": "Node based stdio server run locally with npx."
+    },
+    {
+      "term": "Toolset",
+      "definition": "Named subset of MCP tools such as repos, wit, pipelines, wiki, work, or testplan."
+    }
+  ],
+  "sources": [
+    {
+      "title": "GitHub: microsoft azure-devops-mcp",
+      "url": "https://github.com/microsoft/azure-devops-mcp",
+      "verified": false
+    },
+    {
+      "title": "Microsoft Learn: Remote Azure DevOps MCP Server",
+      "url": "https://learn.microsoft.com/en-us/azure/devops/mcp-server/remote-mcp-server?view=azure-devops",
+      "verified": false
+    },
+    {
+      "title": "Azure DevOps MCP TOOLSET",
+      "url": "https://raw.githubusercontent.com/microsoft/azure-devops-mcp/main/docs/TOOLSET.md",
+      "verified": false
+    }
+  ],
+  "quiz": [
+    {
+      "q": "Which endpoint pattern is documented for the remote Azure DevOps MCP Server preview?",
+      "choices": [
+        "https://mcp.dev.azure.com/{organization}",
+        "https://management.azure.com/mcp",
+        "https://dev.azure.com/{organization}/pat",
+        "https://localhost/ado-only"
+      ],
+      "answer": 0,
+      "explanation": "The remote MCP preview uses the mcp.dev.azure.com organization endpoint."
+    }
+  ]
+}

@@ -1,0 +1,62 @@
+{
+  "id": "fdy-grant-permissions",
+  "title": "Grant the Identity ADX Read Access",
+  "lane": "foundry-connectors",
+  "type": "concept",
+  "order": 209,
+  "summary": "Grant the identity Azure RBAC Reader on the ADX cluster resource so it can read control-plane resource information. Then grant the Kusto database-level viewers role so it can view tables where RestrictedViewAccess is not enabled.",
+  "tags": [
+    "permissions",
+    "viewer",
+    "reader"
+  ],
+  "analogy": "The cluster Reader role gets the identity through the front gate to read the base directory. The database viewers role gives it a visitor pass to specific rooms of data.",
+  "diagram": "flowchart LR\n  MI[Managed identity] --> ARM[Azure RBAC Reader on cluster]\n  MI --> DBRole[Kusto database viewers]\n  ARM --> Enumerate[Can read cluster metadata]\n  DBRole --> Query[Can query allowed database tables]",
+  "body": "## First principles\n\nAuthentication only says who the workload is. Authorization says what it may do. A perfectly authenticated managed identity should still fail if it was not granted ADX read permissions.\n\n## Definition\n\nGrant the identity Azure RBAC Reader on the ADX cluster resource so it can read control-plane resource information. Then grant the Kusto database-level viewers role so it can view tables where RestrictedViewAccess is not enabled. Database roles are managed in the portal or with commands such as .add database DatabaseName viewers and principals can include managed identities in app format.\n\n## How it fits together\n\nUse least privilege: Reader at the cluster resource scope, viewers only on the databases the agent needs, and no admins, users, ingestors, or unrestrictedviewers unless a separate risk review proves necessity.\n\n## Worked example\n\n```kql\n// Run by a database admin. Replace the app id and tenant.\n.add database Samples viewers ('aadapp=00000000-0000-0000-0000-000000000000;contoso.com') 'Foundry Kusto MCP read access'\n\n.show database Samples principals\n```\n\n*Add and verify a database viewer principal.*",
+  "drills": [
+    {
+      "q": "Which Kusto database role is the normal read-only role?",
+      "a": "viewers."
+    },
+    {
+      "q": "What Azure RBAC role is enough to read resource metadata?",
+      "a": "Reader."
+    },
+    {
+      "q": "Should the agent identity be a database admin?",
+      "a": "No. Use least privilege; admin is unnecessary for read-only KQL questions."
+    }
+  ],
+  "teachItBack": "Two permissions are needed in practice: Azure Reader on the cluster resource and Kusto viewers on the database. Authentication without database role assignment is not enough. Least privilege means grant only the databases and roles needed for reading.",
+  "glossary": [
+    {
+      "term": "Reader",
+      "definition": "Azure built-in RBAC role that can view resources but not modify them."
+    },
+    {
+      "term": "viewers",
+      "definition": "Kusto database role that can view tables unless restricted view access blocks them."
+    },
+    {
+      "term": "Principal",
+      "definition": "A user, group, app, or managed identity assigned to a role."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Manage database security roles",
+      "url": "https://learn.microsoft.com/en-us/kusto/management/manage-database-security-roles?view=azure-data-explorer&preserve-view=true",
+      "verified": true
+    },
+    {
+      "title": "Manage database permissions in Azure Data Explorer",
+      "url": "https://learn.microsoft.com/en-us/azure/data-explorer/manage-database-permissions",
+      "verified": true
+    },
+    {
+      "title": "Azure built-in Reader role",
+      "url": "https://learn.microsoft.com/en-us/azure/role-based-access-control/built-in-roles/general#reader",
+      "verified": true
+    }
+  ]
+}

@@ -1,0 +1,70 @@
+{
+  "id": "fdy-prompts-templates",
+  "title": "Prompts as Templates",
+  "lane": "foundry-mcp",
+  "type": "concept",
+  "order": 109,
+  "summary": "Prompts are user-controlled templates exposed by servers. Clients discover them with prompts/list and retrieve a specific prompt with prompts/get, optionally providing arguments.",
+  "tags": [
+    "prompts",
+    "templates",
+    "user-controlled"
+  ],
+  "analogy": "A prompt is a mission briefing form. The user selects the form, fills in variables, and the resulting briefing becomes messages for the model.",
+  "diagram": "sequenceDiagram\nparticipant User\nparticipant Host\nparticipant Client\nparticipant Server\nUser->>Host: select prompt\nClient->>Server: prompts list\nServer-->>Client: prompt descriptors\nClient->>Server: prompts get with arguments\nServer-->>Client: prompt messages\nHost-->>User: show or run template",
+  "body": "## First principles\n\nFirst principles: repeated expert workflows should not rely on users remembering perfect phrasing. A prompt primitive packages a reusable instruction pattern with named arguments so users can intentionally start a known workflow.\n\n## Definition\n\nPrompts are user-controlled templates exposed by servers. Clients discover them with prompts/list and retrieve a specific prompt with prompts/get, optionally providing arguments. The response contains structured messages such as user or assistant content blocks.\n\n## How it fits together\n\nPrompts are not hidden system takeovers. They are meant to be discoverable and explicitly selected, often as slash commands or command-palette entries. They can reference resources or guide use of tools, but the host remains responsible for presentation and consent.\n\n## Worked example\n\n```json\n{\n  \"listRequest\": { \"jsonrpc\": \"2.0\", \"id\": 1, \"method\": \"prompts/list\" },\n  \"getRequest\": {\n    \"jsonrpc\": \"2.0\",\n    \"id\": 2,\n    \"method\": \"prompts/get\",\n    \"params\": {\n      \"name\": \"code_review\",\n      \"arguments\": { \"code\": \"def hello(): print('world')\" }\n    }\n  }\n}\n```\n\n*Prompt list and get methods*",
+  "drills": [
+    {
+      "q": "Who controls prompt invocation in MCP's interaction model?",
+      "a": "The user."
+    },
+    {
+      "q": "Which method discovers prompts?",
+      "a": "prompts/list."
+    },
+    {
+      "q": "What does prompts/get return?",
+      "a": "Prompt content, usually structured messages, customized with arguments."
+    }
+  ],
+  "teachItBack": "Prompts are reusable templates, not model-selected actions. The user chooses a prompt, the client retrieves its messages, and the host decides how to present or run them. Use prompts to encode repeatable workflows clearly.",
+  "glossary": [
+    {
+      "term": "prompts/list",
+      "definition": "Request method for discovering prompt templates."
+    },
+    {
+      "term": "prompts/get",
+      "definition": "Request method for retrieving a named prompt with arguments."
+    },
+    {
+      "term": "PromptMessage",
+      "definition": "A role plus content block returned by prompts/get."
+    }
+  ],
+  "sources": [
+    {
+      "title": "MCP Prompts",
+      "url": "https://modelcontextprotocol.io/specification/2025-11-25/server/prompts.md",
+      "verified": true
+    },
+    {
+      "title": "Understanding MCP servers",
+      "url": "https://modelcontextprotocol.io/docs/learn/server-concepts.md",
+      "verified": true
+    }
+  ],
+  "quiz": [
+    {
+      "q": "How does MCP relate to LLM function calling?",
+      "choices": [
+        "MCP standardizes the tool layer while the model still emits tool-call intent",
+        "MCP eliminates all model tool calling",
+        "MCP requires every server to call the model directly",
+        "MCP only supports prompts and not tools"
+      ],
+      "answer": 0,
+      "explanation": "Hosts bridge MCP tool schemas and calls to provider-specific function or tool calling APIs."
+    }
+  ]
+}

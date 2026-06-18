@@ -1,0 +1,62 @@
+{
+  "id": "fdy-least-privilege-rbac",
+  "title": "Least Privilege for Incident Tools",
+  "lane": "foundry-connectors",
+  "type": "concept",
+  "order": 108,
+  "summary": "Least privilege means granting the managed identity only the incident-system actions it needs: read incidents, read on-call schedules, add discussion, acknowledge, create, update, or resolve.",
+  "tags": [
+    "rbac",
+    "least-privilege",
+    "permissions"
+  ],
+  "analogy": "A hospital volunteer may read a room number, a nurse may update vitals, and a doctor may discharge the patient. All have badges, but badges do not grant identical powers.",
+  "diagram": "graph TD\nReadOnly[Read only identity] --> Query[query incidents]\nReadOnly --> GetOnCall[get on call]\nWriter[Write identity] --> AddDiscussion[add discussion]\nWriter --> Acknowledge[acknowledge]\nCommander[Commander identity] --> Resolve[resolve incident]",
+  "body": "## First principles\n\nFirst principles: identity without least privilege is just a safer way to do too much damage. An incident-reading agent should not be able to create, acknowledge, or resolve incidents unless that is explicitly required and approved.\n\n## Definition\n\nLeast privilege means granting the managed identity only the incident-system actions it needs: read incidents, read on-call schedules, add discussion, acknowledge, create, update, or resolve. Separate read-only and write-capable agents or identities when possible.\n\n## How it fits together\n\nBuild a permission matrix before writing code. Map each MCP tool to the minimum role. Prefer read-only by default; put create, acknowledge, update, and resolve behind approval and stronger roles. Audit every write with identity, arguments, and approval record.\n\n## Worked example\n\n```python\n# Representative policy matrix. Enforce this in the MCP server before backend calls.\nTOOL_ROLES = {\n    \"query_incidents\": {\"Incident.Reader\"},\n    \"get_incident\": {\"Incident.Reader\"},\n    \"get_on_call\": {\"Incident.Reader\"},\n    \"add_discussion\": {\"Incident.Commenter\"},\n    \"acknowledge_incident\": {\"Incident.Responder\"},\n    \"create_incident\": {\"Incident.Creator\"},\n    \"update_incident\": {\"Incident.Responder\"},\n}\n\ndef allowed(tool_name: str, caller_roles: set[str]) -> bool:\n    return bool(TOOL_ROLES.get(tool_name, set()) & caller_roles)\n\nprint(allowed(\"query_incidents\", {\"Incident.Reader\"}))\nprint(allowed(\"acknowledge_incident\", {\"Incident.Reader\"}))\n```\n\n*Representative RBAC gate for MCP incident tools*",
+  "drills": [
+    {
+      "q": "Why separate read and write roles?",
+      "a": "So normal question answering cannot accidentally mutate operational records."
+    },
+    {
+      "q": "Which tools need stronger controls?",
+      "a": "create, acknowledge, update, resolve, and any discussion or annotation write."
+    },
+    {
+      "q": "Where should the permission check run?",
+      "a": "In the MCP server and backend authorization layer, not only in the agent prompt."
+    }
+  ],
+  "teachItBack": "Managed identity must be paired with least privilege. Give read tools read roles and write tools only to identities that truly need them. Approval protects user intent, while RBAC protects the backend regardless of prompt behavior.",
+  "glossary": [
+    {
+      "term": "RBAC",
+      "definition": "Role-based access control, where permissions are grouped into roles assigned to identities."
+    },
+    {
+      "term": "Least privilege",
+      "definition": "Grant only the minimum permissions required for the task."
+    },
+    {
+      "term": "Permission matrix",
+      "definition": "A table mapping tools or actions to required roles."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Microsoft Learn: Set Up MCP Server Authentication",
+      "url": "https://learn.microsoft.com/en-us/azure/foundry/agents/how-to/mcp-authentication",
+      "verified": true
+    },
+    {
+      "title": "Microsoft Entra: Managed identities for Azure resources",
+      "url": "https://learn.microsoft.com/en-us/entra/identity/managed-identities-azure-resources/overview",
+      "verified": true
+    },
+    {
+      "title": "Model Context Protocol: Tools",
+      "url": "https://modelcontextprotocol.io/specification/2025-06-18/server/tools",
+      "verified": true
+    }
+  ]
+}

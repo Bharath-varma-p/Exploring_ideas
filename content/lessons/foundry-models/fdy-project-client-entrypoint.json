@@ -1,0 +1,70 @@
+{
+  "id": "fdy-project-client-entrypoint",
+  "title": "Getting a Client from a Foundry Project",
+  "lane": "foundry-models",
+  "type": "concept",
+  "order": 202,
+  "summary": "In the current azure-ai-projects docs, AIProjectClient is created with endpoint and TokenCredential. It exposes get openai client for an authenticated OpenAI-compatible client. The current public docs do not show project client.",
+  "tags": [
+    "foundry",
+    "managed-identity",
+    "client-creation"
+  ],
+  "analogy": "The project client is a building reception desk. It verifies your badge once and gives you directions to the right office. For current Foundry SDK, the documented office for model calls is get_openai_client; azure-ai-inference clients can also be created directly with the same managed identity.",
+  "diagram": "sequenceDiagram\n  participant App as Python app\n  participant Project as AIProjectClient\n  participant MI as Managed identity\n  participant OpenAI as OpenAI compatible client\n  participant Model as Deployed model\n  App->>Project: create with endpoint and credential\n  Project->>MI: request token\n  App->>Project: get openai client\n  Project->>OpenAI: configure bearer token provider\n  App->>OpenAI: create response with model deployment\n  OpenAI->>Model: inference request\n  Model-->>App: text response",
+  "body": "## First principles\n\nA Foundry project groups deployments and assets. The safest inference path is to let the project client reuse the same managed-identity credential, then request an authenticated inference surface from that project.\n\n## Definition\n\nIn the current azure-ai-projects docs, AIProjectClient is created with endpoint and TokenCredential. It exposes get_openai_client for an authenticated OpenAI-compatible client. The current public docs do not show project_client.inference.get_chat_completions_client; older or preview material may mention it, so treat that name as version-specific.\n\n## How it fits together\n\nUse AIProjectClient when your app is already organized around a Foundry project. Use project_client.get_openai_client for OpenAI-compatible Responses or Chat Completions APIs. Use azure-ai-inference directly when you want one common ChatCompletionsClient or EmbeddingsClient shape across model providers.\n\n## Worked example\n\n```python\nimport os\nfrom azure.identity import DefaultAzureCredential\nfrom azure.ai.projects import AIProjectClient\n\n# Required:\n# AZURE_AI_PROJECT_ENDPOINT like https://account.services.ai.azure.com/api/projects/project\n# AZURE_AI_MODEL_DEPLOYMENT_NAME is the deployment name shown in Foundry.\ncredential = DefaultAzureCredential()\n\nwith AIProjectClient(\n    endpoint=os.environ[\"AZURE_AI_PROJECT_ENDPOINT\"],\n    credential=credential,\n) as project_client:\n    # Current azure-ai-projects docs expose get_openai_client.\n    # If you see project_client.inference.get_chat_completions_client in older code,\n    # check your installed package version and its API reference before using it.\n    with project_client.get_openai_client() as openai_client:\n        response = openai_client.chat.completions.create(\n            model=os.environ[\"AZURE_AI_MODEL_DEPLOYMENT_NAME\"],\n            messages=[{\"role\": \"user\", \"content\": \"Say hello in one sentence.\"}],\n        )\n        print(response.choices[0].message.content)\n```\n\n*Current documented Foundry project client path using managed identity.*",
+  "drills": [
+    {
+      "q": "What method is documented now on AIProjectClient for an OpenAI-compatible client?",
+      "a": "get_openai_client."
+    },
+    {
+      "q": "Is project_client.inference.get_chat_completions_client confirmed in the current public docs?",
+      "a": "No. It appears version-specific or older preview material, so verify your installed package."
+    },
+    {
+      "q": "What credential is reused?",
+      "a": "The TokenCredential such as DefaultAzureCredential backed by managed identity."
+    }
+  ],
+  "teachItBack": "AIProjectClient represents a Foundry project. Current docs show get_openai_client, not project_client.inference.get_chat_completions_client. If samples disagree, pin the package version and follow that version's reference docs.",
+  "glossary": [
+    {
+      "term": "AIProjectClient",
+      "definition": "Foundry project-level client in azure-ai-projects."
+    },
+    {
+      "term": "get_openai_client",
+      "definition": "Documented method that returns an authenticated OpenAI client."
+    },
+    {
+      "term": "Deployment name",
+      "definition": "The model identifier your Foundry deployment exposes to inference calls."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Azure AI Projects client library for Python",
+      "url": "https://learn.microsoft.com/en-us/python/api/overview/azure/ai-projects-readme?view=azure-python-preview",
+      "verified": false
+    },
+    {
+      "title": "AIProjectClient class",
+      "url": "https://learn.microsoft.com/en-us/python/api/azure-ai-projects/azure.ai.projects.aiprojectclient?view=azure-python",
+      "verified": false
+    }
+  ],
+  "quiz": [
+    {
+      "q": "Where is the first generated chat answer usually found?",
+      "choices": [
+        "response.choices[0].message.content",
+        "response.embedding[0]",
+        "response.prompt",
+        "client.message.content"
+      ],
+      "answer": 0,
+      "explanation": "The first choice contains a ChatResponseMessage whose content holds the generated text."
+    }
+  ]
+}

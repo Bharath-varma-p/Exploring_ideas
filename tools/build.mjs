@@ -27,6 +27,18 @@ const LANES = [
     blurb: "What teams actually ship. Product → context signals → patterns → UX moves → sources." },
   { id: "framework",         title: "System-Design Framework & Blueprint", icon: "📐", order: 5,
     blurb: "A repeatable framework to design context+platform+cursor-aware agents, applied to a real build blueprint." },
+  { id: "foundry-core",      title: "Azure AI Foundry & SDK",           icon: "🏗️", order: 6,
+    blurb: "Foundry fundamentals and the SDK core: hubs, projects, resources, AIProjectClient, connections, and config." },
+  { id: "foundry-auth",      title: "Managed Identity (Keyless Auth)",  icon: "🔐", order: 7,
+    blurb: "Authenticate everything with managed identity only: Entra tokens, DefaultAzureCredential, RBAC, zero secrets." },
+  { id: "foundry-models",    title: "Model Deployment & Inference",     icon: "🚀", order: 8,
+    blurb: "Deploy models from the catalog and call them: deployments, endpoints, chat completions, streaming, tokens, errors." },
+  { id: "foundry-mcp",       title: "MCP & Foundry Agents",             icon: "🔌", order: 9,
+    blurb: "The Model Context Protocol and the Foundry Agent Service: servers, tools, transports, threads, runs, tool calling." },
+  { id: "foundry-connectors",title: "MCP Connectors: ICM, Kusto, ADO",  icon: "🛠️", order: 10,
+    blurb: "Wire agents to real systems over MCP with managed identity: ICM incidents, Kusto/ADX KQL, and Azure DevOps." },
+  { id: "foundry-capstone",  title: "Reference Architecture & Teaching Kit", icon: "🎖️", order: 11,
+    blurb: "The whole stack on one page: end-to-end architecture, a present-it deck, and a teach-it-back capstone self-test." },
 ];
 const LANE_IDS = new Set(LANES.map((l) => l.id));
 const TYPES = new Set(["concept", "pattern", "teardown", "framework", "blueprint"]);

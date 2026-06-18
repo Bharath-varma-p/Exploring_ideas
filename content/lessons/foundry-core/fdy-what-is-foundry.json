@@ -1,0 +1,65 @@
+{
+  "id": "fdy-what-is-foundry",
+  "title": "What Foundry Is",
+  "lane": "foundry-core",
+  "type": "concept",
+  "order": 101,
+  "summary": "Microsoft Foundry, formerly Azure AI Foundry and earlier Azure AI Studio, is a unified Azure platform as a service for building, managing, and operating enterprise AI applications, models, agents, tools, and projects.",
+  "tags": [
+    "portal",
+    "platform",
+    "overview"
+  ],
+  "analogy": "Think of Foundry as an aircraft carrier for AI teams: models are aircraft, projects are mission bays, connections are supply lines, and Azure governance is the command structure keeping every mission controlled and auditable.",
+  "diagram": "graph TD\nLearner[Builder] --> Portal[Foundry portal]\nPortal --> Resource[Foundry resource]\nResource --> Project[Project]\nProject --> Assets[Agents evaluations files connections]\nProject --> Models[Model catalog and deployments]",
+  "body": "## First principles\n\nFirst principles: an AI app is not just a model. It needs a model, a safe place to call it, governance, identity, observability, evaluation, and a way for teams to reuse work without rebuilding infrastructure every sprint. Microsoft Foundry is the Azure platform layer that packages those needs so builders can focus on AI product behavior instead of hand wiring every cloud service.\n\n## Definition\n\nMicrosoft Foundry, formerly Azure AI Foundry and earlier Azure AI Studio, is a unified Azure platform as a service for building, managing, and operating enterprise AI applications, models, agents, tools, and projects. The primary browser entry point is https://ai.azure.com.\n\n## How it fits together\n\nUse Foundry when you need a governed AI application workspace, not just a raw model endpoint. The portal gives humans a cockpit; SDKs, CLI, and REST give automation a control stick. The big idea is one managed environment for model discovery, agents, evaluations, tracing, content safety, and project organization.\n\n## Worked example\n\n```bash\n# Browser step: open the Foundry portal.\n# Sign in with your Microsoft Entra identity.\nopen https://ai.azure.com\n\n# CLI sanity check: confirm your active Azure subscription context.\n# This does not use keys or secrets.\naz account show --query \"{name:name,id:id,tenantId:tenantId}\" -o table\n```\n\n*Open the official portal and keep work scoped to a project*",
+  "drills": [
+    {
+      "q": "Why is Foundry more than a model catalog?",
+      "a": "Because production AI also needs projects, identity, governance, deployments, agents, evaluations, observability, and safety controls."
+    },
+    {
+      "q": "What portal URL should a learner remember?",
+      "a": "https://ai.azure.com."
+    },
+    {
+      "q": "What older names might appear in docs or screenshots?",
+      "a": "Azure AI Foundry and Azure AI Studio."
+    }
+  ],
+  "teachItBack": "Foundry is Azure's governed workspace for building AI applications, not merely a place to chat with a model. It gives teams a portal and APIs for projects, models, agents, evaluations, tracing, and safety. If a peer asks why it exists, say it turns scattered AI parts into an operable platform.",
+  "glossary": [
+    {
+      "term": "Microsoft Foundry",
+      "definition": "Unified Azure platform for enterprise AI app, model, and agent development."
+    },
+    {
+      "term": "Foundry portal",
+      "definition": "The browser experience at ai.azure.com."
+    },
+    {
+      "term": "Azure AI Studio",
+      "definition": "Earlier product name that evolved into Foundry experiences."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Microsoft Learn: What is Microsoft Foundry?",
+      "url": "https://learn.microsoft.com/en-us/azure/foundry/what-is-foundry",
+      "verified": true
+    }
+  ],
+  "quiz": [
+    {
+      "q": "What is the best first description of Microsoft Foundry?",
+      "choices": [
+        "A governed Azure platform for building and operating AI apps",
+        "Only a place to store API keys",
+        "Only a replacement for Python notebooks",
+        "Only an Azure billing report"
+      ],
+      "answer": 0,
+      "explanation": "Foundry unifies models, agents, projects, evaluations, observability, and governance for AI apps."
+    }
+  ]
+}

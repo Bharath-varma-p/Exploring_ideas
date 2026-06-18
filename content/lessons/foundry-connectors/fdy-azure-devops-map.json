@@ -1,0 +1,65 @@
+{
+  "id": "fdy-azure-devops-map",
+  "title": "Azure DevOps Service Map",
+  "lane": "foundry-connectors",
+  "type": "concept",
+  "order": 301,
+  "summary": "Azure DevOps is Microsoft's cloud based development platform. An organization contains projects.",
+  "tags": [
+    "ado",
+    "vocabulary",
+    "overview"
+  ],
+  "analogy": "Think of an Azure DevOps organization as a military base. Projects are mission compounds. Boards is the task board, Repos is the armory of source code, Pipelines is the automated launch rail, Test Plans is the inspection team, and Artifacts is the supply depot.",
+  "diagram": "graph TD\nOrg[Azure DevOps organization] --> Project[Project]\nProject --> Boards[Boards work items]\nProject --> Repos[Repos git]\nProject --> Pipes[Pipelines ci cd]\nProject --> Tests[Test Plans]\nProject --> Artifacts[Artifacts packages]",
+  "body": "## First principles\n\nFirst principles: software delivery is a chain of decisions and evidence. A team must decide what to build, store the code, prove it works, ship it, test it, and reuse packages. Azure DevOps is the shared operating system for that chain.\n\n## Definition\n\nAzure DevOps is Microsoft's cloud based development platform. An organization contains projects. Each project can use five core services: Boards for work tracking, Repos for Git code, Pipelines for CI CD, Test Plans for manual and exploratory testing, and Artifacts for package feeds.\n\n## How it fits together\n\nAlways locate an ADO request by organization, project, service, and resource. The MCP connector needs that map so the agent can turn a vague sentence like show active bugs into the right service call with the right project boundary.\n\n## Worked example\n\n```python\n# This is a memory aid, not an SDK dependency.\nado = {\n    'organization': 'contoso',\n    'project': 'SpaceElevator',\n    'services': ['Boards', 'Repos', 'Pipelines', 'Test Plans', 'Artifacts'],\n}\n\nfor service in ado['services']:\n    print(f\"{ado['organization']}/{ado['project']} has {service}\")\n```\n\n*Tiny object model for ADO vocabulary*",
+  "drills": [
+    {
+      "q": "What is the difference between an organization and a project?",
+      "a": "The organization is the top Azure DevOps account boundary; a project is a delivery workspace inside it."
+    },
+    {
+      "q": "Which service stores Git repositories and pull requests?",
+      "a": "Azure Repos."
+    },
+    {
+      "q": "Which service tracks user stories and bugs?",
+      "a": "Azure Boards."
+    }
+  ],
+  "teachItBack": "Azure DevOps is a five service platform for planning, coding, building, testing, and packaging software. The connector should always know the organization and project before it touches data. If I can name the service that owns the request, I can predict the tool family the agent will use.",
+  "glossary": [
+    {
+      "term": "Organization",
+      "definition": "Top Azure DevOps account boundary, usually connected to a Microsoft Entra tenant."
+    },
+    {
+      "term": "Project",
+      "definition": "Workspace inside an organization that contains boards, repos, pipelines, tests, and packages."
+    },
+    {
+      "term": "Azure Boards",
+      "definition": "ADO service for planning and tracking work items."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Microsoft Learn: What is Azure DevOps?",
+      "url": "https://learn.microsoft.com/en-us/azure/devops/user-guide/what-is-azure-devops?view=azure-devops",
+      "verified": true
+    }
+  ],
+  "quiz": [
+    {
+      "q": "Which Azure DevOps service owns work items such as Bugs and Tasks?",
+      "choices": [
+        "Azure Boards",
+        "Azure Repos",
+        "Azure Artifacts",
+        "Azure Test Plans"
+      ],
+      "answer": 0,
+      "explanation": "Boards is the planning and work tracking service."
+    }
+  ]
+}

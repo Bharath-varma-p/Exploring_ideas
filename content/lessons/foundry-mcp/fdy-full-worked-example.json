@@ -1,0 +1,67 @@
+{
+  "id": "fdy-full-worked-example",
+  "title": "Full Worked Example",
+  "lane": "foundry-mcp",
+  "type": "concept",
+  "order": 209,
+  "summary": "This example creates a prompt agent backed by a deployed model, attaches a remote MCP server, uses managed-identity friendly credentials, sends a prompt through a conversation, handles MCP approval requests, and resumes the response.",
+  "tags": [
+    "example",
+    "mcp",
+    "managed-identity"
+  ],
+  "analogy": "This is the whole field exercise: choose the soldier, issue orders, attach approved equipment, open the mission log, approve a controlled tool use, and debrief the result.",
+  "diagram": "graph TD\nUser[User] --> Python[Python app]\nPython --> Foundry[Foundry project]\nFoundry --> Agent[Prompt agent version]\nAgent --> Model[Deployed model]\nAgent --> MCPTool[MCP tool]\nMCPTool --> Server[Remote MCP server]\nServer --> Backend[Azure backend]\nFoundry --> Entra[Microsoft Entra identity]\nEntra --> Server",
+  "body": "## First principles\n\nFirst principles: mastery means wiring the full path, not memorizing definitions. The app must authenticate keylessly, create a model-backed agent, attach a least-privilege MCP server, create conversation state, handle approval, and print the final answer.\n\n## Definition\n\nThis example creates a prompt agent backed by a deployed model, attaches a remote MCP server, uses managed-identity friendly credentials, sends a prompt through a conversation, handles MCP approval requests, and resumes the response.\n\n## How it fits together\n\nSet PROJECT_ENDPOINT, MODEL_DEPLOYMENT_NAME, MCP_SERVER_URL, MCP_SERVER_LABEL, MCP_ALLOWED_TOOLS, and AGENT_NAME. If your MCP server requires Entra auth, configure an Entra project connection in Foundry and pass MCP_PROJECT_CONNECTION_ID, or use a managed-identity bearer header only for servers designed for that audience.\n\n## Worked example\n\n```python\n# pip install azure-ai-projects>=2.0.0 azure-identity openai\n# Environment:\n# PROJECT_ENDPOINT=https://resource.ai.azure.com/api/projects/project\n# MODEL_DEPLOYMENT_NAME=gpt-5-mini\n# AGENT_NAME=academy-mcp-agent\n# MCP_SERVER_URL=https://your-mcp-server.example.com/mcp\n# MCP_SERVER_LABEL=academy-tools\n# MCP_ALLOWED_TOOLS=search_docs,read_doc\n# Optional: MCP_PROJECT_CONNECTION_ID=<Foundry connection configured for Entra or OAuth auth>\n\nimport json, os\nfrom azure.identity import DefaultAzureCredential\nfrom azure.ai.projects import AIProjectClient\nfrom azure.ai.projects.models import PromptAgentDefinition, MCPTool\nfrom openai.types.responses.response_input_param import McpApprovalResponse\n\ncredential = DefaultAzureCredential()\nproject = AIProjectClient(endpoint=os.environ[\"PROJECT_ENDPOINT\"], credential=credential)\nopenai = project.get_openai_client()\n\nallowed_tools = [t.strip() for t in os.environ.get(\"MCP_ALLOWED_TOOLS\", \"search_docs\").split(\",\") if t.strip()]\nmcp_tool = MCPTool(\n    server_label=os.environ.get(\"MCP_SERVER_LABEL\", \"academy-tools\"),\n    server_url=os.environ[\"MCP_SERVER_URL\"],\n    allowed_tools=allowed_tools,\n    require_approval=\"always\",\n    project_connection_id=os.environ.get(\"MCP_PROJECT_CONNECTION_ID\"),\n)\n\nagent = project.agents.create_version(\n    agent_name=os.environ.get(\"AGENT_NAME\", \"academy-mcp-agent\"),\n    definition=PromptAgentDefinition(\n        model=os.environ[\"MODEL_DEPLOYMENT_NAME\"],\n        instructions=(\n            \"You are a careful enterprise assistant. Use MCP only for data you cannot know. \"\n            \"Before final answers, summarize which tool result changed your answer.\"\n        ),\n        tools=[mcp_tool],\n    ),\n)\n\nconversation = openai.conversations.create()\nresponse = openai.responses.create(\n    conversation=conversation.id,\n    input=\"Find one relevant fact from the MCP server and explain it to a beginner.\",\n    extra_body={\"agent_reference\": {\"name\": agent.name, \"type\": \"agent_reference\"}},\n)\n\napproval_inputs = []\nfor item in response.output:\n    if item.type == \"mcp_approval_request\":\n        tool_name = getattr(item, \"name\", \"\")\n        args = getattr(item, \"arguments\", {})\n        print(\"MCP approval request\")\n        print(\"server\", item.server_label)\n        print(\"tool\", tool_name)\n        print(json.dumps(args, indent=2, default=str))\n        approve = tool_name in allowed_tools and not tool_name.startswith((\"delete\", \"write\", \"update\"))\n        approval_inputs.append(McpApprovalResponse(\n            type=\"mcp_approval_response\",\n            approval_request_id=item.id,\n            approve=approve,\n        ))\n\nif approval_inputs:\n    response = openai.responses.create(\n        previous_response_id=response.id,\n        input=approval_inputs,\n        extra_body={\"agent_reference\": {\"name\": agent.name, \"type\": \"agent_reference\"}},\n    )\n\nprint(response.output_text)\n```\n\n*Complete prompt-agent plus MCP approval sample*",
+  "drills": [
+    {
+      "q": "What six values must you know before running the sample?",
+      "a": "Project endpoint, model deployment, agent name, MCP server URL, server label, and allowed tool names."
+    },
+    {
+      "q": "Where does keyless authentication enter the sample?",
+      "a": "DefaultAzureCredential authenticates the app to Foundry, and the MCP tool can use a project connection or managed identity based authentication."
+    },
+    {
+      "q": "Why does the sample approve only allow-listed tools?",
+      "a": "Allowed tools are least privilege, and approval enforces that policy at runtime."
+    }
+  ],
+  "teachItBack": "The full pattern is project client, agent definition, MCP tool, conversation, response, approval, resume, final answer. Managed identity keeps credentials out of code. The allow list and approval step keep tool use intentional.",
+  "glossary": [
+    {
+      "term": "Project endpoint",
+      "definition": "The Foundry project URL used by AIProjectClient."
+    },
+    {
+      "term": "Project connection",
+      "definition": "Foundry-managed connection object for tool authentication configuration."
+    },
+    {
+      "term": "Prompt agent version",
+      "definition": "Versioned server-side definition of a prompt agent."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Microsoft Learn: Foundry quickstart with Azure AI Projects 2.x",
+      "url": "https://learn.microsoft.com/en-us/azure/foundry/quickstarts/get-started-code",
+      "verified": false
+    },
+    {
+      "title": "Microsoft Learn: Connect to MCP server endpoints for agents",
+      "url": "https://learn.microsoft.com/en-us/azure/foundry/agents/how-to/tools/model-context-protocol",
+      "verified": false
+    },
+    {
+      "title": "Microsoft Learn: Set up MCP server authentication",
+      "url": "https://learn.microsoft.com/en-us/azure/foundry/agents/how-to/mcp-authentication",
+      "verified": false
+    },
+    {
+      "title": "Microsoft Learn: Agent identity concepts in Microsoft Foundry",
+      "url": "https://learn.microsoft.com/en-us/azure/foundry/agents/concepts/agent-identity",
+      "verified": false
+    }
+  ]
+}

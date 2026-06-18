@@ -1,0 +1,79 @@
+{
+  "id": "fdy-endpoints-and-uris",
+  "title": "Endpoints and target URIs",
+  "lane": "foundry-models",
+  "type": "concept",
+  "order": 106,
+  "summary": "AIProjectClient uses a Foundry project endpoint shaped like https://{ai-services-account-name}.services.ai.azure.com/api/projects/{project-name}.",
+  "tags": [
+    "endpoint",
+    "target-uri",
+    "project-endpoint"
+  ],
+  "analogy": "The endpoint is the building address, the deployment name is the room number, and the model version is the machine inside the room.",
+  "diagram": "flowchart LR\n  Client[client] --> Endpoint[project or resource endpoint]\n  Endpoint --> Alias[deployment alias]\n  Alias --> Model[model version]\n  Managed[managed online endpoint] --> Target[target URI]",
+  "body": "## First principles\n\nA deployment is only callable when it is reachable through a network address and route. Endpoint, deployment name, and model version are different layers.\n\n## Definition\n\nAIProjectClient uses a Foundry project endpoint shaped like https://{ai-services-account-name}.services.ai.azure.com/api/projects/{project-name}. Managed compute target URIs in classic managed online deployments are shaped like https://<endpoint-name>.<region>.inference.ml.azure.com/score. Portal deployment detail pages show endpoint details, code, consume, or target URI depending on deployment type.\n\n## How it fits together\n\nAfter deployment, record the project or resource endpoint, deployment alias, target URI if applicable, deployment type, and model version. Do not confuse endpoint URL with model name. The endpoint gets traffic to the resource; the deployment alias routes it to capacity.\n\n## Worked example\n\n```python\nfrom azure.ai.projects import AIProjectClient\nfrom azure.identity import DefaultAzureCredential\n\nproject_endpoint = \"https://<account>.services.ai.azure.com/api/projects/<project>\"\nclient = AIProjectClient(endpoint=project_endpoint, credential=DefaultAzureCredential())\n\n# Inventory only. Inference call details are covered by another lane.\nfor deployment in client.deployments.list():\n    print(deployment.get(\"name\"), deployment.get(\"type\"))\n```\n\n*Construct AIProjectClient with managed identity and list deployment names.*",
+  "drills": [
+    {
+      "q": "Is an endpoint the same as a deployment name?",
+      "a": "No. The endpoint is the address; the deployment name is the route or alias."
+    },
+    {
+      "q": "Where do you find endpoint details?",
+      "a": "In Foundry deployment details, code, consume, or model pages depending on deployment type."
+    },
+    {
+      "q": "What does AIProjectClient need?",
+      "a": "A project endpoint and TokenCredential such as DefaultAzureCredential."
+    }
+  ],
+  "teachItBack": "Endpoint, alias, and version are separate. I call the endpoint and route to the deployment alias. I track the backing model version for operations and lifecycle management.",
+  "glossary": [
+    {
+      "term": "Project endpoint",
+      "definition": "The Foundry project URL used by AIProjectClient."
+    },
+    {
+      "term": "Target URI",
+      "definition": "The scoring URL for a managed online endpoint."
+    },
+    {
+      "term": "Route",
+      "definition": "The mapping from request to deployment alias."
+    },
+    {
+      "term": "TokenCredential",
+      "definition": "Azure SDK credential interface used by DefaultAzureCredential."
+    }
+  ],
+  "sources": [
+    {
+      "title": "AIProjectClient class",
+      "url": "https://learn.microsoft.com/en-us/python/api/azure-ai-projects/azure.ai.projects.aiprojectclient?view=azure-python",
+      "verified": true
+    },
+    {
+      "title": "Deploy models with managed compute",
+      "url": "https://learn.microsoft.com/en-us/azure/foundry-classic/how-to/deploy-models-managed",
+      "verified": true
+    },
+    {
+      "title": "Deploy Microsoft Foundry Models in the Foundry portal",
+      "url": "https://learn.microsoft.com/en-us/azure/foundry/foundry-models/how-to/deploy-foundry-models",
+      "verified": true
+    }
+  ],
+  "quiz": [
+    {
+      "q": "What can a retired model return when it no longer serves inference?",
+      "choices": [
+        "410 Gone",
+        "201 Created",
+        "Free unlimited responses",
+        "A VM invoice only"
+      ],
+      "answer": 0,
+      "explanation": "The lifecycle docs describe retired models as no longer serving inference with 410 Gone."
+    }
+  ]
+}

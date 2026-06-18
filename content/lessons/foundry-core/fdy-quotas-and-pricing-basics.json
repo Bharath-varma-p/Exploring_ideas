@@ -1,0 +1,70 @@
+{
+  "id": "fdy-quotas-and-pricing-basics",
+  "title": "Quotas And Pricing Basics",
+  "lane": "foundry-core",
+  "type": "concept",
+  "order": 113,
+  "summary": "Quota is the service limit or capacity allocation, often scoped by subscription, region, model, and deployment type.",
+  "tags": [
+    "quota",
+    "pricing",
+    "cost"
+  ],
+  "analogy": "Quota is the size of your fuel tank and runway schedule; pricing is the bill for fuel, maintenance, and hangar time.",
+  "diagram": "graph TD\nWorkload[AI workload] --> Tokens[Token usage]\nWorkload --> Requests[Request rate]\nWorkload --> Hosting[Hosted capacity]\nWorkload --> Dependencies[Search storage monitoring]\nTokens --> Cost[Cost]\nRequests --> Quota[Quota]\nHosting --> Cost\nDependencies --> Cost",
+  "body": "## First principles\n\nFirst principles: every cloud system has two governors: capacity and money. Quota says how much you are allowed to consume; pricing says what consumption costs. Production AI planning must model both before traffic arrives.\n\n## Definition\n\nQuota is the service limit or capacity allocation, often scoped by subscription, region, model, and deployment type. Pricing is the cost model for the Azure services and models you use, commonly based on tokens, requests, hosting, committed tiers, or dependent services.\n\n## How it fits together\n\nDo not memorize exact prices in a fundamentals lane because they change. Learn the cost drivers: model family, deployment type, tokens or requests, hosted resources, evaluations, search, storage, monitoring, region, and commitment choices. Use Azure pricing pages, Cost Management, budgets, and Foundry quota views for current numbers.\n\n## Worked example\n\n```python\n# pip install azure-identity requests\nimport json\nimport requests\nfrom azure.identity import DefaultAzureCredential\n\nsubscription_id = \"<subscription-id>\"\napi_version = \"2025-10-01-preview\"\nurl = (\n    f\"https://management.azure.com/subscriptions/{subscription_id}\"\n    f\"/providers/Microsoft.CognitiveServices/quotaTiers?api-version={api_version}\"\n)\n\ncredential = DefaultAzureCredential()\ntoken = credential.get_token(\"https://management.azure.com/.default\")\nresponse = requests.get(url, headers={\"Authorization\": f\"Bearer {token.token}\"}, timeout=30)\nprint(json.dumps(response.json(), indent=2))\n```\n\n*Check quota tier with DefaultAzureCredential*",
+  "drills": [
+    {
+      "q": "What dimensions commonly scope Azure OpenAI quota in Foundry Models?",
+      "a": "Per region, per subscription, and per model or deployment type."
+    },
+    {
+      "q": "Why avoid exact prices in core lessons?",
+      "a": "Prices change and depend on service, model, region, and deployment type."
+    },
+    {
+      "q": "Which Azure tool helps monitor spend?",
+      "a": "Microsoft Cost Management, budgets, and alerts."
+    }
+  ],
+  "teachItBack": "Quota is capacity permission; pricing is the bill for usage. Foundry costs come from the services and models you actually use, not from a single magic number. Teach peers to verify quota and estimate costs before production traffic.",
+  "glossary": [
+    {
+      "term": "Quota",
+      "definition": "Allocated usage capacity or service limit."
+    },
+    {
+      "term": "TPM",
+      "definition": "Tokens per minute, a common model throughput quota unit."
+    },
+    {
+      "term": "RPM",
+      "definition": "Requests per minute, a common rate quota unit."
+    },
+    {
+      "term": "Cost Management",
+      "definition": "Azure tooling for viewing costs, budgets, and spending alerts."
+    },
+    {
+      "term": "Token",
+      "definition": "Unit of text or multimodal processing used for model metering."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Microsoft Learn: Plan and Manage Costs",
+      "url": "https://learn.microsoft.com/en-us/azure/foundry/concepts/manage-costs",
+      "verified": true
+    },
+    {
+      "title": "Microsoft Learn: Azure OpenAI in Microsoft Foundry Models quotas and limits",
+      "url": "https://learn.microsoft.com/en-us/azure/foundry/openai/quotas-limits",
+      "verified": true
+    },
+    {
+      "title": "Microsoft Learn: Feature availability across cloud regions",
+      "url": "https://learn.microsoft.com/en-us/azure/foundry/reference/region-support",
+      "verified": true
+    }
+  ]
+}

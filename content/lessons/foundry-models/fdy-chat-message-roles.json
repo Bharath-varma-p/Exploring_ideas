@@ -1,0 +1,75 @@
+{
+  "id": "fdy-chat-message-roles",
+  "title": "Messages and Roles",
+  "lane": "foundry-models",
+  "type": "concept",
+  "order": 203,
+  "summary": "A chat completions request sends messages. The supported helper classes include SystemMessage, UserMessage, AssistantMessage, ToolMessage, and DeveloperMessage in azure.ai.inference.",
+  "tags": [
+    "chat",
+    "messages",
+    "roles"
+  ],
+  "analogy": "Imagine a courtroom transcript. The judge, witness, lawyer, and clerk all speak, but the role label tells you how to interpret each line. In chat inference, system is policy, user is request, assistant is model history, and tool is external result.",
+  "diagram": "flowchart TD\n  System[System rules] --> User[User asks]\n  User --> Assistant[Assistant replies]\n  Assistant --> Tool[Tool result when requested]\n  Tool --> Assistant2[Assistant final answer]",
+  "body": "## First principles\n\nChat models do not read your mind; they read an ordered transcript. Each item has a role so the model can separate instructions, user input, prior assistant output, and tool results.\n\n## Definition\n\nA chat completions request sends messages. The supported helper classes include SystemMessage, UserMessage, AssistantMessage, ToolMessage, and DeveloperMessage in azure.ai.inference.models. Dictionaries with role and content are also accepted.\n\n## How it fits together\n\nBuild messages from highest authority to newest conversation turn. Put stable behavior in SystemMessage, the learner request in UserMessage, previous model replies in AssistantMessage, and function outputs in ToolMessage only after the model asks for a tool call.\n\n## Worked example\n\n```python\nimport os\nfrom azure.identity import DefaultAzureCredential\nfrom azure.ai.inference import ChatCompletionsClient\nfrom azure.ai.inference.models import SystemMessage, UserMessage, AssistantMessage\n\nclient = ChatCompletionsClient(\n    endpoint=os.environ[\"AZURE_AI_CHAT_ENDPOINT\"],\n    credential=DefaultAzureCredential(),\n)\n\nmessages = [\n    SystemMessage(\"You are concise and explain from first principles.\"),\n    UserMessage(\"What is a managed identity in one analogy?\"),\n    AssistantMessage(\"It is like an employee badge for Azure resources.\"),\n    UserMessage(\"Now make the analogy even simpler.\"),\n]\n\nresponse = client.complete(messages=messages, model=os.getenv(\"AZURE_AI_MODEL_DEPLOYMENT_NAME\"))\nprint(response.choices[0].message.content)\n```\n\n*Send typed messages with managed identity.*",
+  "drills": [
+    {
+      "q": "Where do durable behavior instructions belong?",
+      "a": "In a system or developer message, depending on model support and your policy."
+    },
+    {
+      "q": "Why include assistant messages?",
+      "a": "They preserve conversation history so the next answer has context."
+    },
+    {
+      "q": "When do you send ToolMessage?",
+      "a": "After the model requests a tool call and your code has run the tool."
+    }
+  ],
+  "teachItBack": "A chat request is an ordered role-labeled transcript. Roles tell the model how to treat each line. Typed helper classes reduce mistakes, but dictionaries work too.",
+  "glossary": [
+    {
+      "term": "SystemMessage",
+      "definition": "Instruction message that shapes model behavior."
+    },
+    {
+      "term": "UserMessage",
+      "definition": "Message containing user input."
+    },
+    {
+      "term": "ToolMessage",
+      "definition": "Message carrying a tool result back to the model."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Azure AI Inference client library for Python",
+      "url": "https://learn.microsoft.com/en-us/python/api/overview/azure/ai-inference-readme?view=azure-python-preview",
+      "verified": true
+    },
+    {
+      "title": "azure.ai.inference.models package",
+      "url": "https://learn.microsoft.com/en-us/python/api/azure-ai-inference/azure.ai.inference.models?view=azure-python-preview",
+      "verified": true
+    },
+    {
+      "title": "ChatCompletionsClient class",
+      "url": "https://learn.microsoft.com/en-us/python/api/azure-ai-inference/azure.ai.inference.chatcompletionsclient?view=azure-python-preview",
+      "verified": true
+    }
+  ],
+  "quiz": [
+    {
+      "q": "What does stream=True change?",
+      "choices": [
+        "It returns iterable updates with deltas",
+        "It disables authentication",
+        "It creates a deployment",
+        "It turns chat into embeddings"
+      ],
+      "answer": 0,
+      "explanation": "Streaming returns partial updates as the model generates content."
+    }
+  ]
+}

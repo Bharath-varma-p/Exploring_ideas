@@ -1,0 +1,70 @@
+{
+  "id": "fdy-mcp-target-access",
+  "title": "MCP Target Access: ADX, Azure DevOps, and ICM",
+  "lane": "foundry-auth",
+  "type": "concept",
+  "order": 112,
+  "summary": "For Azure Data Explorer, grant the managed identity a Kusto data role such as Database Viewer at database scope for read-only query.",
+  "tags": [
+    "mcp",
+    "adx",
+    "azure-devops",
+    "icm"
+  ],
+  "analogy": "An MCP server is a translator at a checkpoint. The translator can carry your token, but the destination commander still decides whether your identity is on that system's roster.",
+  "diagram": "flowchart LR\n  Agent[Agent with MI] --> MCP[MCP server]\n  MCP --> ADX[Azure Data Explorer Database Viewer]\n  MCP --> ADO[Azure DevOps org project permissions]\n  MCP --> ICM[ICM access verify locally]\n  ADX --> Query[Read query]\n  ADO --> Boards[Work items repos pipelines]",
+  "body": "## First principles\n\nMCP is a tool bridge, not an authorization bypass. Each backing system still checks its own authorization model after the managed identity gets a token for that system.\n\n## Definition\n\nFor Azure Data Explorer, grant the managed identity a Kusto data role such as Database Viewer at database scope for read-only query. For Azure DevOps, access is governed by Azure DevOps organization, project, repository, and pipeline permissions rather than normal Azure RBAC; the managed identity's Entra-backed app identity must be admitted to the relevant DevOps permission surface. ICM access details are not confirmed in public Microsoft Learn docs, so treat ICM as uncertain and verify with your tenant's ICM owner.\n\n## How it fits together\n\nPattern: same managed identity, different audience, different authorization system. Foundry token does not grant ADX query; ADX Database Viewer does not grant Azure DevOps repo read; ICM likely has its own internal access controls.\n\n## Worked example\n\n```bash\n# In Kusto, data-plane roles are managed at cluster or database scope.\n# Run this management command as a Kusto admin for the database.\n# Replace the object ID with the managed identity principal ID.\n.add database <DatabaseName> viewers ('aadapp=<managed-identity-principal-id>')\n\n# Then your Python MCP tool should request an ADX token with scope:\n# https://kusto.kusto.windows.net/.default\n```\n\n*Grant Azure Data Explorer database read access to the MI principal.*",
+  "drills": [
+    {
+      "q": "Which ADX role is read-only for all database data and metadata except restricted tables?",
+      "a": "Database Viewer."
+    },
+    {
+      "q": "Does Azure RBAC Reader on a Kusto cluster automatically grant query data?",
+      "a": "No. ADX data access uses Kusto RBAC roles like Database Viewer."
+    },
+    {
+      "q": "What is uncertain here?",
+      "a": "Exact ICM managed-identity role and public documentation details; verify with internal ICM owners."
+    }
+  ],
+  "teachItBack": "MCP targets keep their own authorization gates. For ADX, grant Database Viewer to the managed identity in Kusto. Azure DevOps and ICM require target-specific admission, and ICM details are uncertain from public docs.",
+  "glossary": [
+    {
+      "term": "MCP",
+      "definition": "Model Context Protocol, a tool interface between agents and external systems."
+    },
+    {
+      "term": "ADX",
+      "definition": "Azure Data Explorer, also known as Kusto."
+    },
+    {
+      "term": "Database Viewer",
+      "definition": "Kusto database role for read-only query and metadata access except restricted tables."
+    },
+    {
+      "term": "Azure DevOps permissions",
+      "definition": "DevOps-specific access model for organizations, projects, repos, pipelines, and work items."
+    },
+    {
+      "term": "ICM",
+      "definition": "Incident management system; exact managed identity access pattern must be tenant-verified."
+    },
+    {
+      "term": "Target audience",
+      "definition": "The API resource for which a token is issued."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Role-based access control - Kusto",
+      "url": "https://learn.microsoft.com/en-us/kusto/access-control/role-based-access-control?view=azure-data-explorer&preserve-view=true",
+      "verified": false
+    },
+    {
+      "title": "Use Azure service connections and managed identities in Azure Pipelines",
+      "url": "https://learn.microsoft.com/en-us/azure/devops/pipelines/library/connect-to-azure?view=azure-devops",
+      "verified": false
+    }
+  ]
+}

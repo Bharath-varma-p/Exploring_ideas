@@ -1,0 +1,52 @@
+{
+  "id": "fdy-representative-tool-calls-mcp-icm",
+  "title": "Representative Tool Call Examples",
+  "lane": "foundry-connectors",
+  "type": "concept",
+  "order": 109,
+  "summary": "Representative incident MCP calls include querying active incidents, fetching one incident, and adding a discussion note. These examples are intentionally labeled representative because no public official IcM MCP tool schema was verified.",
+  "tags": [
+    "json",
+    "examples",
+    "agent-flow"
+  ],
+  "analogy": "The user says, 'Find the payments fire.' The agent fills out the dispatch form: service equals payments, severity equals Sev2, status equals active. The form, not the casual sentence, is what the backend receives.",
+  "diagram": "graph LR\nNaturalLanguage[Natural language] --> ToolChoice[Tool choice]\nToolChoice --> Arguments[Validated arguments]\nArguments --> Result[Structured result]\nResult --> Answer[Grounded answer]",
+  "body": "## First principles\n\nFirst principles: natural language is ambiguous, but tool calls must be exact. The agent converts a user's intent into a tool name plus validated arguments, then the MCP server returns structured results.\n\n## Definition\n\nRepresentative incident MCP calls include querying active incidents, fetching one incident, and adding a discussion note. These examples are intentionally labeled representative because no public official IcM MCP tool schema was verified.\n\n## How it fits together\n\nFor every interaction, trace four steps: user request, agent tool selection, MCP tools/call JSON, and tool result. If a call writes data, pause for approval before executing.\n\n## Worked example\n\n```python\n# Representative MCP tools/call payloads. Not official IcM JSON.\nexamples = [\n    {\n        \"jsonrpc\": \"2.0\",\n        \"id\": 1,\n        \"method\": \"tools/call\",\n        \"params\": {\n            \"name\": \"query_incidents\",\n            \"arguments\": {\"service\": \"payments\", \"severity\": \"Sev2\", \"status\": \"active\"},\n        },\n    },\n    {\n        \"jsonrpc\": \"2.0\",\n        \"id\": 2,\n        \"method\": \"tools/call\",\n        \"params\": {\"name\": \"get_incident\", \"arguments\": {\"incident_id\": \"INC123456\"}},\n    },\n    {\n        \"jsonrpc\": \"2.0\",\n        \"id\": 3,\n        \"method\": \"tools/call\",\n        \"params\": {\n            \"name\": \"add_discussion\",\n            \"arguments\": {\n                \"incident_id\": \"INC123456\",\n                \"message\": \"Representative note: rollback started after human approval.\",\n            },\n        },\n    },\n]\nfor payload in examples:\n    print(payload[\"params\"][\"name\"], payload[\"params\"][\"arguments\"])\n```\n\n*Representative natural language to MCP tool call payloads*",
+  "drills": [
+    {
+      "q": "What transforms natural language into backend action?",
+      "a": "The agent selects an MCP tool and supplies schema-validated arguments."
+    },
+    {
+      "q": "Which example needs approval?",
+      "a": "add_discussion, because it writes to the incident record."
+    },
+    {
+      "q": "Why are these examples uncertain?",
+      "a": "They model a transferable incident connector but are not verified official IcM MCP schemas."
+    }
+  ],
+  "teachItBack": "A tool call is the precise bridge from user intent to backend operation. Read calls can answer questions; write calls must wait for approval and authorization. These JSON examples teach the pattern, not an official IcM contract.",
+  "glossary": [
+    {
+      "term": "tools/call",
+      "definition": "MCP JSON-RPC method used by a client to invoke a server tool."
+    },
+    {
+      "term": "Arguments",
+      "definition": "Structured input values passed to a tool."
+    },
+    {
+      "term": "Structured result",
+      "definition": "Machine-readable data returned by a tool."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Model Context Protocol: Tools",
+      "url": "https://modelcontextprotocol.io/specification/2025-06-18/server/tools",
+      "verified": false
+    }
+  ]
+}

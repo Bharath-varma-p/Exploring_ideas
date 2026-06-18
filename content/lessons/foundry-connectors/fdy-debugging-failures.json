@@ -1,0 +1,62 @@
+{
+  "id": "fdy-debugging-failures",
+  "title": "Troubleshooting the Kusto Connector",
+  "lane": "foundry-connectors",
+  "type": "concept",
+  "order": 213,
+  "summary": "A practical debugging ladder is: confirm MCP server is reachable, confirm the Kusto tools are listed, list clusters or use a known cluster URI, list databases, list tables, get schema, run a tiny take 5 query, then expand.",
+  "tags": [
+    "debug",
+    "errors",
+    "operations"
+  ],
+  "analogy": "Troubleshooting is clearing a blocked convoy: check the road, the driver badge, the gate pass, the map, then the cargo.",
+  "diagram": "flowchart TD\n  Reach[MCP reachable] --> Tools[Tools listed]\n  Tools --> Cluster[Cluster chosen]\n  Cluster --> DB[Database visible]\n  DB --> Table[Tables visible]\n  Table --> Schema[Schema known]\n  Schema --> Tiny[Take five query]\n  Tiny --> Full[Full question]",
+  "body": "## First principles\n\nFailures are diagnostic signals. If the agent cannot answer, isolate whether the failure is endpoint selection, identity authentication, authorization, schema mismatch, KQL syntax, or query cost.\n\n## Definition\n\nA practical debugging ladder is: confirm MCP server is reachable, confirm the Kusto tools are listed, list clusters or use a known cluster URI, list databases, list tables, get schema, run a tiny take 5 query, then expand. Permission errors usually point to Reader or viewers role gaps; syntax errors usually point to case-sensitive table or column names.\n\n## How it fits together\n\nDo not jump straight to a complex natural-language question. Build confidence with tiny deterministic calls, then let the agent generate larger KQL once the path is proven.\n\n## Worked example\n\n```kql\nAppTraces\n| take 5\n```\n\n*Tiny smoke-test query after schema discovery.*",
+  "drills": [
+    {
+      "q": "What does a 403 usually suggest?",
+      "a": "The identity authenticated but lacks Azure RBAC or Kusto database role authorization."
+    },
+    {
+      "q": "What does an unknown column error suggest?",
+      "a": "Schema mismatch, case sensitivity, or querying the wrong table."
+    },
+    {
+      "q": "What is the first query to try after schema discovery?",
+      "a": "A tiny limited query such as TableName | take 5."
+    }
+  ],
+  "teachItBack": "Debug the path one gate at a time. First prove MCP reachability and tool discovery, then identity and permissions, then schema, then KQL. Tiny queries beat giant guesses.",
+  "glossary": [
+    {
+      "term": "403",
+      "definition": "HTTP forbidden response indicating authorization failed."
+    },
+    {
+      "term": "Schema mismatch",
+      "definition": "A query references a table or column that does not exist in the selected database."
+    },
+    {
+      "term": "Smoke test",
+      "definition": "A small test that proves the basic path works."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Azure MCP Server README",
+      "url": "https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/README.md",
+      "verified": true
+    },
+    {
+      "title": "Azure MCP Kusto setup source",
+      "url": "https://github.com/microsoft/mcp/blob/main/tools/Azure.Mcp.Tools.Kusto/src/KustoSetup.cs",
+      "verified": true
+    },
+    {
+      "title": "Manage database security roles",
+      "url": "https://learn.microsoft.com/en-us/kusto/management/manage-database-security-roles?view=azure-data-explorer&preserve-view=true",
+      "verified": true
+    }
+  ]
+}

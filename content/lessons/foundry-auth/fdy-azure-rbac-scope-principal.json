@@ -1,0 +1,82 @@
+{
+  "id": "fdy-azure-rbac-scope-principal",
+  "title": "Azure RBAC: Roles, Assignments, Scopes, Principals",
+  "lane": "foundry-auth",
+  "type": "concept",
+  "order": 109,
+  "summary": "A role definition is a named set of allowed actions. A role assignment attaches that role to a principal at a scope. Scopes form a hierarchy: management group, subscription, resource group, and resource.",
+  "tags": [
+    "rbac",
+    "least-privilege",
+    "authorization"
+  ],
+  "analogy": "RBAC is a written duty roster. It says this identity may perform these duties in this area of the base. A duty granted at headquarters flows downward unless narrowed by design.",
+  "diagram": "flowchart TD\n  MG[Management group] --> Sub[Subscription]\n  Sub --> RG[Resource group]\n  RG --> Res[Resource]\n  Principal[MI principal ID] --> Assignment[Role assignment]\n  Role[Role definition] --> Assignment\n  Assignment --> Res",
+  "body": "## First principles\n\nPermission should be explicit, explainable, and bounded. RBAC accomplishes this by combining who, what, and where: a principal receives a role definition at a scope.\n\n## Definition\n\nA role definition is a named set of allowed actions. A role assignment attaches that role to a principal at a scope. Scopes form a hierarchy: management group, subscription, resource group, and resource. Child scopes inherit assignments from parents.\n\n## How it fits together\n\nFor managed identity authorization, the principal is the MI's principal ID. Assign the smallest role at the narrowest scope that lets the agent do its job.\n\n## Worked example\n\n```bash\n# Principal ID is the object used in Azure role assignments.\nMI_PRINCIPAL_ID=$(az identity show   --name <uami-name>   --resource-group <resource-group>   --query principalId   --output tsv)\n\n# List assignments, including inherited assignments from parent scopes.\naz role assignment list   --assignee-object-id \"$MI_PRINCIPAL_ID\"   --include-inherited   --output table\n```\n\n*Inspect a managed identity and list its RBAC assignments.*",
+  "drills": [
+    {
+      "q": "What are the three parts of a role assignment?",
+      "a": "Principal, role definition, and scope."
+    },
+    {
+      "q": "Where should you assign a role for least privilege?",
+      "a": "At the narrowest scope that still works."
+    },
+    {
+      "q": "What ID do you use for MI role assignments?",
+      "a": "The managed identity principal ID or object ID."
+    }
+  ],
+  "teachItBack": "RBAC answers who can do what where. A managed identity is the who, a role definition is the what, and scope is the where. Least privilege means choose the smallest role and narrowest scope that works.",
+  "glossary": [
+    {
+      "term": "Azure RBAC",
+      "definition": "Azure role-based access control system."
+    },
+    {
+      "term": "Role definition",
+      "definition": "Named set of permissions."
+    },
+    {
+      "term": "Role assignment",
+      "definition": "Binding of role to principal at scope."
+    },
+    {
+      "term": "Scope",
+      "definition": "Resource boundary where an assignment applies."
+    },
+    {
+      "term": "Principal",
+      "definition": "Identity receiving permissions."
+    },
+    {
+      "term": "Least privilege",
+      "definition": "Grant only the required permissions."
+    }
+  ],
+  "sources": [
+    {
+      "title": "az role assignment create",
+      "url": "https://learn.microsoft.com/en-us/cli/azure/role/assignment?view=azure-cli-latest#az-role-assignment-create",
+      "verified": true
+    },
+    {
+      "title": "Role-based access control for Microsoft Foundry",
+      "url": "https://learn.microsoft.com/en-us/azure/foundry/concepts/rbac-foundry",
+      "verified": true
+    }
+  ],
+  "quiz": [
+    {
+      "q": "What are the three essential pieces of an Azure role assignment?",
+      "choices": [
+        "Principal, role definition, scope",
+        "Tenant, region, invoice",
+        "Model, prompt, temperature",
+        "Endpoint, port, subnet"
+      ],
+      "answer": 0,
+      "explanation": "RBAC binds who gets which permissions at which resource boundary."
+    }
+  ]
+}

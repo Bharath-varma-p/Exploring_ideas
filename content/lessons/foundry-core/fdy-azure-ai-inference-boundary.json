@@ -1,0 +1,75 @@
+{
+  "id": "fdy-azure-ai-inference-boundary",
+  "title": "Azure AI Inference Boundary",
+  "lane": "foundry-core",
+  "type": "concept",
+  "order": 208,
+  "summary": "azure-ai-inference is a separate preview package with ChatCompletionsClient, EmbeddingsClient, and load client for model inference endpoints.",
+  "tags": [
+    "inference",
+    "preview",
+    "boundary"
+  ],
+  "analogy": "Foundry project plumbing is the airport terminal. azure-ai-inference is a direct gate to a particular runway. Sometimes you go through the terminal concierge; sometimes you target a gate directly, but they are not the same object.",
+  "diagram": "flowchart LR\nProjectPath[Project scoped path] --> AIProjectClient\nAIProjectClient --> OpenAIClient[get openai client]\nDirectEndpoint[Model endpoint] --> InferenceClients[ChatCompletionsClient and EmbeddingsClient]",
+  "body": "## First principles\n\nTwo clients can both talk to AI services but serve different layers. One may manage project plumbing; another may target model inference endpoints directly. Confusing the layers creates brittle examples.\n\n## Definition\n\nazure-ai-inference is a separate preview package with ChatCompletionsClient, EmbeddingsClient, and load_client for model inference endpoints. Current azure-ai-projects GA documentation emphasizes get_openai_client from AIProjectClient rather than a GA .inference operation group. Therefore, teach azure-ai-inference as a neighboring package and mark project_client.inference examples as version-sensitive unless the learner's installed package exposes them.\n\n## How it fits together\n\nInstall azure-ai-inference when comparing direct inference clients, but for project-scoped OpenAI access use AIProjectClient.get_openai_client in current GA examples.\n\n## Worked example\n\n```python\nfrom azure.ai.inference import ChatCompletionsClient, EmbeddingsClient, load_client\n\nprint(ChatCompletionsClient.__name__)\nprint(EmbeddingsClient.__name__)\nprint(load_client.__name__)\nprint(\"Use these with direct model endpoints, not as a substitute for AIProjectClient plumbing.\")\n```\n\n*Import the inference client classes without making a service call.*",
+  "drills": [
+    {
+      "q": "Is azure-ai-inference the same package as azure-ai-projects?",
+      "a": "No. It is a separate preview inference library."
+    },
+    {
+      "q": "What direct inference clients does the inference README name?",
+      "a": "ChatCompletionsClient and EmbeddingsClient."
+    },
+    {
+      "q": "What is the current project-scoped path for an OpenAI-compatible client?",
+      "a": "AIProjectClient.get_openai_client."
+    }
+  ],
+  "teachItBack": "Teach it back as: azure-ai-projects is the Foundry project plumbing package. azure-ai-inference is a separate preview package for direct model inference clients. If I see project_client.inference in older lessons, I verify the exact SDK version before teaching it as current.",
+  "glossary": [
+    {
+      "term": "ChatCompletionsClient",
+      "definition": "An azure-ai-inference client for chat completions against supported inference endpoints."
+    },
+    {
+      "term": "EmbeddingsClient",
+      "definition": "An azure-ai-inference client for embedding requests against supported inference endpoints."
+    },
+    {
+      "term": "preview",
+      "definition": "A package or feature stage that may change and is not always recommended for production workloads."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Azure AI Inference client library for Python",
+      "url": "https://learn.microsoft.com/en-us/python/api/overview/azure/ai-inference-readme?view=azure-python-preview",
+      "verified": false
+    },
+    {
+      "title": "Azure AI Projects client library for Python",
+      "url": "https://learn.microsoft.com/en-us/python/api/overview/azure/ai-projects-readme?view=azure-python",
+      "verified": false
+    },
+    {
+      "title": "AIProjectClient class reference",
+      "url": "https://learn.microsoft.com/en-us/python/api/azure-ai-projects/azure.ai.projects.aiprojectclient?view=azure-python",
+      "verified": false
+    }
+  ],
+  "quiz": [
+    {
+      "q": "What is the safest statement about project_client.inference in current teaching material?",
+      "choices": [
+        "Verify the installed SDK because current GA AIProjectClient docs do not list it",
+        "It is the only supported GA operation group",
+        "It replaces credentials",
+        "It stores static secrets in the project"
+      ],
+      "answer": 0,
+      "explanation": "Current verified GA docs emphasize get_openai_client and do not list .inference as an AIProjectClient variable."
+    }
+  ]
+}

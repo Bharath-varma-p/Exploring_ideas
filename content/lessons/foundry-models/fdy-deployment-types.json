@@ -1,0 +1,75 @@
+{
+  "id": "fdy-deployment-types",
+  "title": "Standard, Global, Data Zone, and Provisioned choices",
+  "lane": "foundry-models",
+  "type": "concept",
+  "order": 102,
+  "summary": "Current Foundry deployment types include Global Standard, Data Zone Standard, Standard regional, Global Provisioned, Data Zone Provisioned, Regional Provisioned, Batch variants, Developer, and Instant preview.",
+  "tags": [
+    "standard",
+    "global-standard",
+    "data-zone",
+    "provisioned"
+  ],
+  "analogy": "Deployment type is shipping class. Global is a worldwide network, Data Zone is a restricted continent pass, regional is local delivery, and provisioned is reserving a dedicated truck.",
+  "diagram": "flowchart TD\n  Need[workload need] --> Residency[data boundary]\n  Need --> Traffic[traffic pattern]\n  Residency --> Global[Global Standard]\n  Residency --> Zone[Data Zone Standard]\n  Residency --> Regional[Standard]\n  Traffic --> Paygo[pay per token]\n  Traffic --> PTU[reserved PTU]",
+  "body": "## First principles\n\nEvery endpoint has to answer three physical questions: where inference processing may happen, how capacity is allocated, and how you pay.\n\n## Definition\n\nCurrent Foundry deployment types include Global Standard, Data Zone Standard, Standard regional, Global Provisioned, Data Zone Provisioned, Regional Provisioned, Batch variants, Developer, and Instant preview. Standard-family deployments are pay-per-token. Provisioned-family deployments reserve capacity with PTUs. Global can process in any Azure region, Data Zone processes within a Microsoft-defined US or EU zone, and Standard regional processes in the deployment region.\n\n## How it fits together\n\nStart with compliance boundary, then traffic pattern. Use Global Standard for broad availability and high default quota, Data Zone Standard for US or EU zone processing, Standard for single-region processing, and Provisioned when predictable high throughput and lower latency variance justify reserved capacity.\n\n## Worked example\n\n```bash\n# Pay-as-you-go deployment type SKU names.\nSKU_GLOBAL=\"GlobalStandard\"\nSKU_DATA_ZONE=\"DataZoneStandard\"\nSKU_REGIONAL=\"Standard\"\n\n# Provisioned deployment type SKU names.\nSKU_GLOBAL_PTU=\"GlobalProvisionedManaged\"\nSKU_DATA_ZONE_PTU=\"DataZoneProvisionedManaged\"\nSKU_REGIONAL_PTU=\"ProvisionedManaged\"\n\necho \"Check the model card before choosing: $SKU_GLOBAL, $SKU_DATA_ZONE, $SKU_REGIONAL\"\n```\n\n*Current deployment type SKU names used in control-plane commands.*",
+  "drills": [
+    {
+      "q": "Which type usually gives broad availability?",
+      "a": "Global Standard."
+    },
+    {
+      "q": "Which types reserve capacity?",
+      "a": "Global Provisioned, Data Zone Provisioned, and Regional Provisioned."
+    },
+    {
+      "q": "Which type keeps processing in a US or EU zone?",
+      "a": "Data Zone Standard or Data Zone Provisioned."
+    }
+  ],
+  "teachItBack": "Deployment type is the big architectural switch. It controls processing geography, billing style, and capacity behavior. I choose it from compliance and traffic needs, not from habit.",
+  "glossary": [
+    {
+      "term": "Global Standard",
+      "definition": "Pay-per-token deployment with global Azure routing."
+    },
+    {
+      "term": "Data Zone Standard",
+      "definition": "Pay-per-token deployment constrained to a US or EU data zone."
+    },
+    {
+      "term": "Standard",
+      "definition": "Regional pay-per-token deployment."
+    },
+    {
+      "term": "PTU",
+      "definition": "Provisioned Throughput Unit for reserved model capacity."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Understanding deployment types in Microsoft Foundry Models",
+      "url": "https://learn.microsoft.com/en-us/azure/foundry/foundry-models/concepts/deployment-types",
+      "verified": true
+    },
+    {
+      "title": "Microsoft Foundry Models quotas and limits",
+      "url": "https://learn.microsoft.com/en-us/azure/foundry/foundry-models/quotas-limits",
+      "verified": true
+    }
+  ],
+  "quiz": [
+    {
+      "q": "What does a deployment name usually represent?",
+      "choices": [
+        "A callable alias for a deployed model",
+        "The provider company only",
+        "A secret key",
+        "The model weights file"
+      ],
+      "answer": 0,
+      "explanation": "Applications route to the deployment alias, which points to model details."
+    }
+  ]
+}

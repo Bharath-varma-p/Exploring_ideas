@@ -1,0 +1,70 @@
+{
+  "id": "fdy-basic-chat-completion",
+  "title": "Making a Chat Completion Request",
+  "lane": "foundry-models",
+  "type": "concept",
+  "order": 204,
+  "summary": "ChatCompletionsClient.complete sends messages to the chat completions route. The model argument selects a specific model or deployment when the endpoint supports multiple models.",
+  "tags": [
+    "chat",
+    "request",
+    "response"
+  ],
+  "analogy": "It is like autocomplete for a conversation. You hand the model the transcript, and it writes the next assistant line. The SDK puts that new line in response.choices[0].message.content.",
+  "diagram": "sequenceDiagram\n  participant App as Python app\n  participant SDK as ChatCompletionsClient\n  participant Auth as Managed identity\n  participant Service as Inference service\n  participant Model as Deployed model\n  App->>SDK: complete with messages\n  SDK->>Auth: get bearer token\n  SDK->>Service: HTTPS chat completions\n  Service->>Model: run prompt\n  Model-->>Service: assistant message\n  Service-->>SDK: choices usage finish reason\n  SDK-->>App: ChatCompletions object",
+  "body": "## First principles\n\nThe minimum chat call has three facts: who is calling, where the model lives, and what transcript the model should continue. The response is not magic; it is a structured object with choices, a message, finish reason, and token usage.\n\n## Definition\n\nChatCompletionsClient.complete sends messages to the chat completions route. The model argument selects a specific model or deployment when the endpoint supports multiple models. The returned ChatCompletions object has choices, where the first choice usually contains message.content.\n\n## How it fits together\n\nKeep the first version boring and observable: one system message, one user message, a deployment name, and printed usage. Once that works, add parameters, streaming, tools, or JSON mode.\n\n## Worked example\n\n```python\nimport os\nfrom azure.identity import DefaultAzureCredential\nfrom azure.ai.inference import ChatCompletionsClient\nfrom azure.ai.inference.models import SystemMessage, UserMessage\n\nclient = ChatCompletionsClient(\n    endpoint=os.environ[\"AZURE_AI_CHAT_ENDPOINT\"],\n    credential=DefaultAzureCredential(),\n)\n\nresponse = client.complete(\n    model=os.getenv(\"AZURE_AI_MODEL_DEPLOYMENT_NAME\"),\n    messages=[\n        SystemMessage(\"Answer in two short bullet points.\"),\n        UserMessage(\"Why do tokens matter for model inference?\"),\n    ],\n)\n\nchoice = response.choices[0]\nprint(\"content:\", choice.message.content)\nprint(\"finish_reason:\", choice.finish_reason)\nprint(\"usage:\", response.usage)\n```\n\n*Minimal complete call and response inspection.*",
+  "drills": [
+    {
+      "q": "Where is the generated text?",
+      "a": "response.choices[0].message.content."
+    },
+    {
+      "q": "What does model usually mean for Azure OpenAI through Foundry?",
+      "a": "The deployment name."
+    },
+    {
+      "q": "Why print usage early?",
+      "a": "It reveals token consumption, which drives limits, latency, and cost."
+    }
+  ],
+  "teachItBack": "A completion call asks the model to continue a transcript. The SDK returns a structured result, not just a string. Always inspect content, finish reason, and usage while learning.",
+  "glossary": [
+    {
+      "term": "choices",
+      "definition": "Candidate completions returned by the service."
+    },
+    {
+      "term": "finish_reason",
+      "definition": "Why generation stopped, such as stop sequence or token limit."
+    },
+    {
+      "term": "usage",
+      "definition": "Token counts for prompt, completion, and total usage."
+    }
+  ],
+  "sources": [
+    {
+      "title": "ChatCompletionsClient class",
+      "url": "https://learn.microsoft.com/en-us/python/api/azure-ai-inference/azure.ai.inference.chatcompletionsclient?view=azure-python-preview",
+      "verified": true
+    },
+    {
+      "title": "Azure AI Inference client library for Python",
+      "url": "https://learn.microsoft.com/en-us/python/api/overview/azure/ai-inference-readme?view=azure-python-preview",
+      "verified": true
+    }
+  ],
+  "quiz": [
+    {
+      "q": "What does max_tokens control?",
+      "choices": [
+        "Maximum generated output tokens",
+        "Managed identity token lifetime",
+        "Number of model deployments",
+        "Vector dimensions only"
+      ],
+      "answer": 0,
+      "explanation": "max_tokens caps how many tokens the model may generate."
+    }
+  ]
+}

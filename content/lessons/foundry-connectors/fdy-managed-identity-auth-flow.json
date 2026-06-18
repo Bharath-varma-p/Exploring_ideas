@@ -1,0 +1,75 @@
+{
+  "id": "fdy-managed-identity-auth-flow",
+  "title": "Managed Identity Authentication Flow",
+  "lane": "foundry-connectors",
+  "type": "concept",
+  "order": 107,
+  "summary": "For an incident MCP connector, the Foundry agent or project managed identity authenticates to the MCP server or backend with Microsoft Entra. The token audience should match the incident service or MCP server application ID URI.",
+  "tags": [
+    "managed-identity",
+    "entra",
+    "auth"
+  ],
+  "analogy": "Managed identity is a government badge issued to the machine. The responder does not carry a reusable master key; each doorway checks the badge and grants only the rooms authorized for that badge.",
+  "diagram": "sequenceDiagram\nparticipant Agent\nparticipant Entra\nparticipant MCP\nparticipant IncidentBackend\nAgent->>Entra: Request token for incident audience\nEntra-->>Agent: Short lived access token\nAgent->>MCP: MCP request with bearer token\nMCP->>MCP: Validate issuer audience signature\nMCP->>IncidentBackend: Authorized incident request\nIncidentBackend-->>MCP: Result",
+  "body": "## First principles\n\nFirst principles: secrets leak, expire badly, and get copied into places they do not belong. Managed identity replaces stored credentials with a Microsoft Entra identity assigned to the workload. The workload asks Entra for a short-lived token for a specific audience.\n\n## Definition\n\nFor an incident MCP connector, the Foundry agent or project managed identity authenticates to the MCP server or backend with Microsoft Entra. The token audience should match the incident service or MCP server application ID URI. Permissions are granted in the incident system and Entra; no keys, client secrets, or service-principal passwords are used.\n\n## How it fits together\n\nFlow: agent identity exists, role assignment is granted, Foundry requests a token, MCP server validates the token audience and issuer, then backend authorization decides read or write. Authentication proves who the workload is; authorization decides what it may do.\n\n## Worked example\n\n```python\n# Managed identity only. No keys, no client secrets, no service principal password.\nfrom azure.identity import DefaultAzureCredential\n\ncredential = DefaultAzureCredential()\n\n# Representative audience. Your organization must provide the real application ID URI\n# or scope for the incident MCP server or incident backend.\nINCIDENT_AUDIENCE_SCOPE = \"api://incident-mcp/.default\"  # representative\n\ntoken = credential.get_token(INCIDENT_AUDIENCE_SCOPE)\nprint(\"Got token expiring at\", token.expires_on)\n# Send token.token as Authorization: Bearer to the trusted MCP server if your design\n# requires the client to call the server directly. Foundry-managed connections may\n# perform this token acquisition inside Agent Service instead.\n```\n\n*Managed identity token acquisition for a representative incident audience*",
+  "drills": [
+    {
+      "q": "What does managed identity remove?",
+      "a": "Stored secrets such as keys, passwords, and certificates for the workload."
+    },
+    {
+      "q": "What is the token audience?",
+      "a": "The intended recipient of the token, such as the incident MCP server or incident backend application."
+    },
+    {
+      "q": "Is authentication the same as authorization?",
+      "a": "No. Authentication proves identity; authorization grants allowed actions."
+    }
+  ],
+  "teachItBack": "Managed identity lets the agent or project obtain Entra tokens without secrets. The token is scoped to an audience, then the MCP server and backend enforce permissions. This is the required pattern for this lane: no keys, no secrets, no service-principal credentials.",
+  "glossary": [
+    {
+      "term": "Managed identity",
+      "definition": "An Entra workload identity assigned to an Azure resource so code can obtain tokens without managing credentials."
+    },
+    {
+      "term": "Audience",
+      "definition": "The service for which an access token is intended."
+    },
+    {
+      "term": "DefaultAzureCredential",
+      "definition": "Azure SDK credential chain that uses managed identity in Azure-hosted environments."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Microsoft Learn: Set Up MCP Server Authentication",
+      "url": "https://learn.microsoft.com/en-us/azure/foundry/agents/how-to/mcp-authentication",
+      "verified": true
+    },
+    {
+      "title": "Microsoft Entra: Managed identities for Azure resources",
+      "url": "https://learn.microsoft.com/en-us/entra/identity/managed-identities-azure-resources/overview",
+      "verified": true
+    },
+    {
+      "title": "Microsoft Learn: Authenticate Azure-hosted Python apps using system-assigned managed identity",
+      "url": "https://learn.microsoft.com/en-us/azure/developer/python/sdk/authentication/system-assigned-managed-identity",
+      "verified": true
+    }
+  ],
+  "quiz": [
+    {
+      "q": "Where should least-privilege enforcement happen?",
+      "choices": [
+        "In the MCP server and backend authorization layer, with prompt guidance as an additional control",
+        "Only in the model prompt",
+        "Only in the user's memory",
+        "Nowhere if managed identity is enabled"
+      ],
+      "answer": 0,
+      "explanation": "Prompts are not security boundaries. The connector and backend must enforce authorization."
+    }
+  ]
+}
