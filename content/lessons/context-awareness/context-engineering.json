@@ -1,0 +1,110 @@
+{
+  "id": "context-engineering",
+  "title": "Context Engineering",
+  "lane": "context-awareness",
+  "type": "concept",
+  "order": 60,
+  "tags": [
+    "context-engineering",
+    "retrieval",
+    "compression",
+    "memory"
+  ],
+  "summary": "Context engineering is the discipline of assembling the right tokens for the model at each step: retrieve, prioritize, compress, isolate, and refresh context under a limited window.",
+  "analogy": "The context window is a backpack. You cannot carry the whole house, so you pack the tools, map, water, and notes needed for the next hike.",
+  "body": "## First principles\nContext-aware systems can sense more than a model can safely use. Screenshots, accessibility trees, history, files, tool logs, health data, and conversation turns can explode past the context window. Even if they fit, too much noise can distract the model.\n\nThe first-principles problem is scarce attention. Every token competes for the model’s focus. Context engineering asks: which information should be inside the model’s working memory right now?\n\n## Plain definition\nContext engineering is the art and science of curating the information given to a model at each inference step. It includes prompts, instructions, tool descriptions, retrieved knowledge, memory, UI state, previous actions, summaries, and guardrails.\n\nThe backpack analogy is practical. You pack for the next hike, not for every possible future trip. A heavy backpack slows you down and hides the one tool you need.\n\n## Core operations\nUse these operations:\n\n1. **Retrieve** — fetch candidate information from screen state, memory, docs, databases, or tools.\n2. **Score** — rank by relevance, recency, authority, and risk.\n3. **Compress** — summarize long histories, cluster repeated logs, extract structured state.\n4. **Prioritize** — keep goal, constraints, selected text, active target, and recent observations near the top.\n5. **Isolate** — separate sensitive, untrusted, or tool-output context so it cannot override instructions.\n6. **Refresh** — after each action, update context from the new observation.\n\n## Mental model\nThe diagram shows a loop. The universe of possible information is huge. The system retrieves candidates, scores relevance, compresses them, packs the context window, runs a model step, and adds new observations back into the universe.\n\n## Real examples\nAnthropic’s context-engineering article defines context as the tokens included when sampling from an LLM and frames the engineering job as optimizing the utility of those tokens under constraints.\n\nLangChain describes context engineering for agents as filling the context window with the right information at each step, using strategies such as write, select, compress, and isolate.\n\nFor a screen-aware agent, this means you do not paste the entire accessibility tree if the user selected one sentence. You pack the user goal, selected sentence, target metadata, relevant history, and platform constraints.\n\n## Drills\nGiven a 10,000-node accessibility tree and the user says “click the pricing link,” what context should you keep? The active page title/URL, nav landmarks, candidate links named pricing/plans, visible state, and permission/risk notes.\n\nA long-running agent has 80 tool results. What compression should it do? Keep a structured task state: completed steps, current blockers, key facts, failed attempts, and next candidates.\n\n## Teach-it-back\nContext engineering is choosing what the model gets to see next. It retrieves, ranks, compresses, and refreshes information so the context window stays useful. For context-aware agents, it turns many sensed signals into a small, high-signal working memory.",
+  "diagram": "flowchart TD\n  UNIVERSE[Possible information] --> RET[Retrieve candidates]\n  RET --> SCORE[Score relevance]\n  SCORE --> COMP[Compress or summarize]\n  COMP --> PACK[Pack context window]\n  PACK --> MODEL[Model step]\n  MODEL --> NEW[New observations]\n  NEW --> UNIVERSE",
+  "examples": [
+    {
+      "product": "Anthropic effective context engineering",
+      "what": "Defines context as the set of tokens used during inference and context engineering as optimizing token utility under model constraints.",
+      "source": "https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents"
+    },
+    {
+      "product": "LangChain context engineering",
+      "what": "Frames agent context work as deciding what to write, select, compress, and isolate for each step of a trajectory.",
+      "source": "https://www.langchain.com/blog/context-engineering-for-agents"
+    },
+    {
+      "product": "Anthropic building effective agents",
+      "what": "Describes the augmented LLM with retrieval, tools, and memory as a foundational building block for agentic systems.",
+      "source": "https://www.anthropic.com/engineering/building-effective-agents"
+    }
+  ],
+  "drills": [
+    {
+      "q": "Why is context engineering more than prompt writing?",
+      "a": "It manages all tokens: instructions, history, retrieved knowledge, tool results, memory, UI state, and summaries across time."
+    },
+    {
+      "q": "Name three context engineering operations.",
+      "a": "Retrieval, prioritization, compression, isolation, deduplication, and recency weighting."
+    },
+    {
+      "q": "What is context rot or attention dilution?",
+      "a": "The model’s ability to use relevant information can degrade as the window fills with too many or poorly organized tokens."
+    }
+  ],
+  "teachItBack": "Context engineering is packing the model’s working memory for the next step. It retrieves candidate facts, scores relevance, compresses bulky history, prioritizes recent and task-critical signals, and leaves out distracting noise. For context-aware agents, it is the bridge between sensing lots of signals and giving the model only what it can use.",
+  "sources": [
+    {
+      "title": "Anthropic — Effective context engineering for AI agents",
+      "url": "https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents",
+      "verified": true
+    },
+    {
+      "title": "LangChain — Context engineering for agents",
+      "url": "https://www.langchain.com/blog/context-engineering-for-agents",
+      "verified": true
+    },
+    {
+      "title": "Anthropic — Building effective agents",
+      "url": "https://www.anthropic.com/engineering/building-effective-agents",
+      "verified": true
+    }
+  ],
+  "related": [
+    "what-is-context-awareness",
+    "sensing-user-history",
+    "deciding-where-to-go",
+    "permissions-and-consent"
+  ],
+  "glossary": [
+    {
+      "term": "Context window",
+      "definition": "The finite set of tokens available to a model during a single inference step."
+    },
+    {
+      "term": "Retrieval",
+      "definition": "Fetching relevant information from memory, documents, tools, or state stores for the current task."
+    },
+    {
+      "term": "Compression",
+      "definition": "Condensing long information into shorter summaries or structured state while preserving what matters."
+    }
+  ],
+  "quiz": [
+    {
+      "q": "What is the main goal of context engineering?",
+      "choices": [
+        "Put every possible signal into the prompt",
+        "Maximize useful information per token for the next model step",
+        "Avoid using tools",
+        "Replace permissions"
+      ],
+      "answer": 1,
+      "explanation": "The context window is finite, so token utility and relevance matter."
+    },
+    {
+      "q": "Which item should usually have high priority?",
+      "choices": [
+        "A stale preference from years ago",
+        "The current selected text tied to the user’s request",
+        "Random hidden page text",
+        "A duplicate tool log"
+      ],
+      "answer": 1,
+      "explanation": "Current selection is recent, explicit, and task-relevant."
+    }
+  ]
+}

@@ -1,0 +1,47 @@
+{
+  "id": "memory-short-term",
+  "title": "Short-Term Memory",
+  "lane": "architecture",
+  "type": "concept",
+  "order": 60,
+  "tags": ["memory", "context-window", "scratchpad", "summarization", "state"],
+  "summary": "The working memory an agent holds inside its context window during a task — the running conversation, scratchpad notes, and intermediate results — plus the tricks to keep it from overflowing.",
+  "analogy": "Your desk while working on a problem. The papers spread out in front of you are what you can use right now; when the desk gets too cluttered you summarize a stack into one note and clear space. The context window is that desk.",
+  "body": "## First principles\nA transformer has **no built-in memory** between calls. Everything it 'knows' for the current step must fit in its **context window** — the finite span of tokens it reads each forward pass. That window *is* the agent's short-term (working) memory: the system prompt, the conversation so far, tool outputs, and any scratchpad notes.\n\nTwo hard constraints follow. First, the window is **finite**: long tasks generate more history than fits, so something must be dropped or compressed. Second, attention isn't uniform — models can lose information buried in the middle of a long context ('lost in the middle'), so *what* you keep and *where* matters as much as *how much*.\n\n## Plain definition\nShort-term memory = the information an agent carries **within the context window** for the current task: dialogue history, intermediate results, and a **scratchpad** where it writes reasoning or notes it will reuse this session. It vanishes when the session ends (that's long-term memory's job).\n\n## Mental model\nNew input arrives, gets appended to the working context; when the context nears its limit, older content is **summarized or trimmed** to make room, and the freshest, most relevant material is kept. The diagram shows this append→compress cycle.\n\n## Techniques to manage it\n- **Scratchpad / running notes**: let the model write down intermediate conclusions (ReAct's 'Thought' trace is a scratchpad).\n- **Summarization / compaction**: replace a long history with a compact summary when nearing the limit.\n- **Truncation / windowing**: keep the last N turns (sliding window) and drop the oldest.\n- **Selective inclusion**: put the most relevant items near the start/end where attention is strongest.\n\n## Real examples\n- **ChatGPT / Claude conversations**: the running chat is short-term memory; long threads get summarized or truncated as they approach the window limit.\n- **Claude Code / coding agents**: maintain a working scratchpad of the task and compact older steps to stay within context on long sessions.\n\n## Why it matters\nShort-term memory is cheap and immediate but **bounded and ephemeral**. When a task needs facts beyond the window, or knowledge that must persist across sessions, you reach for **long-term memory** (retrieval from an external store). Most real agents combine both.\n\n## Watch out for\n- **Context overflow**: silently dropping early instructions breaks behavior — summarize deliberately.\n- **Lost in the middle**: don't bury critical info in a giant blob.\n- **Cost/latency**: bigger context = more tokens per call; don't hoard irrelevant history.",
+  "diagram": "flowchart TD\n  I([New input / tool result]) --> CTX[Working context\\n(system + history + scratchpad)]\n  CTX --> Q{Near token\\nlimit?}\n  Q -- no --> M[Model reads full context]\n  Q -- yes --> C[Summarize / trim\\noldest content]\n  C --> CTX\n  M --> O([Response + updated scratchpad])\n  O --> CTX",
+  "examples": [
+    { "product": "ChatGPT", "what": "Holds the live conversation in-context as working memory and summarizes or truncates older turns as a long thread approaches the context limit.", "source": "https://huyenchip.com/2025/01/07/agents.html" },
+    { "product": "Claude Code", "what": "Keeps a task scratchpad in context and compacts earlier steps to stay within the window during long coding sessions.", "source": "https://www.anthropic.com/engineering/building-effective-agents" }
+  ],
+  "drills": [
+    { "q": "What physically holds an agent's short-term memory?", "a": "The context window — the finite span of tokens the model reads on each forward pass, containing the prompt, history, tool outputs, and scratchpad." },
+    { "q": "Name two techniques for staying within the context limit on a long task.", "a": "Summarization/compaction of older history and truncation/sliding-window that keeps the last N turns; also selective inclusion of the most relevant items." },
+    { "q": "What is 'lost in the middle' and why does it matter for short-term memory?", "a": "Models attend less to information buried in the middle of a long context, so where you place critical info matters, not just whether it fits." }
+  ],
+  "teachItBack": "Short-term memory is everything an agent holds inside its finite context window for the current task: the conversation, tool results, and a scratchpad of its own notes. Because the window is limited and models lose track of buried content, you manage it with summarization, truncation, and putting the most important material where attention is strongest. It's fast but ephemeral, so when knowledge must outlive the session or exceed the window you switch to long-term memory.",
+  "sources": [
+    { "title": "Lilian Weng — LLM Powered Autonomous Agents", "url": "https://lilianweng.github.io/posts/2023-06-23-agent/", "verified": true },
+    { "title": "Chip Huyen — Agents", "url": "https://huyenchip.com/2025/01/07/agents.html", "verified": true }
+  ],
+  "related": ["memory-long-term", "react", "rag", "agentic-patterns-overview"],
+  "glossary": [
+    { "term": "Short-term memory", "definition": "The working information an agent holds within its context window for the current task; ephemeral and bounded." },
+    { "term": "Context window", "definition": "The finite span of tokens a model can read in a single forward pass; it holds the agent's working memory." },
+    { "term": "Scratchpad", "definition": "A region of the context where the model writes intermediate reasoning or notes to reuse within the session." },
+    { "term": "Lost in the middle", "definition": "The tendency of models to attend less to information located in the middle of a long context." }
+  ],
+  "quiz": [
+    {
+      "q": "Where does an agent's short-term memory live?",
+      "choices": ["In a vector database", "In the model's finite context window", "On disk permanently", "In the GPU firmware"],
+      "answer": 1,
+      "explanation": "Short-term/working memory is the content held in the context window for the current task."
+    },
+    {
+      "q": "What is a standard way to keep a long conversation within the context limit?",
+      "choices": ["Increase temperature", "Summarize or truncate older history", "Add more tools", "Switch to a smaller model"],
+      "answer": 1,
+      "explanation": "Compaction (summarization) and windowing/truncation free up tokens as the context approaches its limit."
+    }
+  ]
+}

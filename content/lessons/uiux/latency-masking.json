@@ -1,0 +1,81 @@
+{
+  "id": "latency-masking",
+  "title": "Latency Masking",
+  "lane": "uiux",
+  "type": "pattern",
+  "order": 30,
+  "summary": "Using skeletons, optimistic UI, and progress states to turn waiting time into reassurance.",
+  "problem": "AI operations (like agentic loops or deep reasoning) are inherently slow. Showing a blank screen or a static spinner causes users to abandon the request, thinking the system is broken.",
+  "forces": [
+    "Users have low tolerance for waiting without visual feedback.",
+    "Complex AI workflows cannot be instantly sped up.",
+    "Uncertainty ('Is it stuck?') is worse than knowing a process takes time."
+  ],
+  "solution": "Mask the latency by providing continuous, meaningful updates. Use optimistic UI where possible, skeleton screens, shimmering placeholders, and detailed 'thinking' states that expose intermediate steps.",
+  "tradeoffs": [
+    "Exposing too many intermediate steps can confuse the user.",
+    "Optimistic UI requires complex rollback logic if the underlying operation fails."
+  ],
+  "body": "## First principles\nWaiting is psychological. Ten seconds of watching a static spinner feels like a minute. Ten seconds of watching a system gather facts, read a document, and prepare an answer feels like watching an expert at work. **We mask latency by making the wait interesting and informative.**\n\n## Skeletons and Shimmer\nBefore content arrives, display a skeleton screen with a subtle shimmer. This establishes the layout and signals that data is on the way, preventing jarring layout shifts when the content finally renders.\n\n## Exposing the 'Thinking' process\nFor long-running tasks, show what the agent is doing. 'Searching the web...', 'Reading 3 sources...', 'Drafting response...'. This not only masks latency but builds trust by showing the AI's work.",
+  "tags": [
+    "latency",
+    "skeletons",
+    "optimistic-ui",
+    "trust"
+  ],
+  "analogy": "It's like an open kitchen in a restaurant. You don't mind waiting 20 minutes for your food if you can watch the chef expertly preparing it.",
+  "diagram": "flowchart LR\n  Req[Request] --> S1[Show Skeleton]\n  S1 --> T1[Status: Searching...]\n  T1 --> T2[Status: Reading...]\n  T2 --> Res[Render Final UI]",
+  "examples": [
+    {
+      "product": "Perplexity",
+      "what": "Shows the exact sources it is reading while constructing the answer, turning wait time into a display of competence.",
+      "source": "https://www.perplexity.ai/"
+    },
+    {
+      "product": "Claude (Artifacts)",
+      "what": "Shows a dedicated, isolated loading state for code/UI artifacts while the main chat stream continues.",
+      "source": "https://claude.ai/"
+    }
+  ],
+  "drills": [
+    {
+      "q": "What is the purpose of a skeleton screen?",
+      "a": "To establish layout early and signal data is loading, reducing perceived wait time and layout shift."
+    },
+    {
+      "q": "How does showing intermediate steps ('thinking') mask latency?",
+      "a": "It gives the user something to read and builds trust, changing the perception from 'waiting' to 'watching work happen'."
+    }
+  ],
+  "teachItBack": "When an AI is doing something slow, don't just show a spinner. Mask the latency by showing skeletons or narrating the steps the AI is taking. It distracts the user, proves the system is working hard, and makes the wait feel significantly shorter.",
+  "sources": [
+    {
+      "title": "Response Times: The 3 Important Limits",
+      "url": "https://www.nngroup.com/articles/response-times-3-important-limits/",
+      "verified": true
+    }
+  ],
+  "related": [
+    "streaming-responses",
+    "trust-and-transparency"
+  ],
+  "glossary": [
+    {
+      "term": "Optimistic UI",
+      "definition": "Updating the UI immediately with the expected result of an action before the server confirms it."
+    }
+  ],
+  "quiz": [
+    {
+      "q": "Which technique is best for masking latency on a 15-second multi-step reasoning task?",
+      "choices": [
+        "A static loading bar",
+        "Optimistic UI showing the final answer",
+        "Streaming intermediate status updates ('Thinking', 'Searching')",
+        "A blank screen to build suspense"
+      ],
+      "answer": 2,
+      "explanation": "Narrating the steps gives the user feedback that the system isn't stuck, making the long wait tolerable and building trust."
+    }
+  ]
+}

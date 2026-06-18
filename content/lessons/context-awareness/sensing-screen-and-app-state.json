@@ -1,0 +1,115 @@
+{
+  "id": "sensing-screen-and-app-state",
+  "title": "Sensing Screen and App State",
+  "lane": "context-awareness",
+  "type": "concept",
+  "order": 30,
+  "tags": [
+    "screen",
+    "ocr",
+    "app-state",
+    "accessibility-tree"
+  ],
+  "summary": "Screen-aware agents combine active window state, screenshots, OCR, and accessibility trees to understand what the user is looking at and what actions are available.",
+  "analogy": "The screen is a city map. Pixels are satellite imagery; the accessibility tree is the labeled street map with addresses and entrances.",
+  "body": "## First principles\nA user’s screen is often the best clue to what they mean. If they say “where do I click?” the answer depends on visible state: active window, current page, dialog boxes, focus, selected item, and error messages.\n\nThe hard problem is that screens were built for human eyes, not model reasoning. Pixels alone do not say which rectangle is a button, which field is focused, or which menu item is disabled. Screen-aware systems must convert visual state into structured state.\n\n## Plain definition\nScreen and app-state sensing means reading the current interface through a mix of active-window metadata, screenshots, OCR, computer vision, accessibility APIs, app APIs, browser DOMs, and recent events.\n\nSatellite imagery versus street map is the key analogy. A screenshot shows what the screen looks like. The accessibility tree or DOM says what the parts are called and how to interact with them.\n\n## Common sensing layers\nUse layered sensing:\n\n1. **App/window state** — active app, window title, URL, focused element.\n2. **Screenshot** — the visual truth of what is on screen.\n3. **OCR and vision** — text and layout from pixels.\n4. **Accessibility tree or DOM** — roles, labels, hierarchy, states, actions.\n5. **Event stream** — clicks, focus changes, page loads, errors.\n\nThe best agents do not choose one layer forever; they fuse layers based on task and platform.\n\n## Mental model\nThe diagram starts with the active window. From there, the system takes a screen snapshot, extracts OCR and visual layout, queries the accessibility tree, and merges the results into a screen model. That model grounds targets and state.\n\n## Real examples\nAnthropic describes computer use as Claude using computers the way people do: looking at a screen, moving a cursor, clicking buttons, and typing. That only works if the screen is turned into reliable context.\n\nAndroid AccessibilityService can receive UI events such as focus changes and clicks, and can request the ability to query active-window content as trees of window and node objects.\n\nOpenAI’s Computer-Using Agent points to the same design family: agent decisions must be grounded in the current browser or computer state.\n\n## Drills\nA screenshot shows a login error but the accessibility tree says the focused field is password. What should the agent do? It should use both: explain the error and propose editing the focused password field if appropriate.\n\nA canvas app has no useful accessibility labels. What fallback sensing layer helps? Screenshot plus OCR/vision, while also warning that reliability is lower.\n\n## Teach-it-back\nScreen sensing turns a human interface into machine-readable state. Screenshots and OCR provide visual evidence; accessibility trees and DOMs provide semantic structure. A reliable agent merges them before it clicks, types, or searches.",
+  "diagram": "flowchart TD\n  AW[Active window] --> SNAP[Screen snapshot]\n  SNAP --> OCR[OCR text]\n  SNAP --> VISION[Visual layout]\n  AW --> AX[Accessibility tree]\n  OCR --> MERGE[Merged screen model]\n  VISION --> MERGE\n  AX --> MERGE\n  MERGE --> GROUND[Grounded targets and state]",
+  "examples": [
+    {
+      "product": "Anthropic computer use",
+      "what": "The announcement describes Claude using computers by looking at a screen, moving a cursor, clicking buttons, and typing text.",
+      "source": "https://www.anthropic.com/news/3-5-models-and-computer-use"
+    },
+    {
+      "product": "OpenAI Computer-Using Agent",
+      "what": "Computer-using agents rely on perceiving a browser or computer state, then selecting grounded actions such as clicks and typing.",
+      "source": "https://openai.com/index/computer-using-agent/"
+    },
+    {
+      "product": "Android AccessibilityService",
+      "what": "Can receive UI state-transition events and optionally query active-window content represented as accessibility window and node trees.",
+      "source": "https://developer.android.com/reference/android/accessibilityservice/AccessibilityService"
+    }
+  ],
+  "drills": [
+    {
+      "q": "Why use both screenshot/OCR and an accessibility tree?",
+      "a": "Screenshots capture visual reality; accessibility trees provide semantic labels, roles, hierarchy, and actions. Each covers gaps in the other."
+    },
+    {
+      "q": "What is active window state?",
+      "a": "The app/window currently receiving user attention or input, including title, bounds, focus, and visible controls if available."
+    },
+    {
+      "q": "What is a common OCR failure mode?",
+      "a": "It can misread small, stylized, hidden, or overlapping text and may miss semantic meaning like button role."
+    }
+  ],
+  "teachItBack": "Screen sensing builds a machine-readable model of the current app view. Pixels and OCR tell what is visually present; accessibility APIs tell what elements mean and what actions they support. A screen-aware agent merges both before deciding where to click or what to search.",
+  "sources": [
+    {
+      "title": "Anthropic — Claude 3.5 models and computer use",
+      "url": "https://www.anthropic.com/news/3-5-models-and-computer-use",
+      "verified": true
+    },
+    {
+      "title": "OpenAI — Computer-Using Agent",
+      "url": "https://openai.com/index/computer-using-agent/",
+      "verified": true
+    },
+    {
+      "title": "Android Developers — AccessibilityService",
+      "url": "https://developer.android.com/reference/android/accessibilityservice/AccessibilityService",
+      "verified": true
+    },
+    {
+      "title": "Microsoft Learn — UI Automation Overview",
+      "url": "https://learn.microsoft.com/en-us/windows/win32/winauto/uiauto-uiautomationoverview",
+      "verified": true
+    }
+  ],
+  "related": [
+    "sensing-cursor-and-selection",
+    "accessibility-apis-as-sensing",
+    "deciding-where-to-go",
+    "permissions-and-consent"
+  ],
+  "glossary": [
+    {
+      "term": "Active window",
+      "definition": "The foreground app window or surface that currently has focus or user attention."
+    },
+    {
+      "term": "OCR",
+      "definition": "Optical character recognition: extracting text from images or screenshots."
+    },
+    {
+      "term": "Screen model",
+      "definition": "A merged representation of visual content, UI hierarchy, focus, and actionable targets."
+    }
+  ],
+  "quiz": [
+    {
+      "q": "Which source best tells an agent that a rectangle is a clickable button?",
+      "choices": [
+        "Screenshot pixels alone",
+        "Accessibility tree role and action metadata",
+        "Battery state",
+        "The user’s timezone"
+      ],
+      "answer": 1,
+      "explanation": "Accessibility metadata exposes semantics like role, label, state, and supported actions."
+    },
+    {
+      "q": "Why is OCR still useful when an accessibility tree exists?",
+      "choices": [
+        "It replaces consent",
+        "It can catch rendered text or canvas/image content missing from the tree",
+        "It makes clicks faster",
+        "It stores long-term memory"
+      ],
+      "answer": 1,
+      "explanation": "Some visual text is not exposed semantically, so OCR can complement the tree."
+    }
+  ]
+}

@@ -1,0 +1,70 @@
+{
+  "id": "conversational-ux",
+  "title": "Conversational UX",
+  "lane": "uiux",
+  "type": "concept",
+  "order": 10,
+  "summary": "Designing turn-by-turn dialog that feels natural, offering affordances, suggestions, and easy repair when the AI misunderstands.",
+  "body": "## First principles\nConversational AI shifts the paradigm from command-and-control to continuous dialog. But users often face a blank canvas problem\u2014they don't know what the system can do. Good conversational UX bridges this gap by providing clear affordances, contextual suggestions, and effortless ways to correct misunderstandings.\n\n## Affordances and repair\nA blank text box is intimidating. By offering suggested prompts, autocomplete, and quick replies, you guide the user. When the AI fails, offering simple repair mechanisms (like 'regenerate' or 'edit prompt') prevents frustration and keeps the conversation flowing.\n\n## The anatomy of a turn\nEach turn should feel like progress. The AI must acknowledge the input, state what it's doing if it takes time, and provide an answer that invites a follow-up. Avoid dead ends; always leave the door open for refinement.",
+  "tags": [
+    "dialog",
+    "affordances",
+    "repair",
+    "chat"
+  ],
+  "analogy": "A good conversation is like a dance: one person leads, but both respond to each other's cues, and if someone steps on a toe, they quickly adjust and keep the rhythm.",
+  "diagram": "flowchart LR\n  U[User Input] --> AI[AI Processing]\n  AI --> R[Response + Suggestions]\n  R --> |Follow-up| U\n  R --> |Repair/Edit| U",
+  "examples": [
+    {
+      "product": "ChatGPT",
+      "what": "Offers suggested follow-up questions at the end of a detailed answer to keep the conversation going.",
+      "source": "https://chatgpt.com/"
+    },
+    {
+      "product": "Claude",
+      "what": "Allows users to easily edit their previous prompts to repair a misunderstood direction.",
+      "source": "https://claude.ai/"
+    }
+  ],
+  "drills": [
+    {
+      "q": "What is the 'blank canvas' problem in conversational UI?",
+      "a": "Users don't know what the system is capable of or what they should type."
+    },
+    {
+      "q": "How can a system support 'repair'?",
+      "a": "By allowing users to edit prompts, regenerate answers, or easily correct the AI's assumptions."
+    }
+  ],
+  "teachItBack": "Conversational UX isn't just a text box; it's about guiding the user. You need to provide suggestions so they know what's possible, and easy repair options when things go wrong. It's a continuous loop of input, response, and refinement.",
+  "sources": [
+    {
+      "title": "NN/g - AI as a UX Assistant",
+      "url": "https://www.nngroup.com/topic/ai-ml/",
+      "verified": true
+    }
+  ],
+  "related": [
+    "error-recovery-ux",
+    "feedback-and-steering"
+  ],
+  "glossary": [
+    {
+      "term": "Repair",
+      "definition": "The UX mechanisms that allow a user to correct the AI when it misunderstands or hallucinates."
+    }
+  ],
+  "quiz": [
+    {
+      "q": "Which feature best solves the 'blank canvas' problem?",
+      "choices": [
+        "A blinking cursor",
+        "Suggested starter prompts",
+        "A long loading spinner",
+        "A terms of service link"
+      ],
+      "answer": 1,
+      "explanation": "Starter prompts give users an immediate idea of what the system can do and how to phrase requests."
+    }
+  ]
+}

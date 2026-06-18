@@ -1,0 +1,115 @@
+{
+  "id": "permissions-and-consent",
+  "title": "Permissions and Consent",
+  "lane": "context-awareness",
+  "type": "concept",
+  "order": 50,
+  "tags": [
+    "privacy",
+    "permissions",
+    "consent",
+    "trust"
+  ],
+  "summary": "Context-aware agents earn trust by negotiating capabilities clearly, using least privilege, favoring on-device processing when possible, and making consent reversible.",
+  "analogy": "Permissions are keys to rooms. A trustworthy assistant asks for the specific key it needs, uses it in front of you, and gives it back when done.",
+  "body": "## First principles\nContext-aware agents can sense sensitive things: screens, health data, location, files, messages, cursor targets, and user history. The more useful the sensing, the greater the trust burden.\n\nThe first-principles problem is alignment of power and permission. The agent should have enough access to help, but not so much that it surprises, leaks, or coerces the user.\n\n## Plain definition\nPermissions and consent are the mechanisms that decide whether an agent may access a signal or perform an action. Good consent is specific, informed, voluntary, visible, and reversible.\n\nThe keys analogy is direct: do not ask for the master key when you only need the conference room. Do not keep the key after the meeting unless the user explicitly wants that.\n\n## Design rules\nUse these rules:\n\n1. **Purpose limitation** — explain the task reason.\n2. **Least privilege** — smallest capability, shortest duration.\n3. **Local first** — use on-device processing when it meaningfully reduces exposure.\n4. **Progressive disclosure** — ask when value is clear, not at first launch for everything.\n5. **User visibility** — show what is being sensed or controlled.\n6. **Revocation** — make pause, delete, and reset obvious.\n7. **Fallbacks** — denial should not punish the user.\n\n## Mental model\nThe diagram is a trust loop. A task needs a signal or action. The system chooses the minimum capability, explains why, asks for consent, uses it with limits if approved, or falls back if denied. Logs, indicators, and revocation close the loop.\n\n## Real examples\nAndroid AccessibilityService is explicit: the service starts when the user turns it on in settings and can stop when the user turns it off or the service disables itself. That is platform-enforced consent.\n\nComputer-use agents from Anthropic and OpenAI are powerful because they can affect real interfaces. That raises the stakes for confirmations around destructive actions, payments, messages, and sensitive fields.\n\nWHOOP Coach shows another sensitive domain: biometric and behavior context can be valuable, but it requires clear expectations about how personal data becomes coaching.\n\n## Drills\nRewrite this bad permission prompt: “Allow screen access to improve AI.” A better version: “To identify the button you asked about, I need to read this active window once. I will not store the screenshot.”\n\nClassify these as low, medium, or high sensitivity: selected text in a public article, a bank login screen, sleep and HRV history, and a cursor location.\n\n## Teach-it-back\nPermissions are how context-aware agents earn the right to sense and act. The agent should request the smallest capability, explain the reason, and offer a fallback if denied. Consent is not real unless the user can see, limit, and revoke it.",
+  "diagram": "flowchart TD\n  NEED[Task needs signal or action] --> MIN[Choose minimum capability]\n  MIN --> EXPLAIN[Explain why]\n  EXPLAIN --> CONSENT{User consents?}\n  CONSENT -- yes --> USE[Use with limits]\n  CONSENT -- no --> FALLBACK[Offer fallback]\n  USE --> AUDIT[Show, log, revoke]\n  AUDIT --> TRUST[Trust loop]",
+  "examples": [
+    {
+      "product": "Android AccessibilityService",
+      "what": "Android states an accessibility service starts only when the user explicitly turns it on in device settings, and it can be turned off by the user.",
+      "source": "https://developer.android.com/reference/android/accessibilityservice/AccessibilityService"
+    },
+    {
+      "product": "Apple Accessibility",
+      "what": "macOS accessibility clients must work within Apple’s accessibility and privacy model for interacting with other apps.",
+      "source": "https://developer.apple.com/library/archive/documentation/Accessibility/Conceptual/AccessibilityMacOSX/index.html"
+    },
+    {
+      "product": "Anthropic computer use",
+      "what": "Computer-use capabilities are powerful and experimental, making guardrails and user oversight essential when an agent clicks or types.",
+      "source": "https://www.anthropic.com/news/3-5-models-and-computer-use"
+    }
+  ],
+  "drills": [
+    {
+      "q": "What is least privilege for a screen-aware assistant?",
+      "a": "Request only the narrowest sensing/action capability needed for the current task, for the shortest reasonable time."
+    },
+    {
+      "q": "Why prefer on-device processing for sensitive context?",
+      "a": "It can reduce data exposure by keeping screenshots, health data, or app content local when cloud processing is unnecessary."
+    },
+    {
+      "q": "What makes consent reversible?",
+      "a": "Users can inspect, pause, revoke, delete, or narrow access after granting it."
+    }
+  ],
+  "teachItBack": "Permissions are part of the product, not a legal checkbox. A trustworthy agent explains why it needs a capability, asks for the minimum access, uses it transparently, and offers fallbacks. Consent should be specific, visible, and reversible.",
+  "sources": [
+    {
+      "title": "Android Developers — AccessibilityService",
+      "url": "https://developer.android.com/reference/android/accessibilityservice/AccessibilityService",
+      "verified": true
+    },
+    {
+      "title": "Apple — Accessibility Programming Guide for OS X",
+      "url": "https://developer.apple.com/library/archive/documentation/Accessibility/Conceptual/AccessibilityMacOSX/index.html",
+      "verified": true
+    },
+    {
+      "title": "Anthropic — Claude 3.5 models and computer use",
+      "url": "https://www.anthropic.com/news/3-5-models-and-computer-use",
+      "verified": true
+    },
+    {
+      "title": "Anthropic — Building effective agents",
+      "url": "https://www.anthropic.com/engineering/building-effective-agents",
+      "verified": true
+    }
+  ],
+  "related": [
+    "sensing-device-os-capabilities",
+    "accessibility-apis-as-sensing",
+    "context-vs-platform",
+    "deciding-where-to-go"
+  ],
+  "glossary": [
+    {
+      "term": "Least privilege",
+      "definition": "Granting only the minimum access needed to complete a task."
+    },
+    {
+      "term": "Capability negotiation",
+      "definition": "The interaction where the agent explains a needed permission or tool and obtains user approval or chooses a fallback."
+    },
+    {
+      "term": "On-device processing",
+      "definition": "Processing data locally on the user’s device rather than sending it to a remote server."
+    }
+  ],
+  "quiz": [
+    {
+      "q": "Which consent request is best?",
+      "choices": [
+        "“Let me watch everything forever.”",
+        "“To summarize this selected paragraph, may I read the selection one time?”",
+        "“Permissions are boring; click allow.”",
+        "“I need all files because AI.”"
+      ],
+      "answer": 1,
+      "explanation": "It is specific, scoped, task-linked, and minimal."
+    },
+    {
+      "q": "What should an agent do if consent is denied?",
+      "choices": [
+        "Bypass the OS",
+        "Offer a manual or lower-privilege fallback",
+        "Pretend permission was granted",
+        "Store the data anyway"
+      ],
+      "answer": 1,
+      "explanation": "Respect denial and provide a safe fallback path."
+    }
+  ]
+}

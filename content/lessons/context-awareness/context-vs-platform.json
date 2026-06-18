@@ -1,0 +1,115 @@
+{
+  "id": "context-vs-platform",
+  "title": "Context vs Platform",
+  "lane": "context-awareness",
+  "type": "concept",
+  "order": 20,
+  "tags": [
+    "context",
+    "platform",
+    "mental-model",
+    "architecture"
+  ],
+  "summary": "Context is what is happening; platform is where it is happening and what the system can do about it. Strong agents need both.",
+  "analogy": "Context is the weather report; platform is the vehicle. Rain means different actions if you are walking, biking, driving, or flying.",
+  "body": "## First principles\nBeginners often merge context awareness and platform awareness into one vague idea: “the agent knows what is going on.” That hides a crucial design boundary. A system can know the user selected text but not know whether it can read it. It can know a button is visible but not know whether it can safely click it.\n\nThe first principle is separation of concerns. Context answers the relevance question. Platform answers the capability question. Decision-making needs both.\n\n## Plain definition\n**Context** means the facts around the current task: selected text, cursor target, open app, recent user request, history, biometrics, time, and constraints.\n\n**Platform** means the environment that exposes or blocks actions: OS, browser, app sandbox, accessibility APIs, sensors, permissions, network, and device capabilities.\n\nTogether they answer: “Given what is happening here, what can I do safely?”\n\n## The combination rule\nThink in a two-column table:\n\n- If context says “user is pointing at a typo” and platform says “I can edit this text field,” the action is edit.\n- If context says “user is pointing at a typo” and platform says “read-only PDF,” the action is suggest or copy instructions.\n- If context says “user needs rest” and platform says “WHOOP can notify in-app,” the action is coaching, not clicking.\n\nThe same context produces different behavior on different platforms.\n\n## Mental model\nThe diagram merges two inputs: user goal plus context, and user goal plus platform. The agent only acts when the plan is both relevant and allowed. Otherwise it asks, explains, or falls back.\n\n## Real examples\nWHOOP shows the context-platform split clearly. The context is biometric: Recovery, Strain, Sleep, Stress, goals, and behavior logs. The platform is a wearable and app experience that can collect those signals and return coaching.\n\nAnthropic computer use shows the split for desktop/web tasks. Screen pixels and UI state are context; cursor movement, clicks, and typing are platform actions exposed through a tool interface.\n\nAndroid AccessibilityService demonstrates that even if active-window content exists, the platform requires explicit enablement before a service can receive events and query content.\n\n## Drills\nFor the sentence “send this to Sam,” identify context and platform in three cases: selected text in Gmail, a highlighted file in Finder, and a chat message on a phone.\n\nThen decide what the agent should do if it knows Sam but lacks permission to send messages.\n\n## Teach-it-back\nContext tells the agent what matters right now. Platform tells the agent what is possible and permitted in this environment. Good computer-use agents decide at the intersection, not from either side alone.",
+  "diagram": "flowchart TD\n  Goal[User goal] --> CTX[Context: situation]\n  Goal --> PLAT[Platform: capabilities]\n  CTX --> PLAN[Possible helpful actions]\n  PLAT --> PLAN\n  PLAN --> SAFE{Allowed and grounded?}\n  SAFE -- yes --> ACT[Act]\n  SAFE -- no --> FALLBACK[Ask, explain, or fallback]",
+  "examples": [
+    {
+      "product": "WHOOP Coach",
+      "what": "Context is the member’s biometrics and goals; platform is the WHOOP app and wearable data pipeline that can surface coaching.",
+      "source": "https://www.whoop.com/us/en/thelocker/whoop-unveils-the-new-whoop-coach-powered-by-openai/"
+    },
+    {
+      "product": "Anthropic computer use",
+      "what": "Context is what Claude sees on the screen; platform is the computer-use tool surface that permits cursor movement, clicks, and typing.",
+      "source": "https://www.anthropic.com/news/3-5-models-and-computer-use"
+    },
+    {
+      "product": "Android AccessibilityService",
+      "what": "Context might be the active window tree; platform awareness determines that the user must explicitly enable the service and grant the right capabilities.",
+      "source": "https://developer.android.com/reference/android/accessibilityservice/AccessibilityService"
+    }
+  ],
+  "drills": [
+    {
+      "q": "In “the user highlighted a paragraph in Chrome on Windows,” what is context and what is platform?",
+      "a": "Context: highlighted paragraph and active task. Platform: Chrome on Windows, with DOM/UI Automation/browser-extension capabilities."
+    },
+    {
+      "q": "Why do agents need the intersection of context and platform?",
+      "a": "Context tells what would help; platform tells what is possible and allowed."
+    },
+    {
+      "q": "Give a fallback when context is known but platform cannot act.",
+      "a": "Explain the steps and ask the user to perform the action manually, or request a permission/capability if appropriate."
+    }
+  ],
+  "teachItBack": "Context is the situation; platform is the execution environment. A great agent chooses actions at their intersection: helpful for the current situation and possible on the current platform. If either side is missing, the plan becomes either irrelevant or impossible.",
+  "sources": [
+    {
+      "title": "WHOOP — WHOOP Coach powered by OpenAI",
+      "url": "https://www.whoop.com/us/en/thelocker/whoop-unveils-the-new-whoop-coach-powered-by-openai/",
+      "verified": true
+    },
+    {
+      "title": "Anthropic — Claude 3.5 models and computer use",
+      "url": "https://www.anthropic.com/news/3-5-models-and-computer-use",
+      "verified": true
+    },
+    {
+      "title": "Android Developers — AccessibilityService",
+      "url": "https://developer.android.com/reference/android/accessibilityservice/AccessibilityService",
+      "verified": true
+    },
+    {
+      "title": "Anthropic — Building effective agents",
+      "url": "https://www.anthropic.com/engineering/building-effective-agents",
+      "verified": true
+    }
+  ],
+  "related": [
+    "what-is-context-awareness",
+    "what-is-platform-awareness",
+    "deciding-where-to-go",
+    "permissions-and-consent"
+  ],
+  "glossary": [
+    {
+      "term": "Context-platform intersection",
+      "definition": "The set of actions that are both relevant to the situation and supported by the current platform."
+    },
+    {
+      "term": "Grounded action",
+      "definition": "An action tied to a real target, state, or capability rather than a guessed instruction."
+    },
+    {
+      "term": "Fallback path",
+      "definition": "The alternative flow used when a desired action is blocked by platform limits or missing permission."
+    }
+  ],
+  "quiz": [
+    {
+      "q": "Which pairing is correct?",
+      "choices": [
+        "Context = OS version; platform = user goal",
+        "Context = what is happening; platform = where and how the agent can act",
+        "Context = cloud only; platform = local only",
+        "Context and platform are synonyms"
+      ],
+      "answer": 1,
+      "explanation": "Context describes the situation; platform describes the runtime and capability surface."
+    },
+    {
+      "q": "What happens if an agent has context but no platform awareness?",
+      "choices": [
+        "It always succeeds",
+        "It may choose helpful but impossible actions",
+        "It becomes more private automatically",
+        "It no longer needs tools"
+      ],
+      "answer": 1,
+      "explanation": "Without platform constraints, the agent may plan actions it cannot execute."
+    }
+  ]
+}

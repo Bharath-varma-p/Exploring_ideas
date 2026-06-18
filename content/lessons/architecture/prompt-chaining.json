@@ -1,0 +1,59 @@
+{
+  "id": "prompt-chaining",
+  "title": "Prompt Chaining",
+  "lane": "architecture",
+  "type": "pattern",
+  "order": 15,
+  "tags": ["workflow", "decomposition", "pipeline", "foundational"],
+  "summary": "Break one hard task into a fixed sequence of smaller LLM steps, where each step's output feeds the next — trading a little latency for a lot of accuracy and control.",
+  "analogy": "An assembly line. Instead of one worker building a whole car, each station does one job — weld, paint, inspect — and passes the car down the line. Each step is simple, checkable, and hard to get wrong.",
+  "problem": "Asking a model to do a complex, multi-part task in a single prompt overloads it: it skips steps, blends concerns, and quality drops. You also can't inspect or fix any intermediate stage.",
+  "forces": [
+    "Bigger prompts asking for more at once lower per-step accuracy.",
+    "You want to validate or correct work mid-way, not only at the end.",
+    "More steps mean more latency and more LLM calls (cost).",
+    "Each handoff must carry exactly the context the next step needs."
+  ],
+  "solution": "Decompose the task into an ordered chain of focused LLM calls. Each call does one well-scoped subtask; its output becomes the next call's input. Optionally insert programmatic 'gates' between steps to check the result before continuing.",
+  "tradeoffs": [
+    "Higher total latency and cost than a single call — you pay per step.",
+    "An early mistake propagates down the chain unless a gate catches it.",
+    "Rigid: the sequence is fixed, so it can't adapt to inputs that need a different path (use routing for that)."
+  ],
+  "body": "## First principles\nA single LLM call is one forward pass: the more distinct things you ask for at once, the more the model's attention is split and the more each sub-answer degrades. Complex tasks also hide a deeper problem — if the model gets step 3 of 5 wrong inside one giant response, **you can't see it or fix it**.\n\nPrompt chaining attacks both. By splitting the work into a fixed pipeline of focused calls, each call is simpler (so it's more accurate), and every intermediate result becomes a **visible, checkable artifact** you can validate before moving on.\n\n## Plain definition\nPrompt chaining = decompose a task into a **fixed sequence** of LLM steps, where the output of step N is the input to step N+1. Optionally add a **gate** between steps — a programmatic check that must pass before continuing.\n\n## Mental model\nGenerate an outline → check it → write the draft → translate it. The arrows are data handoffs; the diamond is a gate.\n\n## Real example\nA classic Anthropic example: write marketing copy, then translate it. Step 1 generates the copy in English; a gate verifies it meets length/format rules; step 2 translates the *approved* copy. Splitting it beats one mega-prompt because each model call has a single, clear job.\n\n## When to use it\n- The task **cleanly decomposes** into fixed subtasks.\n- You want to **inspect or gate** intermediate output.\n- Accuracy matters more than shaving latency.\n\n## Watch out for\n- **Error propagation**: a wrong early step poisons everything after — add gates.\n- **Over-chaining**: don't split into ten steps when three will do; each adds latency.\n- If different inputs need *different* sequences, you want **routing**, not one rigid chain.",
+  "diagram": "flowchart LR\n  In([Task input]) --> S1[Step 1:\\ngenerate outline]\n  S1 --> G{Gate:\\nvalid?}\n  G -- no --> S1\n  G -- yes --> S2[Step 2:\\nwrite draft]\n  S2 --> S3[Step 3:\\npolish / translate]\n  S3 --> Out([Final output])",
+  "examples": [
+    { "product": "Anthropic (docs example)", "what": "Generate marketing copy, gate-check it, then translate — a canonical two-step chain with a validation gate in between.", "source": "https://www.anthropic.com/engineering/building-effective-agents" },
+    { "product": "LangChain LCEL", "what": "The pipe operator composes prompt→model→parser→next-prompt into an explicit chain, the framework's core abstraction.", "source": "https://python.langchain.com/docs/concepts/lcel/" }
+  ],
+  "drills": [
+    { "q": "Why does splitting a task into a chain often beat one large prompt?", "a": "Each step has a single focused job (higher accuracy) and produces a visible intermediate result you can validate or fix before continuing." },
+    { "q": "What is a 'gate' in a prompt chain and why add one?", "a": "A programmatic check between steps that must pass before continuing; it stops an early error from propagating down the rest of the chain." },
+    { "q": "When should you NOT use a single fixed chain?", "a": "When different inputs require different sequences of steps — that calls for routing, since a chain's order is rigid." }
+  ],
+  "teachItBack": "Prompt chaining splits a hard task into a fixed sequence of small LLM steps, where each step's output feeds the next. Because every step is focused and every intermediate result is visible, accuracy goes up and you can gate-check work before it moves on. The cost is more latency and LLM calls, and an early mistake will propagate unless a gate catches it.",
+  "sources": [
+    { "title": "Anthropic — Building effective agents", "url": "https://www.anthropic.com/engineering/building-effective-agents", "verified": true },
+    { "title": "LangChain — LCEL (LangChain Expression Language)", "url": "https://python.langchain.com/docs/concepts/lcel/", "verified": true }
+  ],
+  "related": ["routing", "agentic-patterns-overview", "evaluator-optimizer", "tool-use"],
+  "glossary": [
+    { "term": "Prompt chaining", "definition": "Decomposing a task into a fixed, ordered sequence of LLM calls where each output feeds the next input." },
+    { "term": "Gate", "definition": "A programmatic check inserted between chain steps that must pass before the workflow continues." },
+    { "term": "Error propagation", "definition": "When a mistake in an early pipeline step corrupts every downstream step that depends on it." }
+  ],
+  "quiz": [
+    {
+      "q": "What is the defining characteristic of prompt chaining?",
+      "choices": ["The model picks its own steps at runtime", "A fixed sequence of LLM steps where each output feeds the next", "Running many models in parallel", "Retrieving documents before answering"],
+      "answer": 1,
+      "explanation": "Prompt chaining is a workflow with a predefined ordered sequence of focused LLM calls."
+    },
+    {
+      "q": "What is the main risk of a long prompt chain, and a common mitigation?",
+      "choices": ["It uses too little context; add more steps", "Early errors propagate downstream; add validation gates", "It can't call tools; switch models", "It always loops forever; cap iterations"],
+      "answer": 1,
+      "explanation": "A wrong early step corrupts the rest of the chain, so gates between steps catch problems before they spread."
+    }
+  ]
+}

@@ -1,0 +1,115 @@
+{
+  "id": "sensing-user-history",
+  "title": "Sensing User History",
+  "lane": "context-awareness",
+  "type": "concept",
+  "order": 40,
+  "tags": [
+    "memory",
+    "personalization",
+    "recency",
+    "history"
+  ],
+  "summary": "User history gives an agent continuity: recent actions, preferences, habits, and long-term memories help it personalize without asking the same questions repeatedly.",
+  "analogy": "User history is a trail of footprints. The newest footprints show where the user just went; older paths reveal habits, but may be stale.",
+  "body": "## First principles\nA helpful assistant should not reset after every sentence. If you just asked it to debug a React error, “try again” probably refers to the same code path. If you always ask for short answers, it should learn that preference with consent.\n\nThe first problem is continuity: how does the system remember enough to be useful? The second problem is restraint: how does it avoid building a creepy dossier or using stale facts?\n\n## Plain definition\nUser-history sensing means using recent events, prior conversations, saved preferences, behavior patterns, and domain history to adapt the next response. It can be short-term, like the last five actions, or long-term, like a saved writing style preference.\n\nThe footprint analogy is useful: fresh footprints are strong evidence of where the person is going now. Old trails show habits, but storms and time can erase their relevance.\n\n## Short-term vs long-term\nShort-term history includes the current conversation, recent clicks, recent searches, active task state, and last tool results. It is high-recency and usually expires quickly.\n\nLong-term history includes explicit preferences, durable facts, learned routines, and domain-specific longitudinal data. WHOOP is a strong example: sleep, recovery, strain, stress, and journal behavior only become powerful when viewed over time.\n\n## Mental model\nThe diagram separates events into short-term history and long-term memory. Short-term history is weighted by recency. Long-term memory forms a preference model. A relevance filter decides what becomes personalized context for the next response.\n\n## Real examples\nWHOOP Coach uses personal biometric and behavior history to answer questions in a way that depends on the member’s body, goals, and patterns. The same question, “Why am I tired?” should produce different guidance for different histories.\n\nAnthropic’s agent guidance describes augmented LLMs with retrieval, tools, and memory. Memory is not magic; it is a controlled source of context that can be retrieved and curated.\n\nLangChain’s context-engineering discussion emphasizes selecting and compressing context across an agent trajectory, which is exactly what long-running history requires.\n\n## Drills\nClassify these signals as short-term or long-term: the selected paragraph, yesterday’s failed login, the user’s saved timezone, the last clicked button, and a two-month trend in sleep debt.\n\nDesign a delete button for memory. What should it delete: the stored fact, embeddings, summaries, and downstream personalization state.\n\n## Teach-it-back\nUser history gives an agent continuity across time. Recent events help interpret the current task, while long-term memory captures stable preferences and patterns. The safest systems make memory explicit, editable, and relevance-filtered.",
+  "diagram": "flowchart TD\n  E[Events] --> ST[Short-term history]\n  E --> LT[Long-term memory]\n  ST --> R[Recency weighting]\n  LT --> P[Preference model]\n  R --> FILTER[Relevance filter]\n  P --> FILTER\n  FILTER --> CTX[Personalized context]\n  CTX --> RESPONSE[Adapted response]",
+  "examples": [
+    {
+      "product": "WHOOP Coach",
+      "what": "Becomes more individualized as members share biometric data and Journal behaviors, connecting patterns across Recovery, Strain, Sleep, Stress, and daily choices.",
+      "source": "https://www.whoop.com/us/en/thelocker/whoop-unveils-the-new-whoop-coach-powered-by-openai/"
+    },
+    {
+      "product": "Anthropic effective agents",
+      "what": "Describes augmented LLMs using memory as one of the core capabilities alongside retrieval and tools.",
+      "source": "https://www.anthropic.com/engineering/building-effective-agents"
+    },
+    {
+      "product": "LangChain context engineering",
+      "what": "Frames context management for agents as selecting, writing, compressing, and isolating the right information across a task trajectory.",
+      "source": "https://www.langchain.com/blog/context-engineering-for-agents"
+    }
+  ],
+  "drills": [
+    {
+      "q": "What is the difference between short-term and long-term user history?",
+      "a": "Short-term history covers the current session and recent actions; long-term history stores stable preferences, patterns, and memories across sessions."
+    },
+    {
+      "q": "Why should history be weighted by recency?",
+      "a": "Recent actions usually predict current intent better, while older data can become stale."
+    },
+    {
+      "q": "What is one privacy-safe personalization rule?",
+      "a": "Store only what is useful, explain what is stored, let users inspect/delete it, and avoid sensitive inference without consent."
+    }
+  ],
+  "teachItBack": "User history turns one-off assistance into continuity. Recent history explains the current task; long-term memory captures stable preferences and patterns. The design challenge is to personalize from history without over-collecting or treating stale facts as truth.",
+  "sources": [
+    {
+      "title": "WHOOP — WHOOP Coach powered by OpenAI",
+      "url": "https://www.whoop.com/us/en/thelocker/whoop-unveils-the-new-whoop-coach-powered-by-openai/",
+      "verified": true
+    },
+    {
+      "title": "OpenAI — Delivering LLM-powered health solutions with WHOOP",
+      "url": "https://openai.com/index/whoop/",
+      "verified": true
+    },
+    {
+      "title": "Anthropic — Building effective agents",
+      "url": "https://www.anthropic.com/engineering/building-effective-agents",
+      "verified": true
+    },
+    {
+      "title": "LangChain — Context engineering for agents",
+      "url": "https://www.langchain.com/blog/context-engineering-for-agents",
+      "verified": true
+    }
+  ],
+  "related": [
+    "what-is-context-awareness",
+    "context-engineering",
+    "permissions-and-consent",
+    "deciding-where-to-go"
+  ],
+  "glossary": [
+    {
+      "term": "Short-term history",
+      "definition": "Recent session events and conversation state that are likely relevant right now."
+    },
+    {
+      "term": "Long-term memory",
+      "definition": "Persisted preferences, facts, or patterns that survive beyond the current session."
+    },
+    {
+      "term": "Recency weighting",
+      "definition": "Prioritizing newer observations because they are usually more predictive of current intent."
+    }
+  ],
+  "quiz": [
+    {
+      "q": "Which memory is safest to store by default?",
+      "choices": [
+        "A sensitive health inference the user never approved",
+        "A user-approved preference like “prefer concise answers”",
+        "Every screen the user ever viewed",
+        "All clipboard contents forever"
+      ],
+      "answer": 1,
+      "explanation": "Explicit, useful preferences are safer than broad or sensitive collection."
+    },
+    {
+      "q": "Why can old history be dangerous for personalization?",
+      "choices": [
+        "It may be stale or no longer reflect the user",
+        "It always improves accuracy",
+        "It cannot fit in a database",
+        "It disables permissions"
+      ],
+      "answer": 0,
+      "explanation": "People change; stale memory can produce wrong or creepy behavior."
+    }
+  ]
+}

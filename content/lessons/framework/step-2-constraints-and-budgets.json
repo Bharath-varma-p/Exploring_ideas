@@ -1,0 +1,47 @@
+{
+  "id": "step-2-constraints-and-budgets",
+  "title": "Step 2 — Constraints & Budgets",
+  "lane": "framework",
+  "type": "framework",
+  "order": 30,
+  "tags": ["framework", "estimation", "latency", "cost", "back-of-envelope"],
+  "summary": "Turn requirements into numbers: latency budgets tied to human perception limits, cost-per-task, token/context limits, and privacy/on-device constraints — the back-of-the-envelope math that sizes an agent.",
+  "analogy": "A budget is a fence around your design space. Before you decorate a room you measure the walls; before you architect an agent you measure your milliseconds, dollars, and tokens.",
+  "body": "## First principles\nConstraints are what make design *engineering* rather than wishful thinking. Two designs can both 'work' on paper; the one that fits the latency, cost, and token budgets is the real one. Estimation isn't about precision — it's about finding the **order of magnitude** that rules architectures in or out.\n\n## Latency budget — anchor it to human perception\nNielsen Norman Group's three response-time limits are the canonical anchors:\n- **0.1 s (100 ms)** — feels *instant*. Direct-manipulation feedback (a hover hint, a cursor-anchored suggestion) must land here.\n- **1 s** — keeps the user's *flow of thought* unbroken. A short agent suggestion should resolve by ~1 s.\n- **10 s** — the limit of *keeping attention*. Beyond this, stream partial results or show progress or the user leaves.\n\nSo: cheap local UI cues ≤100 ms; a model suggestion target ~1 s; any multi-step tool action must **stream** (see streaming-responses) to survive past 10 s. These numbers dictate where you put caching, on-device models, and prefetching.\n\n## Decompose the latency\nA single agent suggestion is a chain. Budget each hop:\n\n`sense (capture screen/cursor) + ground (build context) + model (LLM call) + tool (act) + render`\n\nIf your total budget is 1 s and the LLM round-trip alone is 700 ms, sensing+grounding must be cheap (a11y tree read, not full OCR) and you must prefetch/predict. This is the math that forces on-device vs cloud splits.\n\n## Cost-per-task\nEstimate: `tokens_in + tokens_out` per step × steps per task × price/token. If a task is 5 ReAct steps × ~3k tokens × $X, you get a per-task cost. Multiply by daily active tasks → infra bill. High cost pushes you toward smaller models, caching, and fewer loop iterations.\n\n## Token / context limits\nContext windows are finite. A screen-reading agent could capture *megabytes* of accessibility tree + OCR text. You **cannot** dump it all in. Budget tokens: reserve room for system prompt, tools, and reply; the rest is your context budget. This is why the context pipeline (Step 4) must rank and compress.\n\n## Privacy / on-device constraints\nSome data must never leave the machine (screen contents, keystrokes). That's a hard constraint, not a preference. It forces: on-device capture, on-device redaction before any cloud call, and possibly an on-device small model for sensitive paths. Privacy budgets are as real as latency budgets.\n\n## Back-of-the-envelope, worked\n- Perception-instant cue: **≤100 ms** → must be local, no network.\n- Model suggestion: **~1 s** → one cloud LLM call, small model, prefetched context.\n- Context budget: window 200k tokens − 8k (system+tools) − 4k (reply) ≈ **188k** usable, but aim for ~4–8k of *ranked* context for latency/cost, not the max.\n- Cost: 5 steps × 3k tokens ≈ 15k tokens/task → at scale, the line item that decides your model tier.\n\n## Watch out for\n- **Latency tail, not mean**: the p95 is what users feel; budget for it.\n- **Token bloat**: raw screen captures explode context; compress early.\n- **Forgotten privacy cost**: redaction and on-device inference add latency you must pre-budget.",
+  "diagram": "flowchart LR\n  subgraph Latency budget ~1s\n    S[Sense ≤150ms] --> G[Ground/context ≤150ms] --> M[Model call ~600ms] --> A[Tool/act ≤50ms] --> R[Render ≤50ms]\n  end\n  P[NN/g limits: 100ms instant · 1s flow · 10s attention] -.anchors.-> S\n  B[Token budget: window − system − reply = usable] -.caps.-> G\n  C[Cost: tokens × steps × price] -.bounds.-> M",
+  "examples": [
+    { "product": "NN/g response-time limits", "what": "The 0.1s / 1s / 10s thresholds are the industry anchors for what 'fast enough' means; agent UIs inherit them directly.", "source": "https://www.nngroup.com/articles/response-times-3-important-limits/" },
+    { "product": "Anthropic Computer Use", "what": "Demos show multi-second screenshot→reason→click loops, which is exactly why such agents must stream progress and stay under the 10s attention limit per step.", "source": "https://www.anthropic.com/news/3-5-models-and-computer-use" }
+  ],
+  "drills": [
+    { "q": "What are NN/g's three response-time limits and what does each govern?", "a": "0.1s = feels instant (direct feedback); 1s = unbroken flow of thought; 10s = limit of attention. Past 10s you must stream or show progress." },
+    { "q": "Your suggestion latency budget is 1s and the LLM call is 700ms. What does that force in the rest of the design?", "a": "Sensing and context-building must be cheap (read the a11y tree, not full OCR), and you must prefetch/predict context so only ~300ms is left for everything else." },
+    { "q": "Why can't a screen-reading agent put its full captured context into the model?", "a": "Raw a11y tree + OCR can be megabytes; the context window is finite and tokens cost latency and money, so the context must be ranked and compressed first." }
+  ],
+  "teachItBack": "Step two turns requirements into numbers: anchor latency to NN/g's 100ms/1s/10s perception limits, decompose the budget across sense-ground-model-act-render, then estimate cost-per-task and your token budget. Hard privacy constraints can force on-device capture and redaction before any cloud call. These numbers rule whole architectures in or out before you draw them.",
+  "sources": [
+    { "title": "NN/g — Response Times: The 3 Important Limits", "url": "https://www.nngroup.com/articles/response-times-3-important-limits/", "verified": true },
+    { "title": "Hello Interview — System Design in a Hurry (estimation)", "url": "https://www.hellointerview.com/learn/system-design/in-a-hurry/introduction", "verified": true },
+    { "title": "Anthropic — Computer Use", "url": "https://www.anthropic.com/news/3-5-models-and-computer-use", "verified": true }
+  ],
+  "related": ["design-framework-overview", "step-1-requirements", "step-3-high-level-design", "streaming-responses", "blueprint-sensing-and-privacy"],
+  "glossary": [
+    { "term": "Latency budget", "definition": "A target end-to-end response time, decomposed across each processing hop, anchored to human perception thresholds." },
+    { "term": "Back-of-the-envelope estimation", "definition": "Quick order-of-magnitude math (tokens, ms, dollars) used to rule architectures in or out without exact precision." },
+    { "term": "Context budget", "definition": "The token allowance left for retrieved/sensed context after reserving room for the system prompt, tools, and the model's reply." }
+  ],
+  "quiz": [
+    {
+      "q": "Per NN/g, beyond which response time must you stream partial results or risk losing the user's attention?",
+      "choices": ["0.1 seconds", "1 second", "10 seconds", "60 seconds"],
+      "answer": 2,
+      "explanation": "10 seconds is the limit for keeping a user's attention; past it you must show progress or stream."
+    },
+    {
+      "q": "Why does a tight latency budget often force an on-device step?",
+      "choices": ["On-device is always cheaper to build", "Perception-instant cues (≤100ms) can't survive a network round-trip", "Cloud models are less accurate", "It removes the need for guardrails"],
+      "answer": 1,
+      "explanation": "A 100ms 'instant' cue has no time for a network call, so that feedback must run locally."
+    }
+  ]
+}

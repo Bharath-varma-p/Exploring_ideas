@@ -1,0 +1,47 @@
+{
+  "id": "step-4-deep-dive-context-pipeline",
+  "title": "Step 4 — Deep Dive: The Context Pipeline",
+  "lane": "framework",
+  "type": "framework",
+  "order": 50,
+  "tags": ["framework", "deep-dive", "context", "grounding", "sensing"],
+  "summary": "A deep dive on the sensing→grounding pipeline: capture raw signals (cursor, selection, screen, accessibility tree), normalize them, rank and compress into a context, then ground the user's intent to a concrete UI target and a search query.",
+  "analogy": "A great assistant glances at your desk, notices what you're pointing at, ignores the clutter, and hands you the one document you reached for — before you finish the sentence. The context pipeline is that glance, formalized.",
+  "body": "## First principles\nThe hardest part of a context-aware agent isn't the model — it's **feeding it the right context**. Garbage context produces confident wrong actions. The deep dive picks the riskiest component from the high-level design (the Context Engine) and details its internal stages. Goal: turn a flood of raw signals into a few grounded facts the planner can act on, within the ≤150ms sensing budget.\n\n## The five stages\n### 1. Capture\nPull raw signals from the OS and apps:\n- **Cursor position** (x,y) and velocity — where attention is.\n- **Selection / hover** — the exact text or element under focus.\n- **Active app + window** and its **accessibility (a11y) tree** — a structured list of UI elements (buttons, fields, labels) with roles and bounds. This is the cheap, high-signal source.\n- **Screen** via screenshot + **OCR** — the fallback when no a11y tree exists (canvas apps, images).\n- **History** — recent actions, clipboard, open files.\n\n### 2. Normalize\nDifferent sources speak different languages. Convert everything to a common schema: `{element, role, text, bounds, source, confidence, timestamp}`. Resolve the element under the cursor by hit-testing the a11y tree against the cursor (x,y). De-duplicate signals that describe the same thing.\n\n### 3. Rank\nYou can't send it all. Score each candidate by **relevance to likely intent**: proximity to the cursor, recency, focus/selection state, and semantic match to the user's apparent goal. The element under the cursor and the current selection get top weight; distant chrome gets dropped.\n\n### 4. Compress\nFit the ranked context into the token budget. Summarize long text, keep structured fields, drop low-confidence noise. Aim for a few thousand tokens of *signal*, not the megabytes of raw capture. Redact sensitive fields here (passwords, tokens) before anything leaves the device.\n\n### 5. Ground\nThe payoff stage: map fuzzy intent to **concrete handles** the action layer can use:\n- **UI target** — a stable selector for the element to act on (a11y path / role+name, not raw pixels, so it survives layout changes).\n- **Search query** — the precise string to look up, derived from the selection + surrounding context (e.g. selected error text → 'how to fix <error>').\n- **Intent label** — what the user probably wants (define, summarize, fix, navigate).\n\nGrounding is what lets the agent 'know where to go and what to search' — it's the bridge from perception to a callable action.\n\n## Worked micro-example\nUser hovers a red error string in an IDE.\n- Capture: cursor over a label, a11y role=staticText, text='TypeError: undefined is not a function', active app=VS Code.\n- Normalize: one element, high confidence, IDE source.\n- Rank: cursor-anchored + selected → top.\n- Compress: keep the error text + file context, drop the sidebar.\n- Ground: intent='fix error'; search query='TypeError undefined is not a function javascript'; UI target='Quick Fix lightbulb at bounds'.\n\nThe planner now has everything to act in one cheap pass.\n\n## Watch out for\n- **Pixel-only targeting** is brittle; prefer a11y selectors so actions survive re-layout.\n- **Over-capturing**: full screenshots every frame blow latency and privacy budgets — prefer the a11y tree, OCR only on demand.\n- **Stale context**: timestamp signals and discard old ones; the cursor moved.\n- **No confidence scores**: without them you can't rank or know when to ask the user.",
+  "diagram": "flowchart LR\n  subgraph Capture\n    CUR[Cursor x,y + velocity]\n    SEL[Selection / hover]\n    A11Y[Accessibility tree]\n    SCR[Screenshot + OCR]\n    HIS[History / clipboard]\n  end\n  CUR & SEL & A11Y & SCR & HIS --> N[Normalize\\ncommon schema + hit-test cursor]\n  N --> RK[Rank\\nproximity · recency · focus · semantic match]\n  RK --> CMP[Compress\\nsummarize · redact · fit token budget]\n  CMP --> GRD[Ground]\n  GRD --> T1[UI target\\na11y selector]\n  GRD --> T2[Search query]\n  GRD --> T3[Intent label]\n  T1 & T2 & T3 --> PLN([To Planner])",
+  "examples": [
+    { "product": "Anthropic Computer Use", "what": "Grounds actions from screenshots — the model locates on-screen targets and emits coordinates/clicks, illustrating the capture→ground path (and why pixel targeting is brittle).", "source": "https://www.anthropic.com/news/3-5-models-and-computer-use" },
+    { "product": "OpenAI Operator (CUA)", "what": "Builds context from rendered pages and grounds intent to specific page elements and queries before acting — a productized capture→rank→ground pipeline.", "source": "https://openai.com/index/computer-using-agent/" }
+  ],
+  "drills": [
+    { "q": "What are the five stages of the context pipeline?", "a": "Capture (raw signals) → Normalize (common schema, hit-test the cursor) → Rank (by relevance to intent) → Compress (fit token budget, redact) → Ground (to a UI target, search query, and intent label)." },
+    { "q": "Why prefer an accessibility-tree selector over raw pixel coordinates for a UI target?", "a": "Because a11y selectors (role + name / path) are stable across layout, resolution, and theme changes, while pixel coordinates break the moment the UI shifts." },
+    { "q": "What does the 'ground' stage produce, and why is it the key to acting on the user's behalf?", "a": "It produces a concrete UI target, a precise search query, and an intent label — the callable handles that let the agent know exactly where to go and what to search." }
+  ],
+  "teachItBack": "The context pipeline turns a flood of signals into a few grounded facts in five stages: capture cursor/selection/a11y tree/screen, normalize to one schema, rank by relevance to intent, compress to fit the token budget while redacting secrets, and ground intent into a concrete UI target plus a search query. Prefer the accessibility tree over screenshots for speed and stability, and prefer a11y selectors over pixels so actions survive re-layout. Grounding is what lets the agent know where to go and what to search.",
+  "sources": [
+    { "title": "Anthropic — Computer Use", "url": "https://www.anthropic.com/news/3-5-models-and-computer-use", "verified": true },
+    { "title": "OpenAI — Computer-Using Agent (Operator)", "url": "https://openai.com/index/computer-using-agent/", "verified": true },
+    { "title": "Chip Huyen — Agents", "url": "https://huyenchip.com/2025/01/07/agents.html", "verified": true }
+  ],
+  "related": ["step-3-high-level-design", "step-5-tradeoffs-evals-failure", "blueprint-sensing-and-privacy", "blueprint-cursor-context-agent", "react"],
+  "glossary": [
+    { "term": "Accessibility (a11y) tree", "definition": "A structured, machine-readable list of an app's UI elements with roles, names, and bounds — exposed by the OS for assistive tech and ideal as a cheap, stable sensing source." },
+    { "term": "Grounding", "definition": "Mapping fuzzy user intent to concrete, callable handles: a UI target selector, a search query, and an intent label." },
+    { "term": "Hit-testing", "definition": "Determining which UI element lies under a given cursor coordinate by matching the point against element bounds." }
+  ],
+  "quiz": [
+    {
+      "q": "What is the output of the 'ground' stage of the context pipeline?",
+      "choices": ["A raw screenshot", "A concrete UI target, a search query, and an intent label", "The full accessibility tree", "A list of every open window"],
+      "answer": 1,
+      "explanation": "Grounding produces the callable handles — UI target, search query, intent — the planner needs to act."
+    },
+    {
+      "q": "Why is the accessibility tree usually preferred over screenshot+OCR for sensing?",
+      "choices": ["It looks nicer to users", "It is structured, cheaper, and more stable than pixels, fitting the latency budget", "It captures passwords automatically", "OCR is illegal"],
+      "answer": 1,
+      "explanation": "The a11y tree gives structured roles/names/bounds cheaply and stably; OCR is the on-demand fallback."
+    }
+  ]
+}

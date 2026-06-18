@@ -1,0 +1,415 @@
+{
+  "generatedAt": "2026-06-18T05:50:34.993Z",
+  "stats": {
+    "lessons": 54,
+    "glossaryTerms": 136,
+    "quizQuestions": 102
+  },
+  "lanes": [
+    {
+      "id": "architecture",
+      "title": "Agentic Architecture & Patterns",
+      "count": 14
+    },
+    {
+      "id": "context-awareness",
+      "title": "Context & Platform Awareness",
+      "count": 11
+    },
+    {
+      "id": "uiux",
+      "title": "UI/UX & Engagement",
+      "count": 11
+    },
+    {
+      "id": "teardowns",
+      "title": "Real-World Teardowns",
+      "count": 10
+    },
+    {
+      "id": "framework",
+      "title": "System-Design Framework & Blueprint",
+      "count": 8
+    }
+  ],
+  "files": [
+    {
+      "id": "agentic-patterns-overview",
+      "title": "Agentic Patterns — The Landscape",
+      "lane": "architecture",
+      "type": "concept",
+      "file": "content/lessons/architecture/agentic-patterns-overview.json"
+    },
+    {
+      "id": "prompt-chaining",
+      "title": "Prompt Chaining",
+      "lane": "architecture",
+      "type": "pattern",
+      "file": "content/lessons/architecture/prompt-chaining.json"
+    },
+    {
+      "id": "react",
+      "title": "ReAct — Reason + Act",
+      "lane": "architecture",
+      "type": "pattern",
+      "file": "content/lessons/architecture/react.json"
+    },
+    {
+      "id": "routing",
+      "title": "Routing — Classify then Dispatch",
+      "lane": "architecture",
+      "type": "pattern",
+      "file": "content/lessons/architecture/routing.json"
+    },
+    {
+      "id": "tool-use",
+      "title": "Tool Use — Function Calling",
+      "lane": "architecture",
+      "type": "pattern",
+      "file": "content/lessons/architecture/tool-use.json"
+    },
+    {
+      "id": "rag",
+      "title": "RAG — Retrieval-Augmented Generation",
+      "lane": "architecture",
+      "type": "pattern",
+      "file": "content/lessons/architecture/rag.json"
+    },
+    {
+      "id": "planner-executor",
+      "title": "Planner–Executor",
+      "lane": "architecture",
+      "type": "pattern",
+      "file": "content/lessons/architecture/planner-executor.json"
+    },
+    {
+      "id": "multi-agent-orchestration",
+      "title": "Multi-Agent Orchestration",
+      "lane": "architecture",
+      "type": "pattern",
+      "file": "content/lessons/architecture/multi-agent-orchestration.json"
+    },
+    {
+      "id": "reflection",
+      "title": "Reflection — Self-Critique & Iterate",
+      "lane": "architecture",
+      "type": "pattern",
+      "file": "content/lessons/architecture/reflection.json"
+    },
+    {
+      "id": "evaluator-optimizer",
+      "title": "Evaluator–Optimizer",
+      "lane": "architecture",
+      "type": "pattern",
+      "file": "content/lessons/architecture/evaluator-optimizer.json"
+    },
+    {
+      "id": "memory-short-term",
+      "title": "Short-Term Memory",
+      "lane": "architecture",
+      "type": "concept",
+      "file": "content/lessons/architecture/memory-short-term.json"
+    },
+    {
+      "id": "memory-long-term",
+      "title": "Long-Term Memory",
+      "lane": "architecture",
+      "type": "concept",
+      "file": "content/lessons/architecture/memory-long-term.json"
+    },
+    {
+      "id": "guardrails",
+      "title": "Guardrails — Validation & Safety",
+      "lane": "architecture",
+      "type": "pattern",
+      "file": "content/lessons/architecture/guardrails.json"
+    },
+    {
+      "id": "human-in-the-loop",
+      "title": "Human-in-the-Loop",
+      "lane": "architecture",
+      "type": "pattern",
+      "file": "content/lessons/architecture/human-in-the-loop.json"
+    },
+    {
+      "id": "what-is-context-awareness",
+      "title": "What Is Context Awareness?",
+      "lane": "context-awareness",
+      "type": "concept",
+      "file": "content/lessons/context-awareness/what-is-context-awareness.json"
+    },
+    {
+      "id": "what-is-platform-awareness",
+      "title": "What Is Platform Awareness?",
+      "lane": "context-awareness",
+      "type": "concept",
+      "file": "content/lessons/context-awareness/what-is-platform-awareness.json"
+    },
+    {
+      "id": "context-vs-platform",
+      "title": "Context vs Platform",
+      "lane": "context-awareness",
+      "type": "concept",
+      "file": "content/lessons/context-awareness/context-vs-platform.json"
+    },
+    {
+      "id": "sensing-cursor-and-selection",
+      "title": "Sensing Cursor and Selection",
+      "lane": "context-awareness",
+      "type": "concept",
+      "file": "content/lessons/context-awareness/sensing-cursor-and-selection.json"
+    },
+    {
+      "id": "sensing-screen-and-app-state",
+      "title": "Sensing Screen and App State",
+      "lane": "context-awareness",
+      "type": "concept",
+      "file": "content/lessons/context-awareness/sensing-screen-and-app-state.json"
+    },
+    {
+      "id": "accessibility-apis-as-sensing",
+      "title": "Accessibility APIs as Sensing",
+      "lane": "context-awareness",
+      "type": "concept",
+      "file": "content/lessons/context-awareness/accessibility-apis-as-sensing.json"
+    },
+    {
+      "id": "sensing-user-history",
+      "title": "Sensing User History",
+      "lane": "context-awareness",
+      "type": "concept",
+      "file": "content/lessons/context-awareness/sensing-user-history.json"
+    },
+    {
+      "id": "sensing-device-os-capabilities",
+      "title": "Sensing Device and OS Capabilities",
+      "lane": "context-awareness",
+      "type": "concept",
+      "file": "content/lessons/context-awareness/sensing-device-os-capabilities.json"
+    },
+    {
+      "id": "permissions-and-consent",
+      "title": "Permissions and Consent",
+      "lane": "context-awareness",
+      "type": "concept",
+      "file": "content/lessons/context-awareness/permissions-and-consent.json"
+    },
+    {
+      "id": "deciding-where-to-go",
+      "title": "Deciding Where to Go",
+      "lane": "context-awareness",
+      "type": "pattern",
+      "file": "content/lessons/context-awareness/deciding-where-to-go.json"
+    },
+    {
+      "id": "context-engineering",
+      "title": "Context Engineering",
+      "lane": "context-awareness",
+      "type": "concept",
+      "file": "content/lessons/context-awareness/context-engineering.json"
+    },
+    {
+      "id": "conversational-ux",
+      "title": "Conversational UX",
+      "lane": "uiux",
+      "type": "concept",
+      "file": "content/lessons/uiux/conversational-ux.json"
+    },
+    {
+      "id": "streaming-responses",
+      "title": "Streaming Responses",
+      "lane": "uiux",
+      "type": "pattern",
+      "file": "content/lessons/uiux/streaming-responses.json"
+    },
+    {
+      "id": "motion-and-animation",
+      "title": "Motion and Animation",
+      "lane": "uiux",
+      "type": "concept",
+      "file": "content/lessons/uiux/motion-and-animation.json"
+    },
+    {
+      "id": "microinteractions",
+      "title": "Microinteractions",
+      "lane": "uiux",
+      "type": "concept",
+      "file": "content/lessons/uiux/microinteractions.json"
+    },
+    {
+      "id": "latency-masking",
+      "title": "Latency Masking",
+      "lane": "uiux",
+      "type": "pattern",
+      "file": "content/lessons/uiux/latency-masking.json"
+    },
+    {
+      "id": "trust-and-transparency",
+      "title": "Trust and Transparency",
+      "lane": "uiux",
+      "type": "concept",
+      "file": "content/lessons/uiux/trust-and-transparency.json"
+    },
+    {
+      "id": "onboarding-and-progressive-disclosure",
+      "title": "Onboarding & Progressive Disclosure",
+      "lane": "uiux",
+      "type": "concept",
+      "file": "content/lessons/uiux/onboarding-and-progressive-disclosure.json"
+    },
+    {
+      "id": "ethical-hook-model",
+      "title": "The Ethical Hook Model",
+      "lane": "uiux",
+      "type": "concept",
+      "file": "content/lessons/uiux/ethical-hook-model.json"
+    },
+    {
+      "id": "error-recovery-ux",
+      "title": "Error Recovery UX",
+      "lane": "uiux",
+      "type": "pattern",
+      "file": "content/lessons/uiux/error-recovery-ux.json"
+    },
+    {
+      "id": "command-palette-and-keyboard",
+      "title": "Command Palettes & Keyboard-First UX",
+      "lane": "uiux",
+      "type": "pattern",
+      "file": "content/lessons/uiux/command-palette-and-keyboard.json"
+    },
+    {
+      "id": "feedback-and-steering",
+      "title": "Feedback and Steering",
+      "lane": "uiux",
+      "type": "concept",
+      "file": "content/lessons/uiux/feedback-and-steering.json"
+    },
+    {
+      "id": "whoop",
+      "title": "WHOOP — Biometric Context as Coaching",
+      "lane": "teardowns",
+      "type": "teardown",
+      "file": "content/lessons/teardowns/whoop.json"
+    },
+    {
+      "id": "google-gemini",
+      "title": "Google Gemini — Multimodal Context with Motion as Feedback",
+      "lane": "teardowns",
+      "type": "teardown",
+      "file": "content/lessons/teardowns/google-gemini.json"
+    },
+    {
+      "id": "claude",
+      "title": "Claude — Workspaces, Artifacts, and Transparent Control",
+      "lane": "teardowns",
+      "type": "teardown",
+      "file": "content/lessons/teardowns/claude.json"
+    },
+    {
+      "id": "cursor",
+      "title": "Cursor — Repo Context as the Interface",
+      "lane": "teardowns",
+      "type": "teardown",
+      "file": "content/lessons/teardowns/cursor.json"
+    },
+    {
+      "id": "perplexity",
+      "title": "Perplexity — Search, Cite, and Refine",
+      "lane": "teardowns",
+      "type": "teardown",
+      "file": "content/lessons/teardowns/perplexity.json"
+    },
+    {
+      "id": "chatgpt",
+      "title": "ChatGPT — Memory, Canvas, Voice, and Tools",
+      "lane": "teardowns",
+      "type": "teardown",
+      "file": "content/lessons/teardowns/chatgpt.json"
+    },
+    {
+      "id": "github-copilot",
+      "title": "GitHub Copilot — IDE Context and Ghost Text",
+      "lane": "teardowns",
+      "type": "teardown",
+      "file": "content/lessons/teardowns/github-copilot.json"
+    },
+    {
+      "id": "arc-dia",
+      "title": "Arc / Dia — Browser as Context Engine",
+      "lane": "teardowns",
+      "type": "teardown",
+      "file": "content/lessons/teardowns/arc-dia.json"
+    },
+    {
+      "id": "raycast",
+      "title": "Raycast — Command Palette as AI Operating Layer",
+      "lane": "teardowns",
+      "type": "teardown",
+      "file": "content/lessons/teardowns/raycast.json"
+    },
+    {
+      "id": "notion-ai",
+      "title": "Notion AI — Workspace Knowledge as Context",
+      "lane": "teardowns",
+      "type": "teardown",
+      "file": "content/lessons/teardowns/notion-ai.json"
+    },
+    {
+      "id": "design-framework-overview",
+      "title": "The Agentic System-Design Framework",
+      "lane": "framework",
+      "type": "framework",
+      "file": "content/lessons/framework/design-framework-overview.json"
+    },
+    {
+      "id": "step-1-requirements",
+      "title": "Step 1 — Requirements for an Agent",
+      "lane": "framework",
+      "type": "framework",
+      "file": "content/lessons/framework/step-1-requirements.json"
+    },
+    {
+      "id": "step-2-constraints-and-budgets",
+      "title": "Step 2 — Constraints & Budgets",
+      "lane": "framework",
+      "type": "framework",
+      "file": "content/lessons/framework/step-2-constraints-and-budgets.json"
+    },
+    {
+      "id": "step-3-high-level-design",
+      "title": "Step 3 — High-Level Design",
+      "lane": "framework",
+      "type": "framework",
+      "file": "content/lessons/framework/step-3-high-level-design.json"
+    },
+    {
+      "id": "step-4-deep-dive-context-pipeline",
+      "title": "Step 4 — Deep Dive: The Context Pipeline",
+      "lane": "framework",
+      "type": "framework",
+      "file": "content/lessons/framework/step-4-deep-dive-context-pipeline.json"
+    },
+    {
+      "id": "step-5-tradeoffs-evals-failure",
+      "title": "Step 5 — Trade-offs, Failure Modes & Evals",
+      "lane": "framework",
+      "type": "framework",
+      "file": "content/lessons/framework/step-5-tradeoffs-evals-failure.json"
+    },
+    {
+      "id": "blueprint-cursor-context-agent",
+      "title": "Blueprint — The Cursor/Context-Aware Desktop Agent",
+      "lane": "framework",
+      "type": "blueprint",
+      "file": "content/lessons/framework/blueprint-cursor-context-agent.json"
+    },
+    {
+      "id": "blueprint-sensing-and-privacy",
+      "title": "Blueprint — Sensing Stack & Privacy Threat Model",
+      "lane": "framework",
+      "type": "blueprint",
+      "file": "content/lessons/framework/blueprint-sensing-and-privacy.json"
+    }
+  ]
+}

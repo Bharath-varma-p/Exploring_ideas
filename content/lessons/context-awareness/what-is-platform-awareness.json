@@ -1,0 +1,110 @@
+{
+  "id": "what-is-platform-awareness",
+  "title": "What Is Platform Awareness?",
+  "lane": "context-awareness",
+  "type": "concept",
+  "order": 15,
+  "tags": [
+    "platform",
+    "capabilities",
+    "os",
+    "adaptation"
+  ],
+  "summary": "Platform awareness means the agent understands where it is running: device, OS, app surface, input/output modes, permissions, and available APIs.",
+  "analogy": "Platform awareness is like a traveler knowing whether they are in a car, train, or airplane before deciding which doors, controls, and rules apply.",
+  "body": "## First principles\nAn agent does not act in a vacuum. It runs inside a platform: a browser tab, phone, desktop OS, smartwatch, server, or app extension. Each platform decides what the agent can sense and do.\n\nThe core problem is mismatch. If an agent assumes it can read a web DOM but the user is in a native macOS app, it fails. If it assumes it can click anywhere on Android without an enabled AccessibilityService, it fails. Platform awareness prevents impossible plans.\n\n## Plain definition\nPlatform awareness is the agent’s understanding of its runtime environment and capability surface. It answers: “Where am I, what APIs exist here, what permissions do I have, and what actions are safe?”\n\nA context-aware agent knows what is happening. A platform-aware agent knows what is possible here.\n\n## Capability map\nA platform-aware system keeps a capability map. Examples:\n\n- **Input**: text, voice, touch, mouse, keyboard, stylus.\n- **Output**: chat, overlay, notification, spoken response, haptic.\n- **Sensing**: selected text, active window, accessibility tree, screenshot, OCR, location, health metrics.\n- **Acting**: click, type, open app, run shortcut, call API, fill form, send notification.\n- **Constraints**: permissions, sandboxing, battery, network, enterprise policy, app store rules.\n\n## Mental model\nThe diagram says: platform facts feed adaptation. The OS, device sensors, host app, available capabilities, and permissions all constrain the agent’s behavior. The correct action is the one that fits both the user’s goal and the platform’s rules.\n\n## Real examples\nMicrosoft UI Automation is a Windows platform substrate. It gives programs access to UI elements for assistive technology and testing.\n\nAndroid AccessibilityService is a mobile substrate, but Android explicitly says the user turns the service on in settings and the service can request window-content access.\n\nApple’s accessibility documentation shows the same pattern on macOS: apps expose accessible controls, and clients use platform APIs rather than guessing from pixels alone.\n\n## Drills\nYou are designing “click the button I’m pointing at.” On web, desktop, and Android, list the platform API you would check first. Then write the fallback if the API is unavailable.\n\nFor a smartwatch coach, list three platform facts that should change advice: battery, sensor availability, and whether the watch is currently being worn.\n\n## Teach-it-back\nPlatform awareness is knowing the runtime and its rules. It tells the agent what it can sense, what it can do, and what permission is required. Good agents adapt instead of pretending every screen is the same.",
+  "diagram": "flowchart LR\n  P[Platform] --> OS[OS and version]\n  P --> D[Device and sensors]\n  P --> APP[Host app]\n  P --> CAP[Capabilities]\n  P --> PERM[Permissions]\n  OS --> ADAPT[Adapt behavior]\n  D --> ADAPT\n  APP --> ADAPT\n  CAP --> ADAPT\n  PERM --> ADAPT",
+  "examples": [
+    {
+      "product": "Android AccessibilityService",
+      "what": "An Android agent must know that querying active-window content requires the AccessibilityService capability and explicit user enablement in settings.",
+      "source": "https://developer.android.com/reference/android/accessibilityservice/AccessibilityService"
+    },
+    {
+      "product": "Microsoft UI Automation",
+      "what": "A Windows desktop assistant can use UI Automation to programmatically access many UI elements and invoke supported controls.",
+      "source": "https://learn.microsoft.com/en-us/windows/win32/winauto/uiauto-uiautomationoverview"
+    },
+    {
+      "product": "Apple Accessibility",
+      "what": "A macOS assistant must adapt to Apple accessibility permissions and APIs instead of assuming DOM access everywhere.",
+      "source": "https://developer.apple.com/documentation/accessibility"
+    }
+  ],
+  "drills": [
+    {
+      "q": "What are three things included in platform awareness?",
+      "a": "OS/device, host app surface, and available permissions/capabilities."
+    },
+    {
+      "q": "Why can the same agent action work on the web but fail on desktop?",
+      "a": "The web may expose a DOM, while desktop apps require accessibility APIs, screenshots, or app-specific automation."
+    },
+    {
+      "q": "What should an agent do when a capability is unavailable?",
+      "a": "Degrade gracefully: explain the limitation, ask for permission if appropriate, or offer a manual fallback."
+    }
+  ],
+  "teachItBack": "Platform awareness tells the agent what kind of machine and app surface it is inside. It maps available APIs, permissions, sensors, and input methods before choosing an action. Without it, an agent tries web tricks on desktop apps, desktop tricks on phones, or privileged actions without permission.",
+  "sources": [
+    {
+      "title": "Apple Developer Documentation — Accessibility",
+      "url": "https://developer.apple.com/documentation/accessibility",
+      "verified": true
+    },
+    {
+      "title": "Microsoft Learn — UI Automation Overview",
+      "url": "https://learn.microsoft.com/en-us/windows/win32/winauto/uiauto-uiautomationoverview",
+      "verified": true
+    },
+    {
+      "title": "Android Developers — AccessibilityService",
+      "url": "https://developer.android.com/reference/android/accessibilityservice/AccessibilityService",
+      "verified": true
+    }
+  ],
+  "related": [
+    "context-vs-platform",
+    "sensing-device-os-capabilities",
+    "permissions-and-consent",
+    "accessibility-apis-as-sensing"
+  ],
+  "glossary": [
+    {
+      "term": "Platform",
+      "definition": "The runtime environment: device, operating system, app surface, APIs, permissions, and input/output capabilities."
+    },
+    {
+      "term": "Capability",
+      "definition": "An action or sensor the platform can provide, such as reading selected text, opening a URL, getting battery state, or invoking a UI control."
+    },
+    {
+      "term": "Graceful degradation",
+      "definition": "Adapting when a desired capability is unavailable by using a safer or simpler fallback."
+    }
+  ],
+  "quiz": [
+    {
+      "q": "Which is the best example of platform awareness?",
+      "choices": [
+        "Remembering the user likes dark mode",
+        "Knowing macOS requires Accessibility permission before controlling another app",
+        "Summarizing a paragraph",
+        "Using a friendlier tone"
+      ],
+      "answer": 1,
+      "explanation": "That is knowledge about the runtime platform and its permission/capability surface."
+    },
+    {
+      "q": "Why is platform awareness necessary for agents that “use computers”?",
+      "choices": [
+        "Every OS exposes identical controls",
+        "Different platforms expose different APIs, permissions, and UI structures",
+        "It replaces context awareness",
+        "It only matters for mobile games"
+      ],
+      "answer": 1,
+      "explanation": "Computer-use agents must adapt to each surface instead of assuming one universal control layer."
+    }
+  ]
+}

@@ -4,6 +4,7 @@
 # OS / editor cruft
 .DS_Store
 Thumbs.db
+*.log
 *.swp
 .idea/
 .vscode/
@@ -11,3 +12,11 @@ Thumbs.db
 # Python
 __pycache__/
 *.pyc
+
+# Node (we use zero deps, but just in case)
+node_modules/
+npm-debug.log*
+
+# Local scratch
+/tmp/
+*.tmp

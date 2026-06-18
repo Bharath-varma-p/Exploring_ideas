@@ -1,0 +1,115 @@
+{
+  "id": "accessibility-apis-as-sensing",
+  "title": "Accessibility APIs as Sensing",
+  "lane": "context-awareness",
+  "type": "concept",
+  "order": 35,
+  "tags": [
+    "accessibility",
+    "a11y",
+    "ui-automation",
+    "axtree"
+  ],
+  "summary": "Accessibility APIs are the main substrate for screen-aware agents because they expose a semantic, machine-readable map of UI elements, labels, state, bounds, and actions.",
+  "analogy": "Accessibility APIs are the building’s service blueprint: not just what rooms look like, but door labels, handles, switches, and which ones can be used.",
+  "body": "## First principles\nFor a screen-aware agent, the interface must become a map. Pixels are not enough because pixels lack semantics. A model can see a blue rounded rectangle, but it still needs to know: is it a button, is it enabled, what is its label, and what happens if pressed?\n\nAccessibility APIs were invented for users with disabilities and assistive technologies, not for AI agents. But they solve the same first-principles problem: make visual interfaces understandable and operable through a machine-readable layer.\n\n## Plain definition\nAn accessibility API exposes a semantic tree of UI elements. Each node may include role, name, value, state, bounds, children, and supported actions. On the web, the DOM plus ARIA semantics produce an accessibility tree. On operating systems, macOS, Windows, and Android expose platform-specific equivalents.\n\nThe blueprint analogy matters: the blueprint tells the agent where the doors are and what handles exist. A screenshot only shows a picture of the building.\n\n## Why it is the substrate\nAccessibility APIs are central because they provide:\n\n- **Structure**: parent/child hierarchy and containment.\n- **Semantics**: button, text field, checkbox, heading, menu item.\n- **Labels**: accessible names and descriptions.\n- **State**: focused, selected, checked, disabled, expanded.\n- **Geometry**: bounding boxes for cursor grounding.\n- **Actions**: press, focus, set value, scroll, select.\n\nThis is exactly the information an agent needs to decide where to go and what to do.\n\n## Mental model\nThe diagram starts with an app UI. The app exposes accessible elements. The platform builds a tree. The agent reads nodes with role, label, state, bounds, and actions, then either invokes an action or guides the user. Consent gates the whole path.\n\n## Real examples\nMicrosoft UI Automation provides programmatic access to most Windows desktop UI elements and allows assistive technologies to obtain UI information and manipulate the UI.\n\nAndroid AccessibilityService receives callbacks for UI state transitions and can request capability for querying active-window content represented by AccessibilityWindowInfo and AccessibilityNodeInfo trees.\n\nApple’s accessibility guidance explains how accessibility clients interact with apps and encourages developers to expose the information users need, not raw implementation details.\n\n## Drills\nYou need to click “Export CSV.” The screenshot has three similar buttons. What accessibility fields help choose correctly? Role, accessible name, enabled state, bounds, and container hierarchy.\n\nA custom canvas has no accessible nodes. What do you do? Fall back to OCR/vision and consider asking the user or product team for better accessibility metadata.\n\n## Teach-it-back\nAccessibility APIs are the semantic layer of the screen. They expose UI nodes with labels, roles, states, bounds, and actions. Agents use that map to ground decisions, but must respect user consent because the map can reveal and control sensitive app state.",
+  "diagram": "flowchart TD\n  UI[App UI] --> PROVIDER[App exposes accessible elements]\n  PROVIDER --> TREE[Accessibility tree]\n  TREE --> NODE[Node: role label state bounds actions]\n  NODE --> AGENT[Agent screen model]\n  AGENT --> ACTION[Invoke action or guide user]\n  USER[User consent] --> AGENT",
+  "examples": [
+    {
+      "product": "Microsoft UI Automation",
+      "what": "Provides programmatic access to most desktop UI elements so assistive technologies and tests can inspect and manipulate UI.",
+      "source": "https://learn.microsoft.com/en-us/windows/win32/winauto/uiauto-uiautomationoverview"
+    },
+    {
+      "product": "Android AccessibilityService",
+      "what": "Receives accessibility events and can query active-window content as AccessibilityWindowInfo and AccessibilityNodeInfo trees when configured.",
+      "source": "https://developer.android.com/reference/android/accessibilityservice/AccessibilityService"
+    },
+    {
+      "product": "Apple Accessibility",
+      "what": "Defines how accessibility clients interact with apps and encourages exposing useful control information rather than implementation details.",
+      "source": "https://developer.apple.com/library/archive/documentation/Accessibility/Conceptual/AccessibilityMacOSX/index.html"
+    }
+  ],
+  "drills": [
+    {
+      "q": "Why are accessibility APIs better than screenshots for many UI tasks?",
+      "a": "They expose semantic roles, names, states, bounds, and actions instead of only pixels."
+    },
+    {
+      "q": "What is an accessibility tree?",
+      "a": "A hierarchy of UI elements exposed to assistive technologies, with metadata like role, label, value, state, and actions."
+    },
+    {
+      "q": "Why do accessibility APIs require careful consent and policy?",
+      "a": "They can reveal sensitive on-screen information and enable interaction with other apps."
+    }
+  ],
+  "teachItBack": "Accessibility APIs make interfaces legible to machines. The DOM or accessibility tree acts like a map of controls, labels, states, and actions. Screen-aware agents should prefer these semantic maps when available, while respecting consent and platform rules.",
+  "sources": [
+    {
+      "title": "Apple Developer Documentation — Accessibility",
+      "url": "https://developer.apple.com/documentation/accessibility",
+      "verified": true
+    },
+    {
+      "title": "Apple — Accessibility Programming Guide for OS X",
+      "url": "https://developer.apple.com/library/archive/documentation/Accessibility/Conceptual/AccessibilityMacOSX/index.html",
+      "verified": true
+    },
+    {
+      "title": "Microsoft Learn — UI Automation Overview",
+      "url": "https://learn.microsoft.com/en-us/windows/win32/winauto/uiauto-uiautomationoverview",
+      "verified": true
+    },
+    {
+      "title": "Android Developers — AccessibilityService",
+      "url": "https://developer.android.com/reference/android/accessibilityservice/AccessibilityService",
+      "verified": true
+    }
+  ],
+  "related": [
+    "sensing-screen-and-app-state",
+    "permissions-and-consent",
+    "sensing-cursor-and-selection",
+    "what-is-platform-awareness"
+  ],
+  "glossary": [
+    {
+      "term": "Accessibility API",
+      "definition": "A platform interface that exposes UI structure and actions to assistive technologies and other authorized clients."
+    },
+    {
+      "term": "Accessibility tree",
+      "definition": "A semantic hierarchy of UI elements with roles, names, values, states, bounds, and actions."
+    },
+    {
+      "term": "AXTree",
+      "definition": "A common shorthand for an accessibility tree; on the web, browsers derive one from the DOM and ARIA semantics."
+    }
+  ],
+  "quiz": [
+    {
+      "q": "What does an accessibility node typically provide?",
+      "choices": [
+        "Only pixel colors",
+        "Role, label, state, bounds, and possible actions",
+        "A user’s full browsing history",
+        "Battery chemistry"
+      ],
+      "answer": 1,
+      "explanation": "Those fields make UI elements machine-readable and actionable."
+    },
+    {
+      "q": "Why should an agent not rely only on the accessibility tree?",
+      "choices": [
+        "Some apps expose incomplete or incorrect accessibility metadata",
+        "It is always slower than guessing",
+        "It cannot represent buttons",
+        "It removes all need for screenshots"
+      ],
+      "answer": 0,
+      "explanation": "Accessibility metadata is powerful but can be missing, stale, or wrong, especially in custom or canvas-heavy UIs."
+    }
+  ]
+}

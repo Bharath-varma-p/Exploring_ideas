@@ -1,0 +1,74 @@
+{
+  "id": "feedback-and-steering",
+  "title": "Feedback and Steering",
+  "lane": "uiux",
+  "type": "concept",
+  "order": 60,
+  "summary": "Providing tools for users to guide the AI, correct its course, and implicitly train the system through thumbs, edits, and semantic steering.",
+  "body": "## First principles\nAn AI's first guess is rarely perfect. If the only option is to accept it or abandon it, the UX fails. **Steering** provides low-friction ways for the user to tweak the output (e.g., 'make it shorter', 'more professional'). **Feedback** (thumbs up/down) lets the system learn for next time.\n\n## Low-friction steering\nInstead of making the user write a new prompt ('Rewrite that but make it sound less formal and cut it in half'), provide semantic buttons: [Shorter], [More Professional], [Bullet points]. This turns prompt engineering into simple clicks.\n\n## Closing the loop\nWhen a user edits an AI's output, that is the ultimate signal of what they actually wanted. A great system captures those diffs implicitly as training data (or context for the next turn), rather than relying solely on explicit thumbs up/down, which have low completion rates.",
+  "tags": [
+    "steering",
+    "feedback",
+    "personalization",
+    "RLHF"
+  ],
+  "analogy": "Steering an AI should feel like giving notes to an eager intern. You don't rewrite the whole report yourself; you hand it back and say 'great start, just make the intro punchier,' and they do the rest.",
+  "diagram": "flowchart TD\n  Gen[Initial Generation] --> Eval{User Evaluation}\n  Eval -- Needs Tweak --> Steer[Click: Make Shorter]\n  Steer --> Gen2[New Generation]\n  Eval -- Perfect --> Implicit[User Copies/Saves (Implicit +1)]\n  Eval -- Terrible --> Explicit[User Thumbs Down]",
+  "examples": [
+    {
+      "product": "Notion AI",
+      "what": "Offers a dropdown of steering options (Make longer, Fix spelling, Change tone) directly over highlighted text.",
+      "source": "https://www.notion.so/product/ai"
+    },
+    {
+      "product": "Claude",
+      "what": "Provides explicit feedback mechanisms (thumbs up/down) that directly inform their RLHF alignment models.",
+      "source": "https://claude.ai/"
+    }
+  ],
+  "drills": [
+    {
+      "q": "What is the difference between implicit and explicit feedback?",
+      "a": "Explicit is a direct action like clicking a thumbs-up. Implicit is inferred from user behavior, like copying the text or making an edit."
+    },
+    {
+      "q": "Why are semantic steering buttons better than asking the user to re-prompt?",
+      "a": "They drastically lower the cognitive load and physical friction required to iterate on an answer."
+    }
+  ],
+  "teachItBack": "AI outputs are drafts. You need to give users the steering wheel to adjust them easily\u2014buttons for 'shorter' or 'friendlier' beat forcing them to type new prompts. And you must capture their edits and feedback to make the system smarter for their next session.",
+  "sources": [
+    {
+      "title": "NN/g - AI as a UX Assistant",
+      "url": "https://www.nngroup.com/topic/ai-ml/",
+      "verified": true
+    }
+  ],
+  "related": [
+    "conversational-ux",
+    "error-recovery-ux"
+  ],
+  "glossary": [
+    {
+      "term": "Steering",
+      "definition": "The UX mechanisms that allow a user to adjust and refine AI output without writing complete new prompts."
+    },
+    {
+      "term": "RLHF",
+      "definition": "Reinforcement Learning from Human Feedback; the process of using human ratings to train an AI on what good answers look like."
+    }
+  ],
+  "quiz": [
+    {
+      "q": "Which of the following is an example of an 'implicit' positive feedback signal?",
+      "choices": [
+        "Clicking a thumbs-up icon",
+        "Filling out an NPS survey",
+        "Copying the generated code block to the clipboard",
+        "Reporting a bug"
+      ],
+      "answer": 2,
+      "explanation": "Copying the output strongly implies the user found it valuable enough to use, without them having to explicitly rate it."
+    }
+  ]
+}

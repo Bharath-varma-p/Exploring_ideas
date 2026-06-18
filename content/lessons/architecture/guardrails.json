@@ -1,0 +1,63 @@
+{
+  "id": "guardrails",
+  "title": "Guardrails — Validation & Safety",
+  "lane": "architecture",
+  "type": "pattern",
+  "order": 70,
+  "tags": ["safety", "validation", "schema", "policy", "reliability"],
+  "summary": "Programmatic checks around a model's inputs and outputs — schema validation, content policies, allow/deny lists — that catch bad or unsafe data before it reaches the user or triggers an action.",
+  "analogy": "The bumpers and railings on a bowling lane and a balcony. The bowler (model) still throws the ball, but the bumpers keep it out of the gutter and the railing stops anyone going over the edge. Guardrails constrain outcomes without doing the task themselves.",
+  "problem": "Models are probabilistic and can be manipulated: they produce malformed output, leak sensitive data, go off-policy, or get hijacked by prompt injection. Letting raw model output flow straight to users or systems is unsafe and unreliable.",
+  "forces": [
+    "Models are non-deterministic and occasionally wrong or unsafe.",
+    "Downstream systems need structured, valid, in-policy data.",
+    "Security threats (prompt injection, jailbreaks) target the model directly.",
+    "Checks add latency and can produce false positives that block good output.",
+    "Policies must be enforced consistently, not left to model goodwill."
+  ],
+  "solution": "Wrap the model with deterministic checks on both sides: validate and sanitize inputs (filter injection, enforce limits), and validate outputs against a schema and policies (structure, allow/deny lists, safety classifiers) before they're used. On failure, reject, retry, repair, or escalate.",
+  "tradeoffs": [
+    "Extra latency and engineering for the validation layer.",
+    "False positives can block legitimate output; false negatives let bad output through — tuning required.",
+    "Guardrails constrain but don't make the model itself correct.",
+    "Overly strict rules hurt UX; too loose defeats the purpose."
+  ],
+  "body": "## First principles\nAn LLM is a **probabilistic** component: given the same prompt it can return different, occasionally invalid or unsafe, output — and adversaries can deliberately push it off course with **prompt injection** or jailbreaks. You would never let an unvalidated form field write straight to your database; the same discipline applies to model output. **Trust boundaries** need enforcement, and you can't enforce them by *asking the model nicely* — you need deterministic code around it.\n\nGuardrails are that code. They don't perform the task; they **constrain** what's allowed in and out, turning an unpredictable component into a dependable one.\n\n## Plain definition\nGuardrails = deterministic checks on a model's **inputs** and **outputs**. Input guardrails sanitize and screen what goes in; output guardrails validate structure and policy before the result is used or shown.\n\n## Two sides (mental model)\n- **Input guardrails**: strip/flag injection attempts, enforce length and allowed topics, redact secrets, rate-limit.\n- **Output guardrails**: validate against a **schema** (e.g., JSON Schema), apply **allow/deny lists**, run safety/PII classifiers, check the action is permitted. On failure: **reject, retry, auto-repair, or escalate** to a human.\n\nThe diagram shows model output passing a gate before it ever reaches the user or a tool.\n\n## Real examples\n- **OpenAI Moderation / Llama Guard**: classifier-based safety guardrails that screen content in and out.\n- **NVIDIA NeMo Guardrails / Guardrails AI**: frameworks that enforce dialog policy and validate structured output against schemas, retrying on violations.\n- **Structured outputs / JSON Schema mode**: the model is constrained to emit only schema-valid JSON, a built-in output guardrail.\n\n## When to use it\n- **Always** for anything user-facing or that triggers real actions.\n- Especially when output feeds another system that needs valid, in-policy data.\n- Critical defense against **prompt injection** in tool-using/agentic systems.\n\n## Watch out for\n- **Don't rely on the model to police itself** — use deterministic checks.\n- **Tune thresholds**: balance false positives (blocking good output) vs. false negatives.\n- Guardrails complement, not replace, **human-in-the-loop** for the riskiest actions.",
+  "diagram": "flowchart LR\n  U([User / data]) --> IG[Input guardrails:\\nsanitize, screen injection]\n  IG --> M[Model / agent]\n  M --> OG{Output guardrails:\\nschema + policy +\\nallow/deny}\n  OG -- pass --> OUT([Use / show result])\n  OG -- fail --> H[Reject / retry /\\nrepair / escalate]",
+  "examples": [
+    { "product": "NVIDIA NeMo Guardrails", "what": "A framework that enforces conversational policies and validates outputs, blocking or rerouting responses that violate defined rails.", "source": "https://github.com/NVIDIA/NeMo-Guardrails" },
+    { "product": "OpenAI Structured Outputs", "what": "Constrains the model to emit only JSON that conforms to a provided schema, an output guardrail that guarantees valid structure.", "source": "https://platform.openai.com/docs/guides/structured-outputs" }
+  ],
+  "drills": [
+    { "q": "Why can't you enforce safety just by instructing the model in the prompt?", "a": "Models are probabilistic and can be manipulated (e.g., prompt injection), so policies need deterministic code around the model, not the model's own goodwill." },
+    { "q": "What's the difference between input and output guardrails?", "a": "Input guardrails sanitize and screen what goes into the model (injection, limits, secrets); output guardrails validate structure and policy before the result is used or shown." },
+    { "q": "When an output fails a guardrail, what are the typical responses?", "a": "Reject it, retry generation, auto-repair it to conform, or escalate to a human." }
+  ],
+  "teachItBack": "Guardrails are deterministic checks wrapped around a model's inputs and outputs that constrain what's allowed without doing the task themselves. Input guardrails sanitize and screen for things like prompt injection; output guardrails validate against a schema and policies, allow/deny lists, and safety classifiers, then reject, retry, repair, or escalate on failure. Because models are probabilistic and can be manipulated, you enforce trust boundaries with code rather than trusting the model to police itself, and you pair guardrails with a human gate for the riskiest actions.",
+  "sources": [
+    { "title": "Anthropic — Building effective agents", "url": "https://www.anthropic.com/engineering/building-effective-agents", "verified": true },
+    { "title": "NVIDIA NeMo Guardrails", "url": "https://github.com/NVIDIA/NeMo-Guardrails", "verified": false },
+    { "title": "OpenAI — Structured outputs", "url": "https://platform.openai.com/docs/guides/structured-outputs", "verified": true }
+  ],
+  "related": ["tool-use", "human-in-the-loop", "evaluator-optimizer", "agentic-patterns-overview"],
+  "glossary": [
+    { "term": "Guardrails", "definition": "Deterministic checks on a model's inputs and outputs that enforce structure, policy, and safety." },
+    { "term": "Prompt injection", "definition": "An attack where malicious text in the input manipulates the model into ignoring its instructions or policies." },
+    { "term": "Output validation", "definition": "Checking generated output against a schema and policy before it is used or shown." },
+    { "term": "Allow/deny list", "definition": "An explicit list of permitted or forbidden values, actions, or content used to constrain model behavior." }
+  ],
+  "quiz": [
+    {
+      "q": "Why are deterministic guardrails needed instead of just prompting the model to behave?",
+      "choices": ["Prompts are too long", "Models are probabilistic and can be manipulated, so policy must be enforced in code", "Guardrails make the model smarter", "It saves tokens"],
+      "answer": 1,
+      "explanation": "Because models are non-deterministic and vulnerable to injection, safety and validity must be enforced by deterministic checks."
+    },
+    {
+      "q": "Which of these is an example of an output guardrail?",
+      "choices": ["Increasing temperature", "Validating the response against a JSON schema before using it", "Adding more training data", "Letting the model run any tool freely"],
+      "answer": 1,
+      "explanation": "Schema validation of generated output before use is a classic output guardrail."
+    }
+  ]
+}

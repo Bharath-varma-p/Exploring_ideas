@@ -1,0 +1,47 @@
+{
+  "id": "step-1-requirements",
+  "title": "Step 1 — Requirements for an Agent",
+  "lane": "framework",
+  "type": "framework",
+  "order": 20,
+  "tags": ["framework", "requirements", "scoping", "clarifying-questions"],
+  "summary": "How to nail down what an agent must do before designing it: separate functional from non-functional requirements and ask the five clarifying questions — who, what actions, autonomy level, success metric, and safety bounds.",
+  "analogy": "A good contractor won't build until they know who lives here, what rooms you need, and what you absolutely cannot live without. Requirements are that interview — done badly, you build the wrong house perfectly.",
+  "body": "## First principles\nDesign problems are deliberately vague. 'Build an agent that helps the user' could mean a thousand systems. The first job is **compression of ambiguity into a contract**: a short list of what the system must do (functional) and how well it must do it (non-functional). Everything downstream — budgets, architecture, evals — derives from this contract.\n\n## Plain definition\n- **Functional requirements (FRs)** = the *actions* the system performs. Verbs. 'Summarize the active document', 'click the Send button', 'search the user's files'.\n- **Non-functional requirements (NFRs)** = the *qualities* those actions must have. Adjectives. Fast, cheap, safe, private, autonomous-but-reversible.\n\nFor agents the NFRs are where the design lives — latency, autonomy, and safety shape the whole architecture far more than the feature list.\n\n## The five clarifying questions for any agent\nAsk these before drawing a single box:\n\n1. **WHO** is the user and what's their environment? (desktop power-user vs phone novice; one app vs the whole OS.)\n2. **WHAT ACTIONS** may it take? (read-only suggestions? click/type? spend money?) This sets the blast radius.\n3. **AUTONOMY LEVEL** — suggest, confirm-then-act, or act-then-report? (Anthropic: prefer the least autonomy that solves the task.)\n4. **SUCCESS METRIC** — how do we know it worked? (task completion rate, time saved, user acceptance of suggestions.)\n5. **SAFETY / BOUNDS** — what must it never do? (no irreversible actions without confirmation, no reading password fields, no exfiltrating the screen.)\n\n## Scoping: in vs out\nState explicitly what's **out of scope**. 'V1 reads screen + cursor and *suggests* one action; it does not auto-execute or touch other apps.' Narrow scope is a feature — it shrinks the budget, the attack surface, and the eval set.\n\n## Turning answers into a contract\nWrite FRs and NFRs as testable bullets. 'FR: given a selected paragraph, propose a rewrite.' 'NFR: suggestion appears within 300 ms of selection (perceptible-instant budget).' 'NFR: never act without one click of confirmation in V1.' Each becomes an eval later.\n\n## Watch out for\n- **Gold-plating**: don't promise full autonomy when confirm-then-act meets the metric.\n- **Hidden NFRs**: privacy and reversibility are easy to forget and expensive to retrofit.\n- **Unmeasurable goals**: 'be helpful' isn't a metric; 'user accepts ≥60% of suggestions' is.",
+  "diagram": "flowchart TD\n  Q[Vague prompt: 'design a helpful agent'] --> C{Clarify}\n  C --> W1[WHO + environment]\n  C --> W2[WHAT actions / blast radius]\n  C --> W3[AUTONOMY level]\n  C --> W4[SUCCESS metric]\n  C --> W5[SAFETY bounds]\n  W1 & W2 & W3 & W4 & W5 --> FR[Functional reqs: verbs]\n  W1 & W2 & W3 & W4 & W5 --> NFR[Non-functional reqs: qualities]\n  FR --> CT[Testable contract]\n  NFR --> CT",
+  "examples": [
+    { "product": "OpenAI Operator (CUA)", "what": "Scoped its first release to a confirm-heavy browser agent that pauses for the user on sensitive actions (logins, payments) — an explicit autonomy + safety requirement, not an afterthought.", "source": "https://openai.com/index/computer-using-agent/" },
+    { "product": "Anthropic Computer Use", "what": "Shipped as a capability with loud safety caveats and a recommendation to constrain actions — illustrating that 'what actions may it take' is a primary requirement.", "source": "https://www.anthropic.com/news/3-5-models-and-computer-use" }
+  ],
+  "drills": [
+    { "q": "What is the difference between a functional and a non-functional requirement?", "a": "Functional = the actions the system performs (verbs). Non-functional = the qualities those actions must have (fast, safe, private, autonomous). For agents, NFRs drive most of the design." },
+    { "q": "Why is 'what actions may it take' the most safety-relevant clarifying question?", "a": "Because it sets the blast radius — read-only suggestions are low-risk, while clicking, typing, or spending money makes mistakes consequential and demands guardrails." },
+    { "q": "Rewrite the vague goal 'be helpful' as a testable success metric.", "a": "e.g. 'The user accepts at least 60% of proposed actions' or 'median task completed in under 30s with one confirmation' — something you can measure in an eval." }
+  ],
+  "teachItBack": "Before designing an agent, turn the vague prompt into a contract of functional requirements (the actions) and non-functional requirements (the qualities like latency, autonomy, and safety). Get there by asking five clarifying questions: who, what actions, autonomy level, success metric, and safety bounds. Then write each as a testable bullet that later becomes an eval.",
+  "sources": [
+    { "title": "Hello Interview — System Design in a Hurry (requirements)", "url": "https://www.hellointerview.com/learn/system-design/in-a-hurry/introduction", "verified": true },
+    { "title": "OpenAI — Computer-Using Agent (Operator)", "url": "https://openai.com/index/computer-using-agent/", "verified": true },
+    { "title": "Anthropic — Building effective agents", "url": "https://www.anthropic.com/engineering/building-effective-agents", "verified": true }
+  ],
+  "related": ["design-framework-overview", "step-2-constraints-and-budgets", "step-5-tradeoffs-evals-failure", "blueprint-cursor-context-agent"],
+  "glossary": [
+    { "term": "Functional requirement", "definition": "A specific action or behavior the system must perform, stated as a verb (e.g. 'summarize the active document')." },
+    { "term": "Autonomy level", "definition": "How much an agent acts on its own: suggest-only, confirm-then-act, or act-then-report. Lower autonomy = lower risk." },
+    { "term": "Blast radius", "definition": "The scope of harm an agent's actions can cause; widened by write/click/spend permissions, narrowed by read-only scoping." }
+  ],
+  "quiz": [
+    {
+      "q": "Which clarifying question most directly determines an agent's safety blast radius?",
+      "choices": ["Who is the user?", "What actions may it take?", "What is the success metric?", "What is the latency budget?"],
+      "answer": 1,
+      "explanation": "The set of permitted actions (read vs click vs spend) defines how much harm a mistake can cause."
+    },
+    {
+      "q": "For agents, where does most of the architectural pressure come from?",
+      "choices": ["The list of features (FRs)", "The non-functional requirements (latency, autonomy, safety)", "The choice of programming language", "The UI color scheme"],
+      "answer": 1,
+      "explanation": "NFRs like latency, autonomy, and safety shape the architecture far more than the feature list."
+    }
+  ]
+}
