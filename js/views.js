@@ -183,12 +183,8 @@ export function renderLesson(id) {
       h("p", {}, l.teachItBack),
       h("button", { class: "btn btn-tiny", type: "button", onClick: () => copyText(l.teachItBack) }, "Copy script"))));
 
-  // sources
-  if (l.sources && l.sources.length) wrap.append(h("section", { class: "sources" },
-    h("h2", { class: "section-h" }, "Sources"),
-    h("ul", { class: "source-list" }, ...l.sources.map((s) => h("li", {},
-      h("a", { href: s.url, target: "_blank", rel: "noopener" }, s.title || s.url),
-      s.verified === false ? chip("unverified", "chip-warn") : (s.verified ? chip("verified", "chip-ok") : null))))));
+  // sources — ranked by recency × authority, split into current vs historical
+  if (l.sources && l.sources.length) wrap.append(sourcesSection(l));
 
   // related
   const rel = (l.related || []).map((rid) => lesson(rid)).filter(Boolean);
@@ -206,6 +202,54 @@ function patternRow(label, content) {
   return h("div", { class: "pattern-row" }, h("div", { class: "pattern-label" }, label),
     typeof content === "string" ? h("div", { class: "pattern-val" }, content) : h("div", { class: "pattern-val" }, content));
 }
+
+// ---------------- Citation freshness ----------------
+const FRESH_TITLE = {
+  fresh: "Fresh (< 6 months)", living: "Living reference (continuously updated)",
+  foundational: "Foundational (age-exempt)", aging: "Aging (6–18 months)",
+  stale: "Stale (> 18 months)", undated: "Undated — verify before relying",
+};
+function fmtDate(iso) {
+  if (!iso) return null;
+  const d = new Date(iso); if (isNaN(d)) return iso;
+  return d.toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });
+}
+function freshnessBadge(f) {
+  if (!f) return null;
+  const age = f.ageMonths != null ? ` ${f.ageMonths < 12 ? Math.round(f.ageMonths) + "mo" : (f.ageMonths / 12).toFixed(1) + "yr"}` : "";
+  return h("span", { class: "fresh-badge fresh-" + f.status, title: FRESH_TITLE[f.status] || f.status },
+    f.badge, h("span", { class: "fresh-label" }, f.label + age));
+}
+function sourceItem(s) {
+  const meta = [];
+  if (s.publisher) meta.push(s.publisher);
+  if (s.type) meta.push(s.type.replace(/-/g, " "));
+  const date = s.updated || s.published;
+  if (date) meta.push((s.updated ? "updated " : "") + fmtDate(date));
+  else if (s.living) meta.push("living doc");
+  else meta.push("date unknown");
+  return h("li", { class: "source-item" },
+    h("div", { class: "source-line" },
+      freshnessBadge(s.freshness),
+      h("a", { href: s.url, target: "_blank", rel: "noopener" }, s.title || s.url),
+      s.verified === false ? chip("unverified", "chip-warn") : (s.verified ? chip("verified", "chip-ok") : null)),
+    h("div", { class: "source-meta" }, meta.join(" · "),
+      s.note ? h("span", { class: "source-note" }, " — " + s.note) : null));
+}
+function sourcesSection(l) {
+  const current = l.sources.filter((s) => !s.historical);
+  const historical = l.sources.filter((s) => s.historical);
+  const sec = h("section", { class: "sources" }, h("h2", { class: "section-h" }, "Sources"),
+    l.lastVerified ? h("p", { class: "verified-stamp" }, "Last verified: " + fmtDate(l.lastVerified) + " · ranked by recency × authority") : null);
+  if (current.length) sec.append(
+    historical.length ? h("h3", { class: "source-subhead" }, "Current best practice") : null,
+    h("ul", { class: "source-list" }, ...current.map(sourceItem)));
+  if (historical.length) sec.append(
+    h("h3", { class: "source-subhead" }, "Historical / origin"),
+    h("ul", { class: "source-list" }, ...historical.map(sourceItem)));
+  return sec;
+}
+
 function metaChips(label, arr, cls) {
   if (!arr || !arr.length) return null;
   return h("div", { class: "meta-block" }, h("div", { class: "meta-label" }, label),
@@ -322,6 +366,48 @@ export function renderIndex() {
   }
   wrap.append(body);
   return wrap;
+}
+
+// ---------------- Freshness report ----------------
+export function renderFreshness() {
+  const wrap = h("div", { class: "view view-freshness" });
+  wrap.append(breadcrumb([["Home", "#/"], ["Freshness report", null]]));
+  const report = State.data?.freshnessReport || { counts: {}, items: [] };
+  const c = report.counts || {};
+  const verified = State.data?.verifiedOn || report.verifiedOn;
+  wrap.append(h("header", { class: "lane-head" }, h("div", { class: "lane-ico big" }, "🩺"),
+    h("div", {}, h("h1", {}, "Citation freshness report"),
+      h("p", { class: "muted" }, "Every source ranked by recency × authority. Last verified: " + (fmtDate(verified) || "—") + "."))));
+
+  wrap.append(h("section", { class: "fresh-legend" },
+    legendChip("🟢", "fresh / living", (c.fresh || 0) + (c.living || 0)),
+    legendChip("📘", "foundational", c.foundational || 0),
+    legendChip("🟡", "aging (6–18mo)", c.aging || 0),
+    legendChip("🔴", "stale (>18mo)", c.stale || 0),
+    legendChip("⚠️", "undated", c.undated || 0)));
+
+  const items = report.items || [];
+  if (!items.length) {
+    wrap.append(h("div", { class: "empty" }, h("p", {}, "✅ No aging, stale, or undated citations. Everything checks out.")));
+    return wrap;
+  }
+  wrap.append(h("p", { class: "muted" }, items.length + " citation(s) need attention, worst first:"));
+  const table = h("div", { class: "fresh-table" });
+  for (const it of items) {
+    table.append(h("div", { class: "fresh-row fresh-" + it.status },
+      h("div", { class: "fresh-cell fresh-badge-cell" }, freshnessBadge({ status: it.status, badge: it.badge, label: it.status, ageMonths: it.ageMonths })),
+      h("div", { class: "fresh-cell" },
+        h("a", { href: it.url, target: "_blank", rel: "noopener" }, it.title),
+        h("div", { class: "source-meta" }, [it.publisher, it.type && it.type.replace(/-/g, " "), it.published ? fmtDate(it.published) : "date unknown"].filter(Boolean).join(" · "),
+          it.historical ? " · historical/origin" : "")),
+      h("div", { class: "fresh-cell" }, h("a", { class: "chip chip-link", href: `#/lesson/${it.lessonId}` }, it.lessonTitle))));
+  }
+  wrap.append(table);
+  return wrap;
+}
+function legendChip(badge, label, n) {
+  return h("div", { class: "legend-chip" }, h("span", { class: "legend-badge" }, badge),
+    h("span", {}, label), h("span", { class: "legend-count" }, String(n)));
 }
 
 // ---------------- Quiz hub + engine ----------------

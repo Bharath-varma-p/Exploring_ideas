@@ -53,8 +53,11 @@ To add a **new lane**: create `content/lessons/<lane>/`, then add one entry to t
   ],
   "teachItBack": "A 3-sentence script the learner can say to a peer.",
   "sources": [
+    // Keep each citation minimal: the build enriches it from content/sources.json
+    // (publisher, date, type, tier, freshness badge). See "Citations & freshness" below.
     { "title": "ReAct (Yao et al., 2022)", "url": "https://arxiv.org/abs/2210.03629", "verified": true }
   ],
+  "lastVerified": "2026-06-18",          // optional; date this topic's sources were last audited
   "related": ["planner-executor", "reflection"],   // ids of related lessons
   "glossary": [
     { "term": "ReAct", "definition": "Interleaving reasoning traces with tool actions in a loop." }
@@ -82,6 +85,63 @@ To add a **new lane**: create `content/lessons/<lane>/`, then add one entry to t
 }
 ```
 
+## Citations & freshness
+
+Every citation carries a **date** and a **freshness badge**, and citation lists are
+**ranked by recency × authority** (freshest authoritative source on top). You don't
+hand-write the metadata on every lesson — instead, the build enriches each `sources[]`
+entry from a central catalog and computes the freshness for you.
+
+### The source catalog — `content/sources.json`
+A single JSON object mapping a source **URL** to its metadata, so each source is described
+**once** and reused across lessons:
+
+```jsonc
+{
+  "https://arxiv.org/abs/2210.03629": {
+    "publisher": "Yao et al.",
+    "type": "research-paper",   // official-docs | engineering-blog | research-paper | spec
+                                //  | secondary-blog | vendor-blog | product-announcement | community
+    "tier": 2,                  // authority tier (1=primary/official, 2=research, 3=reputable secondary, 4=community)
+    "published": "2022-10-06",  // publication date (YYYY-MM-DD)
+    "updated": "2023-03-10",    // optional last-updated date
+    "foundational": true,       // optional: age-exempt, first-principles content
+    "living": true,             // optional: continuously-updated official doc with no fixed date
+    "historical": true,         // optional: origin/historical — kept but demoted below current sources
+    "note": "Short annotation shown under the citation."
+  }
+}
+```
+
+A lesson's `sources[]` entry only needs `title` + `url` (+ optional `verified`). Any field
+set inline on the lesson source **overrides** the catalog for that lesson.
+
+### Freshness badges (computed at build time)
+Age is measured from the source's `updated`/`published` date to the topic's `lastVerified`
+date (default `VERIFIED_ON` in `tools/build.mjs`). Fast-moving thresholds:
+
+| badge | meaning |
+|---|---|
+| 📘 foundational | first-principles / seminal — age-exempt |
+| 🟢 fresh / living | < 6 months old, or a continuously-updated official doc |
+| 🟡 aging | 6–18 months old |
+| 🔴 stale | > 18 months old — replace, or label `historical` |
+| ⚠️ undated | no date found — verify before relying; deprioritized |
+
+### Ranking rule
+Within each lesson, sources are ordered: **current** sources first (by authority `tier`,
+then newest-first), then `historical`/origin sources, then `undated` ones. The lesson page
+splits them into **Current best practice** vs **Historical / origin** when both exist, and
+stamps the topic with **"Last verified: YYYY-MM-DD."**
+
+### Freshness report
+`npm run build` emits a `freshnessReport` into `content/data.json` listing every 🟡/🔴/⚠️
+citation still needing attention (worst-first). It's surfaced in-app at **`#/freshness`**
+and printed in the build summary. Re-verify sources, bump `VERIFIED_ON` (or a lesson's
+`lastVerified`), and rebuild to refresh the badges.
+
+---
+
 ### Field rules
 - `id` must be globally unique across all lessons and kebab-case (`[a-z0-9-]`).
 - `lane` must equal the folder name the file lives in.
@@ -89,6 +149,8 @@ To add a **new lane**: create `content/lessons/<lane>/`, then add one entry to t
 - `diagram` holds raw Mermaid (no triple-backtick fence; the site renders it).
 - `quiz[].answer` is a 0-based index into `choices`.
 - `sources[].verified`: set `false` if you could not confirm the link is live/correct.
+- `sources` metadata (dates, publisher, type, tier, freshness) comes from
+  `content/sources.json`; add an entry there for any new URL so it gets a date + badge.
 - Everything except the 6 required fields is optional, but lessons are richer (and the
   quiz/flashcards/glossary fill out) when you include `drills`, `quiz`, `glossary`,
   `examples`, `sources`, and a `diagram`.
@@ -107,6 +169,8 @@ To add a **new lane**: create `content/lessons/<lane>/`, then add one entry to t
 - `content/glossary.json` — optional array of `{ term, definition, related?, lane? }`
   for terms that don't belong to a single lesson.
 - `content/quizzes/*.json` — optional extra quiz banks: `{ id, title, questions:[ {q,choices,answer,explanation} ] }`.
+- `content/sources.json` — citation catalog: maps a source URL to its `{ publisher, type,
+  tier, published, updated?, foundational?, living?, historical?, note? }` (see *Citations & freshness*).
 
 ## Generated files (do not hand-edit)
 - `content/data.json` — the bundle the site loads.

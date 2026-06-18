@@ -1,0 +1,530 @@
+{
+  "https://docs.anthropic.com/en/docs/build-with-claude/prompt-engineering/chain-prompts": {
+    "publisher": "Anthropic",
+    "type": "official-docs",
+    "tier": 1,
+    "living": true,
+    "note": "Current first-party guidance on chaining prompts."
+  },
+  "https://platform.openai.com/docs/guides/agents": {
+    "publisher": "OpenAI",
+    "type": "official-docs",
+    "tier": 1,
+    "living": true
+  },
+  "https://www.anthropic.com/engineering/building-effective-agents": {
+    "publisher": "Anthropic",
+    "type": "engineering-blog",
+    "tier": 1,
+    "published": "2024-12-19",
+    "historical": true,
+    "note": "Origin of the canonical prompt-chaining example; foundational but superseded by newer first-party guidance for current practice."
+  },
+  "https://huyenchip.com/2025/01/07/agents.html": {
+    "publisher": "Chip Huyen",
+    "type": "secondary-blog",
+    "tier": 3,
+    "published": "2025-01-07"
+  },
+  "https://lilianweng.github.io/posts/2023-06-23-agent/": {
+    "publisher": "Lilian Weng",
+    "type": "secondary-blog",
+    "tier": 3,
+    "published": "2023-06-23",
+    "note": "Widely-cited survey of LLM-powered autonomous agents."
+  },
+  "https://arxiv.org/abs/2303.17651": {
+    "publisher": "Madaan et al.",
+    "type": "research-paper",
+    "tier": 2,
+    "published": "2023-03-30",
+    "foundational": true
+  },
+  "https://github.com/NVIDIA/NeMo-Guardrails": {
+    "publisher": "NVIDIA",
+    "type": "official-docs",
+    "tier": 1,
+    "living": true
+  },
+  "https://platform.openai.com/docs/guides/structured-outputs": {
+    "publisher": "OpenAI",
+    "type": "official-docs",
+    "tier": 1,
+    "living": true
+  },
+  "https://langchain-ai.github.io/langgraph/concepts/human_in_the_loop/": {
+    "publisher": "LangChain",
+    "type": "official-docs",
+    "tier": 1,
+    "living": true
+  },
+  "https://arxiv.org/abs/2310.08560": {
+    "publisher": "Packer et al.",
+    "type": "research-paper",
+    "tier": 2,
+    "published": "2023-10-12",
+    "foundational": true
+  },
+  "https://www.anthropic.com/engineering/built-multi-agent-research-system": {
+    "publisher": "Anthropic",
+    "type": "engineering-blog",
+    "tier": 1,
+    "published": "2025-06-13"
+  },
+  "https://langchain-ai.github.io/langgraph/concepts/multi_agent/": {
+    "publisher": "LangChain",
+    "type": "official-docs",
+    "tier": 1,
+    "living": true
+  },
+  "https://langchain-ai.github.io/langgraph/tutorials/plan-and-execute/plan-and-execute/": {
+    "publisher": "LangChain",
+    "type": "official-docs",
+    "tier": 1,
+    "living": true
+  },
+  "https://python.langchain.com/docs/concepts/lcel/": {
+    "publisher": "LangChain",
+    "type": "official-docs",
+    "tier": 1,
+    "living": true
+  },
+  "https://arxiv.org/abs/2005.11401": {
+    "publisher": "Lewis et al.",
+    "type": "research-paper",
+    "tier": 2,
+    "published": "2020-05-22",
+    "foundational": true
+  },
+  "https://arxiv.org/abs/2210.03629": {
+    "publisher": "Yao et al.",
+    "type": "research-paper",
+    "tier": 2,
+    "published": "2022-10-06",
+    "foundational": true
+  },
+  "https://arxiv.org/abs/2303.11366": {
+    "publisher": "Shinn et al.",
+    "type": "research-paper",
+    "tier": 2,
+    "published": "2023-03-20",
+    "foundational": true
+  },
+  "https://openrouter.ai/docs/features/model-routing": {
+    "publisher": "OpenRouter",
+    "type": "official-docs",
+    "tier": 1,
+    "living": true
+  },
+  "https://platform.openai.com/docs/guides/function-calling": {
+    "publisher": "OpenAI",
+    "type": "official-docs",
+    "tier": 1,
+    "living": true
+  },
+  "https://arxiv.org/abs/2302.04761": {
+    "publisher": "Schick et al.",
+    "type": "research-paper",
+    "tier": 2,
+    "published": "2023-02-09",
+    "foundational": true
+  },
+  "https://developer.apple.com/documentation/accessibility": {
+    "publisher": "Apple",
+    "type": "official-docs",
+    "tier": 1,
+    "living": true
+  },
+  "https://developer.apple.com/library/archive/documentation/Accessibility/Conceptual/AccessibilityMacOSX/index.html": {
+    "publisher": "Apple",
+    "type": "official-docs",
+    "tier": 1,
+    "historical": true,
+    "note": "Archived legacy guide; superseded by current Accessibility documentation."
+  },
+  "https://learn.microsoft.com/en-us/windows/win32/winauto/uiauto-uiautomationoverview": {
+    "publisher": "Microsoft",
+    "type": "official-docs",
+    "tier": 1,
+    "living": true
+  },
+  "https://developer.android.com/reference/android/accessibilityservice/AccessibilityService": {
+    "publisher": "Android (Google)",
+    "type": "official-docs",
+    "tier": 1,
+    "living": true
+  },
+  "https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents": {
+    "publisher": "Anthropic",
+    "type": "engineering-blog",
+    "tier": 1,
+    "published": "2025-09-29"
+  },
+  "https://www.langchain.com/blog/context-engineering-for-agents": {
+    "publisher": "LangChain",
+    "type": "engineering-blog",
+    "tier": 1,
+    "published": "2025-06-23"
+  },
+  "https://www.whoop.com/us/en/thelocker/whoop-unveils-the-new-whoop-coach-powered-by-openai/": {
+    "publisher": "WHOOP",
+    "type": "product-announcement",
+    "tier": 1,
+    "published": "2023-09-25"
+  },
+  "https://www.anthropic.com/news/3-5-models-and-computer-use": {
+    "publisher": "Anthropic",
+    "type": "product-announcement",
+    "tier": 1,
+    "published": "2024-10-22"
+  },
+  "https://openai.com/index/computer-using-agent/": {
+    "publisher": "OpenAI",
+    "type": "product-announcement",
+    "tier": 1,
+    "published": "2025-01-23"
+  },
+  "https://openai.com/index/whoop/": {
+    "publisher": "OpenAI",
+    "type": "engineering-blog",
+    "tier": 1,
+    "published": "2023-09-25"
+  },
+  "https://www.nngroup.com/articles/response-times-3-important-limits/": {
+    "publisher": "Nielsen Norman Group",
+    "type": "secondary-blog",
+    "tier": 2,
+    "published": "1993-01-01",
+    "foundational": true,
+    "note": "Jakob Nielsen's classic response-time limits — durable UX first principles."
+  },
+  "https://www.hellointerview.com/learn/system-design/in-a-hurry/introduction": {
+    "publisher": "Hello Interview",
+    "type": "secondary-blog",
+    "tier": 3,
+    "living": true
+  },
+  "https://github.com/donnemartin/system-design-primer": {
+    "publisher": "Donne Martin (community)",
+    "type": "community",
+    "tier": 3,
+    "living": true,
+    "note": "Community-maintained reference; widely used but verify specifics."
+  },
+  "https://resources.arc.net/hc/en-us/articles/19335160678679-Arc-Max-Boost-Your-Browsing-with-AI": {
+    "publisher": "The Browser Company",
+    "type": "official-docs",
+    "tier": 1,
+    "living": true
+  },
+  "https://www.diabrowser.com/": {
+    "publisher": "The Browser Company",
+    "type": "vendor-blog",
+    "tier": 1,
+    "living": true
+  },
+  "https://www.diabrowser.com/privacy": {
+    "publisher": "The Browser Company",
+    "type": "official-docs",
+    "tier": 1,
+    "living": true
+  },
+  "https://www.thebrowser.company/": {
+    "publisher": "The Browser Company",
+    "type": "vendor-blog",
+    "tier": 1,
+    "living": true
+  },
+  "https://techcrunch.com/2023/10/03/arc-browsers-new-ai-powered-features-combine-openai-and-anthropics-models/": {
+    "publisher": "TechCrunch",
+    "type": "secondary-blog",
+    "tier": 3,
+    "published": "2023-10-03"
+  },
+  "https://help.openai.com/en/articles/8590148-memory-faq": {
+    "publisher": "OpenAI",
+    "type": "official-docs",
+    "tier": 1,
+    "living": true
+  },
+  "https://openai.com/index/memory-and-new-controls-for-chatgpt/": {
+    "publisher": "OpenAI",
+    "type": "product-announcement",
+    "tier": 1,
+    "published": "2024-02-13"
+  },
+  "https://help.openai.com/en/articles/9930697-what-is-the-canvas-feature-in-chatgpt-and-how-do-i-use-it": {
+    "publisher": "OpenAI",
+    "type": "official-docs",
+    "tier": 1,
+    "living": true
+  },
+  "https://openai.com/index/introducing-canvas/": {
+    "publisher": "OpenAI",
+    "type": "product-announcement",
+    "tier": 1,
+    "published": "2024-10-03"
+  },
+  "https://help.openai.com/en/articles/8400625-voice-mode-faq": {
+    "publisher": "OpenAI",
+    "type": "official-docs",
+    "tier": 1,
+    "living": true
+  },
+  "https://openai.com/index/new-tools-for-building-agents/": {
+    "publisher": "OpenAI",
+    "type": "product-announcement",
+    "tier": 1,
+    "published": "2025-03-11"
+  },
+  "https://claude.com/blog/artifacts": {
+    "publisher": "Anthropic",
+    "type": "product-announcement",
+    "tier": 1,
+    "published": "2024-08-27"
+  },
+  "https://www.anthropic.com/news/projects": {
+    "publisher": "Anthropic",
+    "type": "product-announcement",
+    "tier": 1,
+    "published": "2024-06-25"
+  },
+  "https://platform.claude.com/docs/en/build-with-claude/context-windows": {
+    "publisher": "Anthropic",
+    "type": "official-docs",
+    "tier": 1,
+    "living": true
+  },
+  "https://www.anthropic.com/news/claude-3-5-sonnet": {
+    "publisher": "Anthropic",
+    "type": "product-announcement",
+    "tier": 1,
+    "published": "2024-06-20"
+  },
+  "https://cursor.com/blog/secure-codebase-indexing": {
+    "publisher": "Cursor (Anysphere)",
+    "type": "engineering-blog",
+    "tier": 1,
+    "living": true
+  },
+  "https://cursor.com/help/ai-features/tab": {
+    "publisher": "Cursor (Anysphere)",
+    "type": "official-docs",
+    "tier": 1,
+    "living": true
+  },
+  "https://cursor.com/blog/tab-update": {
+    "publisher": "Cursor (Anysphere)",
+    "type": "engineering-blog",
+    "tier": 1,
+    "published": "2024-11-22"
+  },
+  "https://cursor.com/blog/tab-rl": {
+    "publisher": "Cursor (Anysphere)",
+    "type": "engineering-blog",
+    "tier": 1,
+    "published": "2025-09-04"
+  },
+  "https://cursor.com/blog/third-era": {
+    "publisher": "Cursor (Anysphere)",
+    "type": "engineering-blog",
+    "tier": 1,
+    "living": true
+  },
+  "https://docs.github.com/en/copilot/get-started/best-practices": {
+    "publisher": "GitHub",
+    "type": "official-docs",
+    "tier": 1,
+    "living": true
+  },
+  "https://docs.github.com/en/copilot/how-tos/get-code-suggestions/get-ide-code-suggestions": {
+    "publisher": "GitHub",
+    "type": "official-docs",
+    "tier": 1,
+    "living": true
+  },
+  "https://docs.github.com/en/copilot/how-tos/chat-with-copilot/chat-in-ide": {
+    "publisher": "GitHub",
+    "type": "official-docs",
+    "tier": 1,
+    "living": true
+  },
+  "https://github.blog/ai-and-ml/github-copilot/how-github-copilot-is-getting-better-at-understanding-your-code/": {
+    "publisher": "GitHub",
+    "type": "engineering-blog",
+    "tier": 1,
+    "published": "2024-02-28"
+  },
+  "https://github.blog/news-insights/product-news/github-copilot-the-agent-awakens/": {
+    "publisher": "GitHub",
+    "type": "product-announcement",
+    "tier": 1,
+    "published": "2025-02-06"
+  },
+  "https://blog.google/innovation-and-ai/technology/ai/google-gemini-ai/": {
+    "publisher": "Google",
+    "type": "product-announcement",
+    "tier": 1,
+    "published": "2023-12-06"
+  },
+  "https://developers.googleblog.com/en/gemini-2-0-level-up-your-apps-with-real-time-multimodal-interactions/": {
+    "publisher": "Google",
+    "type": "engineering-blog",
+    "tier": 1,
+    "published": "2024-12-11"
+  },
+  "https://design.google/library/gemini-ai-visual-design": {
+    "publisher": "Google Design",
+    "type": "vendor-blog",
+    "tier": 1,
+    "living": true
+  },
+  "https://m3.material.io/styles/motion/overview/how-it-works": {
+    "publisher": "Google (Material Design 3)",
+    "type": "official-docs",
+    "tier": 1,
+    "living": true
+  },
+  "https://www.notion.com/blog/introducing-q-and-a": {
+    "publisher": "Notion",
+    "type": "product-announcement",
+    "tier": 1,
+    "published": "2023-11-16"
+  },
+  "https://www.notion.com/help/guides/get-answers-about-content-faster-with-q-and-a": {
+    "publisher": "Notion",
+    "type": "official-docs",
+    "tier": 1,
+    "living": true
+  },
+  "https://www.notion.com/help/notion-ai-security-practices": {
+    "publisher": "Notion",
+    "type": "official-docs",
+    "tier": 1,
+    "living": true
+  },
+  "https://www.notion.com/blog/introducing-notion-ai": {
+    "publisher": "Notion",
+    "type": "product-announcement",
+    "tier": 1,
+    "published": "2022-11-16"
+  },
+  "https://www.notion.com/product/ai": {
+    "publisher": "Notion",
+    "type": "vendor-blog",
+    "tier": 1,
+    "living": true
+  },
+  "https://www.perplexity.ai/hub/blog/getting-started-with-perplexity": {
+    "publisher": "Perplexity",
+    "type": "official-docs",
+    "tier": 1,
+    "living": true
+  },
+  "https://www.perplexity.ai/hub/blog": {
+    "publisher": "Perplexity",
+    "type": "vendor-blog",
+    "tier": 1,
+    "living": true
+  },
+  "https://www.perplexity.ai/hub/blog/more-value-in-every-answer-new-benefits-for-every-level-of-perplexity-user": {
+    "publisher": "Perplexity",
+    "type": "product-announcement",
+    "tier": 1,
+    "published": "2025-02-20"
+  },
+  "https://www.perplexity.ai/hub/blog/introducing-perplexity-health": {
+    "publisher": "Perplexity",
+    "type": "product-announcement",
+    "tier": 1,
+    "published": "2025-09-18"
+  },
+  "https://manual.raycast.com/ai/ai-commands": {
+    "publisher": "Raycast",
+    "type": "official-docs",
+    "tier": 1,
+    "living": true
+  },
+  "https://manual.raycast.com/dynamic-placeholders": {
+    "publisher": "Raycast",
+    "type": "official-docs",
+    "tier": 1,
+    "living": true
+  },
+  "https://developers.raycast.com/": {
+    "publisher": "Raycast",
+    "type": "official-docs",
+    "tier": 1,
+    "living": true
+  },
+  "https://developers.raycast.com/api-reference/ai.md": {
+    "publisher": "Raycast",
+    "type": "official-docs",
+    "tier": 1,
+    "living": true
+  },
+  "https://developers.raycast.com/api-reference/environment.md": {
+    "publisher": "Raycast",
+    "type": "official-docs",
+    "tier": 1,
+    "living": true
+  },
+  "https://www.whoop.com/us/en/press-center/whoop-unveils-the-new-whoop-coach-powered-by-openai/": {
+    "publisher": "WHOOP",
+    "type": "product-announcement",
+    "tier": 1,
+    "published": "2023-09-25"
+  },
+  "https://www.wareable.com/wearable-tech/whoop-launches-gpt-4-ai-coach": {
+    "publisher": "Wareable",
+    "type": "secondary-blog",
+    "tier": 3,
+    "published": "2023-09-26"
+  },
+  "https://www.nngroup.com/articles/command-palettes/": {
+    "publisher": "Nielsen Norman Group",
+    "type": "secondary-blog",
+    "tier": 2,
+    "published": "2024-08-23"
+  },
+  "https://www.nngroup.com/topic/ai-ml/": {
+    "publisher": "Nielsen Norman Group",
+    "type": "secondary-blog",
+    "tier": 2,
+    "living": true
+  },
+  "https://www.nngroup.com/articles/error-message-guidelines/": {
+    "publisher": "Nielsen Norman Group",
+    "type": "secondary-blog",
+    "tier": 2,
+    "published": "2001-06-23",
+    "foundational": true,
+    "note": "Durable error-message usability guidelines."
+  },
+  "https://www.nirandfar.com/how-to-manufacture-desire/": {
+    "publisher": "Nir Eyal",
+    "type": "secondary-blog",
+    "tier": 3,
+    "published": "2012-02-15",
+    "foundational": true,
+    "note": "The Hook model of habit-forming products."
+  },
+  "https://www.nngroup.com/articles/microinteractions/": {
+    "publisher": "Nielsen Norman Group",
+    "type": "secondary-blog",
+    "tier": 2,
+    "published": "2022-07-24"
+  },
+  "https://m3.material.io/styles/motion/overview": {
+    "publisher": "Google (Material Design 3)",
+    "type": "official-docs",
+    "tier": 1,
+    "living": true
+  },
+  "https://developer.apple.com/design/human-interface-guidelines": {
+    "publisher": "Apple",
+    "type": "official-docs",
+    "tier": 1,
+    "living": true
+  }
+}
