@@ -1,5 +1,343 @@
 {
-  "generatedAt": "2026-06-19T07:16:24.438Z",
+  "generatedAt": "2026-06-19T07:24:07.648Z",
+  "repo": {
+    "branch": "bharath-varma-p/learn-managed-identity-pme",
+    "slug": "Bharath-varma-p/Exploring_ideas",
+    "owner": "Bharath-varma-p",
+    "name": "Exploring_ideas"
+  },
+  "changeCatalog": {
+    "generatedAt": "2026-06-19T07:24:07.628Z",
+    "source": "git-log",
+    "branch": "bharath-varma-p/learn-managed-identity-pme",
+    "limit": 40,
+    "entries": [
+      {
+        "sha": "62a10b1145f0bdb226655b24015adc3b34ea030e",
+        "shortSha": "62a10b1",
+        "subject": "Add Azure Bootcamp: 95 first-principles, pure-signal lessons across 10 lanes",
+        "body": "",
+        "author": {
+          "name": "Bharath-varma-p",
+          "email": "bharath-varma-p@users.noreply.github.com"
+        },
+        "committedAt": "2026-06-19T00:17:43-07:00",
+        "isMerge": false,
+        "mergeDomain": null,
+        "category": "other",
+        "filesChanged": 98,
+        "areas": [
+          "content",
+          "tools"
+        ],
+        "files": [
+          "content/data.json",
+          "content/lessons/az-compute/azc-aks.json",
+          "content/lessons/az-compute/azc-app-service.json",
+          "content/lessons/az-compute/azc-batch-hpc.json",
+          "content/lessons/az-compute/azc-choosing-compute.json",
+          "content/lessons/az-compute/azc-container-apps.json",
+          "content/lessons/az-compute/azc-containers.json",
+          "content/lessons/az-compute/azc-functions.json",
+          "content/lessons/az-compute/azc-intro.json",
+          "content/lessons/az-compute/azc-vms.json",
+          "content/lessons/az-compute/azc-vmss.json",
+          "content/lessons/az-data/azd-analytics.json",
+          "content/lessons/az-data/azd-azure-sql.json",
+          "content/lessons/az-data/azd-backup-dr.json",
+          "content/lessons/az-data/azd-choosing-data.json",
+          "content/lessons/az-data/azd-cosmos.json",
+          "content/lessons/az-data/azd-disks.json",
+          "content/lessons/az-data/azd-intro.json",
+          "content/lessons/az-data/azd-oss-databases.json",
+          "content/lessons/az-data/azd-redis.json",
+          "content/lessons/az-data/azd-redundancy-tiers.json",
+          "content/lessons/az-data/azd-storage-account.json",
+          "content/lessons/az-devops/azp-arm-bicep.json",
+          "content/lessons/az-devops/azp-azure-devops.json",
+          "content/lessons/az-devops/azp-capstone.json"
+        ],
+        "commitUrl": "https://github.com/Bharath-varma-p/Exploring_ideas/commit/62a10b1145f0bdb226655b24015adc3b34ea030e"
+      },
+      {
+        "sha": "c1e3031bf877be01195b3b80ea9f1b94b498bf93",
+        "shortSha": "c1e3031",
+        "subject": "Add foundry-core create-resources mini-track (3 lessons)",
+        "body": "",
+        "author": {
+          "name": "Bharath-varma-p",
+          "email": "bharath-varma-p@users.noreply.github.com"
+        },
+        "committedAt": "2026-06-18T20:36:32-07:00",
+        "isMerge": false,
+        "mergeDomain": null,
+        "category": "other",
+        "filesChanged": 5,
+        "areas": [
+          "content"
+        ],
+        "files": [
+          "content/data.json",
+          "content/lessons/foundry-core/fdy-create-foundry-resource-and-project.json",
+          "content/lessons/foundry-core/fdy-deploy-a-model-in-foundry.json",
+          "content/lessons/foundry-core/fdy-foundry-connections-and-rbac.json",
+          "content/manifest.json"
+        ],
+        "commitUrl": "https://github.com/Bharath-varma-p/Exploring_ideas/commit/c1e3031bf877be01195b3b80ea9f1b94b498bf93"
+      },
+      {
+        "sha": "b2892c7550f28dedee1ed4bbaf4ddb2e3ef770c8",
+        "shortSha": "b2892c7",
+        "subject": "Add managed identity + PME lessons to foundry-auth lane",
+        "body": "",
+        "author": {
+          "name": "Bharath-varma-p",
+          "email": "bharath-varma-p@users.noreply.github.com"
+        },
+        "committedAt": "2026-06-18T20:19:39-07:00",
+        "isMerge": false,
+        "mergeDomain": null,
+        "category": "other",
+        "filesChanged": 6,
+        "areas": [
+          "content"
+        ],
+        "files": [
+          "content/data.json",
+          "content/lessons/foundry-auth/fdy-create-managed-identity-step-by-step.json",
+          "content/lessons/foundry-auth/fdy-managed-identity-best-practices.json",
+          "content/lessons/foundry-auth/fdy-managed-identity-resource-hub.json",
+          "content/lessons/foundry-auth/fdy-pme-account-managed-identity.json",
+          "content/manifest.json"
+        ],
+        "commitUrl": "https://github.com/Bharath-varma-p/Exploring_ideas/commit/b2892c7550f28dedee1ed4bbaf4ddb2e3ef770c8"
+      },
+      {
+        "sha": "49124176669aa6cfe7d1951fd1b609bf6f16e4fe",
+        "shortSha": "4912417",
+        "subject": "Merge pull request #1 from Bharath-varma-p/bharath-varma-p/foundry-sdk-learning-site",
+        "body": "",
+        "author": {
+          "name": "Penumatcha Bharath Varma",
+          "email": "50948937+Bharath-varma-p@users.noreply.github.com"
+        },
+        "committedAt": "2026-06-17T23:32:30-07:00",
+        "isMerge": true,
+        "mergeDomain": "foundry-sdk-learning-site",
+        "category": "merge",
+        "filesChanged": 0,
+        "areas": [],
+        "files": [],
+        "commitUrl": "https://github.com/Bharath-varma-p/Exploring_ideas/commit/49124176669aa6cfe7d1951fd1b609bf6f16e4fe"
+      },
+      {
+        "sha": "63b7c395c474244b4b0bcacbef21794921798c9e",
+        "shortSha": "63b7c39",
+        "subject": "Integrate Foundry SDK + MCP track into Agentic Design Academy",
+        "body": "",
+        "author": {
+          "name": "Bharath-varma-p",
+          "email": "bharath-varma-p@users.noreply.github.com"
+        },
+        "committedAt": "2026-06-17T23:27:41-07:00",
+        "isMerge": false,
+        "mergeDomain": null,
+        "category": "other",
+        "filesChanged": 158,
+        "areas": [
+          ".github",
+          "README.md",
+          "build.py",
+          "content",
+          "docs",
+          "tools"
+        ],
+        "files": [
+          ".github/workflows/pages.yml",
+          "README.md",
+          "build.py",
+          "content/data.json",
+          "content/lessons/foundry-auth/fdy-authn-vs-authz.json",
+          "content/lessons/foundry-auth/fdy-azure-identity-managedidentitycredential.json",
+          "content/lessons/foundry-auth/fdy-azure-rbac-scope-principal.json",
+          "content/lessons/foundry-auth/fdy-defaultazurecredential-local-to-prod.json",
+          "content/lessons/foundry-auth/fdy-end-to-end-keyless-foundry.json",
+          "content/lessons/foundry-auth/fdy-entra-tenants-identities.json",
+          "content/lessons/foundry-auth/fdy-foundry-ai-role-map.json",
+          "content/lessons/foundry-auth/fdy-grant-managed-identity-access.json",
+          "content/lessons/foundry-auth/fdy-managed-identity-imds.json",
+          "content/lessons/foundry-auth/fdy-mcp-target-access.json",
+          "content/lessons/foundry-auth/fdy-oauth-oidc-token-exchange.json",
+          "content/lessons/foundry-auth/fdy-system-vs-user-assigned.json",
+          "content/lessons/foundry-auth/fdy-troubleshooting-authz.json",
+          "content/lessons/foundry-auth/fdy-why-not-secrets-or-sps.json",
+          "content/lessons/foundry-auth/fdy-workload-identity-aks.json",
+          "content/lessons/foundry-capstone/fdy-capstone-self-test.json",
+          "content/lessons/foundry-capstone/fdy-reference-architecture.json",
+          "content/lessons/foundry-capstone/fdy-teaching-kit.json",
+          "content/lessons/foundry-connectors/fdy-adx-purpose.json",
+          "content/lessons/foundry-connectors/fdy-agent-interaction-traces.json",
+          "content/lessons/foundry-connectors/fdy-azure-devops-map.json"
+        ],
+        "commitUrl": "https://github.com/Bharath-varma-p/Exploring_ideas/commit/63b7c395c474244b4b0bcacbef21794921798c9e"
+      },
+      {
+        "sha": "28d8340125f2d4c3b3c2dfbb53d8f62f3573ef7c",
+        "shortSha": "28d8340",
+        "subject": "Merge main into foundry-sdk-learning-site, resolve conflicts in .gitignore and README.md",
+        "body": "",
+        "author": {
+          "name": "copilot-swe-agent[bot]",
+          "email": "198982749+Copilot@users.noreply.github.com"
+        },
+        "committedAt": "2026-06-18T06:05:19Z",
+        "isMerge": true,
+        "mergeDomain": null,
+        "category": "merge",
+        "filesChanged": 0,
+        "areas": [],
+        "files": [],
+        "commitUrl": "https://github.com/Bharath-varma-p/Exploring_ideas/commit/28d8340125f2d4c3b3c2dfbb53d8f62f3573ef7c"
+      },
+      {
+        "sha": "d32657091a9cb2b2dfbc032ec1d1ad14869a2058",
+        "shortSha": "d326570",
+        "subject": "Merge pull request #2 from Bharath-varma-p/bharath-varma-p/agentic-ai-learning-site",
+        "body": "",
+        "author": {
+          "name": "Penumatcha Bharath Varma",
+          "email": "50948937+Bharath-varma-p@users.noreply.github.com"
+        },
+        "committedAt": "2026-06-17T22:54:04-07:00",
+        "isMerge": true,
+        "mergeDomain": "agentic-ai-learning-site",
+        "category": "merge",
+        "filesChanged": 0,
+        "areas": [],
+        "files": [],
+        "commitUrl": "https://github.com/Bharath-varma-p/Exploring_ideas/commit/d32657091a9cb2b2dfbc032ec1d1ad14869a2058"
+      },
+      {
+        "sha": "588a715000ada001029398ba1205a6569361d2be",
+        "shortSha": "588a715",
+        "subject": "Build Agentic Design Academy: interactive context/platform-aware AI curriculum",
+        "body": "",
+        "author": {
+          "name": "Bharath-varma-p",
+          "email": "bharath-varma-p@users.noreply.github.com"
+        },
+        "committedAt": "2026-06-17T22:51:20-07:00",
+        "isMerge": false,
+        "mergeDomain": null,
+        "category": "build",
+        "filesChanged": 74,
+        "areas": [
+          ".github",
+          ".gitignore",
+          ".nojekyll",
+          "CONTENT_SCHEMA.md",
+          "LICENSE",
+          "README.md"
+        ],
+        "files": [
+          ".github/workflows/deploy.yml",
+          ".gitignore",
+          ".nojekyll",
+          "CONTENT_SCHEMA.md",
+          "LICENSE",
+          "README.md",
+          "content/data.json",
+          "content/glossary.json",
+          "content/lessons/architecture/agentic-patterns-overview.json",
+          "content/lessons/architecture/evaluator-optimizer.json",
+          "content/lessons/architecture/guardrails.json",
+          "content/lessons/architecture/human-in-the-loop.json",
+          "content/lessons/architecture/memory-long-term.json",
+          "content/lessons/architecture/memory-short-term.json",
+          "content/lessons/architecture/multi-agent-orchestration.json",
+          "content/lessons/architecture/planner-executor.json",
+          "content/lessons/architecture/prompt-chaining.json",
+          "content/lessons/architecture/rag.json",
+          "content/lessons/architecture/react.json",
+          "content/lessons/architecture/reflection.json",
+          "content/lessons/architecture/routing.json",
+          "content/lessons/architecture/tool-use.json",
+          "content/lessons/context-awareness/accessibility-apis-as-sensing.json",
+          "content/lessons/context-awareness/context-engineering.json",
+          "content/lessons/context-awareness/context-vs-platform.json"
+        ],
+        "commitUrl": "https://github.com/Bharath-varma-p/Exploring_ideas/commit/588a715000ada001029398ba1205a6569361d2be"
+      },
+      {
+        "sha": "4c2a554fee3b858e661f5e4e3a349f6c8734f3df",
+        "shortSha": "4c2a554",
+        "subject": "Add Foundry SDK Academy: interactive A–Z learning site",
+        "body": "",
+        "author": {
+          "name": "Bharath-varma-p",
+          "email": "bharath-varma-p@users.noreply.github.com"
+        },
+        "committedAt": "2026-06-17T22:46:18-07:00",
+        "isMerge": false,
+        "mergeDomain": null,
+        "category": "other",
+        "filesChanged": 21,
+        "areas": [
+          ".github",
+          ".gitignore",
+          "README.md",
+          "build.py",
+          "docs"
+        ],
+        "files": [
+          ".github/workflows/pages.yml",
+          ".gitignore",
+          "README.md",
+          "build.py",
+          "docs/css/styles.css",
+          "docs/data/curriculum.js",
+          "docs/data/extras.js",
+          "docs/data/lanes/agents-mcp.json",
+          "docs/data/lanes/auth-managed-identity.json",
+          "docs/data/lanes/foundry-fundamentals.json",
+          "docs/data/lanes/mcp-ado.json",
+          "docs/data/lanes/mcp-fundamentals.json",
+          "docs/data/lanes/mcp-icm.json",
+          "docs/data/lanes/mcp-kusto.json",
+          "docs/data/lanes/model-deployment.json",
+          "docs/data/lanes/model-inference.json",
+          "docs/data/lanes/sdk-core.json",
+          "docs/index.html",
+          "docs/js/app.js",
+          "docs/js/util.js",
+          "docs/js/views.js"
+        ],
+        "commitUrl": "https://github.com/Bharath-varma-p/Exploring_ideas/commit/4c2a554fee3b858e661f5e4e3a349f6c8734f3df"
+      },
+      {
+        "sha": "d56f4ba1343fd5af886151e0b0f1b583377212b3",
+        "shortSha": "d56f4ba",
+        "subject": "Initial commit",
+        "body": "",
+        "author": {
+          "name": "Penumatcha Bharath Varma",
+          "email": "50948937+Bharath-varma-p@users.noreply.github.com"
+        },
+        "committedAt": "2026-06-17T21:25:15-07:00",
+        "isMerge": false,
+        "mergeDomain": null,
+        "category": "other",
+        "filesChanged": 1,
+        "areas": [
+          "README.md"
+        ],
+        "files": [
+          "README.md"
+        ],
+        "commitUrl": "https://github.com/Bharath-varma-p/Exploring_ideas/commit/d56f4ba1343fd5af886151e0b0f1b583377212b3"
+      }
+    ]
+  },
   "lanes": [
     {
       "id": "architecture",
@@ -29861,6 +30199,7 @@
   "stats": {
     "lessons": 291,
     "glossaryTerms": 832,
-    "quizQuestions": 189
+    "quizQuestions": 189,
+    "changeEntries": 10
   }
 }

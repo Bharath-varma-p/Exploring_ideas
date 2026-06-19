@@ -3,6 +3,17 @@ import { h, md, enhance, esc, renderMermaid, copyText, toast } from "./render.js
 import { State, lane, lessonsIn, lesson, teardowns, search, Progress, QuizStore } from "./data.js";
 
 const TYPE_LABEL = { concept: "Concept", pattern: "Pattern", teardown: "Teardown", framework: "Framework", blueprint: "Blueprint" };
+const CHANGE_CATEGORY_LABEL = {
+  merge: "Merge",
+  feature: "Feature",
+  fix: "Fix",
+  docs: "Docs",
+  content: "Content",
+  build: "Build",
+  chore: "Chore",
+  other: "Other",
+};
+const CHANGE_CATEGORY_ORDER = ["merge", "feature", "fix", "docs", "content", "build", "chore", "other"];
 
 function go(hash) { location.hash = hash; }
 function chip(text, cls = "") { return h("span", { class: "chip " + cls }, text); }
@@ -69,6 +80,7 @@ export function renderHome() {
   wrap.append(h("section", { class: "quicklinks" },
     quickLink("🔤", "A–Z Index", "Every pattern & term", "#/index"),
     quickLink("📚", "Glossary", `${State.glossary.length} terms defined`, "#/glossary"),
+    quickLink("🗂️", "Change Catalog", "Real-time merged updates", "#/changes"),
     quickLink("🔍", "Teardown Gallery", "Real products, dissected", "#/teardowns"),
     quickLink("🧠", "Quizzes", "Test yourself", "#/quiz"),
     quickLink("🃏", "Flashcards", "Spaced drill mode", "#/flashcards"),
@@ -322,6 +334,212 @@ export function renderIndex() {
   }
   wrap.append(body);
   return wrap;
+}
+
+// ---------------- Change catalog ----------------
+export function renderChangeCatalog() {
+  const wrap = h("div", { class: "view view-changes" });
+  wrap.append(breadcrumb([["Home", "#/"], ["Change Catalog", null]]));
+  wrap.append(h("header", { class: "lane-head" }, h("div", { class: "lane-ico big" }, "🗂️"),
+    h("div", {},
+      h("h1", {}, "Change Catalog"),
+      h("p", { class: "muted" }, "One place to track what changed. This feed updates every build/deploy, and you can refresh live from GitHub."))));
+
+  const snapshot = State.changeCatalog || {};
+  const repoSlug = State.repo?.slug || inferRepoSlugFromLocation();
+  const branch = snapshot.branch || State.repo?.branch || "main";
+  const count = h("p", { class: "muted change-count" });
+  const buildStamp = h("p", { class: "muted change-build-stamp" });
+  const filterBar = h("div", { class: "filter-bar change-filter-bar" });
+  const list = h("div", { class: "change-list" });
+  const refreshBtn = h("button", { class: "btn btn-ghost btn-tiny", type: "button" }, "Refresh from GitHub");
+
+  let entries = normalizeChangeEntries(snapshot.entries || []);
+  let activeCategory = "all";
+
+  const controls = h("div", { class: "change-controls" }, refreshBtn);
+  wrap.append(count, buildStamp, filterBar, controls, list);
+
+  function categoriesFor(items) {
+    const present = new Set(items.map((item) => item.category));
+    const ordered = CHANGE_CATEGORY_ORDER.filter((key) => present.has(key));
+    const extra = [...present].filter((key) => !CHANGE_CATEGORY_ORDER.includes(key)).sort();
+    return ["all", ...ordered, ...extra];
+  }
+
+  function updateMeta(isLive = false) {
+    count.textContent = `${entries.length} changes on ${branch}`;
+    if (isLive) {
+      buildStamp.textContent = `Live data refreshed at ${formatTs(new Date().toISOString())}`;
+      return;
+    }
+    const at = snapshot.generatedAt ? formatTs(snapshot.generatedAt) : "unknown time";
+    buildStamp.textContent = `Snapshot generated at ${at} during build/deploy`;
+  }
+
+  function renderFilters() {
+    const categories = categoriesFor(entries);
+    if (!categories.includes(activeCategory)) activeCategory = "all";
+    filterBar.innerHTML = "";
+    for (const category of categories) {
+      const isAll = category === "all";
+      const label = isAll ? "All" : (CHANGE_CATEGORY_LABEL[category] || category);
+      const button = h("button", { class: "filter-btn" + (category === activeCategory ? " on" : ""), type: "button" }, label);
+      button.addEventListener("click", () => {
+        activeCategory = category;
+        renderFilters();
+        draw();
+      });
+      filterBar.append(button);
+    }
+  }
+
+  function draw() {
+    list.innerHTML = "";
+    const shown = activeCategory === "all" ? entries : entries.filter((entry) => entry.category === activeCategory);
+    if (!shown.length) {
+      list.append(h("p", { class: "muted" }, "No changes match this filter."));
+      return;
+    }
+    for (const entry of shown) list.append(changeCard(entry));
+  }
+
+  async function refreshFromGitHub() {
+    if (!repoSlug) {
+      toast("Repo metadata missing. Build once to enable live refresh.", true);
+      return;
+    }
+    const prev = refreshBtn.textContent;
+    refreshBtn.disabled = true;
+    refreshBtn.textContent = "Refreshing…";
+    try {
+      const url = `https://api.github.com/repos/${repoSlug}/commits?sha=${encodeURIComponent(branch)}&per_page=40`;
+      const res = await fetch(url, { headers: { Accept: "application/vnd.github+json" } });
+      if (!res.ok) throw new Error(`GitHub API returned ${res.status}`);
+      const payload = await res.json();
+      entries = normalizeGitHubCommits(payload);
+      renderFilters();
+      updateMeta(true);
+      draw();
+    } catch (err) {
+      toast(`Could not refresh change catalog: ${err.message}`, true);
+    } finally {
+      refreshBtn.disabled = false;
+      refreshBtn.textContent = prev;
+    }
+  }
+
+  refreshBtn.addEventListener("click", refreshFromGitHub);
+  if (!repoSlug) refreshBtn.disabled = true;
+
+  renderFilters();
+  updateMeta(false);
+  draw();
+  return wrap;
+}
+
+function changeCard(entry) {
+  const hashNode = entry.commitUrl
+    ? h("a", { class: "change-hash", href: entry.commitUrl, target: "_blank", rel: "noopener noreferrer" }, entry.shortSha)
+    : h("span", { class: "change-hash" }, entry.shortSha);
+  return h("article", { class: "card change-card" },
+    h("div", { class: "change-card-head" },
+      chip(CHANGE_CATEGORY_LABEL[entry.category] || "Other", `chip-change chip-change-${entry.category}`),
+      entry.mergeDomain ? chip(`domain:${entry.mergeDomain}`, "chip-tag") : null,
+      h("h3", { class: "change-title" }, entry.subject)),
+    h("div", { class: "change-meta" },
+      h("span", {}, formatTs(entry.committedAt)),
+      entry.author?.name ? h("span", {}, `by ${entry.author.name}`) : null,
+      typeof entry.filesChanged === "number" ? h("span", {}, `${entry.filesChanged} files`) : null,
+      hashNode),
+    entry.areas?.length ? h("div", { class: "change-areas" }, ...entry.areas.map((area) => chip(area, "chip-tag"))) : null);
+}
+
+function normalizeChangeEntries(entries = []) {
+  if (!Array.isArray(entries)) return [];
+  return entries
+    .map((entry) => {
+      const subject = String(entry.subject || "").trim();
+      const sha = String(entry.sha || "").trim();
+      const isMerge = Boolean(entry.isMerge || /^merge\b/i.test(subject));
+      const inferredCategory = classifyChange(subject, isMerge);
+      return {
+        sha,
+        shortSha: String(entry.shortSha || sha.slice(0, 7) || "n/a"),
+        subject: subject || "Untitled change",
+        author: entry.author || {},
+        committedAt: entry.committedAt || null,
+        filesChanged: typeof entry.filesChanged === "number"
+          ? entry.filesChanged
+          : (Array.isArray(entry.files) ? entry.files.length : null),
+        areas: Array.isArray(entry.areas) ? entry.areas.filter(Boolean).slice(0, 8) : [],
+        category: entry.category || inferredCategory,
+        isMerge,
+        mergeDomain: entry.mergeDomain || (isMerge ? inferMergeDomain(subject) : null),
+        commitUrl: entry.commitUrl || null,
+      };
+    })
+    .filter((entry) => entry.sha || entry.subject);
+}
+
+function normalizeGitHubCommits(payload) {
+  if (!Array.isArray(payload)) return [];
+  return payload.map((item) => {
+    const message = String(item?.commit?.message || "");
+    const [subjectRaw] = message.split("\n");
+    const subject = subjectRaw.trim() || item.sha?.slice(0, 7) || "Untitled change";
+    const isMerge = Array.isArray(item.parents) && item.parents.length > 1;
+    const category = classifyChange(subject, isMerge);
+    return {
+      sha: item.sha,
+      shortSha: item.sha?.slice(0, 7) || "n/a",
+      subject,
+      author: { name: item?.commit?.author?.name || item?.author?.login || "unknown" },
+      committedAt: item?.commit?.author?.date || item?.commit?.committer?.date || null,
+      filesChanged: null,
+      areas: [],
+      category,
+      isMerge,
+      mergeDomain: isMerge ? inferMergeDomain(subject) : null,
+      commitUrl: item.html_url || null,
+    };
+  });
+}
+
+function classifyChange(subject = "", isMerge = false) {
+  if (isMerge) return "merge";
+  const s = String(subject).toLowerCase();
+  if (/^feat(\(|:|!)/.test(s) || s.startsWith("feat ")) return "feature";
+  if (/^fix(\(|:|!)/.test(s) || s.startsWith("fix ")) return "fix";
+  if (/^docs(\(|:|!)/.test(s) || s.startsWith("docs ")) return "docs";
+  if (/^build(\(|:|!)/.test(s) || s.startsWith("build ")) return "build";
+  if (/^content(\(|:|!)/.test(s) || s.startsWith("content ")) return "content";
+  if (/^chore(\(|:|!)/.test(s) || s.startsWith("chore ")) return "chore";
+  return "other";
+}
+
+function inferMergeDomain(subject = "") {
+  const match = String(subject).match(/ from ([^\s]+)/i);
+  if (!match) return null;
+  const ref = match[1].trim();
+  const parts = ref.split("/");
+  return parts[parts.length - 1] || ref;
+}
+
+function inferRepoSlugFromLocation() {
+  const host = String(location.hostname || "");
+  const pathParts = String(location.pathname || "").split("/").filter(Boolean);
+  if (!host.endsWith(".github.io") || !pathParts.length) return null;
+  const owner = host.replace(/\.github\.io$/i, "");
+  const repo = pathParts[0];
+  return owner && repo ? `${owner}/${repo}` : null;
+}
+
+function formatTs(ts) {
+  if (!ts) return "unknown time";
+  const d = new Date(ts);
+  if (Number.isNaN(d.getTime())) return String(ts);
+  return d.toLocaleString();
 }
 
 // ---------------- Quiz hub + engine ----------------

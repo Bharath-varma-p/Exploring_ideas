@@ -181,6 +181,14 @@ h1,h2,h3,h4 { line-height: 1.2; letter-spacing: -.02em; }
 .chip-link:hover { border-color: var(--accent); color: var(--accent); }
 .chip-ok { color: var(--ok); border-color: color-mix(in srgb, var(--ok) 40%, transparent); }
 .chip-warn { color: var(--warn); border-color: color-mix(in srgb, var(--warn) 40%, transparent); }
+.chip-change-merge { background: color-mix(in srgb, var(--accent) 20%, transparent); color: #c4bcff; border: 1px solid color-mix(in srgb, var(--accent) 45%, transparent); }
+.chip-change-feature { background: color-mix(in srgb, var(--ok) 18%, transparent); color: var(--ok); border: 1px solid color-mix(in srgb, var(--ok) 40%, transparent); }
+.chip-change-fix { background: color-mix(in srgb, var(--accent-2) 16%, transparent); color: var(--accent-2); border: 1px solid color-mix(in srgb, var(--accent-2) 38%, transparent); }
+.chip-change-docs { background: color-mix(in srgb, #94a3b8 20%, transparent); color: #c6ceda; border: 1px solid color-mix(in srgb, #94a3b8 40%, transparent); }
+.chip-change-content { background: color-mix(in srgb, var(--c-blueprint) 18%, transparent); color: var(--c-blueprint); border: 1px solid color-mix(in srgb, var(--c-blueprint) 40%, transparent); }
+.chip-change-build { background: color-mix(in srgb, var(--warn) 20%, transparent); color: var(--warn); border: 1px solid color-mix(in srgb, var(--warn) 40%, transparent); }
+.chip-change-chore { background: color-mix(in srgb, #a78bfa 20%, transparent); color: #cabdff; border: 1px solid color-mix(in srgb, #a78bfa 40%, transparent); }
+.chip-change-other { background: color-mix(in srgb, var(--border-2) 35%, transparent); color: var(--text-dim); border: 1px solid var(--border-2); }
 
 /* ============================ Lane / Lesson head ============================ */
 .lane-head { display: flex; gap: 18px; align-items: center; margin-bottom: 24px; }
@@ -297,6 +305,19 @@ html[data-theme="light"] .tok-kw { color: #8a3ffc; } html[data-theme="light"] .t
 .az-item { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 9px; transition: .12s; }
 .az-item:hover { background: var(--bg-3); }
 .az-item span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* ============================ Change catalog ============================ */
+.change-count { margin: 0 0 2px; }
+.change-build-stamp { margin: 0 0 14px; }
+.change-filter-bar { margin-bottom: 10px; }
+.change-controls { display: flex; justify-content: flex-end; margin: 0 0 16px; }
+.change-list { display: grid; gap: 12px; }
+.change-card { padding: 16px; }
+.change-card-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
+.change-title { margin: 0; font-size: 16px; }
+.change-meta { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; font-size: 12.5px; color: var(--muted); margin-bottom: 10px; }
+.change-hash { margin-left: auto; color: var(--accent-2); font-family: var(--mono); font-size: 12px; }
+.change-areas { display: flex; flex-wrap: wrap; gap: 6px; }
 
 /* ============================ Quiz ============================ */
 .quiz-h1 { font-size: 28px; margin: 0 0 20px; }
