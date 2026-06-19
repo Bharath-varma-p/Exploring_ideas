@@ -1,0 +1,97 @@
+{
+  "id": "fdy-deploy-a-model-in-foundry",
+  "title": "Deploy a Model in Foundry and Call It Keyless",
+  "lane": "foundry-core",
+  "type": "concept",
+  "order": 216,
+  "summary": "A hands-on recipe for deploying a model from the Foundry catalog to your project (Portal + Azure CLI + Bicep), then calling it with no API key using AIProjectClient and DefaultAzureCredential. The deployment name is what you pass as the model parameter at inference time.",
+  "tags": [
+    "models",
+    "deployment",
+    "how-to",
+    "inference",
+    "managed-identity"
+  ],
+  "analogy": "The catalog is a hangar full of aircraft; deploying a model rolls one onto your runway and paints your tail number on it. The deployment name is that tail number — every inference call routes by it — and your managed-identity badge gets you into the cockpit without a key.",
+  "diagram": "flowchart TD\n  Catalog[Model catalog Discover Models] --> Pick[Pick a model card]\n  Pick --> Sub{Partner or community model}\n  Sub -->|yes| Market[Subscribe via Azure Marketplace]\n  Sub -->|no, sold by Azure| Deploy\n  Market --> Deploy[Deploy default or custom settings]\n  Deploy --> Name[Deployment name becomes the model param]\n  Name --> Endpoint[Project endpoint]\n  Endpoint --> Client[AIProjectClient plus DefaultAzureCredential]\n  Client --> Call[openai.responses.create model equals deployment name]",
+  "body": "## First principles\n\nA model in the catalog is not yet callable — it is a listing. **Deploying** creates a named, billable endpoint of that model inside your project. The single most important fact: the **deployment name** you choose is what you pass as the `model` argument when you call the API. Models **sold by Azure** (for example Azure OpenAI's `gpt-4o-mini`) deploy directly; models **from partners and community** (for example `Llama-3.2-90B-Vision-Instruct`) first require an Azure Marketplace subscription. To create deployments you need **Cognitive Services Contributor** (or equivalent) on the Foundry resource.\n\n## Definition\n\nA **deployment** binds a catalog model + version + deployment type (such as Global Standard) to a name in your project, with quota allocated in Tokens-per-Minute (TPM). You can deploy in the portal, with the Azure CLI, or with Bicep, and then run inference keyless through the project endpoint.\n\n## Way 1 — Foundry portal\n\n- Sign in to https://ai.azure.com (New Foundry on). Select **Discover -> Models**.\n- Open a model card (for example `gpt-4o-mini`). Select **Deploy -> Custom settings** (or **Default settings**).\n- For a partner/community model, accept the Marketplace terms (**Agree and Proceed**). Models sold by Azure skip this.\n- Keep or edit the **deployment name** — remember it; it is your `model` parameter. Select **Deploy**.\n- When status shows **Succeeded** you land in the **Playground**; the **Code** tab shows how to call it.\n\n## Way 2 — Azure CLI\n\n```bash\n# Deploy an Azure OpenAI model (sold by Azure) into the Foundry resource.\naz cognitiveservices account deployment create \\\n  --name my-foundry-resource \\\n  --resource-group my-foundry-rg \\\n  --deployment-name gpt-4o-mini \\\n  --model-name gpt-4o-mini \\\n  --model-version \"2024-07-18\" \\\n  --model-format OpenAI \\\n  --sku-name GlobalStandard \\\n  --sku-capacity 50   # capacity is Tokens-per-Minute quota in thousands\n\n# Confirm it exists.\naz cognitiveservices account deployment show \\\n  --name my-foundry-resource -g my-foundry-rg \\\n  --deployment-name gpt-4o-mini \\\n  --query \"{name:name, model:properties.model.name, state:properties.provisioningState}\"\n```\n\n## Way 3 — Bicep\n\n```bicep\nparam aiFoundryName string\n\nresource foundry 'Microsoft.CognitiveServices/accounts@2025-04-01-preview' existing = {\n  name: aiFoundryName\n}\n\nresource deployment 'Microsoft.CognitiveServices/accounts/deployments@2025-04-01-preview' = {\n  parent: foundry\n  name: 'gpt-4o-mini'           // this name is the inference `model` parameter\n  sku: { name: 'GlobalStandard', capacity: 50 }\n  properties: {\n    model: {\n      format: 'OpenAI'\n      name: 'gpt-4o-mini'\n      version: '2024-07-18'\n    }\n  }\n}\n```\n\n## Call it keyless\n\nThe modern SDK is **azure-ai-projects 2.x** (the Foundry projects \"new\" API). `AIProjectClient` plus `DefaultAzureCredential` means no keys: locally it uses your `az login`, in production it uses the workload's managed identity.\n\n```python\n# pip install \"azure-ai-projects>=2.0.0\" azure-identity\nimport os\nfrom azure.identity import DefaultAzureCredential\nfrom azure.ai.projects import AIProjectClient\n\n# https://<resource>.services.ai.azure.com/api/projects/<project>\nendpoint = os.environ[\"FOUNDRY_PROJECT_ENDPOINT\"]\n\nproject = AIProjectClient(endpoint=endpoint, credential=DefaultAzureCredential())\nopenai = project.get_openai_client()\n\nresponse = openai.responses.create(\n    model=\"gpt-4o-mini\",   # the DEPLOYMENT name, not the catalog id\n    input=\"What is the size of France in square miles?\",\n)\nprint(response.output_text)\n```\n\nIf inference returns 401/403, the deployment is fine but the **caller's identity** lacks a data-plane role on the project (assign **Foundry User**) — authentication and authorization are separate problems.\n\n*Catalog -> deploy (name it) -> endpoint -> AIProjectClient with DefaultAzureCredential -> call by deployment name.*",
+  "examples": [
+    {
+      "product": "Azure OpenAI gpt-4o-mini, sold by Azure",
+      "what": "Deploy gpt-4o-mini with Default settings (no Marketplace step), then call openai.responses.create(model='gpt-4o-mini', ...) through the project endpoint with DefaultAzureCredential — no key in code.",
+      "source": "https://learn.microsoft.com/en-us/azure/foundry/quickstarts/get-started-code"
+    }
+  ],
+  "drills": [
+    {
+      "q": "What value do you pass as the model parameter at inference time?",
+      "a": "The deployment name you chose, not the catalog model id."
+    },
+    {
+      "q": "Which models require an Azure Marketplace subscription before deploying?",
+      "a": "Models from partners and community (for example Llama); models sold by Azure such as Azure OpenAI models do not."
+    },
+    {
+      "q": "Which RBAC role lets you create model deployments on the resource?",
+      "a": "Cognitive Services Contributor (or an equivalent role) on the Foundry resource."
+    },
+    {
+      "q": "Inference returns 403 but the deployment succeeded. What is missing?",
+      "a": "The caller's identity needs a data-plane role on the project, typically Foundry User — it is an authorization gap, not a deployment problem."
+    }
+  ],
+  "teachItBack": "Deploying a model turns a catalog listing into a named, billable endpoint in your project, and that deployment name is the model parameter you call with. Models sold by Azure deploy directly; partner and community models need a Marketplace subscription first. You can deploy via portal, CLI, or Bicep, then call it keyless with AIProjectClient and DefaultAzureCredential. A 403 at call time means the caller needs a Foundry User data role, not a redeploy.",
+  "glossary": [
+    {
+      "term": "Deployment",
+      "definition": "A named binding of a catalog model, version, and deployment type to your project, with TPM quota; the name is the inference model parameter."
+    },
+    {
+      "term": "Models sold by Azure vs partners and community",
+      "definition": "Azure-sold models (e.g., Azure OpenAI) deploy directly; partner/community models require an Azure Marketplace subscription first."
+    },
+    {
+      "term": "get_openai_client",
+      "definition": "AIProjectClient method returning an OpenAI-compatible client wired to the project endpoint and credential."
+    },
+    {
+      "term": "Tokens-per-Minute (TPM)",
+      "definition": "The quota unit allocated to a deployment's capacity, per region and model."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Microsoft Learn: Deploy Microsoft Foundry Models in the portal",
+      "url": "https://learn.microsoft.com/en-us/azure/foundry/foundry-models/how-to/deploy-foundry-models",
+      "verified": true
+    },
+    {
+      "title": "Microsoft Learn: Foundry quickstart — get started with code (Projects 2.x)",
+      "url": "https://learn.microsoft.com/en-us/azure/foundry/quickstarts/get-started-code",
+      "verified": true
+    },
+    {
+      "title": "Microsoft Learn: az cognitiveservices account deployment",
+      "url": "https://learn.microsoft.com/en-us/cli/azure/cognitiveservices/account/deployment",
+      "verified": true
+    },
+    {
+      "title": "Microsoft Learn: Azure AI Projects client library for Python",
+      "url": "https://learn.microsoft.com/en-us/python/api/overview/azure/ai-projects-readme",
+      "verified": true
+    }
+  ],
+  "quiz": [
+    {
+      "q": "After deploying gpt-4o-mini as a deployment named 'chat-prod', what do you pass to openai.responses.create as the model?",
+      "choices": [
+        "'chat-prod' — the deployment name",
+        "'gpt-4o-mini' — always the catalog id",
+        "The full model resource ID",
+        "The project endpoint URL"
+      ],
+      "answer": 0,
+      "explanation": "Inference routes by deployment name, so the model parameter must be 'chat-prod', the name you gave the deployment."
+    }
+  ]
+}

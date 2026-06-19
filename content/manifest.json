@@ -1,9 +1,9 @@
 {
-  "generatedAt": "2026-06-18T06:25:50.729Z",
+  "generatedAt": "2026-06-19T03:25:25.341Z",
   "stats": {
-    "lessons": 189,
-    "glossaryTerms": 501,
-    "quizQuestions": 182
+    "lessons": 196,
+    "glossaryTerms": 519,
+    "quizQuestions": 189
   },
   "lanes": [
     {
@@ -34,12 +34,12 @@
     {
       "id": "foundry-core",
       "title": "Azure AI Foundry & SDK",
-      "count": 27
+      "count": 30
     },
     {
       "id": "foundry-auth",
       "title": "Managed Identity (Keyless Auth)",
-      "count": 15
+      "count": 19
     },
     {
       "id": "foundry-models",
@@ -631,6 +631,27 @@
       "file": "content/lessons/foundry-core/fdy-error-handling.json"
     },
     {
+      "id": "fdy-create-foundry-resource-and-project",
+      "title": "Create a Foundry Resource and Project — Portal, CLI & Bicep",
+      "lane": "foundry-core",
+      "type": "concept",
+      "file": "content/lessons/foundry-core/fdy-create-foundry-resource-and-project.json"
+    },
+    {
+      "id": "fdy-deploy-a-model-in-foundry",
+      "title": "Deploy a Model in Foundry and Call It Keyless",
+      "lane": "foundry-core",
+      "type": "concept",
+      "file": "content/lessons/foundry-core/fdy-deploy-a-model-in-foundry.json"
+    },
+    {
+      "id": "fdy-foundry-connections-and-rbac",
+      "title": "Wire Connections and Assign RBAC to the Managed Identity",
+      "lane": "foundry-core",
+      "type": "concept",
+      "file": "content/lessons/foundry-core/fdy-foundry-connections-and-rbac.json"
+    },
+    {
       "id": "fdy-authn-vs-authz",
       "title": "Authentication vs Authorization",
       "lane": "foundry-auth",
@@ -734,6 +755,34 @@
       "lane": "foundry-auth",
       "type": "concept",
       "file": "content/lessons/foundry-auth/fdy-why-not-secrets-or-sps.json"
+    },
+    {
+      "id": "fdy-create-managed-identity-step-by-step",
+      "title": "Create a Managed Identity — Portal, CLI & Bicep (step by step)",
+      "lane": "foundry-auth",
+      "type": "concept",
+      "file": "content/lessons/foundry-auth/fdy-create-managed-identity-step-by-step.json"
+    },
+    {
+      "id": "fdy-pme-account-managed-identity",
+      "title": "PME Accounts & Managed Identity (Microsoft corporate context)",
+      "lane": "foundry-auth",
+      "type": "concept",
+      "file": "content/lessons/foundry-auth/fdy-pme-account-managed-identity.json"
+    },
+    {
+      "id": "fdy-managed-identity-best-practices",
+      "title": "Managed Identity Best Practices (latest)",
+      "lane": "foundry-auth",
+      "type": "concept",
+      "file": "content/lessons/foundry-auth/fdy-managed-identity-best-practices.json"
+    },
+    {
+      "id": "fdy-managed-identity-resource-hub",
+      "title": "Managed Identity — Field Guide & Resource Hub (videos, docs, community)",
+      "lane": "foundry-auth",
+      "type": "concept",
+      "file": "content/lessons/foundry-auth/fdy-managed-identity-resource-hub.json"
     },
     {
       "id": "fdy-catalog-and-providers",

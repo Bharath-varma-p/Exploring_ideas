@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-06-18T06:25:50.729Z",
+  "generatedAt": "2026-06-19T03:25:25.341Z",
   "lanes": [
     {
       "id": "architecture",
@@ -47,7 +47,7 @@
       "icon": "🏗️",
       "order": 6,
       "blurb": "Foundry fundamentals and the SDK core: hubs, projects, resources, AIProjectClient, connections, and config.",
-      "count": 27
+      "count": 30
     },
     {
       "id": "foundry-auth",
@@ -55,7 +55,7 @@
       "icon": "🔐",
       "order": 7,
       "blurb": "Authenticate everything with managed identity only: Entra tokens, DefaultAzureCredential, RBAC, zero secrets.",
-      "count": 15
+      "count": 19
     },
     {
       "id": "foundry-models",
@@ -7951,6 +7951,300 @@
       "_file": "content/lessons/foundry-core/fdy-error-handling.json"
     },
     {
+      "id": "fdy-create-foundry-resource-and-project",
+      "title": "Create a Foundry Resource and Project — Portal, CLI & Bicep",
+      "lane": "foundry-core",
+      "type": "concept",
+      "order": 215,
+      "summary": "A hands-on recipe for standing up the modern Foundry resource and a project three ways — Foundry portal, Azure CLI, and Bicep. The modern model is a Microsoft.CognitiveServices account of kind AIServices with allowProjectManagement enabled, and projects are child resources — no hub, no keys, managed identity from the first minute.",
+      "tags": [
+        "how-to",
+        "azure-cli",
+        "bicep",
+        "provisioning",
+        "managed-identity"
+      ],
+      "analogy": "Creating the Foundry resource is like erecting the secure command building, and creating a project is like assigning a locked mission room inside it. The portal builds both with one click; CLI and Bicep let you blueprint the building so any base can raise an identical one.",
+      "diagram": "flowchart TD\n  Start[Need an AI workspace] --> Choose{How to create}\n  Choose -->|click-through| Portal[Foundry portal auto-creates resource plus project]\n  Choose -->|scriptable| CLI[az cognitiveservices account create kind AIServices]\n  Choose -->|repeatable IaC| Bicep[az deployment group create main.bicep]\n  CLI --> Proj[az cognitiveservices account project create]\n  Bicep --> Proj\n  Portal --> Ready[Project endpoint plus system-assigned identity]\n  Proj --> Ready\n  Ready --> Build[Build agents evaluations files keyless]",
+      "body": "## First principles\n\nAn AI app needs a governed home before it needs a single line of model code. In the modern Foundry model that home is one Azure resource — a `Microsoft.CognitiveServices/accounts` of `kind: AIServices` with the property `allowProjectManagement` turned on — plus at least one **project** (a child resource) where you actually build. \"Creating Foundry\" means: bring the resource into existence, enable project management, give it a globally unique custom subdomain, then create a project. A system-assigned managed identity is attached so you never hand-roll keys.\n\n## Definition\n\nThe **Foundry resource** is the top-level governance, security, and deployment boundary. A **Foundry project** is a child resource inside it that organizes agents, evaluations, files, and connections, and exposes a project-scoped endpoint of the form `https://<resource-name>.services.ai.azure.com/api/projects/<project-name>`. This is the modern resource-centric model — distinct from the older **hub-based** projects backed by an Azure Machine Learning workspace, which you should avoid for new work.\n\n## Way 1 — Foundry portal (fastest to learn)\n\n- Sign in to https://ai.azure.com and make sure the **New Foundry** toggle is on (\"Foundry (new)\").\n- Select the project name in the upper-left, then **Create new project**.\n- Name it and select **Create project**. The portal **automatically creates the underlying Foundry resource** for you (use **Advanced options** to pick the resource group and region).\n- Tip: create a fresh resource group so the project and its resources share one lifecycle. To create the resource you need a role such as **Foundry Account Owner** or **Foundry Owner**.\n\n## Way 2 — Azure CLI (scriptable)\n\n```bash\n# 1) Resource group\naz group create --name my-foundry-rg --location eastus\n\n# 2) The Foundry resource: an AIServices account with project management enabled\naz cognitiveservices account create \\\n  --name my-foundry-resource \\\n  --resource-group my-foundry-rg \\\n  --kind AIServices \\\n  --sku s0 \\\n  --location eastus \\\n  --allow-project-management   # this flag is what makes it a Foundry resource\n\n# 3) Custom subdomain (must be globally unique) — needed for the token endpoint\naz cognitiveservices account update \\\n  --name my-foundry-resource \\\n  --resource-group my-foundry-rg \\\n  --custom-domain my-foundry-resource\n\n# 4) Create a project (a child resource of the account)\naz cognitiveservices account project create \\\n  --name my-foundry-resource \\\n  --resource-group my-foundry-rg \\\n  --project-name my-foundry-project \\\n  --location eastus\n\n# 5) Verify\naz cognitiveservices account project show \\\n  --name my-foundry-resource -g my-foundry-rg \\\n  --project-name my-foundry-project\n```\n\nThe resource's first project is the **default project** and is slightly more capable (for example, OpenAI Batch and fine-tuning live only on the default project). Add more projects on the same resource to share security, deployments, and connections across a team.\n\n## Way 3 — Bicep (infrastructure as code, the production default)\n\n```bicep\nparam location string = resourceGroup().location\nparam aiFoundryName string\nparam aiProjectName string\n\n// The Foundry resource: AIServices account, system-assigned identity, project mgmt on.\nresource foundry 'Microsoft.CognitiveServices/accounts@2025-04-01-preview' = {\n  name: aiFoundryName\n  location: location\n  kind: 'AIServices'\n  sku: { name: 'S0' }\n  identity: { type: 'SystemAssigned' }\n  properties: {\n    allowProjectManagement: true\n    customSubDomainName: aiFoundryName\n  }\n}\n\n// A project as a child resource, with its own system-assigned identity.\nresource project 'Microsoft.CognitiveServices/accounts/projects@2025-04-01-preview' = {\n  parent: foundry\n  name: aiProjectName\n  location: location\n  identity: { type: 'SystemAssigned' }\n  properties: {}\n}\n```\n\nDeploy it, or clone Microsoft's ready-made templates:\n\n```bash\ngit clone https://github.com/microsoft-foundry/foundry-samples\ncd foundry-samples/infrastructure/infrastructure-setup-bicep/00-basic\n\naz group create --name exampleRG --location eastus\naz deployment group create \\\n  --resource-group exampleRG \\\n  --template-file main.bicep \\\n  --parameters aiFoundryName=myai aiProjectName=myai-proj\n# Success shows \"provisioningState\": \"Succeeded\".\n```\n\n## Verify it actually works\n\n```python\n# pip install azure-identity azure-mgmt-cognitiveservices~=13.7.0\n# Run after `az login`, or on an Azure host with a managed identity.\nfrom azure.identity import DefaultAzureCredential\nfrom azure.mgmt.cognitiveservices import CognitiveServicesManagementClient\n\nsubscription_id = \"<subscription-id>\"\nresource_group = \"my-foundry-rg\"\nfoundry_resource = \"my-foundry-resource\"\n\nclient = CognitiveServicesManagementClient(DefaultAzureCredential(), subscription_id)\naccount = client.accounts.get(resource_group, foundry_resource)\nprint(\"Resource:\", account.name, account.kind, account.properties.allow_project_management)\nfor project in client.projects.list(resource_group, foundry_resource):\n    print(\"Project:\", project.name)\n```\n\n*Exist -> enable project management -> name the subdomain -> create project -> verify, all keyless.*",
+      "examples": [
+        {
+          "product": "Foundry portal default project",
+          "what": "Selecting Create new project in ai.azure.com silently provisions the AIServices account, enables project management, and lands you on a project endpoint with a system-assigned identity — zero ARM authoring required.",
+          "source": "https://learn.microsoft.com/en-us/azure/foundry/how-to/create-projects"
+        }
+      ],
+      "drills": [
+        {
+          "q": "What Azure resource type and kind is a modern Foundry resource?",
+          "a": "A Microsoft.CognitiveServices/accounts resource of kind AIServices, with allowProjectManagement set to true."
+        },
+        {
+          "q": "Which CLI flag turns an AIServices account into a Foundry resource that can host projects?",
+          "a": "--allow-project-management on az cognitiveservices account create."
+        },
+        {
+          "q": "Why must you set a custom subdomain on the resource?",
+          "a": "The globally-unique subdomain produces the services.ai.azure.com host used by the token and project endpoint."
+        },
+        {
+          "q": "How does the modern model differ from a hub-based project?",
+          "a": "The modern project is a child of an AIServices account; a hub-based project is backed by an Azure Machine Learning workspace (older pattern, avoid for new work)."
+        }
+      ],
+      "teachItBack": "To stand up Foundry the modern way, create one AIServices account with allowProjectManagement enabled and a unique custom subdomain, then create a project as a child resource. The portal does both in a click; CLI and Bicep make it scriptable and repeatable. Each layer gets a system-assigned managed identity, so you build keyless from the start — and you skip the older hub/workspace model entirely.",
+      "glossary": [
+        {
+          "term": "Foundry resource",
+          "definition": "A Microsoft.CognitiveServices/accounts resource of kind AIServices with allowProjectManagement enabled; the top-level Foundry boundary."
+        },
+        {
+          "term": "allowProjectManagement",
+          "definition": "The account property (CLI flag --allow-project-management) that lets a Foundry resource host child projects."
+        },
+        {
+          "term": "Default project",
+          "definition": "The first project on a resource; carries extra capabilities such as OpenAI Batch and fine-tuning, marked is_default in code."
+        },
+        {
+          "term": "Custom subdomain",
+          "definition": "A globally-unique name on the account that forms the services.ai.azure.com endpoint host."
+        }
+      ],
+      "sources": [
+        {
+          "title": "Microsoft Learn: Create a project (portal, Python, Azure CLI)",
+          "url": "https://learn.microsoft.com/en-us/azure/foundry/how-to/create-projects",
+          "verified": true
+        },
+        {
+          "title": "Microsoft Learn: Deploy a Foundry resource by using Bicep",
+          "url": "https://learn.microsoft.com/en-us/azure/foundry/how-to/create-resource-template",
+          "verified": true
+        },
+        {
+          "title": "GitHub: microsoft-foundry/foundry-samples — infrastructure-setup-bicep",
+          "url": "https://github.com/microsoft-foundry/foundry-samples/tree/main/infrastructure/infrastructure-setup-bicep",
+          "verified": true
+        },
+        {
+          "title": "YouTube — Microsoft Mechanics: Introducing Azure AI Foundry",
+          "url": "https://www.youtube.com/watch?v=GD7MnIwAxYM",
+          "verified": true
+        }
+      ],
+      "quiz": [
+        {
+          "q": "Which command sequence correctly creates a modern Foundry resource and project with the CLI?",
+          "choices": [
+            "az cognitiveservices account create --kind AIServices --allow-project-management, then az cognitiveservices account project create",
+            "az ml workspace create, then az ml hub create",
+            "az keyvault create, then az storage account create",
+            "az webapp create, then az functionapp create"
+          ],
+          "answer": 0,
+          "explanation": "The modern resource is an AIServices account with project management enabled; projects are created as child resources via az cognitiveservices account project create. The hub/workspace path is the older model."
+        }
+      ],
+      "_file": "content/lessons/foundry-core/fdy-create-foundry-resource-and-project.json"
+    },
+    {
+      "id": "fdy-deploy-a-model-in-foundry",
+      "title": "Deploy a Model in Foundry and Call It Keyless",
+      "lane": "foundry-core",
+      "type": "concept",
+      "order": 216,
+      "summary": "A hands-on recipe for deploying a model from the Foundry catalog to your project (Portal + Azure CLI + Bicep), then calling it with no API key using AIProjectClient and DefaultAzureCredential. The deployment name is what you pass as the model parameter at inference time.",
+      "tags": [
+        "models",
+        "deployment",
+        "how-to",
+        "inference",
+        "managed-identity"
+      ],
+      "analogy": "The catalog is a hangar full of aircraft; deploying a model rolls one onto your runway and paints your tail number on it. The deployment name is that tail number — every inference call routes by it — and your managed-identity badge gets you into the cockpit without a key.",
+      "diagram": "flowchart TD\n  Catalog[Model catalog Discover Models] --> Pick[Pick a model card]\n  Pick --> Sub{Partner or community model}\n  Sub -->|yes| Market[Subscribe via Azure Marketplace]\n  Sub -->|no, sold by Azure| Deploy\n  Market --> Deploy[Deploy default or custom settings]\n  Deploy --> Name[Deployment name becomes the model param]\n  Name --> Endpoint[Project endpoint]\n  Endpoint --> Client[AIProjectClient plus DefaultAzureCredential]\n  Client --> Call[openai.responses.create model equals deployment name]",
+      "body": "## First principles\n\nA model in the catalog is not yet callable — it is a listing. **Deploying** creates a named, billable endpoint of that model inside your project. The single most important fact: the **deployment name** you choose is what you pass as the `model` argument when you call the API. Models **sold by Azure** (for example Azure OpenAI's `gpt-4o-mini`) deploy directly; models **from partners and community** (for example `Llama-3.2-90B-Vision-Instruct`) first require an Azure Marketplace subscription. To create deployments you need **Cognitive Services Contributor** (or equivalent) on the Foundry resource.\n\n## Definition\n\nA **deployment** binds a catalog model + version + deployment type (such as Global Standard) to a name in your project, with quota allocated in Tokens-per-Minute (TPM). You can deploy in the portal, with the Azure CLI, or with Bicep, and then run inference keyless through the project endpoint.\n\n## Way 1 — Foundry portal\n\n- Sign in to https://ai.azure.com (New Foundry on). Select **Discover -> Models**.\n- Open a model card (for example `gpt-4o-mini`). Select **Deploy -> Custom settings** (or **Default settings**).\n- For a partner/community model, accept the Marketplace terms (**Agree and Proceed**). Models sold by Azure skip this.\n- Keep or edit the **deployment name** — remember it; it is your `model` parameter. Select **Deploy**.\n- When status shows **Succeeded** you land in the **Playground**; the **Code** tab shows how to call it.\n\n## Way 2 — Azure CLI\n\n```bash\n# Deploy an Azure OpenAI model (sold by Azure) into the Foundry resource.\naz cognitiveservices account deployment create \\\n  --name my-foundry-resource \\\n  --resource-group my-foundry-rg \\\n  --deployment-name gpt-4o-mini \\\n  --model-name gpt-4o-mini \\\n  --model-version \"2024-07-18\" \\\n  --model-format OpenAI \\\n  --sku-name GlobalStandard \\\n  --sku-capacity 50   # capacity is Tokens-per-Minute quota in thousands\n\n# Confirm it exists.\naz cognitiveservices account deployment show \\\n  --name my-foundry-resource -g my-foundry-rg \\\n  --deployment-name gpt-4o-mini \\\n  --query \"{name:name, model:properties.model.name, state:properties.provisioningState}\"\n```\n\n## Way 3 — Bicep\n\n```bicep\nparam aiFoundryName string\n\nresource foundry 'Microsoft.CognitiveServices/accounts@2025-04-01-preview' existing = {\n  name: aiFoundryName\n}\n\nresource deployment 'Microsoft.CognitiveServices/accounts/deployments@2025-04-01-preview' = {\n  parent: foundry\n  name: 'gpt-4o-mini'           // this name is the inference `model` parameter\n  sku: { name: 'GlobalStandard', capacity: 50 }\n  properties: {\n    model: {\n      format: 'OpenAI'\n      name: 'gpt-4o-mini'\n      version: '2024-07-18'\n    }\n  }\n}\n```\n\n## Call it keyless\n\nThe modern SDK is **azure-ai-projects 2.x** (the Foundry projects \"new\" API). `AIProjectClient` plus `DefaultAzureCredential` means no keys: locally it uses your `az login`, in production it uses the workload's managed identity.\n\n```python\n# pip install \"azure-ai-projects>=2.0.0\" azure-identity\nimport os\nfrom azure.identity import DefaultAzureCredential\nfrom azure.ai.projects import AIProjectClient\n\n# https://<resource>.services.ai.azure.com/api/projects/<project>\nendpoint = os.environ[\"FOUNDRY_PROJECT_ENDPOINT\"]\n\nproject = AIProjectClient(endpoint=endpoint, credential=DefaultAzureCredential())\nopenai = project.get_openai_client()\n\nresponse = openai.responses.create(\n    model=\"gpt-4o-mini\",   # the DEPLOYMENT name, not the catalog id\n    input=\"What is the size of France in square miles?\",\n)\nprint(response.output_text)\n```\n\nIf inference returns 401/403, the deployment is fine but the **caller's identity** lacks a data-plane role on the project (assign **Foundry User**) — authentication and authorization are separate problems.\n\n*Catalog -> deploy (name it) -> endpoint -> AIProjectClient with DefaultAzureCredential -> call by deployment name.*",
+      "examples": [
+        {
+          "product": "Azure OpenAI gpt-4o-mini, sold by Azure",
+          "what": "Deploy gpt-4o-mini with Default settings (no Marketplace step), then call openai.responses.create(model='gpt-4o-mini', ...) through the project endpoint with DefaultAzureCredential — no key in code.",
+          "source": "https://learn.microsoft.com/en-us/azure/foundry/quickstarts/get-started-code"
+        }
+      ],
+      "drills": [
+        {
+          "q": "What value do you pass as the model parameter at inference time?",
+          "a": "The deployment name you chose, not the catalog model id."
+        },
+        {
+          "q": "Which models require an Azure Marketplace subscription before deploying?",
+          "a": "Models from partners and community (for example Llama); models sold by Azure such as Azure OpenAI models do not."
+        },
+        {
+          "q": "Which RBAC role lets you create model deployments on the resource?",
+          "a": "Cognitive Services Contributor (or an equivalent role) on the Foundry resource."
+        },
+        {
+          "q": "Inference returns 403 but the deployment succeeded. What is missing?",
+          "a": "The caller's identity needs a data-plane role on the project, typically Foundry User — it is an authorization gap, not a deployment problem."
+        }
+      ],
+      "teachItBack": "Deploying a model turns a catalog listing into a named, billable endpoint in your project, and that deployment name is the model parameter you call with. Models sold by Azure deploy directly; partner and community models need a Marketplace subscription first. You can deploy via portal, CLI, or Bicep, then call it keyless with AIProjectClient and DefaultAzureCredential. A 403 at call time means the caller needs a Foundry User data role, not a redeploy.",
+      "glossary": [
+        {
+          "term": "Deployment",
+          "definition": "A named binding of a catalog model, version, and deployment type to your project, with TPM quota; the name is the inference model parameter."
+        },
+        {
+          "term": "Models sold by Azure vs partners and community",
+          "definition": "Azure-sold models (e.g., Azure OpenAI) deploy directly; partner/community models require an Azure Marketplace subscription first."
+        },
+        {
+          "term": "get_openai_client",
+          "definition": "AIProjectClient method returning an OpenAI-compatible client wired to the project endpoint and credential."
+        },
+        {
+          "term": "Tokens-per-Minute (TPM)",
+          "definition": "The quota unit allocated to a deployment's capacity, per region and model."
+        }
+      ],
+      "sources": [
+        {
+          "title": "Microsoft Learn: Deploy Microsoft Foundry Models in the portal",
+          "url": "https://learn.microsoft.com/en-us/azure/foundry/foundry-models/how-to/deploy-foundry-models",
+          "verified": true
+        },
+        {
+          "title": "Microsoft Learn: Foundry quickstart — get started with code (Projects 2.x)",
+          "url": "https://learn.microsoft.com/en-us/azure/foundry/quickstarts/get-started-code",
+          "verified": true
+        },
+        {
+          "title": "Microsoft Learn: az cognitiveservices account deployment",
+          "url": "https://learn.microsoft.com/en-us/cli/azure/cognitiveservices/account/deployment",
+          "verified": true
+        },
+        {
+          "title": "Microsoft Learn: Azure AI Projects client library for Python",
+          "url": "https://learn.microsoft.com/en-us/python/api/overview/azure/ai-projects-readme",
+          "verified": true
+        }
+      ],
+      "quiz": [
+        {
+          "q": "After deploying gpt-4o-mini as a deployment named 'chat-prod', what do you pass to openai.responses.create as the model?",
+          "choices": [
+            "'chat-prod' — the deployment name",
+            "'gpt-4o-mini' — always the catalog id",
+            "The full model resource ID",
+            "The project endpoint URL"
+          ],
+          "answer": 0,
+          "explanation": "Inference routes by deployment name, so the model parameter must be 'chat-prod', the name you gave the deployment."
+        }
+      ],
+      "_file": "content/lessons/foundry-core/fdy-deploy-a-model-in-foundry.json"
+    },
+    {
+      "id": "fdy-foundry-connections-and-rbac",
+      "title": "Wire Connections and Assign RBAC to the Managed Identity",
+      "lane": "foundry-core",
+      "type": "concept",
+      "order": 217,
+      "summary": "A hands-on recipe for connecting a Foundry project to dependent Azure resources (AI Search, Storage, Cosmos DB, Azure OpenAI) and granting the workload's managed identity the right Foundry roles — keyless end to end. The minimum to get going is Foundry User on the resource for both your user and the project's managed identity.",
+      "tags": [
+        "connections",
+        "rbac",
+        "managed-identity",
+        "how-to",
+        "keyless"
+      ],
+      "analogy": "A connection is an address-book entry telling the project where a resource lives; an RBAC role assignment is the guard roster saying whose badge opens that door. Without the role, the address is just a locked building — Entra-authenticated connections need the managed identity on the guest list.",
+      "diagram": "flowchart TD\n  Project[Foundry project] --> Conn[Connection to dependent resource]\n  Conn --> Search[Azure AI Search]\n  Conn --> Storage[Azure Storage]\n  Conn --> Cosmos[Cosmos DB preview, code only]\n  MI[Project managed identity] --> Role[Role assignment]\n  Role --> FoundryUser[Foundry User on Foundry resource]\n  Role --> DataRole[Data role on target e.g. Search Index Data Contributor]\n  FoundryUser --> Keyless[Keyless access works]\n  DataRole --> Keyless",
+      "body": "## First principles\n\nReal projects rarely stand alone — agents need a search index, datasets need storage, threads need Cosmos DB. A **connection** records where that dependent resource is and how the project authenticates to it. Prefer **Microsoft Entra ID** connections over API keys: with Entra, access is governed by **RBAC role assignments** on the workload's **managed identity**, so there are no secrets to leak or rotate. The recurring failure mode is a connection that exists but a missing role — the address is known, but the door is shut.\n\n## Definition\n\nA Foundry **connection** is a project (or resource-level) object naming a target service and an authentication method. Common types include **Azure AI Search**, **Azure Storage**, **Azure Cosmos DB** (preview, code-only), **Azure OpenAI**, **Application Insights**, **Azure Key Vault**, and another **Foundry** resource. The **Standard Agent** setup specifically requires AI Search + Storage + Cosmos DB. Some connection types (Cosmos DB, Serverless Model, Databricks, SharePoint) can only be created through code/Bicep, not the portal.\n\n## Way 1 — Foundry portal (create a connection)\n\n- Sign in to https://ai.azure.com (New Foundry on). Select **Operate -> Admin**.\n- Select your project, then **Add connection** (upper right).\n- Pick the service (for example **Azure AI Search**), browse to the resource, and choose the **Authentication** method. Prefer **Microsoft Entra ID** over key-based. Select **Add connection** and confirm it appears in connected resources.\n\n## Way 2 — Bicep (connections as code)\n\nUse Microsoft's connection templates and customize them:\n\n```bash\ngit clone https://github.com/microsoft-foundry/foundry-samples\ncd foundry-samples/infrastructure/infrastructure-setup-bicep/01-connections\naz deployment group create -g my-foundry-rg --template-file main.bicep\n```\n\nA connection is a child of the account/project and points at a target's resource ID, with Entra-based auth so no key is stored:\n\n```bicep\nparam aiFoundryName string\n\nresource foundry 'Microsoft.CognitiveServices/accounts@2025-04-01-preview' existing = {\n  name: aiFoundryName\n}\n\nresource searchConn 'Microsoft.CognitiveServices/accounts/connections@2025-04-01-preview' = {\n  parent: foundry\n  name: 'my-search'\n  properties: {\n    category: 'CognitiveSearch'\n    target: 'https://<search-name>.search.windows.net'\n    authType: 'AAD'           // Entra ID — no key in the connection\n    isSharedToAll: true\n    metadata: { ApiType: 'Azure' }\n  }\n}\n```\n\n## Way 3 — Assign RBAC to the managed identity (the part people forget)\n\n**Minimum to get going:** assign **Foundry User** on the Foundry resource to *both* your user principal *and* the project's managed identity. If the project creator is an Azure **Owner**, these two are added automatically.\n\n```bash\n# Foundry role on the Foundry resource for the project's managed identity.\nFOUNDRY_ID=\"/subscriptions/<sub>/resourceGroups/my-foundry-rg/providers/Microsoft.CognitiveServices/accounts/my-foundry-resource\"\nMI_PRINCIPAL_ID=$(az cognitiveservices account project show \\\n  --name my-foundry-resource -g my-foundry-rg --project-name my-foundry-project \\\n  --query identity.principalId -o tsv)\n\naz role assignment create \\\n  --assignee-object-id \"$MI_PRINCIPAL_ID\" \\\n  --assignee-principal-type ServicePrincipal \\\n  --role \"Foundry User\" \\\n  --scope \"$FOUNDRY_ID\"\n\n# Data-plane role on the TARGET so the identity can actually use the connection.\nSEARCH_ID=\"/subscriptions/<sub>/resourceGroups/my-foundry-rg/providers/Microsoft.Search/searchServices/<search-name>\"\naz role assignment create \\\n  --assignee-object-id \"$MI_PRINCIPAL_ID\" \\\n  --assignee-principal-type ServicePrincipal \\\n  --role \"Search Index Data Contributor\" \\\n  --scope \"$SEARCH_ID\"\n```\n\nThe Foundry built-in roles are **Foundry User** (least-privilege data role), **Foundry Project Manager**, **Foundry Account Owner**, and **Foundry Owner** — recently renamed from the Azure AI * names (role IDs unchanged). Do **not** use roles starting with **Cognitive Services**, nor **Azure AI Developer** (that one targets ML workspaces and hub-based projects), for modern Foundry project access.\n\n## Verify keyless end to end\n\n```python\n# pip install \"azure-ai-projects>=2.0.0\" azure-identity\nimport os\nfrom azure.identity import DefaultAzureCredential\nfrom azure.ai.projects import AIProjectClient\n\nproject = AIProjectClient(\n    endpoint=os.environ[\"FOUNDRY_PROJECT_ENDPOINT\"],\n    credential=DefaultAzureCredential(),\n)\nfor c in project.connections.list():\n    print(c.name, c.type, c.target)   # discovered without a single stored key\n```\n\n*Connect the resource -> prefer Entra auth -> grant Foundry User plus a target data role to the managed identity -> verify, all keyless.*",
+      "examples": [
+        {
+          "product": "Standard Agent setup",
+          "what": "Connect the project to Azure AI Search, Azure Storage, and Cosmos DB, then grant the project managed identity Foundry User plus the target data roles so the agent reads indexes and writes threads with no keys.",
+          "source": "https://learn.microsoft.com/en-us/azure/foundry/how-to/connections-add"
+        }
+      ],
+      "drills": [
+        {
+          "q": "What is the minimum RBAC needed for a new user and a project to use Foundry?",
+          "a": "Assign Foundry User on the Foundry resource to both the user principal and the project's managed identity (auto-assigned if the creator is an Owner)."
+        },
+        {
+          "q": "Why prefer an Entra ID connection over an API key connection?",
+          "a": "Entra connections are governed by RBAC on the managed identity, so there are no secrets to store, leak, or rotate."
+        },
+        {
+          "q": "Which Foundry roles should you avoid for modern project access, and why?",
+          "a": "Roles starting with Cognitive Services and the Azure AI Developer role — they target AI Services directly or ML workspaces/hubs, not modern Foundry projects."
+        },
+        {
+          "q": "A connection exists but the agent gets 403 using it. What is the likely fix?",
+          "a": "Grant the managed identity the right data-plane role on the target resource (for example Search Index Data Contributor); the connection alone does not authorize access."
+        }
+      ],
+      "teachItBack": "A Foundry connection tells the project where a dependent resource lives and how to authenticate; favor Entra ID so RBAC, not keys, controls access. The minimum is Foundry User on the resource for both your user and the project's managed identity, then a data-plane role on each target the identity must use. Skip Cognitive Services * and Azure AI Developer roles for modern projects. Verify by listing connections with AIProjectClient and DefaultAzureCredential — no secrets anywhere.",
+      "glossary": [
+        {
+          "term": "Connection",
+          "definition": "A Foundry object naming a dependent resource target and its authentication method, scoped to a project or resource."
+        },
+        {
+          "term": "Foundry User",
+          "definition": "Least-privilege Foundry built-in role granting project data actions; the recommended minimum for users and project managed identities."
+        },
+        {
+          "term": "Project managed identity",
+          "definition": "The system-assigned identity on a Foundry project used to access connected resources without keys."
+        },
+        {
+          "term": "Standard Agent requirement",
+          "definition": "The agent setup that requires connections to Azure AI Search, Azure Storage, and Cosmos DB."
+        }
+      ],
+      "sources": [
+        {
+          "title": "Microsoft Learn: Add a new connection to your project (types, portal, Bicep)",
+          "url": "https://learn.microsoft.com/en-us/azure/foundry/how-to/connections-add",
+          "verified": true
+        },
+        {
+          "title": "Microsoft Learn: Role-based access control for Microsoft Foundry",
+          "url": "https://learn.microsoft.com/en-us/azure/foundry/concepts/rbac-foundry",
+          "verified": true
+        },
+        {
+          "title": "Microsoft Learn: AI + Machine Learning built-in roles",
+          "url": "https://learn.microsoft.com/en-us/azure/role-based-access-control/built-in-roles/ai-machine-learning",
+          "verified": true
+        },
+        {
+          "title": "GitHub: foundry-samples — infrastructure-setup-bicep/01-connections",
+          "url": "https://github.com/microsoft-foundry/foundry-samples/tree/main/infrastructure/infrastructure-setup-bicep",
+          "verified": true
+        }
+      ],
+      "quiz": [
+        {
+          "q": "What is the recommended minimum role assignment for a project's managed identity to use Foundry?",
+          "choices": [
+            "Foundry User on the Foundry resource",
+            "Owner on the subscription",
+            "A Cognitive Services key stored in the connection",
+            "Azure AI Developer on the project"
+          ],
+          "answer": 0,
+          "explanation": "Foundry User is the least-privilege data role; assign it on the Foundry resource to the project's managed identity. Cognitive Services keys and the Azure AI Developer role are explicitly discouraged for modern Foundry projects."
+        }
+      ],
+      "_file": "content/lessons/foundry-core/fdy-foundry-connections-and-rbac.json"
+    },
+    {
       "id": "fdy-authn-vs-authz",
       "title": "Authentication vs Authorization",
       "lane": "foundry-auth",
@@ -9071,6 +9365,447 @@
         }
       ],
       "_file": "content/lessons/foundry-auth/fdy-why-not-secrets-or-sps.json"
+    },
+    {
+      "id": "fdy-create-managed-identity-step-by-step",
+      "title": "Create a Managed Identity — Portal, CLI & Bicep (step by step)",
+      "lane": "foundry-auth",
+      "type": "concept",
+      "order": 116,
+      "summary": "A hands-on recipe for creating a managed identity three ways — Azure portal, Azure CLI, and Bicep — then granting it least-privilege RBAC and verifying it can mint a token. System-assigned is a checkbox on a resource; user-assigned is a standalone resource you attach.",
+      "tags": [
+        "managed-identity",
+        "how-to",
+        "azure-cli",
+        "bicep",
+        "rbac"
+      ],
+      "analogy": "Creating a managed identity is like issuing an employee badge. System-assigned prints the badge onto one specific machine; user-assigned makes a reusable badge you can clip onto many machines. Either way, the badge is useless until a door (RBAC role) is told to accept it.",
+      "diagram": "flowchart TD\n  Start[Need keyless auth] --> Choose{System or user assigned}\n  Choose -->|one resource, simple| SA[Enable system-assigned on resource]\n  Choose -->|shared or pre-provisioned| UA[az identity create]\n  UA --> Attach[Attach identity to compute]\n  SA --> Grant\n  Attach --> Grant[az role assignment create - least privilege scope]\n  Grant --> Verify[Acquire token via IMDS or DefaultAzureCredential]\n  Verify --> Done[Keyless access working]",
+      "body": "## First principles\n\nA managed identity is just a service principal in Microsoft Entra ID whose secret is managed by the Azure platform, not by you. \"Creating\" one means: (1) bring the identity into existence, (2) make sure your compute is associated with it, and (3) authorize it with RBAC. Skipping step 3 is the #1 reason a brand-new identity returns 403.\n\n## Definition\n\nThere are two kinds. A **system-assigned** identity is toggled on directly on a single resource (VM, App Service, Container App, Function, AKS pod, etc.) and shares that resource's lifecycle. A **user-assigned** identity is its own Azure resource (`Microsoft.ManagedIdentity/userAssignedIdentities`) that you create once and attach to one or many workloads.\n\n## Way 1 — Azure portal (fastest to learn)\n\n- **System-assigned:** open the resource (e.g. an App Service) -> **Settings -> Identity -> System assigned -> Status: On -> Save**. Azure creates the Entra object for you.\n- **User-assigned:** search **Managed Identities -> Create**, pick subscription/resource group/region/name, **Review + create**. Then on your compute resource go to **Identity -> User assigned -> Add** and select it.\n- Grant access from the target resource: open (say) the Key Vault -> **Access control (IAM) -> Add role assignment -> Managed identity -> select your identity**.\n\n## Way 2 — Azure CLI (scriptable)\n\n```bash\n# --- User-assigned: create the standalone identity ---\naz identity create \\\n  --name <uami-name> \\\n  --resource-group <rg> \\\n  --location <region>\n\n# Capture the IDs you will need next.\nPRINCIPAL_ID=$(az identity show -n <uami-name> -g <rg> --query principalId -o tsv)\nCLIENT_ID=$(az identity show -n <uami-name> -g <rg> --query clientId -o tsv)\nUAMI_ID=$(az identity show -n <uami-name> -g <rg> --query id -o tsv)\n\n# --- Attach it to compute (App Service example) ---\naz webapp identity assign \\\n  --name <app-name> -g <rg> \\\n  --identities \"$UAMI_ID\"\n\n# --- OR enable a system-assigned identity on the same app ---\naz webapp identity assign --name <app-name> -g <rg>\n\n# --- Grant least-privilege RBAC (use the PRINCIPAL/object id, scope it tightly) ---\naz role assignment create \\\n  --assignee-object-id \"$PRINCIPAL_ID\" \\\n  --assignee-principal-type ServicePrincipal \\\n  --role \"Key Vault Secrets User\" \\\n  --scope \"/subscriptions/<sub>/resourceGroups/<rg>/providers/Microsoft.KeyVault/vaults/<kv-name>\"\n```\n\nUse `--assignee-object-id` + `--assignee-principal-type ServicePrincipal` (not `--assignee`) for managed identities — it skips a Graph lookup and avoids replication-timing failures.\n\n## Way 3 — Bicep (infrastructure as code, the production default)\n\n```bicep\nparam location string = resourceGroup().location\n\nresource uami 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' = {\n  name: 'uami-app'\n  location: location\n}\n\n// Reference an existing Key Vault and grant the identity a built-in role.\nresource kv 'Microsoft.KeyVault/vaults@2023-07-01' existing = { name: '<kv-name>' }\n\nvar kvSecretsUser = '4633458b-17de-408a-b874-0445c86b69e6' // Key Vault Secrets User\n\nresource ra 'Microsoft.Authorization/roleAssignments@2022-04-01' = {\n  name: guid(uami.id, kv.id, kvSecretsUser)\n  scope: kv\n  properties: {\n    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', kvSecretsUser)\n    principalId: uami.properties.principalId\n    principalType: 'ServicePrincipal' // avoids the 'principal not found' race on fresh identities\n  }\n}\n```\n\n## Verify it actually works\n\n```bash\n# From inside the Azure compute host, ask IMDS for a token (no secrets involved):\ncurl -s -H \"Metadata: true\" \\\n  \"http://169.254.169.254/metadata/identity/oauth2/token?api-version=2018-02-01&resource=https://vault.azure.net\" \\\n  | python3 -c \"import sys,json;print('token length', len(json.load(sys.stdin)['access_token']))\"\n```\n\nIn application code you almost never call IMDS directly — you let `DefaultAzureCredential` (or `ManagedIdentityCredential`) do it. A successful token but a 403 on the data call means the identity exists and is attached, but the RBAC role/scope is missing or hasn't propagated yet (give it a minute).\n\n*Three creation paths, one mental model: exist -> attach -> authorize -> verify.*",
+      "examples": [
+        {
+          "product": "Azure App Service + Key Vault",
+          "what": "Enable a managed identity on the web app, grant it 'Key Vault Secrets User' on the vault, and read secrets with DefaultAzureCredential — zero connection strings in config.",
+          "source": "https://learn.microsoft.com/en-us/entra/identity/managed-identities-azure-resources/how-to-configure-managed-identities"
+        }
+      ],
+      "drills": [
+        {
+          "q": "What three steps must always happen before a new managed identity can call a resource?",
+          "a": "The identity must exist, be associated with the compute, and be granted an RBAC role at the right scope."
+        },
+        {
+          "q": "Which CLI flags should you use to assign a role to a managed identity, and why?",
+          "a": "--assignee-object-id with --assignee-principal-type ServicePrincipal, to skip the Graph lookup and avoid replication-timing errors."
+        },
+        {
+          "q": "You get a valid token but a 403 on the data call. What is wrong?",
+          "a": "Authentication works; authorization does not — the role assignment or scope is missing, wrong, or not yet propagated."
+        },
+        {
+          "q": "Why set principalType: 'ServicePrincipal' in a Bicep role assignment for a fresh identity?",
+          "a": "It prevents the 'principal does not exist' race when the identity was just created in the same deployment."
+        }
+      ],
+      "teachItBack": "To create a managed identity, decide system-assigned (a toggle on one resource) or user-assigned (a standalone resource you attach). Make the identity exist, associate it with your compute, then grant it a least-privilege RBAC role at a tight scope. Finally verify by acquiring a token — if the token works but the call 403s, it is an RBAC problem, not an identity problem.",
+      "glossary": [
+        {
+          "term": "userAssignedIdentities",
+          "definition": "The Azure resource type for a standalone user-assigned managed identity."
+        },
+        {
+          "term": "Principal ID (object ID)",
+          "definition": "The Entra object ID of the identity used as the assignee in role assignments."
+        },
+        {
+          "term": "Role assignment",
+          "definition": "A binding of (principal, role definition, scope) that grants RBAC access."
+        },
+        {
+          "term": "IMDS token endpoint",
+          "definition": "The 169.254.169.254 metadata endpoint a host calls to obtain a managed-identity token."
+        }
+      ],
+      "sources": [
+        {
+          "title": "Dev docs — Configure managed identities (system & user-assigned, step by step)",
+          "url": "https://learn.microsoft.com/en-us/entra/identity/managed-identities-azure-resources/how-to-configure-managed-identities",
+          "verified": true
+        },
+        {
+          "title": "Dev docs — Managed identities for Azure resources (overview)",
+          "url": "https://learn.microsoft.com/en-us/entra/identity/managed-identities-azure-resources/overview",
+          "verified": true
+        },
+        {
+          "title": "YouTube — John Savill: Microsoft Azure Managed Identity Deep Dive",
+          "url": "https://www.youtube.com/watch?v=rC1TV0_sIrM",
+          "verified": true
+        },
+        {
+          "title": "YouTube — dotnet (official): Using Azure Managed identities",
+          "url": "https://www.youtube.com/watch?v=vYUKC0mZFqI",
+          "verified": true
+        }
+      ],
+      "quiz": [
+        {
+          "q": "What is the most reliable way to grant a brand-new user-assigned identity access to a Key Vault in a single Bicep deployment?",
+          "choices": [
+            "Add a roleAssignment resource using the identity's principalId with principalType 'ServicePrincipal'",
+            "Put the Key Vault access key in an app setting",
+            "Assign Owner at the subscription scope",
+            "Wait 24 hours, then add the assignment by hand in the portal"
+          ],
+          "answer": 0,
+          "explanation": "A scoped built-in role assignment using the identity's principalId (with principalType ServicePrincipal to avoid the creation race) is least-privilege and deployable as code."
+        }
+      ],
+      "_file": "content/lessons/foundry-auth/fdy-create-managed-identity-step-by-step.json"
+    },
+    {
+      "id": "fdy-pme-account-managed-identity",
+      "title": "PME Accounts & Managed Identity (Microsoft corporate context)",
+      "lane": "foundry-auth",
+      "type": "concept",
+      "order": 117,
+      "summary": "PME (Production Microsoft Enterprise) is Microsoft's first-party Microsoft Entra environment for running and operating Microsoft's own production and engineering workloads — separate from any customer tenant. In PME, managed identity is effectively mandatory: secrets/keys are discouraged, access is least-privilege, and standing privilege is replaced by just-in-time elevation.",
+      "tags": [
+        "pme",
+        "microsoft-internal",
+        "compliance",
+        "managed-identity",
+        "governance"
+      ],
+      "analogy": "If a customer Azure tenant is your own house, a PME tenant is a high-security government building where Microsoft runs its own operations: same Azure underneath, but stricter doors, badge-only entry (managed identity), no spare keys under the mat (no secrets), and time-boxed visitor passes (just-in-time elevation) that are all recorded.",
+      "diagram": "flowchart TD\n  subgraph PME[Production Microsoft Enterprise tenant]\n    Sub[Engineering subscription] --> Compute[Workload: VM / app / pipeline / Foundry]\n    Compute --> MI[Managed identity - no secrets]\n    MI --> RBAC[Least-privilege RBAC]\n    Admin[Human admin] -.JIT elevation via PIM.-> RBAC\n    RBAC --> Target[ICM / Kusto / ADO / Foundry / Storage]\n    Audit[Audit + monitoring] --- MI\n    Audit --- Admin\n  end\n  PME -. separate from .- Customer[Customer tenants]",
+      "body": "## First principles: first-party vs customer tenants\n\nMicrosoft runs its own services and engineering on Azure too. To keep that separate from external customers — for security, compliance, and blast-radius isolation — Microsoft operates **first-party** Microsoft Entra tenants distinct from customer tenants. PME is the production-grade one.\n\n## What PME means\n\n**PME = Production Microsoft Enterprise**: a Microsoft-managed Entra (Azure AD) tenant and the subscriptions within it, used to build, operate, and run Microsoft's own production and internal-engineering workloads. It is *not* a customer tenant. Public details are intentionally sparse because it is internal Microsoft infrastructure; the mechanics, however, are ordinary Azure — Entra identities, subscriptions, RBAC — operated under stricter corporate policy and monitoring.\n\n## Why managed identity is effectively the rule in PME\n\nPME-class environments are governed by Microsoft's **Secure Future Initiative (SFI)**, whose identity pillar pushes the industry direction Microsoft holds itself to: **eliminate long-lived secrets, prefer phishing-resistant and managed credentials, and enforce least privilege.** Concretely, inside PME you should expect:\n\n- **No keys / connection strings / client secrets in code or config.** Workloads authenticate as a **managed identity**; the platform rotates the credential.\n- **Least-privilege RBAC**, scoped to the exact resource, not the subscription.\n- **No standing admin.** Human elevation is **just-in-time** through **Privileged Identity Management (PIM)** — you request a role, it is approved/time-boxed, and it expires.\n- **Everything is audited.** Identity sign-ins, role activations, and access are logged for review.\n\nThis is exactly the keyless model the rest of this lane teaches — PME just makes it non-negotiable.\n\n## What's different from a customer tenant (operationally)\n\nThe *APIs are the same* (`az identity create`, role assignments, `DefaultAzureCredential`). What changes is the surrounding policy: identity creation and role assignment may be gated by corporate controls and approvals; eligible (not active) role assignments via PIM are the norm; compliance scanners flag any secret usage or over-broad role; and onboarding a subscription/identity follows internal Microsoft processes rather than a public quickstart.\n\n## Practical pattern inside a PME subscription\n\n1. Create a **user-assigned** managed identity for your workload (decoupled lifecycle, can be pre-provisioned and pre-authorized).\n2. Grant it the **minimum** built-in role at the **resource** scope (e.g. `Key Vault Secrets User`, `Storage Blob Data Reader`, or the relevant Foundry role).\n3. Attach it to your compute (VM / App Service / Container App / AKS via workload identity / pipeline).\n4. In code, use `DefaultAzureCredential` locally and the managed identity in production — **never** a secret.\n5. For humans who must touch production, elevate **just-in-time** through PIM; don't hold standing privilege.\n\n## Guardrails and gotchas\n\n- Treat any instruction to \"just use a client secret/key to unblock\" as a red flag — it violates the model and will be flagged.\n- Don't request broad roles (Owner/Contributor) to save time; scope tightly and request elevation only when needed.\n- Exact PME onboarding steps, internal portals, and `aka.ms` links live in **internal Microsoft documentation** — follow those for your team rather than guessing; the public mechanics here are the conceptual backbone.\n\n*PME is normal Azure managed identity, run under Microsoft's strictest corporate posture: keyless, least-privilege, just-in-time, fully audited.*",
+      "drills": [
+        {
+          "q": "What does PME stand for and what is it?",
+          "a": "Production Microsoft Enterprise — a Microsoft first-party Entra tenant/subscriptions for running Microsoft's own production and engineering workloads, separate from customer tenants."
+        },
+        {
+          "q": "Why is managed identity effectively mandatory in PME?",
+          "a": "Corporate security posture (the Secure Future Initiative) eliminates long-lived secrets and enforces least privilege, so workloads authenticate as managed identities instead of using keys/secrets."
+        },
+        {
+          "q": "How do humans get production access in a PME-style environment?",
+          "a": "Just-in-time elevation via Privileged Identity Management (PIM) — time-boxed, approved, and audited — rather than standing admin rights."
+        },
+        {
+          "q": "Are the Azure APIs different in PME?",
+          "a": "No — same Entra identities, RBAC, and SDK credentials; what differs is stricter policy, approvals, monitoring, and internal onboarding."
+        }
+      ],
+      "teachItBack": "PME — Production Microsoft Enterprise — is Microsoft's own first-party Azure/Entra environment, kept apart from customer tenants. It runs on ordinary Azure identity primitives but under Microsoft's strictest posture: managed identity instead of secrets, least-privilege RBAC scoped to the resource, just-in-time human elevation via PIM, and full auditing — the keyless model made mandatory by the Secure Future Initiative.",
+      "glossary": [
+        {
+          "term": "PME (Production Microsoft Enterprise)",
+          "definition": "A Microsoft first-party Microsoft Entra tenant/subscriptions for operating Microsoft's own production and engineering workloads, separate from customer tenants."
+        },
+        {
+          "term": "First-party tenant",
+          "definition": "An Entra tenant operated by Microsoft for its own services, as opposed to an external customer tenant."
+        },
+        {
+          "term": "Secure Future Initiative (SFI)",
+          "definition": "Microsoft's company-wide security program; its identity pillar emphasizes eliminating secrets, phishing-resistant credentials, and least privilege."
+        },
+        {
+          "term": "Just-in-time (JIT) elevation",
+          "definition": "Granting privileged access only for a limited, approved time window instead of standing access."
+        },
+        {
+          "term": "PIM (Privileged Identity Management)",
+          "definition": "Microsoft Entra service for eligible, time-bound, approval-gated, audited privileged role activation."
+        }
+      ],
+      "sources": [
+        {
+          "title": "Dev docs — Managed identities for Azure resources (overview)",
+          "url": "https://learn.microsoft.com/en-us/entra/identity/managed-identities-azure-resources/overview",
+          "verified": true
+        },
+        {
+          "title": "Microsoft Secure Future Initiative (why keyless / least-privilege is the standard)",
+          "url": "https://www.microsoft.com/en-us/security/business/microsoft-secure-future-initiative",
+          "verified": true
+        },
+        {
+          "title": "Dev docs — Privileged Identity Management (PIM) for just-in-time elevation",
+          "url": "https://learn.microsoft.com/en-us/entra/id-governance/privileged-identity-management/pim-configure",
+          "verified": true
+        },
+        {
+          "title": "PME onboarding & specifics — internal Microsoft documentation (access required; not public)",
+          "url": "https://learn.microsoft.com/en-us/entra/identity/managed-identities-azure-resources/managed-identity-best-practice-recommendations",
+          "verified": false
+        }
+      ],
+      "quiz": [
+        {
+          "q": "A teammate suggests pasting a Key Vault access key into app config to ship faster in a PME subscription. What is the correct response?",
+          "choices": [
+            "Refuse — use the workload's managed identity with a scoped RBAC role; secrets violate the PME/SFI posture and will be flagged",
+            "Do it, then delete the key next sprint",
+            "Store the key in a code comment so it is easy to find",
+            "Assign Owner to the app so it never hits a 403"
+          ],
+          "answer": 0,
+          "explanation": "PME enforces keyless, least-privilege access. Use a managed identity with a tightly scoped role; long-lived secrets and broad roles are non-compliant."
+        }
+      ],
+      "_file": "content/lessons/foundry-auth/fdy-pme-account-managed-identity.json"
+    },
+    {
+      "id": "fdy-managed-identity-best-practices",
+      "title": "Managed Identity Best Practices (latest)",
+      "lane": "foundry-auth",
+      "type": "concept",
+      "order": 118,
+      "summary": "The current best-practice playbook: prefer managed identity over secrets/service principals, default to user-assigned for most production workloads, grant least-privilege RBAC scoped to the resource, write DefaultAzureCredential code that runs dev-to-prod, use workload identity federation for anything outside Azure, and manage assignments as code with monitoring.",
+      "tags": [
+        "managed-identity",
+        "best-practices",
+        "least-privilege",
+        "workload-identity-federation",
+        "security"
+      ],
+      "analogy": "Good identity hygiene is like a well-run building: badge access not shared keys (managed identity), each badge opens only the rooms it needs (least privilege), one badge per role (per-workload identity), and a logged front desk (monitoring). The newest wing even lets trusted outside contractors in with their own employer's badge (federation) — still no copied keys.",
+      "diagram": "flowchart TD\n  A[Need to authenticate a workload] --> B{Runs in Azure?}\n  B -->|Yes| C[Managed identity]\n  B -->|No - GitHub Actions / other cloud / on-prem| D[Workload identity federation]\n  C --> E{Shared, pre-provisioned, or stable across redeploys?}\n  E -->|Yes| F[User-assigned]\n  E -->|No - single simple resource| G[System-assigned]\n  F --> H[Least-privilege RBAC at resource scope]\n  G --> H\n  D --> H\n  H --> I[DefaultAzureCredential in code]\n  I --> J[Monitor sign-ins + review assignments as code]",
+      "body": "## First principles\n\nEvery credential you create is a liability someone must rotate, store, and could leak. The best practice is therefore to **create as few secrets as possible — ideally zero** — and to make each identity able to do as little as possible. Managed identity plus least-privilege RBAC achieves both.\n\n## 1. Prefer managed identity over secrets and service principals\n\nFor anything running **in Azure**, use a managed identity. It removes secret storage, rotation, and leak risk because the platform manages the credential. This is the direction of Microsoft's **Secure Future Initiative**, and the community consensus (Reddit/Stack Overflow) is the same: managed identity by default, service principals only where managed identity is not supported (and then with strict secret governance).\n\n## 2. Default to user-assigned for most production scenarios\n\nMicrosoft's own best-practice guidance now states user-assigned managed identities are **more efficient in a broader range of scenarios**. Reasons:\n\n- **Decoupled lifecycle** — the identity (and its role assignments) can be created *before* the compute, so deployments don't fail on a missing principal.\n- **Separation of duties** — identity/RBAC admins pre-authorize; app teams just attach the identity.\n- **Avoids rate limits** — mass-creating system-assigned identities (e.g. ephemeral VMs) can hit Entra object-creation throttling (HTTP 429). One shared user-assigned identity sidesteps that.\n- Use **system-assigned** when one resource needs a unique identity that should die with it.\n\n## 3. Least privilege: scope tight, use built-in roles\n\n- Assign at the **narrowest scope** that works (resource > resource group > subscription).\n- Pick the **most specific built-in role** (e.g. `Storage Blob Data Reader`, `Key Vault Secrets User`), not `Contributor`/`Owner`.\n- Use **data-plane** roles for data access; control-plane roles don't grant data access and vice-versa.\n\n## 4. One identity per workload / trust boundary\n\nDon't share a single identity across unrelated apps — a compromise of one then exposes all. Give each workload (or trust boundary) its own identity so blast radius and auditing stay clean.\n\n## 5. Write DefaultAzureCredential code that runs dev-to-prod\n\n`DefaultAzureCredential` chains credentials so the same code uses your dev sign-in locally and the managed identity in production. In production, **disambiguate and tighten**:\n\n```python\nimport os\nfrom azure.identity import DefaultAzureCredential\n\n# In prod, point at the specific user-assigned identity and trim the chain\n# so a misconfig fails fast instead of silently falling back.\ncredential = DefaultAzureCredential(\n    managed_identity_client_id=os.environ.get(\"AZURE_CLIENT_ID\"),\n    exclude_shared_token_cache_credential=True,\n    exclude_visual_studio_code_credential=True,\n)\n```\n\nFor a single known host you can use `ManagedIdentityCredential(client_id=...)` directly. Either way: **no secrets in the chain.**\n\n## 6. Use workload identity federation for anything outside Azure\n\nFor GitHub Actions, Azure DevOps, AKS pods, or other clouds, use **workload identity federation**: a trust between the external IdP and a user-assigned managed identity (or app registration) so the external token is exchanged for an Entra token — **no client secret at all**. At scale, use **flexible federated identity credentials** (claims-matching expressions) instead of one credential per branch.\n\n## 7. Manage assignments as code and monitor\n\n- Define identities and role assignments in **Bicep/Terraform** so access is reviewable and reproducible (set `principalType: 'ServicePrincipal'` to avoid creation races).\n- **Monitor** sign-ins and review role assignments regularly; remove unused identities and over-broad roles.\n- Be deliberate about **cross-tenant** access and the **20 federated-credential** default limit per identity.\n\n## Quick checklist\n\nKeyless? Yes. User-assigned unless a unique throwaway identity is needed? Yes. Built-in role at resource scope? Yes. One identity per workload? Yes. DefaultAzureCredential, pinned in prod? Yes. Federation for outside-Azure? Yes. Assignments in IaC + monitored? Yes.\n\n*Fewest secrets, smallest privilege, one identity per job, federation at the edges, everything as code.*",
+      "examples": [
+        {
+          "product": "GitHub Actions -> Azure (OIDC)",
+          "what": "Federate the GitHub workflow to a user-assigned managed identity / app via OIDC so the pipeline deploys to Azure with no stored client secret.",
+          "source": "https://learn.microsoft.com/en-us/entra/workload-id/workload-identity-federation"
+        }
+      ],
+      "drills": [
+        {
+          "q": "Per current Microsoft guidance, which managed identity type is the broader default — and why?",
+          "a": "User-assigned: decoupled lifecycle (pre-create role assignments), separation of duties, and it avoids Entra object-creation rate limits."
+        },
+        {
+          "q": "What is the keyless option for a GitHub Actions pipeline that must deploy to Azure?",
+          "a": "Workload identity federation (OIDC) trusting a user-assigned managed identity or app registration — no client secret."
+        },
+        {
+          "q": "How do you keep DefaultAzureCredential predictable in production?",
+          "a": "Pass the user-assigned identity's client id and exclude unused credentials in the chain so misconfig fails fast."
+        },
+        {
+          "q": "Why one identity per workload instead of a shared one?",
+          "a": "It limits blast radius if one workload is compromised and keeps auditing/attribution clean."
+        }
+      ],
+      "teachItBack": "Default to managed identity for in-Azure workloads and workload identity federation for everything outside — both keyless. Prefer user-assigned identities because their lifecycle is decoupled and they avoid rate limits, grant the most specific built-in role at the tightest scope, give each workload its own identity, write DefaultAzureCredential code that's pinned in production, and manage every assignment as code with monitoring.",
+      "glossary": [
+        {
+          "term": "Least privilege",
+          "definition": "Granting only the minimum permissions, at the narrowest scope, needed to do the job."
+        },
+        {
+          "term": "Workload identity federation",
+          "definition": "A trust between an external identity provider and Entra so external tokens are exchanged for Entra tokens without a stored secret."
+        },
+        {
+          "term": "Flexible federated identity credentials",
+          "definition": "Federated credentials that match claims via expressions, so one credential covers many branches/refs instead of one-per-case."
+        },
+        {
+          "term": "Data-plane role",
+          "definition": "An RBAC role that grants access to a resource's data (e.g. blob contents), distinct from control-plane management roles."
+        }
+      ],
+      "sources": [
+        {
+          "title": "Dev docs — Managed identity best practice recommendations (user-assigned default, rate limits)",
+          "url": "https://learn.microsoft.com/en-us/entra/identity/managed-identities-azure-resources/managed-identity-best-practice-recommendations",
+          "verified": true
+        },
+        {
+          "title": "Dev docs — Credential chains & DefaultAzureCredential (Azure Identity)",
+          "url": "https://learn.microsoft.com/en-us/dotnet/azure/sdk/authentication/credential-chains",
+          "verified": true
+        },
+        {
+          "title": "Dev docs — Workload identity federation (keyless for outside-Azure)",
+          "url": "https://learn.microsoft.com/en-us/entra/workload-id/workload-identity-federation",
+          "verified": true
+        },
+        {
+          "title": "Reddit — r/AZURE search: managed identity vs service principal (community consensus)",
+          "url": "https://www.reddit.com/r/AZURE/search/?q=managed%20identity%20vs%20service%20principal&restrict_sr=1&sort=relevance",
+          "verified": false
+        },
+        {
+          "title": "X — Microsoft Entra (@MicrosoftEntra) identity announcements",
+          "url": "https://x.com/MicrosoftEntra",
+          "verified": true
+        }
+      ],
+      "quiz": [
+        {
+          "q": "You are mass-deploying short-lived VMs that each need the same Storage access. What identity strategy avoids Entra throttling and pre-authorizes access?",
+          "choices": [
+            "One shared user-assigned managed identity with the role assigned in advance",
+            "A system-assigned identity per VM, created at boot",
+            "A single client secret embedded in the VM image",
+            "Owner on the subscription for every VM"
+          ],
+          "answer": 0,
+          "explanation": "User-assigned identities are created once and pre-authorized, avoiding the HTTP 429 object-creation throttling you hit when minting a system-assigned identity per ephemeral resource."
+        }
+      ],
+      "_file": "content/lessons/foundry-auth/fdy-managed-identity-best-practices.json"
+    },
+    {
+      "id": "fdy-managed-identity-resource-hub",
+      "title": "Managed Identity — Field Guide & Resource Hub (videos, docs, community)",
+      "lane": "foundry-auth",
+      "type": "concept",
+      "order": 119,
+      "summary": "One place with the best, current, link-checked resources for learning managed identity: official dev docs, the top YouTube deep-dives (John Savill + official Microsoft channels), authoritative X accounts, and live r/AZURE community discussion. Every link here was verified at authoring time.",
+      "tags": [
+        "managed-identity",
+        "resources",
+        "links",
+        "learning-path",
+        "field-guide"
+      ],
+      "analogy": "A trailhead map: instead of wandering, you get the marked routes — read this doc, watch that deep-dive, follow these accounts, lurk this thread — ordered from fastest orientation to deepest dive.",
+      "diagram": "flowchart LR\n  Start[Start here] --> Docs[Dev docs: overview + best practices]\n  Docs --> Video[Watch: John Savill Deep Dive]\n  Video --> Do[Do: configure + DefaultAzureCredential]\n  Do --> Edge[Edge cases: workload identity federation]\n  Edge --> Community[Stay current: X + r/AZURE]",
+      "body": "## How to use this hub\n\nA suggested path: **read** the overview + best-practice docs, **watch** John Savill's deep dive, **do** the configure + `DefaultAzureCredential` steps from the other lessons in this lane, then **stay current** via the X accounts and r/AZURE. Full clickable links are in the Sources list below; this is the annotated map.\n\n## Dev docs (start here — authoritative & current)\n\n- **Managed identities overview** — what they are, system vs user-assigned, which services support them.\n- **Best-practice recommendations** — Microsoft's own guidance (now favoring user-assigned for most scenarios; rate-limit notes).\n- **Configure managed identities (how-to)** — step-by-step enable/attach for system- and user-assigned.\n- **Credential chains / DefaultAzureCredential** — how the SDK picks a credential dev-to-prod.\n- **Workload identity federation** — keyless auth for GitHub Actions, AKS, and other clouds.\n- **Azure Identity (Python) library readme** — `ManagedIdentityCredential`, `DefaultAzureCredential` API.\n\n## YouTube (link-checked)\n\n- **John Savill — Azure Managed Identity Deep Dive** — the single best end-to-end explainer; system vs user-assigned, IMDS, RBAC, troubleshooting.\n- **John Savill — Azure 360 in 360: Managed Identity** — a fast refresher.\n- **John Savill — Azure Master Class: Identity** — managed identity inside the wider Entra identity picture.\n- **dotnet (official Microsoft channel) — Using Azure Managed identities** — code-first walkthrough.\n- **Cloud Scholars — Azure Managed Identities, Full Explanation** — alternative community explainer.\n\n## X / Twitter (authoritative accounts to follow)\n\n- **@NTFAQGuy** — John Savill; deep Azure identity content and new-feature breakdowns.\n- **@MicrosoftEntra** — official Microsoft Entra identity announcements.\n- **@Azure** — official Microsoft Azure news.\n- **@MSFTMechanics** — official Microsoft Mechanics demos.\n\n## Reddit (live community discussion)\n\n- **r/AZURE** — the main practitioner subreddit.\n- **r/AZURE search: \"managed identity best practices\"** — real-world gotchas and patterns.\n- **r/AZURE search: \"managed identity vs service principal\"** — the recurring decision, with current consensus.\n\n> Note: Reddit blocks automated fetching, so the search links above were not machine-verified but are valid Reddit search URLs that resolve in a browser. Everything else in Sources was link-checked at authoring time.\n\n*Read -> watch -> do -> stay current: the whole managed-identity learning path in one card.*",
+      "drills": [
+        {
+          "q": "Which single video is the recommended end-to-end managed identity explainer here?",
+          "a": "John Savill's 'Microsoft Azure Managed Identity Deep Dive'."
+        },
+        {
+          "q": "Which two official docs should you read first?",
+          "a": "The managed identities overview and the best-practice recommendations."
+        },
+        {
+          "q": "Which X account is best for new Entra identity feature announcements?",
+          "a": "@MicrosoftEntra (with @NTFAQGuy for deep explainers)."
+        }
+      ],
+      "teachItBack": "To learn managed identity efficiently: read the official overview and best-practice docs, watch John Savill's deep dive, then do the configure and DefaultAzureCredential steps, and follow @MicrosoftEntra / @NTFAQGuy and r/AZURE to stay current. This hub collects link-checked resources across docs, YouTube, X, and Reddit in one place.",
+      "glossary": [
+        {
+          "term": "Resource hub",
+          "definition": "A curated, annotated index of the best learning materials on a topic, grouped by medium."
+        }
+      ],
+      "sources": [
+        {
+          "title": "Dev docs — Managed identities for Azure resources (overview)",
+          "url": "https://learn.microsoft.com/en-us/entra/identity/managed-identities-azure-resources/overview",
+          "verified": true
+        },
+        {
+          "title": "Dev docs — Managed identity best practice recommendations",
+          "url": "https://learn.microsoft.com/en-us/entra/identity/managed-identities-azure-resources/managed-identity-best-practice-recommendations",
+          "verified": true
+        },
+        {
+          "title": "Dev docs — Configure managed identities (how-to, system & user-assigned)",
+          "url": "https://learn.microsoft.com/en-us/entra/identity/managed-identities-azure-resources/how-to-configure-managed-identities",
+          "verified": true
+        },
+        {
+          "title": "Dev docs — Credential chains & DefaultAzureCredential",
+          "url": "https://learn.microsoft.com/en-us/dotnet/azure/sdk/authentication/credential-chains",
+          "verified": true
+        },
+        {
+          "title": "Dev docs — Workload identity federation (keyless for outside-Azure)",
+          "url": "https://learn.microsoft.com/en-us/entra/workload-id/workload-identity-federation",
+          "verified": true
+        },
+        {
+          "title": "Dev docs — Azure Identity client library for Python",
+          "url": "https://learn.microsoft.com/en-us/python/api/overview/azure/identity-readme",
+          "verified": true
+        },
+        {
+          "title": "YouTube — John Savill: Microsoft Azure Managed Identity Deep Dive",
+          "url": "https://www.youtube.com/watch?v=rC1TV0_sIrM",
+          "verified": true
+        },
+        {
+          "title": "YouTube — John Savill: Azure 360 in 360 - Managed Identity",
+          "url": "https://www.youtube.com/watch?v=1NOZv2M3q2k",
+          "verified": true
+        },
+        {
+          "title": "YouTube — John Savill: Azure Master Class - Identity",
+          "url": "https://www.youtube.com/watch?v=megA6BPpYqo",
+          "verified": true
+        },
+        {
+          "title": "YouTube — dotnet (official): Using Azure Managed identities",
+          "url": "https://www.youtube.com/watch?v=vYUKC0mZFqI",
+          "verified": true
+        },
+        {
+          "title": "YouTube — Cloud Scholars: Azure Managed Identities - Full Explanation",
+          "url": "https://www.youtube.com/watch?v=evhkGWSwQIA",
+          "verified": true
+        },
+        {
+          "title": "X — John Savill (@NTFAQGuy)",
+          "url": "https://x.com/NTFAQGuy",
+          "verified": true
+        },
+        {
+          "title": "X — Microsoft Entra (@MicrosoftEntra)",
+          "url": "https://x.com/MicrosoftEntra",
+          "verified": true
+        },
+        {
+          "title": "X — Microsoft Azure (@Azure)",
+          "url": "https://x.com/Azure",
+          "verified": true
+        },
+        {
+          "title": "X — Microsoft Mechanics (@MSFTMechanics)",
+          "url": "https://x.com/MSFTMechanics",
+          "verified": true
+        },
+        {
+          "title": "Reddit — r/AZURE (community)",
+          "url": "https://www.reddit.com/r/AZURE/",
+          "verified": true
+        },
+        {
+          "title": "Reddit — r/AZURE search: managed identity best practices",
+          "url": "https://www.reddit.com/r/AZURE/search/?q=managed%20identity%20best%20practices&restrict_sr=1&sort=top",
+          "verified": false
+        },
+        {
+          "title": "Reddit — r/AZURE search: managed identity vs service principal",
+          "url": "https://www.reddit.com/r/AZURE/search/?q=managed%20identity%20vs%20service%20principal&restrict_sr=1&sort=relevance",
+          "verified": false
+        }
+      ],
+      "quiz": [
+        {
+          "q": "Why are two of the Reddit links marked verified:false in this hub?",
+          "choices": [
+            "Reddit blocks automated fetching, so they could not be machine-checked (though they resolve in a browser)",
+            "The subreddit was deleted",
+            "Reddit is not a useful source",
+            "They link to private messages"
+          ],
+          "answer": 0,
+          "explanation": "Honesty about verification: Reddit returns 403 to automated fetchers, so those search URLs weren't machine-verified, unlike the docs and oembed-checked videos."
+        }
+      ],
+      "_file": "content/lessons/foundry-auth/fdy-managed-identity-resource-hub.json"
     },
     {
       "id": "fdy-catalog-and-providers",
@@ -15625,6 +16360,12 @@
       "lane": "foundry-mcp"
     },
     {
+      "term": "allowProjectManagement",
+      "definition": "The account property (CLI flag --allow-project-management) that lets a Foundry resource host child projects.",
+      "lessonId": "fdy-create-foundry-resource-and-project",
+      "lane": "foundry-core"
+    },
+    {
       "term": "Ambient AI",
       "definition": "AI behavior embedded into existing interactions so users get help without opening a separate assistant.",
       "lessonId": "arc-dia",
@@ -16253,6 +16994,12 @@
       "lane": "context-awareness"
     },
     {
+      "term": "Custom subdomain",
+      "definition": "A globally-unique name on the account that forms the services.ai.azure.com endpoint host.",
+      "lessonId": "fdy-create-foundry-resource-and-project",
+      "lane": "foundry-core"
+    },
+    {
       "term": "Dark Pattern",
       "definition": "A UI designed to trick or manipulate users into doing things they might not want to do.",
       "lessonId": "ethical-hook-model",
@@ -16289,6 +17036,12 @@
       "lane": "foundry-models"
     },
     {
+      "term": "Data-plane role",
+      "definition": "An RBAC role that grants access to a resource's data (e.g. blob contents), distinct from control-plane management roles.",
+      "lessonId": "fdy-managed-identity-best-practices",
+      "lane": "foundry-auth"
+    },
+    {
       "term": "Database",
       "definition": "Named data container within a cluster.",
       "lessonId": "fdy-resource-hierarchy",
@@ -16311,6 +17064,12 @@
       "definition": "Python syntax used by FastMCP to register tools, resources, and prompts.",
       "lessonId": "fdy-minimal-python-server",
       "lane": "foundry-mcp"
+    },
+    {
+      "term": "Default project",
+      "definition": "The first project on a resource; carries extra capabilities such as OpenAI Batch and fine-tuning, marked is_default in code.",
+      "lessonId": "fdy-create-foundry-resource-and-project",
+      "lane": "foundry-core"
     },
     {
       "term": "DefaultAzureCredential",
@@ -16547,6 +17306,18 @@
       "lane": "foundry-models"
     },
     {
+      "term": "First-party tenant",
+      "definition": "An Entra tenant operated by Microsoft for its own services, as opposed to an external customer tenant.",
+      "lessonId": "fdy-pme-account-managed-identity",
+      "lane": "foundry-auth"
+    },
+    {
+      "term": "Flexible federated identity credentials",
+      "definition": "Federated credentials that match claims via expressions, so one credential covers many branches/refs instead of one-per-case.",
+      "lessonId": "fdy-managed-identity-best-practices",
+      "lane": "foundry-auth"
+    },
+    {
       "term": "Focus mode",
       "definition": "A user-facing control that narrows retrieval to a source type or domain.",
       "lessonId": "perplexity",
@@ -16650,9 +17421,9 @@
     },
     {
       "term": "get_openai_client",
-      "definition": "Documented method that returns an authenticated OpenAI client.",
-      "lessonId": "fdy-project-client-entrypoint",
-      "lane": "foundry-models"
+      "definition": "AIProjectClient method returning an OpenAI-compatible client wired to the project endpoint and credential.",
+      "lessonId": "fdy-deploy-a-model-in-foundry",
+      "lane": "foundry-core"
     },
     {
       "term": "get_token",
@@ -16793,6 +17564,12 @@
       "lane": "foundry-auth"
     },
     {
+      "term": "IMDS token endpoint",
+      "definition": "The 169.254.169.254 metadata endpoint a host calls to obtain a managed-identity token.",
+      "lessonId": "fdy-create-managed-identity-step-by-step",
+      "lane": "foundry-auth"
+    },
+    {
       "term": "Incident",
       "definition": "A tracked operational event that disrupts, degrades, or threatens a service.",
       "lessonId": "fdy-what-is-icm",
@@ -16869,6 +17646,12 @@
       "definition": "Model output format constrained by a JSON schema.",
       "lessonId": "fdy-json-response-format",
       "lane": "foundry-models"
+    },
+    {
+      "term": "Just-in-time (JIT) elevation",
+      "definition": "Granting privileged access only for a limited, approved time window instead of standing access.",
+      "lessonId": "fdy-pme-account-managed-identity",
+      "lane": "foundry-auth"
     },
     {
       "term": "Keyless",
@@ -17079,6 +17862,12 @@
       "lane": "foundry-models"
     },
     {
+      "term": "Models sold by Azure vs partners and community",
+      "definition": "Azure-sold models (e.g., Azure OpenAI) deploy directly; partner/community models require an Azure Marketplace subscription first.",
+      "lessonId": "fdy-deploy-a-model-in-foundry",
+      "lane": "foundry-core"
+    },
+    {
       "term": "Motion feedback",
       "definition": "Animation that communicates interface state, continuity, and progress rather than merely decorating the UI.",
       "lessonId": "google-gemini",
@@ -17265,6 +18054,12 @@
       "lane": "foundry-mcp"
     },
     {
+      "term": "PIM (Privileged Identity Management)",
+      "definition": "Microsoft Entra service for eligible, time-bound, approval-gated, audited privileged role activation.",
+      "lessonId": "fdy-pme-account-managed-identity",
+      "lane": "foundry-auth"
+    },
+    {
       "term": "pinning",
       "definition": "Restricting installed package versions to a known compatible range.",
       "lessonId": "fdy-config-versioning",
@@ -17313,6 +18108,12 @@
       "lane": "framework"
     },
     {
+      "term": "PME (Production Microsoft Enterprise)",
+      "definition": "A Microsoft first-party Microsoft Entra tenant/subscriptions for operating Microsoft's own production and engineering workloads, separate from customer tenants.",
+      "lessonId": "fdy-pme-account-managed-identity",
+      "lane": "foundry-auth"
+    },
+    {
       "term": "poller",
       "definition": "An object representing a long-running operation that can be waited on for a final result.",
       "lessonId": "fdy-paging-and-lro",
@@ -17352,6 +18153,12 @@
       "term": "Principal ID",
       "definition": "Object ID used for role assignments.",
       "lessonId": "fdy-system-vs-user-assigned",
+      "lane": "foundry-auth"
+    },
+    {
+      "term": "Principal ID (object ID)",
+      "definition": "The Entra object ID of the identity used as the assignee in role assignments.",
+      "lessonId": "fdy-create-managed-identity-step-by-step",
       "lane": "foundry-auth"
     },
     {
@@ -17649,6 +18456,12 @@
       "lane": "foundry-core"
     },
     {
+      "term": "Resource hub",
+      "definition": "A curated, annotated index of the best learning materials on a topic, grouped by medium.",
+      "lessonId": "fdy-managed-identity-resource-hub",
+      "lane": "foundry-auth"
+    },
+    {
       "term": "Resource ID",
       "definition": "Azure Resource Manager path of a resource.",
       "lessonId": "fdy-system-vs-user-assigned",
@@ -17829,6 +18642,12 @@
       "lane": "foundry-mcp"
     },
     {
+      "term": "Secure Future Initiative (SFI)",
+      "definition": "Microsoft's company-wide security program; its identity pillar emphasizes eliminating secrets, phishing-resistant credentials, and least privilege.",
+      "lessonId": "fdy-pme-account-managed-identity",
+      "lane": "foundry-auth"
+    },
+    {
       "term": "Security group",
       "definition": "ADO group that grants permissions to users or identities.",
       "lessonId": "fdy-granting-ado-access",
@@ -17965,6 +18784,12 @@
       "definition": "Regional pay-per-token deployment.",
       "lessonId": "fdy-deployment-types",
       "lane": "foundry-models"
+    },
+    {
+      "term": "Standard Agent requirement",
+      "definition": "The agent setup that requires connections to Azure AI Search, Azure Storage, and Cosmos DB.",
+      "lessonId": "fdy-foundry-connections-and-rbac",
+      "lane": "foundry-core"
     },
     {
       "term": "State",
@@ -18175,6 +19000,12 @@
       "lane": "foundry-models"
     },
     {
+      "term": "Tokens-per-Minute (TPM)",
+      "definition": "The quota unit allocated to a deployment's capacity, per region and model.",
+      "lessonId": "fdy-deploy-a-model-in-foundry",
+      "lane": "foundry-core"
+    },
+    {
       "term": "Tool",
       "definition": "Model-controlled executable function exposed by an MCP server.",
       "lessonId": "fdy-server-primitives",
@@ -18347,6 +19178,12 @@
       "lane": "foundry-auth"
     },
     {
+      "term": "userAssignedIdentities",
+      "definition": "The Azure resource type for a standalone user-assigned managed identity.",
+      "lessonId": "fdy-create-managed-identity-step-by-step",
+      "lane": "foundry-auth"
+    },
+    {
       "term": "UserMessage",
       "definition": "Message containing user input.",
       "lessonId": "fdy-chat-message-roles",
@@ -18416,6 +19253,12 @@
       "term": "Workload identity",
       "definition": "Federated identity pattern for Kubernetes and similar hosts.",
       "lessonId": "fdy-workload-identity-aks",
+      "lane": "foundry-auth"
+    },
+    {
+      "term": "Workload identity federation",
+      "definition": "A trust between an external identity provider and Entra so external tokens are exchanged for Entra tokens without a stored secret.",
+      "lessonId": "fdy-managed-identity-best-practices",
       "lane": "foundry-auth"
     },
     {
@@ -19887,6 +20730,48 @@
       "explanation": "Current verified GA docs emphasize get_openai_client and do not list .inference as an AIProjectClient variable."
     },
     {
+      "id": "fdy-create-foundry-resource-and-project-q0",
+      "lessonId": "fdy-create-foundry-resource-and-project",
+      "lane": "foundry-core",
+      "q": "Which command sequence correctly creates a modern Foundry resource and project with the CLI?",
+      "choices": [
+        "az cognitiveservices account create --kind AIServices --allow-project-management, then az cognitiveservices account project create",
+        "az ml workspace create, then az ml hub create",
+        "az keyvault create, then az storage account create",
+        "az webapp create, then az functionapp create"
+      ],
+      "answer": 0,
+      "explanation": "The modern resource is an AIServices account with project management enabled; projects are created as child resources via az cognitiveservices account project create. The hub/workspace path is the older model."
+    },
+    {
+      "id": "fdy-deploy-a-model-in-foundry-q0",
+      "lessonId": "fdy-deploy-a-model-in-foundry",
+      "lane": "foundry-core",
+      "q": "After deploying gpt-4o-mini as a deployment named 'chat-prod', what do you pass to openai.responses.create as the model?",
+      "choices": [
+        "'chat-prod' — the deployment name",
+        "'gpt-4o-mini' — always the catalog id",
+        "The full model resource ID",
+        "The project endpoint URL"
+      ],
+      "answer": 0,
+      "explanation": "Inference routes by deployment name, so the model parameter must be 'chat-prod', the name you gave the deployment."
+    },
+    {
+      "id": "fdy-foundry-connections-and-rbac-q0",
+      "lessonId": "fdy-foundry-connections-and-rbac",
+      "lane": "foundry-core",
+      "q": "What is the recommended minimum role assignment for a project's managed identity to use Foundry?",
+      "choices": [
+        "Foundry User on the Foundry resource",
+        "Owner on the subscription",
+        "A Cognitive Services key stored in the connection",
+        "Azure AI Developer on the project"
+      ],
+      "answer": 0,
+      "explanation": "Foundry User is the least-privilege data role; assign it on the Foundry resource to the project's managed identity. Cognitive Services keys and the Azure AI Developer role are explicitly discouraged for modern Foundry projects."
+    },
+    {
       "id": "fdy-authn-vs-authz-q0",
       "lessonId": "fdy-authn-vs-authz",
       "lane": "foundry-auth",
@@ -20025,6 +20910,62 @@
       ],
       "answer": 0,
       "explanation": "Public docs did not confirm exact ICM role/access details, so verify with the ICM owner."
+    },
+    {
+      "id": "fdy-create-managed-identity-step-by-step-q0",
+      "lessonId": "fdy-create-managed-identity-step-by-step",
+      "lane": "foundry-auth",
+      "q": "What is the most reliable way to grant a brand-new user-assigned identity access to a Key Vault in a single Bicep deployment?",
+      "choices": [
+        "Add a roleAssignment resource using the identity's principalId with principalType 'ServicePrincipal'",
+        "Put the Key Vault access key in an app setting",
+        "Assign Owner at the subscription scope",
+        "Wait 24 hours, then add the assignment by hand in the portal"
+      ],
+      "answer": 0,
+      "explanation": "A scoped built-in role assignment using the identity's principalId (with principalType ServicePrincipal to avoid the creation race) is least-privilege and deployable as code."
+    },
+    {
+      "id": "fdy-pme-account-managed-identity-q0",
+      "lessonId": "fdy-pme-account-managed-identity",
+      "lane": "foundry-auth",
+      "q": "A teammate suggests pasting a Key Vault access key into app config to ship faster in a PME subscription. What is the correct response?",
+      "choices": [
+        "Refuse — use the workload's managed identity with a scoped RBAC role; secrets violate the PME/SFI posture and will be flagged",
+        "Do it, then delete the key next sprint",
+        "Store the key in a code comment so it is easy to find",
+        "Assign Owner to the app so it never hits a 403"
+      ],
+      "answer": 0,
+      "explanation": "PME enforces keyless, least-privilege access. Use a managed identity with a tightly scoped role; long-lived secrets and broad roles are non-compliant."
+    },
+    {
+      "id": "fdy-managed-identity-best-practices-q0",
+      "lessonId": "fdy-managed-identity-best-practices",
+      "lane": "foundry-auth",
+      "q": "You are mass-deploying short-lived VMs that each need the same Storage access. What identity strategy avoids Entra throttling and pre-authorizes access?",
+      "choices": [
+        "One shared user-assigned managed identity with the role assigned in advance",
+        "A system-assigned identity per VM, created at boot",
+        "A single client secret embedded in the VM image",
+        "Owner on the subscription for every VM"
+      ],
+      "answer": 0,
+      "explanation": "User-assigned identities are created once and pre-authorized, avoiding the HTTP 429 object-creation throttling you hit when minting a system-assigned identity per ephemeral resource."
+    },
+    {
+      "id": "fdy-managed-identity-resource-hub-q0",
+      "lessonId": "fdy-managed-identity-resource-hub",
+      "lane": "foundry-auth",
+      "q": "Why are two of the Reddit links marked verified:false in this hub?",
+      "choices": [
+        "Reddit blocks automated fetching, so they could not be machine-checked (though they resolve in a browser)",
+        "The subreddit was deleted",
+        "Reddit is not a useful source",
+        "They link to private messages"
+      ],
+      "answer": 0,
+      "explanation": "Honesty about verification: Reddit returns 403 to automated fetchers, so those search URLs weren't machine-verified, unlike the docs and oembed-checked videos."
     },
     {
       "id": "fdy-catalog-and-providers-q0",
@@ -20957,8 +21898,8 @@
     }
   },
   "stats": {
-    "lessons": 189,
-    "glossaryTerms": 501,
-    "quizQuestions": 182
+    "lessons": 196,
+    "glossaryTerms": 519,
+    "quizQuestions": 189
   }
 }
