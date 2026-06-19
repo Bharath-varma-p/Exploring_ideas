@@ -1,0 +1,94 @@
+{
+  "id": "fdy-pme-account-managed-identity",
+  "title": "PME Accounts & Managed Identity (Microsoft corporate context)",
+  "lane": "foundry-auth",
+  "type": "concept",
+  "order": 117,
+  "summary": "PME (Production Microsoft Enterprise) is Microsoft's first-party Microsoft Entra environment for running and operating Microsoft's own production and engineering workloads — separate from any customer tenant. In PME, managed identity is effectively mandatory: secrets/keys are discouraged, access is least-privilege, and standing privilege is replaced by just-in-time elevation.",
+  "tags": [
+    "pme",
+    "microsoft-internal",
+    "compliance",
+    "managed-identity",
+    "governance"
+  ],
+  "analogy": "If a customer Azure tenant is your own house, a PME tenant is a high-security government building where Microsoft runs its own operations: same Azure underneath, but stricter doors, badge-only entry (managed identity), no spare keys under the mat (no secrets), and time-boxed visitor passes (just-in-time elevation) that are all recorded.",
+  "diagram": "flowchart TD\n  subgraph PME[Production Microsoft Enterprise tenant]\n    Sub[Engineering subscription] --> Compute[Workload: VM / app / pipeline / Foundry]\n    Compute --> MI[Managed identity - no secrets]\n    MI --> RBAC[Least-privilege RBAC]\n    Admin[Human admin] -.JIT elevation via PIM.-> RBAC\n    RBAC --> Target[ICM / Kusto / ADO / Foundry / Storage]\n    Audit[Audit + monitoring] --- MI\n    Audit --- Admin\n  end\n  PME -. separate from .- Customer[Customer tenants]",
+  "body": "## First principles: first-party vs customer tenants\n\nMicrosoft runs its own services and engineering on Azure too. To keep that separate from external customers — for security, compliance, and blast-radius isolation — Microsoft operates **first-party** Microsoft Entra tenants distinct from customer tenants. PME is the production-grade one.\n\n## What PME means\n\n**PME = Production Microsoft Enterprise**: a Microsoft-managed Entra (Azure AD) tenant and the subscriptions within it, used to build, operate, and run Microsoft's own production and internal-engineering workloads. It is *not* a customer tenant. Public details are intentionally sparse because it is internal Microsoft infrastructure; the mechanics, however, are ordinary Azure — Entra identities, subscriptions, RBAC — operated under stricter corporate policy and monitoring.\n\n## Why managed identity is effectively the rule in PME\n\nPME-class environments are governed by Microsoft's **Secure Future Initiative (SFI)**, whose identity pillar pushes the industry direction Microsoft holds itself to: **eliminate long-lived secrets, prefer phishing-resistant and managed credentials, and enforce least privilege.** Concretely, inside PME you should expect:\n\n- **No keys / connection strings / client secrets in code or config.** Workloads authenticate as a **managed identity**; the platform rotates the credential.\n- **Least-privilege RBAC**, scoped to the exact resource, not the subscription.\n- **No standing admin.** Human elevation is **just-in-time** through **Privileged Identity Management (PIM)** — you request a role, it is approved/time-boxed, and it expires.\n- **Everything is audited.** Identity sign-ins, role activations, and access are logged for review.\n\nThis is exactly the keyless model the rest of this lane teaches — PME just makes it non-negotiable.\n\n## What's different from a customer tenant (operationally)\n\nThe *APIs are the same* (`az identity create`, role assignments, `DefaultAzureCredential`). What changes is the surrounding policy: identity creation and role assignment may be gated by corporate controls and approvals; eligible (not active) role assignments via PIM are the norm; compliance scanners flag any secret usage or over-broad role; and onboarding a subscription/identity follows internal Microsoft processes rather than a public quickstart.\n\n## Practical pattern inside a PME subscription\n\n1. Create a **user-assigned** managed identity for your workload (decoupled lifecycle, can be pre-provisioned and pre-authorized).\n2. Grant it the **minimum** built-in role at the **resource** scope (e.g. `Key Vault Secrets User`, `Storage Blob Data Reader`, or the relevant Foundry role).\n3. Attach it to your compute (VM / App Service / Container App / AKS via workload identity / pipeline).\n4. In code, use `DefaultAzureCredential` locally and the managed identity in production — **never** a secret.\n5. For humans who must touch production, elevate **just-in-time** through PIM; don't hold standing privilege.\n\n## Guardrails and gotchas\n\n- Treat any instruction to \"just use a client secret/key to unblock\" as a red flag — it violates the model and will be flagged.\n- Don't request broad roles (Owner/Contributor) to save time; scope tightly and request elevation only when needed.\n- Exact PME onboarding steps, internal portals, and `aka.ms` links live in **internal Microsoft documentation** — follow those for your team rather than guessing; the public mechanics here are the conceptual backbone.\n\n*PME is normal Azure managed identity, run under Microsoft's strictest corporate posture: keyless, least-privilege, just-in-time, fully audited.*",
+  "drills": [
+    {
+      "q": "What does PME stand for and what is it?",
+      "a": "Production Microsoft Enterprise — a Microsoft first-party Entra tenant/subscriptions for running Microsoft's own production and engineering workloads, separate from customer tenants."
+    },
+    {
+      "q": "Why is managed identity effectively mandatory in PME?",
+      "a": "Corporate security posture (the Secure Future Initiative) eliminates long-lived secrets and enforces least privilege, so workloads authenticate as managed identities instead of using keys/secrets."
+    },
+    {
+      "q": "How do humans get production access in a PME-style environment?",
+      "a": "Just-in-time elevation via Privileged Identity Management (PIM) — time-boxed, approved, and audited — rather than standing admin rights."
+    },
+    {
+      "q": "Are the Azure APIs different in PME?",
+      "a": "No — same Entra identities, RBAC, and SDK credentials; what differs is stricter policy, approvals, monitoring, and internal onboarding."
+    }
+  ],
+  "teachItBack": "PME — Production Microsoft Enterprise — is Microsoft's own first-party Azure/Entra environment, kept apart from customer tenants. It runs on ordinary Azure identity primitives but under Microsoft's strictest posture: managed identity instead of secrets, least-privilege RBAC scoped to the resource, just-in-time human elevation via PIM, and full auditing — the keyless model made mandatory by the Secure Future Initiative.",
+  "glossary": [
+    {
+      "term": "PME (Production Microsoft Enterprise)",
+      "definition": "A Microsoft first-party Microsoft Entra tenant/subscriptions for operating Microsoft's own production and engineering workloads, separate from customer tenants."
+    },
+    {
+      "term": "First-party tenant",
+      "definition": "An Entra tenant operated by Microsoft for its own services, as opposed to an external customer tenant."
+    },
+    {
+      "term": "Secure Future Initiative (SFI)",
+      "definition": "Microsoft's company-wide security program; its identity pillar emphasizes eliminating secrets, phishing-resistant credentials, and least privilege."
+    },
+    {
+      "term": "Just-in-time (JIT) elevation",
+      "definition": "Granting privileged access only for a limited, approved time window instead of standing access."
+    },
+    {
+      "term": "PIM (Privileged Identity Management)",
+      "definition": "Microsoft Entra service for eligible, time-bound, approval-gated, audited privileged role activation."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Dev docs — Managed identities for Azure resources (overview)",
+      "url": "https://learn.microsoft.com/en-us/entra/identity/managed-identities-azure-resources/overview",
+      "verified": true
+    },
+    {
+      "title": "Microsoft Secure Future Initiative (why keyless / least-privilege is the standard)",
+      "url": "https://www.microsoft.com/en-us/security/business/microsoft-secure-future-initiative",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — Privileged Identity Management (PIM) for just-in-time elevation",
+      "url": "https://learn.microsoft.com/en-us/entra/id-governance/privileged-identity-management/pim-configure",
+      "verified": true
+    },
+    {
+      "title": "PME onboarding & specifics — internal Microsoft documentation (access required; not public)",
+      "url": "https://learn.microsoft.com/en-us/entra/identity/managed-identities-azure-resources/managed-identity-best-practice-recommendations",
+      "verified": false
+    }
+  ],
+  "quiz": [
+    {
+      "q": "A teammate suggests pasting a Key Vault access key into app config to ship faster in a PME subscription. What is the correct response?",
+      "choices": [
+        "Refuse — use the workload's managed identity with a scoped RBAC role; secrets violate the PME/SFI posture and will be flagged",
+        "Do it, then delete the key next sprint",
+        "Store the key in a code comment so it is easy to find",
+        "Assign Owner to the app so it never hits a 403"
+      ],
+      "answer": 0,
+      "explanation": "PME enforces keyless, least-privilege access. Use a managed identity with a tightly scoped role; long-lived secrets and broad roles are non-compliant."
+    }
+  ]
+}

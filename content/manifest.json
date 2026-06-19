@@ -1,9 +1,9 @@
 {
-  "generatedAt": "2026-06-18T06:25:50.729Z",
+  "generatedAt": "2026-06-19T03:19:12.445Z",
   "stats": {
-    "lessons": 189,
-    "glossaryTerms": 501,
-    "quizQuestions": 182
+    "lessons": 193,
+    "glossaryTerms": 513,
+    "quizQuestions": 186
   },
   "lanes": [
     {
@@ -39,7 +39,7 @@
     {
       "id": "foundry-auth",
       "title": "Managed Identity (Keyless Auth)",
-      "count": 15
+      "count": 19
     },
     {
       "id": "foundry-models",
@@ -734,6 +734,34 @@
       "lane": "foundry-auth",
       "type": "concept",
       "file": "content/lessons/foundry-auth/fdy-why-not-secrets-or-sps.json"
+    },
+    {
+      "id": "fdy-create-managed-identity-step-by-step",
+      "title": "Create a Managed Identity — Portal, CLI & Bicep (step by step)",
+      "lane": "foundry-auth",
+      "type": "concept",
+      "file": "content/lessons/foundry-auth/fdy-create-managed-identity-step-by-step.json"
+    },
+    {
+      "id": "fdy-pme-account-managed-identity",
+      "title": "PME Accounts & Managed Identity (Microsoft corporate context)",
+      "lane": "foundry-auth",
+      "type": "concept",
+      "file": "content/lessons/foundry-auth/fdy-pme-account-managed-identity.json"
+    },
+    {
+      "id": "fdy-managed-identity-best-practices",
+      "title": "Managed Identity Best Practices (latest)",
+      "lane": "foundry-auth",
+      "type": "concept",
+      "file": "content/lessons/foundry-auth/fdy-managed-identity-best-practices.json"
+    },
+    {
+      "id": "fdy-managed-identity-resource-hub",
+      "title": "Managed Identity — Field Guide & Resource Hub (videos, docs, community)",
+      "lane": "foundry-auth",
+      "type": "concept",
+      "file": "content/lessons/foundry-auth/fdy-managed-identity-resource-hub.json"
     },
     {
       "id": "fdy-catalog-and-providers",
