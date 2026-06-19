@@ -1,0 +1,64 @@
+{
+  "id": "azn-nsg",
+  "title": "NSGs & ASGs: stateful firewall rules without the cables",
+  "lane": "az-networking",
+  "type": "concept",
+  "order": 30,
+  "summary": "A Network Security Group is a distributed, stateful firewall you attach to subnets or NICs. Service tags and Application Security Groups let you write rules about *roles* (\"web tier\", \"Storage\") instead of brittle IP lists — and priority numbers decide who wins.",
+  "tags": [
+    "azure",
+    "nsg",
+    "asg",
+    "security",
+    "firewall",
+    "service-tags"
+  ],
+  "analogy": "An NSG is a bouncer with a numbered guest list checked top-to-bottom: the first matching line wins, and because the bouncer is stateful, anyone allowed in is automatically allowed back out.",
+  "diagram": "flowchart TD\n  Internet((Internet)) -->|inbound| NSG{NSG ruleset by priority}\n  NSG -->|100 Allow 443 from Internet| Web[web subnet ASG: web]\n  NSG -->|200 Allow 1433 from ASG web| Data[data subnet ASG: db]\n  NSG -->|4096 DenyAll default| X[blocked]\n  Web -->|stateful: reply allowed automatically| Internet",
+  "body": "## First principles\n\nReaching a server is not the same as being allowed to use it. You need a gate that inspects each connection attempt and decides *allow* or *deny* based on where it's from, where it's going, and which port. That gate is a **firewall**. The question Azure had to answer: how do you give every customer a firewall without shipping everyone a physical appliance? Answer: make it software and attach it to the SDN fabric. That's a **Network Security Group (NSG)**.\n\n## Why it exists\n\nIn the physical world, a firewall is a box that traffic must flow *through*. That creates bottlenecks and single points of failure, and it only protects the perimeter — once you're past it, the internal network is wide open (\"hard shell, soft center\"). Modern security wants the opposite: a firewall right next to *every* workload, so even traffic between two of your own VMs is checked. You can't ship a hardware box per VM.\n\nAn NSG solves this by being **distributed**: the rules are enforced by the Azure host running each VM, not by a central appliance. There's no chokepoint and no extra latency. You get per-workload firewalling for free, which is exactly what Zero Trust (\"never trust the network alone\") demands.\n\n## How it works\n\nAn NSG is a list of **security rules**, each with: priority, direction (inbound/outbound), source, destination, port, protocol, and allow/deny. You attach an NSG to a **subnet** (protects everything in it) and/or to a **NIC** (protects one VM). Both can apply at once.\n\nThree mechanics you must internalize:\n\n1. **Priority decides the winner.** Rules have a number from 100–4096; **lower numbers are evaluated first**, and the **first match wins** — later rules never even run. So a broad Allow at priority 100 can accidentally shadow a Deny at 200.\n2. **It's stateful.** If you allow an inbound connection, the return traffic is automatically allowed — you do *not* write a matching outbound rule. The platform tracks the flow. This is the single biggest difference from old stateless ACLs.\n3. **There are invisible default rules.** Every NSG starts with built-in low-priority rules: allow inside the VNet, allow from a load balancer's health probe, and a final **DenyAllInbound**. So if you write *no* rules, internal traffic works but the internet is already blocked.\n\nNow the part that makes NSGs maintainable:\n\n- **Service tags** let you reference Azure services by name instead of IP ranges that change constantly. Write `Source = Internet`, `Destination = Storage`, `AzureLoadBalancer`, `Sql`, etc., and Microsoft keeps the underlying IP list current for you. You'll never hand-maintain Azure IP ranges again.\n- **Application Security Groups (ASGs)** let you tag NICs with a *role* — `web`, `app`, `db` — and write rules between roles: \"allow ASG `web` → ASG `db` on 1433.\" Now scaling out the web tier just means putting new VMs in the `web` ASG; the rules already cover them. No IPs, no subnets hard-coded into rules.\n\n## In practice\n\n```bash\n# Allow HTTPS from the internet to anything tagged in the 'web' ASG.\naz network nsg rule create \\\n  --resource-group <rg> --nsg-name <nsg> \\\n  --name allow-https --priority 100 \\\n  --direction Inbound --access Allow --protocol Tcp \\\n  --destination-port-ranges 443 \\\n  --source-address-prefixes Internet \\\n  --destination-asgs web\n\n# Allow the web tier (and ONLY the web tier) to reach the DB tier on 1433.\naz network nsg rule create \\\n  --resource-group <rg> --nsg-name <nsg> \\\n  --name web-to-db --priority 200 \\\n  --direction Inbound --access Allow --protocol Tcp \\\n  --destination-port-ranges 1433 \\\n  --source-asgs web --destination-asgs db\n```\n\nNo IP addresses appear in those rules — only roles and a service tag. That's a maintainable firewall.\n\n## Gotchas\n\n- **Lower priority number = higher precedence, first match wins.** Reversing this in your head is the #1 NSG mistake. Leave gaps (100, 200, 300) so you can insert rules later.\n- **Stateful means don't double-write.** Adding an outbound rule to \"let replies out\" is unnecessary and often a sign you've misunderstood the flow.\n- **Subnet NSG + NIC NSG both apply.** Inbound traffic must pass the subnet NSG *then* the NIC NSG; outbound is the reverse. If a packet is mysteriously dropped, check both.\n- **NSGs are L3/L4 only.** They filter by IP, port, protocol — not by URL, hostname, or payload. For application-layer filtering (FQDNs, HTTP inspection) you need Azure Firewall or a WAF.\n- **Default-deny from the internet is already on.** If a new VM is unreachable, you usually need to *add* an allow rule, not remove a deny.\n- **Use NSG flow logs to debug and audit.** When you can't tell why traffic is blocked, flow logs (via Network Watcher) show allowed/denied flows.",
+  "teachItBack": "A Network Security Group is a stateful, distributed firewall enforced by the host next to every VM, attachable to subnets and NICs. Its rules are evaluated by priority from lowest number up and the first match wins; because it's stateful, allowing an inbound connection automatically allows the reply. To keep rules sane you reference Azure services by service tags instead of IP lists, and you tag VM roles into Application Security Groups so rules describe 'web to db' instead of brittle addresses. NSGs only see IP, port, and protocol — for URLs or payload inspection you escalate to a firewall or WAF.",
+  "glossary": [
+    {
+      "term": "Network Security Group (NSG)",
+      "definition": "A stateful L3/L4 firewall ruleset attached to a subnet and/or NIC, enforced by the Azure host."
+    },
+    {
+      "term": "Stateful firewall",
+      "definition": "A firewall that tracks connections, so the return traffic for an allowed flow is permitted automatically."
+    },
+    {
+      "term": "Priority (security rule)",
+      "definition": "A number 100–4096; rules are checked low-to-high and the first match decides allow or deny."
+    },
+    {
+      "term": "Service tag",
+      "definition": "A named handle for an Azure service's IP ranges (e.g. Internet, Storage, Sql) that Microsoft keeps updated so you don't hard-code IPs."
+    },
+    {
+      "term": "Application Security Group (ASG)",
+      "definition": "A role label applied to NICs so NSG rules can target groups of workloads (web, app, db) instead of IPs."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Dev docs — Network security groups overview",
+      "url": "https://learn.microsoft.com/en-us/azure/virtual-network/network-security-groups-overview",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — Application security groups",
+      "url": "https://learn.microsoft.com/en-us/azure/virtual-network/application-security-groups",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — Virtual network service tags",
+      "url": "https://learn.microsoft.com/en-us/azure/virtual-network/service-tags-overview",
+      "verified": true
+    }
+  ],
+  "related": [
+    "azn-vnet",
+    "azn-ips-nat",
+    "azn-firewall-waf"
+  ]
+}

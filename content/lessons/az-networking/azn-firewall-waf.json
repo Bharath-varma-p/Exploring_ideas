@@ -1,0 +1,74 @@
+{
+  "id": "azn-firewall-waf",
+  "title": "Defense in Depth: Azure Firewall, WAF & DDoS Protection",
+  "lane": "az-networking",
+  "type": "concept",
+  "order": 100,
+  "summary": "NSGs are the per-VM door locks; this lesson is the building's security system. Azure Firewall controls and inspects traffic in/out of your network, a Web Application Firewall blocks web attacks like SQL injection, and DDoS Protection absorbs volumetric floods. Three different layers for three different threats.",
+  "tags": [
+    "azure",
+    "firewall",
+    "waf",
+    "ddos",
+    "defense-in-depth",
+    "security"
+  ],
+  "analogy": "Think of a castle: DDoS Protection is the moat absorbing the charging horde; Azure Firewall is the gatehouse deciding who may enter or leave and watching for smugglers; the WAF is the inspector at the throne-room door who frisks each visitor for hidden weapons (malicious requests).",
+  "diagram": "flowchart TD\n  Attack((Internet traffic)) --> DDoS[DDoS Protection: absorb volumetric floods L3/L4]\n  DDoS --> Edge{Traffic type?}\n  Edge -->|Web app HTTP/S| WAF[WAF on App Gateway/Front Door: block OWASP attacks L7]\n  Edge -->|All network traffic| FW[Azure Firewall: central in/out policy, FQDN, threat intel]\n  WAF --> App[Web app]\n  FW --> Workloads[VNet workloads]",
+  "body": "## First principles\n\nNo single wall stops every attack, because attacks come in different shapes. A flood of junk traffic trying to exhaust your capacity is nothing like a crafted HTTP request trying to trick your database, which is nothing like malware on a VM phoning home to a command server. **Defense in depth** means layering controls so each handles the threat it's built for — and so a failure in one layer isn't game over. Azure gives you three network-layer defenses that sit at different points and operate at different OSI layers. The skill is knowing which threat each one stops.\n\n## Why it exists — and where NSGs stop\n\nYou already met **NSGs**: stateful allow/deny by IP, port, and protocol, attached to subnets and NICs. They're essential but limited — they're **L3/L4 only**. An NSG can say \"allow 443 from the internet,\" but it cannot tell a legitimate HTTPS request from a SQL-injection payload riding inside that 443 traffic, cannot block outbound connections by **domain name**, and cannot absorb a 200 Gbps flood. Each of those gaps is a different product:\n\n- **Volumetric floods (L3/L4) → Azure DDoS Protection.**\n- **Malicious web requests (L7/HTTP) → Web Application Firewall (WAF).**\n- **Central network traffic control & inspection, especially outbound by FQDN → Azure Firewall.**\n\n## How it works\n\n**Azure DDoS Protection (the moat).** A Distributed Denial-of-Service attack tries to overwhelm you with sheer traffic volume. Azure's platform already has always-on basic DDoS defense for everyone. The paid tiers add tuned, per-resource mitigation, telemetry, alerting, and cost-protection. As of 2025 there are two SKUs: **DDoS Network Protection** (covers all public IPs across protected VNets, plus rapid-response support and cost protection) and **DDoS IP Protection** (a cheaper per-public-IP model for smaller footprints). It operates at **L3/L4** — it scrubs the flood before it reaches you.\n\n**Web Application Firewall (the inspector).** A WAF understands **HTTP** (L7) and inspects the *content* of web requests, blocking the classic application attacks — SQL injection, cross-site scripting, and the rest of the **OWASP Top 10** — using managed rule sets (the OWASP Core Rule Set) plus your custom rules. A WAF is not standalone: it attaches to the **L7 load balancers** — **Application Gateway** (regional) or **Azure Front Door** (global edge). Put it in front of any internet-facing web app.\n\n**Azure Firewall (the gatehouse).** A managed, stateful, scalable network firewall for your whole VNet, typically placed in the **hub** of a hub-and-spoke. Unlike an NSG it does **application-layer** tricks: **FQDN filtering** (allow outbound to `*.ubuntu.com` but nothing else), **network and application rule collections**, **threat-intelligence-based filtering** (auto-block known-malicious IPs/domains), and full logging of every flow. Its superpower is **egress control** — governing and inspecting what leaves your network, which NSGs can't do by name. Premium tier adds TLS inspection and IDPS (intrusion detection/prevention).\n\n**They are not either/or — they stack.** A hardened internet-facing app uses *all* of them: DDoS Protection absorbs floods, Front Door/App Gateway + WAF inspects inbound web requests, Azure Firewall governs outbound and east-west traffic, and NSGs lock down each subnet/NIC. Each layer is cheap insurance against the threat the others can't see.\n\n## In practice\n\n```bash\n# Azure Firewall in the hub (needs a subnet named AzureFirewallSubnet).\naz network firewall create \\\n  --name <fw> --resource-group <rg> --location <region>\n\n# Allow outbound only to specific FQDNs - NSGs can't do this.\naz network firewall application-rule create \\\n  --firewall-name <fw> --resource-group <rg> \\\n  --collection-name allow-updates --name ubuntu \\\n  --protocols Http=80 Https=443 \\\n  --target-fqdns '*.ubuntu.com' --source-addresses 10.0.0.0/16 \\\n  --action Allow --priority 100\n```\n\nFor the web tier you'd enable a **WAF policy** on your Application Gateway or Front Door, and enable **DDoS Network Protection** on the VNet hosting your public IPs.\n\n## Gotchas\n\n- **Match the layer to the threat.** WAF = HTTP request content (L7). Firewall = network/FQDN/egress control. DDoS = volumetric floods (L3/L4). NSG = basic per-resource IP/port. Using the wrong one leaves a real gap.\n- **WAF only protects HTTP(S), and only on L7 front ends.** It rides Application Gateway (regional) or Front Door (global). It does nothing for non-web (e.g. raw TCP) traffic.\n- **Azure Firewall needs `AzureFirewallSubnet`.** Like the gateway, it requires a specifically-named subnet; deploy it in the hub so all spokes route egress through it (via UDRs).\n- **NSGs don't do FQDNs or payloads.** If you need \"allow outbound only to these domains\" or content inspection, that's Azure Firewall / WAF territory, not NSGs.\n- **Basic DDoS is automatic; tuned protection is a paid SKU.** Don't assume you have full DDoS mitigation — Network Protection vs IP Protection is a deliberate choice with cost implications.\n- **Layers complement, they don't replace.** A WAF doesn't remove the need for a firewall or NSGs; defense in depth means keeping all the locks, not picking one.",
+  "teachItBack": "Different attacks need different walls, so Azure layers network defenses. NSGs give basic per-resource IP/port filtering but are blind to floods, domains, and request content. DDoS Protection absorbs volumetric L3/L4 floods (with Network Protection covering whole VNets and IP Protection a cheaper per-IP option). A Web Application Firewall inspects HTTP content to block OWASP attacks like SQL injection and rides on Application Gateway or Front Door. Azure Firewall is the central gatehouse — usually in the hub — that controls and inspects traffic by FQDN and threat intelligence, especially outbound. The point is defense in depth: a hardened app runs all of them together, each catching what the others can't.",
+  "glossary": [
+    {
+      "term": "Defense in depth",
+      "definition": "Layering multiple independent security controls so each covers a different threat and no single failure is fatal."
+    },
+    {
+      "term": "Azure Firewall",
+      "definition": "A managed, stateful, cloud-scale network firewall (usually in the hub) offering FQDN filtering, threat-intel filtering, and centralized in/out traffic control."
+    },
+    {
+      "term": "Web Application Firewall (WAF)",
+      "definition": "An L7 filter that inspects HTTP request content to block web attacks (OWASP Top 10), attached to Application Gateway or Front Door."
+    },
+    {
+      "term": "DDoS Protection",
+      "definition": "Mitigation for volumetric L3/L4 floods; Network Protection covers VNets while IP Protection is a per-public-IP tier."
+    },
+    {
+      "term": "FQDN filtering",
+      "definition": "Allowing or denying traffic by fully-qualified domain name (e.g. *.ubuntu.com) — something NSGs cannot do."
+    },
+    {
+      "term": "OWASP Top 10",
+      "definition": "A widely used list of the most critical web application security risks that WAF rule sets are designed to block."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Dev docs — What is Azure Firewall?",
+      "url": "https://learn.microsoft.com/en-us/azure/firewall/overview",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — What is Azure Web Application Firewall?",
+      "url": "https://learn.microsoft.com/en-us/azure/web-application-firewall/overview",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — What is Azure DDoS Protection?",
+      "url": "https://learn.microsoft.com/en-us/azure/ddos-protection/ddos-protection-overview",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — Azure DDoS Protection tier comparison (SKUs)",
+      "url": "https://learn.microsoft.com/en-us/azure/ddos-protection/ddos-protection-sku-comparison",
+      "verified": true
+    }
+  ],
+  "related": [
+    "azn-nsg",
+    "azn-load-balancing",
+    "azn-peering",
+    "azn-private-link"
+  ]
+}

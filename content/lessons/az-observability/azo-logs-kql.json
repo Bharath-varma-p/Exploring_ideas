@@ -1,0 +1,44 @@
+{
+  "id": "azo-logs-kql",
+  "title": "Log Analytics & KQL basics",
+  "lane": "az-observability",
+  "type": "concept",
+  "order": 40,
+  "summary": "Log Analytics is the massive database for unstructured events. Kusto Query Language (KQL) is the incredibly fast, pipe-based language you use to interrogate it.",
+  "tags": [
+    "log-analytics",
+    "kql",
+    "logs",
+    "query"
+  ],
+  "analogy": "Log Analytics is a massive, endlessly growing warehouse of filing cabinets. KQL is the hyper-efficient librarian who can instantly fetch exactly the files you need by passing them through a series of filters.",
+  "diagram": "flowchart LR\n  Source[App Logs / Security Events] -->|Ingest| LAW[(Log Analytics Workspace)]\n  LAW -->|KQL Query| Filter1[where Level == 'Error']\n  Filter1 -->|Pipe| Summarize[summarize count by App]\n  Summarize -->|Result| Chart[Render Chart]",
+  "body": "## First principles\n\nWhen investigating an incident, you need to search billions of lines of text (logs) instantly. Traditional relational databases (SQL) are too rigid for unstructured, schema-on-read log data. You need a dedicated big-data indexing engine and a language optimized for filtering streams of text.\n\n## Why it exists\n\nBefore Log Analytics, engineers `grep`ped text files on individual servers. **Log Analytics Workspaces** provide a bottomless, centralized sink for logs. **Kusto Query Language (KQL)** was invented by Microsoft to query this data at breathtaking speed. It is built around a \"pipeline\" mental model, making it much easier to write than deeply nested SQL.\n\n## How it works\n\nData is stored in **Tables** (e.g., `AppRequests`, `SecurityEvent`) inside a **Workspace**.\n\nKQL reads top-to-bottom. You start with a massive dataset (a table) and pass it through the pipe operator `|` to filter, transform, and summarize it, whittling it down step by step.\n\n## In practice\n\nHere is a tiny, concrete KQL walkthrough answering the question: *\"Which endpoints are throwing the most 500 errors in the last day?\"*\n\n```kusto\nAppRequests                        // 1. Start with the table (all requests)\n| where TimeGenerated > ago(1d)    // 2. Filter down to the last 24 hours\n| where ResultCode == \"500\"        // 3. Filter down to only server errors\n| summarize ErrorCount = count() by Url  // 4. Group by URL and count them\n| order by ErrorCount desc         // 5. Sort highest first\n| take 10                          // 6. Show me just the top 10\n```\nNotice how the data flows downward. Each `|` takes the output of the line above it.\n\n## Gotchas\n\n- **Time filters matter.** Always include a `where TimeGenerated > ago(...)` early in your query. If you don't, KQL will try to scan months of data, which is slow and expensive.\n- **Workspaces are a security boundary.** You usually have one central Log Analytics Workspace for a team or environment, so you can query across all resources at once. Splitting logs into 50 different workspaces makes cross-resource queries incredibly painful.",
+  "teachItBack": "Log Analytics Workspaces store massive amounts of telemetry data. We query that data using KQL, which uses a pipe structure to filter and shape data step-by-step. You always start with a table, filter by time, filter by condition, and then aggregate.",
+  "glossary": [
+    {
+      "term": "Log Analytics Workspace",
+      "definition": "The Azure resource that acts as a logical container for your logs and metrics data."
+    },
+    {
+      "term": "KQL (Kusto Query Language)",
+      "definition": "A read-only query language optimized for processing massive amounts of log data using a pipeline syntax."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Dev docs — Log Analytics overview",
+      "url": "https://learn.microsoft.com/en-us/azure/azure-monitor/logs/log-analytics-overview",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — Kusto Query Language (KQL) overview",
+      "url": "https://learn.microsoft.com/en-us/kusto/query/?view=azure-data-explorer&preserve-view=true",
+      "verified": true
+    }
+  ],
+  "related": [
+    "azo-azure-monitor",
+    "azo-app-insights"
+  ]
+}

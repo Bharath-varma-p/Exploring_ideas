@@ -1,0 +1,65 @@
+{
+  "id": "azp-terraform",
+  "title": "Terraform on Azure — State, Providers, and Team Boundaries",
+  "lane": "az-devops",
+  "type": "concept",
+  "order": 30,
+  "summary": "Terraform brings a provider-based, stateful IaC workflow to Azure. Teams pick it when they need one language across Azure, SaaS, identity, networking appliances, or multiple clouds.",
+  "tags": [
+    "azure",
+    "terraform",
+    "state",
+    "providers",
+    "iac"
+  ],
+  "analogy": "Terraform state is the clipboard a stage manager carries: it maps every prop in the script to the real prop on stage so the next scene change does not guess.",
+  "diagram": "flowchart LR\n  HCL[Terraform configuration] --> Plan[terraform plan]\n  State[(State file)] --> Plan\n  Plan --> Apply[terraform apply]\n  Apply --> Providers[Providers: AzureRM AzAPI AzureAD]\n  Providers --> Azure[Azure resources]\n  Apply --> State",
+  "body": "## First principles\n\nA deployment tool must answer two questions: *what do you want?* and *what already exists?* Terraform's configuration answers the first question. Terraform **state** answers the second by storing the mapping between configuration objects and real infrastructure objects.\n\nThat stateful model is Terraform's superpower and its sharp edge. It lets Terraform plan exact changes across many APIs, but it makes shared state a production asset that must be stored, locked, protected, and backed up.\n\n## Why it exists\n\nAzure is rarely the only API a platform team manages. A real product might need Azure resources, Microsoft Entra groups, GitHub repositories, Datadog monitors, Cloudflare DNS, and a SaaS incident tool. Bicep is excellent for native Azure resources; Terraform is attractive when the platform boundary is wider than Azure.\n\nTerraform also gives many organizations one IaC workflow across clouds and vendors: `terraform init`, `terraform plan`, `terraform apply`, remote state, modules, provider versions, and policy checks.\n\n## How it works\n\nTerraform configuration is written in HCL. Providers translate Terraform's generic resource graph into API calls. On Azure, the major providers are **AzureRM** for stable Azure resources, **AzAPI** for direct Azure Resource Manager coverage when a feature is newer or provider support lags, and **AzureAD** for Microsoft Entra objects.\n\nThe plan step compares configuration plus state plus live provider reads and proposes actions. The apply step performs them and updates state. In teams, state usually lives in a remote backend such as Azure Storage so pipelines and engineers do not each keep private, conflicting copies.\n\n## Analogy\n\nImagine a theater stage. The script says \"table center stage.\" The state file says which physical table is already there, its inventory tag, and who moved it last. Lose the clipboard and the crew may build a second table or remove the wrong one.\n\n## In practice\n\n```hcl\nterraform {\n  backend \"azurerm\" {\n    resource_group_name  = \"<state-rg>\"\n    storage_account_name = \"<stateaccount>\"\n    container_name       = \"tfstate\"\n    key                  = \"prod.app.tfstate\"\n  }\n}\n\nprovider \"azurerm\" {\n  features {}\n}\n```\n\nThat backend block is not decoration; it is the team's shared memory. Protect it like deployment credentials.\n\n## Gotchas\n\nNever casually edit state by hand. Never store production state only on a laptop. Avoid one giant state file for the whole company; blast radius follows state boundaries. Also remember that Terraform provider support can lag brand-new Azure features; AzAPI can bridge that gap, while Bicep may be simpler if the job is purely Azure-native.",
+  "teachItBack": "Terraform manages Azure by combining configuration, providers, and state. Configuration declares the desired infrastructure, providers call Azure and other APIs, and state remembers the mapping to real objects. Teams choose Terraform when their platform spans multiple APIs, but they must treat remote state as critical infrastructure.",
+  "glossary": [
+    {
+      "term": "Provider",
+      "definition": "Terraform plugin that knows how to manage a specific API, such as AzureRM or AzureAD."
+    },
+    {
+      "term": "State",
+      "definition": "Terraform's record of managed objects and their real-world identities."
+    },
+    {
+      "term": "Plan",
+      "definition": "Terraform's proposed set of changes before apply."
+    },
+    {
+      "term": "Backend",
+      "definition": "Where Terraform stores state, often remote storage for team use."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Dev docs — Overview of Terraform on Azure",
+      "url": "https://learn.microsoft.com/en-us/azure/developer/terraform/overview",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — Store Terraform state in Azure Storage",
+      "url": "https://learn.microsoft.com/en-us/azure/developer/terraform/store-state-in-azure-storage",
+      "verified": true
+    },
+    {
+      "title": "HashiCorp docs — Terraform state",
+      "url": "https://developer.hashicorp.com/terraform/language/state",
+      "verified": true
+    },
+    {
+      "title": "Terraform Registry — AzureRM provider",
+      "url": "https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs",
+      "verified": true
+    }
+  ],
+  "related": [
+    "azp-intro",
+    "azp-arm-bicep",
+    "azp-environments",
+    "azp-capstone"
+  ]
+}

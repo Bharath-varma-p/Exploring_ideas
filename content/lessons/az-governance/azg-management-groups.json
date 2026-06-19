@@ -1,0 +1,61 @@
+{
+  "id": "azg-management-groups",
+  "title": "Management Groups: Governance Above Subscriptions",
+  "lane": "az-governance",
+  "type": "concept",
+  "order": 20,
+  "summary": "Management groups are Azure folders for subscriptions: put subscriptions in a hierarchy, then apply policy and RBAC once so it inherits everywhere below.",
+  "tags": [
+    "azure",
+    "management-groups",
+    "subscriptions",
+    "scope",
+    "rbac",
+    "policy"
+  ],
+  "analogy": "A management group is a regional office above many stores: set the rule once at headquarters and every store below inherits it.",
+  "diagram": "flowchart TD\n  Root[Tenant root group] --> Platform[Platform]\n  Root --> Landing[Landing zones]\n  Platform --> Identity[Identity subscription]\n  Platform --> Connectivity[Connectivity subscription]\n  Landing --> Prod[Production subscriptions]\n  Landing --> NonProd[Nonproduction subscriptions]\n  Root -.global rules.-> Prod\n  Landing -.workload rules.-> NonProd",
+  "body": "## First principles\n\nA subscription is a powerful boundary, but organizations rarely have just one. They have production, nonproduction, platform, sandbox, regulated, regional, and acquisition subscriptions. If every subscription is governed one by one, governance becomes copy-paste infrastructure. Copy-paste eventually lies.\n\n**Management groups** solve the scaling problem by creating a hierarchy above subscriptions. You place subscriptions under groups that match how your organization wants to govern them, then assign Azure Policy and Azure RBAC at the right level.\n\n## Why it exists\n\nImagine needing to allow resources only in approved regions across 200 subscriptions. Without management groups, you script 200 policy assignments and hope every new subscription gets added. With management groups, you assign the policy once to `Production` or `Landing zones`, and descendant subscriptions inherit it.\n\nThis turns governance from a spreadsheet into structure. The hierarchy becomes a living map of intent: platform subscriptions live under `Platform`; workload subscriptions live under `Landing zones`; stricter rules apply to production than sandboxes.\n\n## How it works\n\nEvery Microsoft Entra tenant has a single root management group. All management groups and subscriptions fold into one hierarchy. A management group can contain child management groups and subscriptions; each child has only one parent. Azure documents several important limits: a directory can support 10,000 management groups, and a management group tree supports up to six levels of depth, not counting the root or subscription level. All subscriptions under one management group hierarchy must trust the same Microsoft Entra tenant.\n\nRole assignments and policy assignments inherit down the hierarchy. That inheritance is the point: assign broad, stable controls high; put environment-specific controls lower.\n\n## Analogy\n\nA retailer does not print separate safety manuals for every store. Headquarters sets company-wide rules, regional offices add local rules, and each store operates within both. Management groups are the headquarters and regional offices for Azure subscriptions.\n\n## In practice\n\nA typical first hierarchy looks like this:\n\n```text\nTenant root group\n  Platform\n    Identity\n    Connectivity\n    Management\n  Landing zones\n    Production\n    Nonproduction\n  Sandbox\n```\n\nUse the root sparingly. Anything assigned there affects everything in the tenant. Put must-have global rules at root; most controls belong lower, where blast radius is easier to reason about.\n\n## Gotchas\n\nDo not mirror every org chart change. Management group hierarchies should represent governance differences, not politics. Do not go too deep: six levels exist, but depth makes troubleshooting inheritance harder. And remember that management groups are not cost tags; they are governance scopes. Tags still carry business metadata like owner and cost center.",
+  "teachItBack": "Management groups let Azure apply governance above subscriptions. You arrange subscriptions into a tenant-wide hierarchy, then assign RBAC and Policy where the rule naturally belongs so it inherits downward. Use them for durable governance boundaries such as platform, landing zones, production, nonproduction, and sandbox—not for every temporary team name.",
+  "glossary": [
+    {
+      "term": "Management group",
+      "definition": "A container above subscriptions used to apply governance and access across many subscriptions."
+    },
+    {
+      "term": "Tenant root group",
+      "definition": "The built-in top management group where all subscriptions and management groups in a tenant ultimately fold up."
+    },
+    {
+      "term": "Inheritance",
+      "definition": "The flow of role and policy assignments from a parent scope to child scopes."
+    },
+    {
+      "term": "Subscription",
+      "definition": "Azure billing, quota, and administrative boundary that contains resource groups and resources."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Dev docs — Organize your resources with management groups",
+      "url": "https://learn.microsoft.com/en-us/azure/governance/management-groups/overview",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — Overview of Azure Policy",
+      "url": "https://learn.microsoft.com/en-us/azure/governance/policy/overview",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — What is an Azure landing zone?",
+      "url": "https://learn.microsoft.com/en-us/azure/cloud-adoption-framework/ready/landing-zone/",
+      "verified": true
+    }
+  ],
+  "related": [
+    "azg-intro",
+    "azg-policy",
+    "azg-landing-zones",
+    "azg-quotas"
+  ]
+}

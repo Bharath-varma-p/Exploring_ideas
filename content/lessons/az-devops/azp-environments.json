@@ -1,0 +1,66 @@
+{
+  "id": "azp-environments",
+  "title": "Environments, Stages, Approvals, and Gates",
+  "lane": "az-devops",
+  "type": "concept",
+  "order": 70,
+  "summary": "Promotion is the movement of the same change through increasing trust zones. Environments, stages, approvals, and gates make that movement visible and controlled.",
+  "tags": [
+    "azure",
+    "environments",
+    "stages",
+    "approvals",
+    "gates",
+    "pipelines"
+  ],
+  "analogy": "A pipeline environment is an airport security checkpoint: the plane can be ready, but it does not enter the runway until identity, paperwork, and safety checks pass.",
+  "diagram": "flowchart TD\n  Commit[Commit] --> Build[Build once]\n  Build --> Dev[Dev stage]\n  Dev --> Test[Test stage]\n  Test --> Approval{Approval and checks}\n  Approval --> Staging[Staging environment]\n  Staging --> Gate{Health policy gate}\n  Gate --> Prod[Production environment]\n  Prod --> History[Deployment history]",
+  "body": "## First principles\n\nA release pipeline should not rebuild reality differently for every environment. The safe pattern is **build once, promote many times**: the same artifact moves from dev to test to staging to production, while controls get stricter as risk increases.\n\nAn **environment** is a logical target such as Dev, Test, QA, Staging, or Production. A **stage** is a pipeline phase. **Approvals and gates/checks** decide whether a stage can deploy to a protected target.\n\n## Why it exists\n\nWithout environment controls, production is just another YAML line. Anyone who can merge might accidentally deploy. Nobody can easily answer what version is in staging, who approved prod, which commits entered an environment, or whether a required security scan ran before promotion.\n\nEnvironments create a named place for deployment history and policy. Approvals add human judgment where automation cannot know business timing. Gates/checks add machine judgment: branch rules, monitoring signals, security scans, work item linkage, or external change-management systems.\n\n## How it works\n\nIn Azure DevOps, environments can record deployment history and trace commits/work items. Deployment jobs target those environments. Approvals and checks are configured on protected resources such as environments, service connections, repositories, variable groups, or agent pools.\n\nGitHub Actions has a similar concept: environments can hold protection rules, reviewers, wait timers, environment secrets, and deployment history. The mental model is the same even if the UI differs: risky targets require explicit conditions before the deployment job receives access.\n\n## Analogy\n\nA plane can be mechanically ready and still not take off. It needs runway clearance, weather checks, passenger manifest, and sometimes a human controller. Production deserves at least that much respect.\n\n## In practice\n\n```yaml\nstages:\n- stage: Staging\n  jobs:\n  - deployment: deploy_staging\n    environment: staging\n- stage: Production\n  dependsOn: Staging\n  jobs:\n  - deployment: deploy_prod\n    environment: production\n```\n\nThe production environment can require approval without putting a human's name in YAML. Policy belongs to the protected target, not just the pipeline author.\n\n## Gotchas\n\nApproval is not security if the approver does not understand the diff. Gates are not quality if they only check that a web page returns 200. Do not rebuild different artifacts per environment unless you enjoy impossible incident reviews. Avoid putting secrets in generic pipeline variables when environment-scoped identity or OIDC can narrow exposure.",
+  "teachItBack": "Environments are named deployment targets; stages are pipeline phases; approvals and gates decide when a change can move into a riskier target. The best pattern builds one artifact and promotes it through controlled environments. That gives traceability, separation of duties, and a clear answer to what changed in production.",
+  "glossary": [
+    {
+      "term": "Environment",
+      "definition": "A logical deployment target such as dev, staging, or production, often with history and protection rules."
+    },
+    {
+      "term": "Stage",
+      "definition": "A pipeline phase that groups jobs, often aligned to build, test, or deploy steps."
+    },
+    {
+      "term": "Approval",
+      "definition": "A human decision required before a protected deployment proceeds."
+    },
+    {
+      "term": "Gate / check",
+      "definition": "An automated condition that must pass before deployment to a protected resource."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Dev docs — Azure Pipelines environments",
+      "url": "https://learn.microsoft.com/en-us/azure/devops/pipelines/process/environments?view=azure-devops",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — Pipeline deployment approvals",
+      "url": "https://learn.microsoft.com/en-us/azure/devops/pipelines/process/approvals?view=azure-devops",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — Azure Pipelines deployment jobs",
+      "url": "https://learn.microsoft.com/en-us/azure/devops/pipelines/process/deployment-jobs?view=azure-devops",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — Safe deployment practices",
+      "url": "https://learn.microsoft.com/en-us/azure/well-architected/operational-excellence/safe-deployments",
+      "verified": true
+    }
+  ],
+  "related": [
+    "azp-azure-devops",
+    "azp-github-actions",
+    "azp-deployment-strategies",
+    "azp-capstone"
+  ]
+}

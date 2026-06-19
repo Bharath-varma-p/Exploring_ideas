@@ -1,0 +1,33 @@
+{
+  "id": "azd-analytics",
+  "title": "Big Data: Data Lake, Synapse, and Fabric",
+  "lane": "az-data",
+  "type": "concept",
+  "order": 90,
+  "summary": "How Azure handles petabytes of analytical data. The evolution from Blob Storage to Data Lake Gen2, Synapse Analytics, and the new SaaS unification: Microsoft Fabric.",
+  "tags": ["analytics", "olap", "fabric", "synapse", "data-lake"],
+  "analogy": "A Data Lake is a massive unorganized reservoir of water. Synapse is the water treatment plant. Microsoft Fabric is the modern bottled-water delivery service that handles the reservoir, treatment, and delivery all in one SaaS package.",
+  "diagram": "flowchart TD\n  Sources[Logs / Apps / Telemetry] --> Lake[Data Lake Gen2\\nCheap, raw storage]\n  Lake --> Engine[Compute Engine\\nSpark or SQL]\n  Engine --> Report[Power BI\\nVisual Dashboards]\n  subgraph \"Microsoft Fabric (SaaS)\"\n    Lake\n    Engine\n    Report\n  end",
+  "body": "## First principles\n\nTransactional databases (OLTP) like Azure SQL are built to find a single needle in a haystack instantly. But if you ask Azure SQL to read the entire haystack to find the average length of a needle over five years, it will freeze. **Analytical databases (OLAP)** are built differently: they store data in columns rather than rows, allowing them to scan billions of records in seconds to find aggregates.\n\n## Why it exists\n\nCompanies generate petabytes of raw telemetry, logs, and clickstreams. You cannot afford to store petabytes in an expensive SQL database. The modern \"Big Data\" pattern separates storage from compute. You dump the raw data into extremely cheap storage, and you only spin up expensive computing engines when you need to analyze it.\n\n## How it works (The Evolution)\n\nAzure's analytical tools have evolved rapidly. You will see all three of these terms:\n\n### 1. Azure Data Lake Storage Gen2 (The Storage)\nThis is simply a standard Azure Storage Account with a \"Hierarchical Namespace\" toggle flipped on. It gives the blob storage real folders and directories, which Big Data tools (like Hadoop and Spark) require to read files efficiently. It is the cheap, raw reservoir.\n\n### 2. Azure Synapse Analytics (The PaaS Engine)\nSynapse is an integrated workspace that combines the compute engines. It brings together Enterprise Data Warehousing (dedicated SQL pools) and Big Data analytics (Apache Spark pools) so data engineers can clean, transform, and query the data sitting in the Data Lake.\n\n### 3. Microsoft Fabric (The SaaS Future)\nFabric is Microsoft's newest platform. Instead of wiring together a Data Lake, an Azure Data Factory for movement, Synapse for compute, and Power BI for visuals, Fabric bundles them all into a single Software-as-a-Service product. Its core storage layer is called **OneLake** (think \"OneDrive for data\"). \n\n## In practice\n\nIn a modern Fabric architecture:\n1. Data streams into **OneLake** from your web apps.\n2. A data engineer uses a **Notebook (Spark)** in Fabric to clean the raw JSON into structured tables (the \"Medallion Architecture\": Bronze to Silver to Gold).\n3. A business analyst opens **Power BI** (built directly into Fabric) and queries the Gold data to build a dashboard for the CEO.\n\n## Gotchas\n\n- **The Naming Confusion:** Fabric does not replace Synapse; it absorbs its capabilities. You will see \"Synapse Data Engineering\" as an experience *inside* Microsoft Fabric. \n- **Cost:** Big data compute is expensive. Leaving a massive Spark cluster running overnight by accident will result in a painful bill.",
+  "teachItBack": "Analytical workloads separate cheap storage (Data Lake Gen2/OneLake) from heavy compute. Microsoft's data platform evolved from piecing together individual PaaS services like Synapse, into Microsoft Fabric: a unified SaaS platform that handles data ingestion, engineering, and Power BI visualization in one place.",
+  "glossary": [
+    {
+      "term": "Data Lake",
+      "definition": "A centralized repository that allows you to store all your structured and unstructured data at any scale."
+    },
+    {
+      "term": "Microsoft Fabric",
+      "definition": "An end-to-end analytics SaaS platform that unifies Data Factory, Synapse, and Power BI over a single data lake called OneLake."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Microsoft Learn: What is Microsoft Fabric?",
+      "url": "https://learn.microsoft.com/en-us/fabric/enterprise/what-is-fabric",
+      "verified": true
+    }
+  ],
+  "related": [
+    "azd-intro"
+  ]
+}

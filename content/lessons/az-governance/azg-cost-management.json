@@ -1,0 +1,65 @@
+{
+  "id": "azg-cost-management",
+  "title": "Cost Management + Billing: Make Spend Visible Early",
+  "lane": "az-governance",
+  "type": "concept",
+  "order": 60,
+  "summary": "Microsoft Cost Management helps analyze, monitor, allocate, and optimize cloud spend; Billing manages accounts, invoices, payments, and commercial relationships.",
+  "tags": [
+    "azure",
+    "cost-management",
+    "billing",
+    "budgets",
+    "finops"
+  ],
+  "analogy": "Cost Management is the dashboard in the car; Billing is the statement from the gas station and financing office.",
+  "diagram": "flowchart TD\n  Usage[Azure usage meters] --> Commerce[Microsoft commerce pipeline]\n  Commerce --> Rated[Rated usage and discounts]\n  Rated --> Cost[Cost Management]\n  Rated --> Invoice[Billing invoices]\n  Cost --> Analysis[Cost Analysis]\n  Cost --> Budgets[Budgets and alerts]\n  Cost --> Exports[Exports and APIs]\n  Cost --> Allocation[Tags and cost allocation]",
+  "body": "## First principles\n\nCloud cost is not a single price tag. It is metered usage multiplied by pricing rules, discounts, commitments, taxes, credits, and billing scopes. The faster teams can create resources, the more important it becomes to see cost while it is still steerable. **Microsoft Cost Management** gives that visibility. **Billing** handles the commercial record: accounts, invoices, payments, and agreements.\n\n## Why it exists\n\nIn a data center, waste hides in purchase orders and underused hardware. In cloud, waste hides in time: idle VMs, oversized databases, forgotten disks, over-retained logs, and resources created in expensive regions. The bill arrives after the usage. Cost governance exists to shorten that feedback loop.\n\nCost Management lets teams ask useful questions before finance escalates: what changed since last week, which service is driving the spike, which tags are missing, which reservation is underused, and which subscription is forecast to exceed budget?\n\n## How it works\n\nAzure services emit usage into Microsoft Commerce. Pricing and discounts produce rated usage. Cost details then appear in Cost Management, where you can use **Cost Analysis** for exploration, **budgets** and alerts for thresholds, exports and APIs for integration, and allocation features such as tag inheritance and shared cost splitting. Advisor cost recommendations are also pulled in to surface optimization opportunities.\n\nBilling is related but not identical. Billing manages invoices, payment methods, billing accounts, billing profiles, invoice sections, agreements, and purchased products. Cost Management shows operational cost visibility at scopes like billing account, management group, subscription, and resource group.\n\nA practical freshness detail: Microsoft docs state cost and usage data is typically available within 8-24 hours, budgets are evaluated every 24 hours, and budget alerts notify people; budgets do not stop resources.\n\n## Analogy\n\nCost Management is your car dashboard: current speed, fuel level, trip history, warning lights. Billing is the monthly statement: what you owe, payment method, taxes, credits, and the legal account. You need both, but you drive by the dashboard.\n\n## In practice\n\nCreate budgets where action happens. A platform-wide budget is useful for executives; a subscription or resource group budget is useful for teams.\n\n```bash\naz consumption budget list --subscription <subscription-id> -o table\naz costmanagement query \\\n  --scope /subscriptions/<subscription-id> \\\n  --type ActualCost \\\n  --timeframe MonthToDate\n```\n\nPair budgets with tags. A budget without owner metadata only tells you there is smoke; tags tell you whose kitchen is on fire.\n\n## Gotchas\n\nBudgets are alerts, not circuit breakers. If you need hard prevention, combine Policy, quotas, and process. Cost data can lag, so do not use it for real-time shutdown logic. Also learn your billing agreement: Enterprise Agreement, Microsoft Customer Agreement, and partner scenarios expose scopes differently. Cost visibility is only useful when the right people have read access.",
+  "teachItBack": "Cost Management is the FinOps toolkit for analyzing, allocating, monitoring, and optimizing Azure spend. Billing manages invoices, payment methods, and commercial account structure. Budgets and alerts create early warning, Cost Analysis explains spend, exports feed external systems, and tags make costs accountable—but none of these automatically stops consumption.",
+  "glossary": [
+    {
+      "term": "Cost Management",
+      "definition": "Microsoft tools for analyzing, monitoring, allocating, exporting, and optimizing cloud costs."
+    },
+    {
+      "term": "Billing",
+      "definition": "The account, invoice, payment, agreement, and purchased-product side of Microsoft cloud commerce."
+    },
+    {
+      "term": "Budget",
+      "definition": "A configured spending threshold that can trigger alerts based on actual or forecasted cost."
+    },
+    {
+      "term": "FinOps",
+      "definition": "A cloud financial management discipline that aligns engineering, finance, and business teams around cost-informed decisions."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Dev docs — Overview of Microsoft Cost Management",
+      "url": "https://learn.microsoft.com/en-us/azure/cost-management-billing/costs/overview-cost-management",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — Overview of Billing",
+      "url": "https://learn.microsoft.com/en-us/azure/cost-management-billing/cost-management-billing-overview",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — Create and manage budgets",
+      "url": "https://learn.microsoft.com/en-us/azure/cost-management-billing/costs/tutorial-acm-create-budgets",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — Use tags to organize Azure resources",
+      "url": "https://learn.microsoft.com/en-us/azure/azure-resource-manager/management/tag-resources",
+      "verified": true
+    }
+  ],
+  "related": [
+    "azg-tags",
+    "azg-pricing-models",
+    "azg-advisor",
+    "azg-quotas"
+  ]
+}

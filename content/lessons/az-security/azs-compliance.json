@@ -1,0 +1,77 @@
+{
+  "id": "azs-compliance",
+  "title": "Compliance & Data Governance for Security",
+  "lane": "az-security",
+  "type": "concept",
+  "order": 80,
+  "summary": "Security is what you do; compliance is proving it to auditors and regulators. Three tools carry the load: Azure Policy enforces security rules at scale, Microsoft Purview governs and protects data, and the Service Trust Portal shows Microsoft's own certifications.",
+  "tags": [
+    "azure",
+    "security",
+    "compliance",
+    "azure-policy",
+    "purview"
+  ],
+  "analogy": "Compliance is the difference between being honest and passing the audit that proves you're honest. Azure Policy is the building code inspector who won't let you pour concrete that violates code; Purview is the librarian who knows where every sensitive document is and who can touch it; the Service Trust Portal is Microsoft's own binder of safety certificates for the building you're renting.",
+  "diagram": "flowchart TD\n  REG[Regulations: GDPR, HIPAA, PCI, ISO] --> NEED[Prove + enforce controls]\n  NEED --> POL[Azure Policy: enforce rules at scale]\n  NEED --> PUR[Microsoft Purview: find + govern + protect data]\n  NEED --> STP[Service Trust Portal: Microsoft's certifications]\n  POL --> AUDIT[Audit / Deny / DeployIfNotExists]\n  PUR --> CLASS[Discover + classify sensitive data]\n  POL --> DASH[Compliance dashboard in Defender for Cloud]",
+  "body": "## First principles\n\nDoing the right thing is necessary but not sufficient — in a regulated world you must also *prove* you did it, continuously, to someone who doesn't trust your word. **Compliance** is that proof: demonstrating that your systems meet a defined set of controls (a law like GDPR, an industry standard like PCI-DSS, a framework like ISO 27001). The hard part isn't reading the rules; it's *enforcing* them across hundreds of resources and *evidencing* them on demand. Manual enforcement doesn't scale and humans drift. So Azure gives you machinery to make compliance continuous and demonstrable.\n\n## Why it exists\n\nWithout automation, compliance is a frantic pre-audit scramble: someone manually checks every resource against a checklist, screenshots settings into a spreadsheet, and prays nothing changed since. The moment the audit ends, drift resumes — a developer spins up an unencrypted storage account, a region rule gets violated, MFA lapses. You're 'compliant' for exactly one day a year. The tools below flip this: rules are *enforced as resources are created*, and your compliance posture is *measured continuously*, so the audit becomes a report you export rather than a fire drill you survive.\n\n## How it works: three pillars\n\n### 1. Azure Policy — enforce security rules at scale\n\n**Azure Policy** lets you declare rules and have Azure enforce them automatically across subscriptions and management groups. A policy evaluates resources and can **Audit** (flag violations), **Deny** (block non-compliant creation outright), or **DeployIfNotExists** (auto-remediate by deploying the missing control). Examples: 'deny any storage account that allows public access,' 'require HTTPS-only,' 'allow resources only in approved regions,' 'enforce a minimum TLS version.'\n\nPolicies bundle into **initiatives** — and Microsoft ships built-in initiatives mapped to whole standards, like the **Microsoft Cloud Security Benchmark**, NIST, PCI-DSS, and ISO 27001. Assign the initiative and you get continuous, scored measurement against that standard. This is the *enforcement* engine of compliance, and it's the same engine the Governance lane uses for cost and tagging — here we point it at security controls. Defender for Cloud's **regulatory compliance dashboard** surfaces the results.\n\n### 2. Microsoft Purview — govern and protect the data itself\n\nPolicy governs *resources*; **Microsoft Purview** governs the *data inside them*. You can't protect what you don't know you have, and at scale nobody knows where all the sensitive data lives. Purview **discovers and classifies** data across your estate (finding credit-card numbers, health records, PII), applies **sensitivity labels**, supports data loss prevention, and maps data lineage. For a regulation like GDPR ('know where personal data is and control it'), Purview is how you actually answer 'where is it, who can touch it, and where did it come from?' (Purview is a broad data-governance suite; for security, think *sensitive-data discovery, classification, and protection*.)\n\n### 3. Service Trust Portal — Microsoft's side of the bargain\n\nRemember shared responsibility: Microsoft must prove *its* compliance too. The **Service Trust Portal** is Microsoft's public library of independent audit reports and certifications (SOC 1/2/3, ISO, FedRAMP, and many more) for Azure itself. When *your* auditor asks 'is the underlying platform certified for X?', you download the evidence here rather than re-auditing Microsoft's datacenters. **Compliance Manager** then helps you track *your* shared responsibilities against those frameworks with a measurable score.\n\n## In practice\n\n```bash\n# Assign a built-in security initiative to a management group\naz policy assignment create \\\n  --name require-secure-storage \\\n  --display-name \"Deny public storage + require HTTPS\" \\\n  --scope <management-group-resource-id> \\\n  --policy-set-definition <microsoft-cloud-security-benchmark-id>\n```\n\nWorkflow: assign a security initiative via **Azure Policy** so violations are blocked or flagged at the source -> watch the score in Defender for Cloud's **compliance dashboard** -> use **Purview** to locate and label the regulated data those controls protect -> pull platform certifications from the **Service Trust Portal** for the auditor. Enforcement, measurement, data, and evidence — covered.\n\n## Gotchas\n\n- **Compliance is not security.** Passing an audit means you met a *baseline* on the day you were measured; a determined attacker doesn't care about your certificate. Treat frameworks as a floor, not a finish line.\n- **'Microsoft is certified' ≠ 'your app is compliant.'** The Service Trust Portal proves the *platform's* compliance. Your configuration on top of it is still your responsibility — that's shared responsibility again.\n- **Deny policies can break deployments.** A well-meaning 'deny public IPs' policy can block a legitimate deploy at 5 p.m. Start new policies in **Audit** mode, see what they'd catch, then promote to **Deny**.\n- **Classification needs upkeep.** Purview's view is only as current as its scans and labels. New data sources and unlabeled exports slip through the cracks if governance isn't ongoing.\n- **Standards overlap and conflict.** Mapping one control to five frameworks is normal; chasing 100% on every initiative simultaneously is a trap. Prioritize the regulations that actually apply to you.",
+  "teachItBack": "Security is doing the right thing; compliance is continuously proving it to auditors, and the hard part is enforcing and evidencing controls across hundreds of resources. Azure Policy enforces security rules at scale — auditing, denying, or auto-remediating non-compliant resources, with built-in initiatives mapped to standards like the Microsoft Cloud Security Benchmark, ISO, and PCI. Microsoft Purview governs the data itself by discovering, classifying, and labeling sensitive information so you can answer where regulated data lives and who can touch it, while the Service Trust Portal supplies Microsoft's own platform certifications for your auditor. Remember compliance is a baseline floor, not real-world security, and Microsoft's certifications don't make your configuration compliant.",
+  "glossary": [
+    {
+      "term": "Compliance",
+      "definition": "Demonstrating that systems meet a defined set of controls from a law, standard, or framework (e.g. GDPR, PCI-DSS, ISO 27001)."
+    },
+    {
+      "term": "Azure Policy",
+      "definition": "A service that enforces rules on resources at scale, with effects like Audit, Deny, and DeployIfNotExists, bundled into initiatives."
+    },
+    {
+      "term": "Initiative (policy set)",
+      "definition": "A group of Azure policies, often mapped to a whole compliance standard, assigned and scored together."
+    },
+    {
+      "term": "Microsoft Purview",
+      "definition": "A data governance suite that discovers, classifies, labels, and protects sensitive data across your estate."
+    },
+    {
+      "term": "Service Trust Portal",
+      "definition": "Microsoft's public library of independent audit reports and certifications proving the Azure platform's own compliance."
+    },
+    {
+      "term": "Compliance Manager",
+      "definition": "A tool that tracks your shared compliance responsibilities against frameworks and gives a measurable score."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Dev docs — Azure Policy overview",
+      "url": "https://learn.microsoft.com/en-us/azure/governance/policy/overview",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — Microsoft Cloud Security Benchmark policy initiative",
+      "url": "https://learn.microsoft.com/en-us/azure/governance/policy/samples/azure-security-benchmark",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — What is Microsoft Purview?",
+      "url": "https://learn.microsoft.com/en-us/purview/purview",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — Get started with the Service Trust Portal",
+      "url": "https://learn.microsoft.com/en-us/compliance/assurance/stp-get-started",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — Microsoft Purview Compliance Manager",
+      "url": "https://learn.microsoft.com/en-us/purview/compliance-manager",
+      "verified": true
+    }
+  ],
+  "related": [
+    "azs-defender",
+    "azs-encryption",
+    "azs-shared-responsibility"
+  ]
+}

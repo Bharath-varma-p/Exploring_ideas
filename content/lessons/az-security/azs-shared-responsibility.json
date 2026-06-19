@@ -1,0 +1,63 @@
+{
+  "id": "azs-shared-responsibility",
+  "title": "Shared Responsibility: What's Always Yours",
+  "lane": "az-security",
+  "type": "concept",
+  "order": 20,
+  "summary": "The cloud is a partnership, not a handoff. Microsoft secures the cloud; you secure what you put in it. The line moves depending on whether you use IaaS, PaaS, or SaaS — but identity, data, and access governance are ALWAYS yours.",
+  "tags": [
+    "azure",
+    "security",
+    "shared-responsibility",
+    "iaas-paas-saas",
+    "governance"
+  ],
+  "analogy": "Renting cloud is like housing: a detached house (IaaS) means you maintain the plumbing and locks; an apartment (PaaS) means the landlord handles the building but you still lock your own door; a hotel (SaaS) means staff run everything — but your valuables in the room safe are still your job. You never outsource locking your own valuables.",
+  "diagram": "flowchart TD\n  subgraph Always yours\n    D[Data] --- I[Identities and accounts] --- A[Access management]\n  end\n  subgraph Shifts by model\n    OS[OS and runtime] --- NET[Network controls] --- APP[Application]\n  end\n  subgraph Always Microsoft\n    PH[Physical hosts] --- DC[Datacenter] --- NETW[Physical network]\n  end\n  IaaS -->|you own more| OS\n  SaaS -->|Microsoft owns more| APP",
+  "body": "## First principles\n\nWhen you run software on someone else's computer, *someone* has to patch the OS, lock the building, encrypt the disk, and decide who gets in. Security failures happen in the gaps where each party assumes the other had it covered. So before you secure anything, you must answer one question precisely: **which security tasks are mine, and which are Microsoft's?** That dividing line is the **shared responsibility model**, and misreading it is one of the most common — and most expensive — cloud mistakes.\n\n## Why it exists: the dangerous assumption\n\nThe seductive lie of the cloud is \"Microsoft handles security, so I don't have to.\" Microsoft *does* handle an enormous amount — physical datacenters, host hardware, the hypervisor, the global network. But it cannot, even in principle, decide *who in your company should access your database* or *whether your storage account is public*. Those are your business decisions.\n\nAlmost every headline \"cloud breach\" is actually a *customer-side* misconfiguration: a storage container left open to the internet, a leaked access key, an over-privileged account, MFA never turned on. The platform was secure; the *tenant's* configuration wasn't. The shared responsibility model exists to make that boundary explicit so nothing falls into the gap.\n\n## How it works: the line moves with the service model\n\nThink of a stack from the physical datacenter up to your data. The more of that stack Azure runs for you, the more security Azure owns — and the less you do. Three reference points:\n\n- **IaaS (Infrastructure as a Service)** — e.g. a virtual machine. Azure secures the physical host, hypervisor, and datacenter. *You* own the guest OS (patching!), the installed software, network rules (NSGs), application code, identity, and data. Most responsibility is yours.\n- **PaaS (Platform as a Service)** — e.g. App Service, Azure SQL. Azure also runs and patches the OS and runtime. You own your app code and its configuration, plus identity and data. The OS burden moves to Microsoft; the app and access stay yours.\n- **SaaS (Software as a Service)** — e.g. Microsoft 365. Azure runs almost everything. You still own your *data*, your *identities/accounts*, and *access management* — who's in, what they can reach, and whether sharing is locked down.\n\nNotice the pattern: as you move IaaS -> PaaS -> SaaS, the boundary slides upward and your operational burden shrinks. But three things never cross the line.\n\n## The three things that are ALWAYS yours\n\nNo matter the service model — even pure SaaS — you always own:\n\n1. **Data.** Its classification, where it's allowed to live, who may read it, and (when you choose customer-managed keys) the keys that protect it. Microsoft stores it; you govern it.\n2. **Identities and accounts.** Your users, service principals, and managed identities — and the strength of their authentication (MFA, passwordless, Conditional Access).\n3. **Access management.** The RBAC assignments, least-privilege scoping, and just-in-time elevation that decide who can touch what.\n\nMicrosoft secures *the cloud*; you secure *what you put in the cloud, and who gets to it*. That sentence is the whole model.\n\n## In practice\n\nUse this as a checklist when you stand up anything:\n\n- Deployed a **VM**? You now owe OS patching, endpoint protection, and NSG rules — Azure won't patch your guest OS. (Defender for Cloud will *nag* you about it; see the next lesson.)\n- Deployed an **App Service**? Skip OS patching, but you still owe secure app config, secrets in Key Vault, and managed identity instead of stored credentials.\n- Using **storage**? Azure encrypts the disk automatically, but *you* decide whether the container is public and who holds the keys.\n\nIn all three, identity and data governance never left your plate.\n\n## Gotchas\n\n- **\"Encrypted by default\" ≠ \"access-controlled by default.\"** Azure encrypts storage at rest for you, but encryption doesn't stop a *legitimately reachable* public endpoint. Different layer, different job.\n- **The free tier of Defender for Cloud is on for every subscription** and exists precisely to flag *your* side of the line (open ports, missing MFA, unpatched VMs). Read it as a to-do list, not noise.\n- **SaaS does not absolve you.** The most common Microsoft 365 incidents are customer identity failures (no MFA, risky legacy auth) — squarely on your side of the line.\n- **Compliance is shared too.** Microsoft certifies the platform; you're still responsible for configuring *your* workloads to meet *your* regulations. Inheriting a compliant datacenter doesn't make your app compliant.",
+  "teachItBack": "The cloud is a partnership: Microsoft secures the physical hosts, datacenters, and increasingly the OS and runtime, while you secure what you put in it. The line slides upward as you move from IaaS to PaaS to SaaS, shrinking your operational burden — but three things are always yours no matter what: your data, your identities and accounts, and your access management. Most 'cloud breaches' are really customer-side misconfigurations in exactly those three areas, which is why reading the dividing line correctly is the first job in cloud security.",
+  "glossary": [
+    {
+      "term": "Shared responsibility model",
+      "definition": "The framework defining which security tasks belong to the cloud provider versus the customer, and how that split changes by service type."
+    },
+    {
+      "term": "IaaS",
+      "definition": "Infrastructure as a Service (e.g. a VM); the provider runs the hardware and hypervisor while you own the OS, software, network rules, and data."
+    },
+    {
+      "term": "PaaS",
+      "definition": "Platform as a Service (e.g. App Service, Azure SQL); the provider also runs and patches the OS and runtime, leaving you the app, identity, and data."
+    },
+    {
+      "term": "SaaS",
+      "definition": "Software as a Service (e.g. Microsoft 365); the provider runs nearly everything, but you still own your data, accounts, and access."
+    },
+    {
+      "term": "Misconfiguration",
+      "definition": "A customer-side setup error (open storage, leaked key, missing MFA) that causes most cloud security incidents despite a secure platform."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Dev docs — Shared responsibility in the cloud",
+      "url": "https://learn.microsoft.com/en-us/azure/security/fundamentals/shared-responsibility",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — Security in the Azure Well-Architected Framework",
+      "url": "https://learn.microsoft.com/en-us/azure/well-architected/security/",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — Zero Trust security overview",
+      "url": "https://learn.microsoft.com/en-us/security/zero-trust/zero-trust-overview",
+      "verified": true
+    }
+  ],
+  "related": [
+    "azs-intro",
+    "azs-defender",
+    "azs-encryption"
+  ]
+}

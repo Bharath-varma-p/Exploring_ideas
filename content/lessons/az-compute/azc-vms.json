@@ -1,0 +1,75 @@
+{
+  "id": "azc-vms",
+  "title": "Virtual Machines: Control Has a Shape",
+  "lane": "az-compute",
+  "type": "concept",
+  "order": 20,
+  "summary": "Azure VMs are cloud computers you assemble from size, image, disks, and network. Use them when OS-level control matters enough to own the operations bill.",
+  "tags": [
+    "azure",
+    "compute",
+    "virtual-machines",
+    "iaas",
+    "disks",
+    "images"
+  ],
+  "analogy": "A VM is a furnished apartment in Azure: the building is managed, but the rooms, locks, furniture, and chores are yours.",
+  "diagram": "flowchart TD\n  Image[Image: OS plus baseline] --> VM[Virtual Machine]\n  Size[Size family: CPU memory GPU IO] --> VM\n  NIC[Network interface and subnet] --> VM\n  OS[OS disk: boot volume] --> VM\n  Data[Data disks: app state] --> VM\n  Agent[VM Agent: extensions and fabric signals] --> VM",
+  "body": "## First principles\n\nA **virtual machine** is the cloud version of a computer you can log into. It needs a processor and memory, a boot disk, network identity, an operating system, and a lifecycle. Azure supplies the physical hardware and virtualization fabric; you still own the guest OS and what happens inside it.\n\nThat boundary is the whole lesson: Azure keeps the building standing, but you still keep the apartment clean.\n\n## Why it exists\n\nSome workloads cannot start life as tidy cloud-native apps. They may require a specific OS, custom kernel modules, vendor installers, legacy services, domain join patterns, GPU drivers, or migration with minimal code change. VMs give those workloads a familiar home while still gaining Azure primitives: regions, VNets, managed disks, images, backups, monitoring, and automation.\n\n## How it works\n\nA VM begins with an **image**: Windows or Linux plus an initial software baseline. You pick a **size** from a VM family. General purpose sizes balance CPU and memory; compute optimized sizes favor CPU; memory optimized sizes favor RAM; GPU sizes attach accelerators; storage optimized sizes favor high disk throughput.\n\nThe **OS disk** boots the machine. **Data disks** hold application state and can be attached, detached, snapshotted, and sized independently. Treat the OS disk as replaceable machinery and the data disk as the cargo.\n\nThe **VM Agent** is the small bridge between the guest OS and Azure. It enables extensions, password reset, Run Command, monitoring hooks, and other fabric-driven operations. If the agent is broken or missing, Azure can still own the host, but it loses many convenient ways to help inside the guest.\n\n## In practice\n\n```bash\naz vm create   --resource-group <rg>   --name <vm-name>   --image Ubuntu2204   --size Standard_D2s_v5   --admin-username <user>   --generate-ssh-keys\n```\n\nThat command hides a lot: it creates or attaches networking, chooses an image, provisions an OS disk, injects access, and lets the VM Agent finish configuration.\n\n## Gotchas\n\nA VM is rarely “just one resource.” It drags along a NIC, public IP if exposed, disks, boot diagnostics, identity, extensions, backup, patching, and monitoring. Stopping inside the OS is not the same as deallocating in Azure; allocated compute can still cost money. And scaling a single VM vertically is easy, but reliability usually needs multiple instances, zones, load balancing, and automation.",
+  "teachItBack": "An Azure VM is the most familiar compute shape: a cloud computer built from an image, size, disks, and network. Azure manages the physical host, but you manage the guest OS, patches, runtime, and most operational hygiene. Choose VMs when that control is necessary; otherwise, prefer a service that removes more chores.",
+  "glossary": [
+    {
+      "term": "Image",
+      "definition": "A reusable OS and software baseline used to create a VM."
+    },
+    {
+      "term": "VM size",
+      "definition": "The selected bundle of vCPU, memory, temporary storage, IO capability, and sometimes GPU hardware."
+    },
+    {
+      "term": "OS disk",
+      "definition": "The managed disk that contains the boot volume for a VM."
+    },
+    {
+      "term": "Data disk",
+      "definition": "An attached managed disk intended for application data rather than the operating system."
+    },
+    {
+      "term": "VM Agent",
+      "definition": "Software inside the guest OS that lets Azure coordinate extensions and management operations."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Dev docs — Overview of Azure virtual machines",
+      "url": "https://learn.microsoft.com/en-us/azure/virtual-machines/overview",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — Virtual machine sizes overview",
+      "url": "https://learn.microsoft.com/en-us/azure/virtual-machines/sizes/overview",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — Overview of Azure Disk Storage",
+      "url": "https://learn.microsoft.com/en-us/azure/virtual-machines/managed-disks-overview",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — Azure Windows VM Agent overview",
+      "url": "https://learn.microsoft.com/en-us/azure/virtual-machines/extensions/agent-windows",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — Azure Linux VM Agent overview",
+      "url": "https://learn.microsoft.com/en-us/azure/virtual-machines/extensions/agent-linux",
+      "verified": true
+    }
+  ],
+  "related": [
+    "azc-intro",
+    "azc-vmss",
+    "azc-batch-hpc",
+    "azc-choosing-compute"
+  ]
+}

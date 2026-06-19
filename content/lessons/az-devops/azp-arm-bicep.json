@@ -1,0 +1,71 @@
+{
+  "id": "azp-arm-bicep",
+  "title": "ARM Templates to Bicep — Native Azure IaC",
+  "lane": "az-devops",
+  "type": "concept",
+  "order": 20,
+  "summary": "ARM is Azure's control-plane contract; Bicep is the human-friendly language that compiles to that contract. Use it when you want native Azure coverage, type safety, modules, and fast access to new resource APIs.",
+  "tags": [
+    "azure",
+    "bicep",
+    "arm",
+    "templates",
+    "modules",
+    "iac"
+  ],
+  "analogy": "ARM is the legal contract Azure accepts; Bicep is the clear architect's drawing that compiles into that contract without making humans read legalese.",
+  "diagram": "flowchart TD\n  B[Bicep file] --> C[Compile]\n  C --> A[ARM JSON template]\n  A --> ARM[Azure Resource Manager]\n  ARM --> RP[Resource providers]\n  RP --> R[Azure resources]\n  M[Local or registry modules] --> B",
+  "body": "## First principles\n\nEvery Azure resource is created through the Azure control plane. The front door for that control plane is **Azure Resource Manager (ARM)**. Whether you click in the portal, run `az`, call REST, deploy Terraform, or deploy Bicep, the request eventually becomes an ARM operation against a resource provider.\n\nAn **ARM template** is JSON that declares Azure resources. It is powerful and exact, but humans do not enjoy hand-authoring deeply nested JSON. **Bicep** keeps the ARM model and replaces the authoring experience with a concise domain-specific language.\n\n## Why it exists\n\nThe original pain was not that Azure lacked automation; ARM templates already automated Azure. The pain was that JSON templates were noisy: brackets, string functions, copy loops, and giant parameter blocks hid the actual architecture. Teams needed native Azure coverage without making every infrastructure file feel like reading minified law.\n\nBicep fixes the human layer. It compiles to ARM JSON, so it does not wait for a third-party provider to support new Azure resource types. Microsoft positions Bicep as a declarative language for repeatedly deploying Azure resources with concise syntax, type safety, and reuse.\n\n## How it works\n\nA Bicep file declares resources, parameters, variables, outputs, and **modules**. A module is another Bicep file you call from a parent file, often to standardize repeatable building blocks such as a storage account, virtual network, app service, or diagnostic settings.\n\nDeployment target matters. Bicep can deploy at resource group, subscription, management group, and tenant scopes, matching Azure's hierarchy. The file is compiled to ARM JSON and submitted to ARM; ARM talks to resource providers like `Microsoft.Web`, `Microsoft.Storage`, or `Microsoft.Network`.\n\n## Analogy\n\nARM is the building permit office: it only accepts precise legal forms. Bicep is the architect's plan set: readable rooms, walls, and labels that the permit office can still translate into official paperwork.\n\n## In practice\n\n```bicep\nparam location string = resourceGroup().location\nparam name string\n\nresource storage 'Microsoft.Storage/storageAccounts@2023-05-01' = {\n  name: name\n  location: location\n  sku: { name: 'Standard_LRS' }\n  kind: 'StorageV2'\n}\n\noutput blobEndpoint string = storage.properties.primaryEndpoints.blob\n```\n\nThat tiny file says more than it looks like: resource type, API version, name, location, SKU, and an output another deployment step can consume.\n\n## Gotchas\n\nBicep is Azure-native, not multi-cloud. That is a strength when you live in Azure and want instant resource-provider coverage; it is a constraint when one workflow must manage Azure plus non-Azure systems. Modules are not a license to create a giant platform monolith; keep module boundaries around lifecycles. And remember: Bicep describes infrastructure, but RBAC and policy still decide whether the deployment is allowed.",
+  "teachItBack": "ARM is the native Azure deployment engine, and Bicep is the cleaner language humans use to feed it. Bicep files compile to ARM templates, deploy through Azure Resource Manager, and can be organized into modules. Choose it when Azure-native coverage, readable declarations, and alignment with Azure scopes matter more than multi-cloud portability.",
+  "glossary": [
+    {
+      "term": "Azure Resource Manager",
+      "definition": "Azure's deployment and management control plane for resources."
+    },
+    {
+      "term": "ARM template",
+      "definition": "A JSON document that declares Azure resources and properties for ARM to deploy."
+    },
+    {
+      "term": "Bicep",
+      "definition": "A declarative Azure IaC language that compiles to ARM templates."
+    },
+    {
+      "term": "Module",
+      "definition": "A reusable Bicep deployment unit called by another Bicep file."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Dev docs — Azure Resource Manager overview",
+      "url": "https://learn.microsoft.com/en-us/azure/azure-resource-manager/management/overview",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — Bicep overview",
+      "url": "https://learn.microsoft.com/en-us/azure/azure-resource-manager/bicep/overview",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — Bicep modules",
+      "url": "https://learn.microsoft.com/en-us/azure/azure-resource-manager/bicep/modules",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — Deploy Bicep to subscription scope",
+      "url": "https://learn.microsoft.com/en-us/azure/azure-resource-manager/bicep/deploy-to-subscription",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — Template deployment what-if",
+      "url": "https://learn.microsoft.com/en-us/azure/azure-resource-manager/templates/deploy-what-if",
+      "verified": true
+    }
+  ],
+  "related": [
+    "azp-intro",
+    "azp-terraform",
+    "azp-github-actions",
+    "azp-capstone"
+  ]
+}

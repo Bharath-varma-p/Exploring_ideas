@@ -1,0 +1,59 @@
+{
+  "id": "azn-intro",
+  "title": "Why Cloud Networking Exists (the software-defined mental model)",
+  "lane": "az-networking",
+  "type": "concept",
+  "order": 10,
+  "summary": "Before the cloud, a network was cables, switches, and a guy with a ladder. In Azure, the entire network is software you describe in text — and that one shift changes everything about how you reason about connectivity, security, and scale.",
+  "tags": [
+    "azure",
+    "networking",
+    "sdn",
+    "overview",
+    "mental-model"
+  ],
+  "analogy": "Traditional networking is laying physical roads with a construction crew; Azure networking is SimCity — you draw the roads, zoning, and toll booths on a screen and the platform makes them real in seconds.",
+  "diagram": "flowchart TD\n  You[You: declare intent in portal/CLI/Bicep] --> ARM[Azure Resource Manager]\n  ARM --> SDN[Software-Defined Network control plane]\n  SDN --> VNet[Virtual Network - your private address space]\n  VNet --> Subnet[Subnets - segments inside the VNet]\n  Subnet --> NIC[VM network interfaces]\n  SDN -.enforces.-> Rules[NSG rules, routes, DNS - all software]",
+  "body": "## First principles\n\nTwo computers can only talk if each has an **address** and there is a **path** between them. That's the whole game. Everything in networking — IP addresses, subnets, routers, firewalls — is just machinery for *handing out addresses* and *controlling which paths are allowed*. Hold onto that: addressing + reachability is the entire subject, and Azure networking is just those two ideas implemented in software.\n\n## Why it exists\n\nIn a traditional data center, the network is **physical**. Want a new isolated environment? Someone racks a switch, runs cables, configures a hardware firewall, and updates a router. It takes days, it's error-prone, and you can't \"undo\" a cable. Worse, the network is a shared, fragile thing — one misconfiguration on a core switch can take down everyone.\n\nThe cloud's core trick is **virtualization**: turning physical things into software you can create, copy, and destroy instantly. Compute got virtualized into VMs. Storage got virtualized into blobs. Networking got virtualized too — this is **Software-Defined Networking (SDN)**. In Azure, your \"network\" isn't cables; it's a set of resources described in text and enforced by the platform's host servers. There is no ladder, no crew, no waiting.\n\nThis is why an Azure network feels different: it's **declarative**. You describe the network you *want* — \"a private space using 10.0.0.0/16, split into a web tier and a database tier, where web can reach database on port 1433 but the internet cannot reach database at all\" — and Azure makes it true. You don't configure routers; you state intent and the SDN fabric programs every host to obey.\n\n## How it works\n\nWhen you create a **Virtual Network (VNet)**, Azure doesn't build anything physical for you. It records that you own a private address range, and it programs the underlying hosts so that packets from your VMs are tagged, isolated, and routed according to your rules. Your traffic shares the same physical fiber as thousands of other tenants, but the SDN layer keeps each customer's packets in a separate logical universe — they can never see each other.\n\nEvery networking feature in this lane is a *software control* layered on that fabric:\n\n- **VNets and subnets** carve out your private address space.\n- **Network Security Groups (NSGs)** are software firewalls attached to subnets or NICs.\n- **Route tables** override where traffic goes — no physical router required.\n- **Load balancers, DNS, peering, VPN gateways, Private Link** are all just resources you declare.\n\nBecause it's all software, it's all **API-driven**. The portal, the `az` CLI, and Bicep/Terraform are just different keyboards onto the same Azure Resource Manager control plane. That's why infrastructure-as-code works so well for networking: a network is now *text*, and text can be versioned, reviewed, and redeployed identically a thousand times.\n\n## In practice\n\n```bash\n# A whole private network in two commands — no hardware, ~30 seconds.\naz network vnet create \\\n  --name <vnet-name> \\\n  --resource-group <rg> \\\n  --address-prefix 10.0.0.0/16 \\\n  --subnet-name web \\\n  --subnet-prefix 10.0.1.0/24\n\n# Add a second isolated segment for the database tier.\naz network vnet subnet create \\\n  --vnet-name <vnet-name> \\\n  --resource-group <rg> \\\n  --name data \\\n  --address-prefix 10.0.2.0/24\n```\n\nThat `10.0.0.0/16` you typed is a *promise from the platform*: those addresses are yours, private, and invisible to every other tenant — until you explicitly open a door.\n\n## Gotchas\n\n- **\"Default allow inside, default deny from outside.\"** Resources in the same VNet can generally reach each other out of the box; the internet generally cannot reach in. People assume the cloud is open by default — it mostly isn't. You open paths deliberately.\n- **The network is invisible, not absent.** Because there's no cable to point at, beginners forget the network exists and then can't explain why a VM can't reach a database. The rules are real; they're just software you have to read (NSGs, routes, DNS).\n- **Don't think like a single box; think in layers.** Connectivity problems are almost always one of: addressing (wrong subnet/overlap), reachability (an NSG or route blocks it), or name resolution (DNS). Diagnose in that order.\n- **Region matters.** A VNet lives in one Azure region. Spanning regions means peering or gateways — it isn't automatic.",
+  "teachItBack": "Networking is just two things: giving machines addresses and controlling which paths between them are allowed. Azure virtualizes that entire job into software — a Software-Defined Network — so instead of cables and hardware you declare the network you want in text and the platform enforces it on shared physical fiber while keeping every tenant isolated. That's why Azure networking is declarative, API-driven, and perfect for infrastructure-as-code, and why every feature in this lane is really just a software control over addressing and reachability.",
+  "glossary": [
+    {
+      "term": "Software-Defined Networking (SDN)",
+      "definition": "Implementing network functions (addressing, routing, firewalling) as software running on general hosts instead of dedicated physical hardware."
+    },
+    {
+      "term": "Virtual Network (VNet)",
+      "definition": "Your private, isolated network in Azure — a declared block of IP address space that your resources live inside."
+    },
+    {
+      "term": "Declarative networking",
+      "definition": "Describing the desired end-state of a network and letting the platform make it real, rather than manually configuring devices step by step."
+    },
+    {
+      "term": "Control plane",
+      "definition": "The API layer (Azure Resource Manager) that receives your intent and programs the underlying fabric to match."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Dev docs — Azure Virtual Network overview",
+      "url": "https://learn.microsoft.com/en-us/azure/virtual-network/virtual-networks-overview",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — Azure networking services overview",
+      "url": "https://learn.microsoft.com/en-us/azure/networking/fundamentals/networking-overview",
+      "verified": true
+    },
+    {
+      "title": "John Savill — Azure Networking Master Class / 360-in-360 context",
+      "url": "https://www.youtube.com/watch?v=1NOZv2M3q2k",
+      "verified": true
+    }
+  ],
+  "related": [
+    "azn-vnet",
+    "azn-nsg",
+    "azn-load-balancing"
+  ]
+}

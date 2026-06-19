@@ -43,6 +43,28 @@ const LANES = [
     blurb: "Wire agents to real systems over MCP with managed identity: ICM incidents, Kusto/ADX KQL, and Azure DevOps." },
   { id: "foundry-capstone",  title: "Reference Architecture & Teaching Kit", icon: "🎖️", order: 11,
     blurb: "The whole stack on one page: end-to-end architecture, a present-it deck, and a teach-it-back capstone self-test." },
+
+  // ---- Azure Bootcamp: a first-principles, no-quiz, pure-signal tour of the whole Azure platform ----
+  { id: "az-foundations",    title: "Azure Foundations & Mental Model",   icon: "🧱", order: 12,
+    blurb: "Start here. What the cloud is and why Azure exists, regions and zones, the tenant -> management group -> subscription -> resource group -> resource hierarchy, ARM, and how you talk to Azure." },
+  { id: "az-identity",       title: "Identity & Access (Entra ID)",       icon: "🪪", order: 13,
+    blurb: "Identity is the new perimeter: Microsoft Entra ID, users, groups, service principals, RBAC, PIM, Conditional Access, and Zero Trust — why each exists." },
+  { id: "az-governance",     title: "Governance, Cost & Well-Architected", icon: "🏛️", order: 14,
+    blurb: "Keep the cloud safe, tidy, and affordable: management groups, Azure Policy, locks, tags, Cost Management, landing zones, Advisor, and the Well-Architected Framework." },
+  { id: "az-networking",     title: "Networking & Connectivity",          icon: "🌐", order: 15,
+    blurb: "The Azure backbone: virtual networks and subnets, NSGs, load balancing (LB / App Gateway / Front Door / Traffic Manager), DNS, peering, VPN/ExpressRoute, and Private Link." },
+  { id: "az-compute",        title: "Compute — Run Your Code",            icon: "⚙️", order: 16,
+    blurb: "The IaaS to PaaS to serverless spectrum: virtual machines, scale sets, App Service, Functions, containers, AKS, and Container Apps — and how to choose." },
+  { id: "az-data",           title: "Storage & Databases",                icon: "🗄️", order: 17,
+    blurb: "Where state lives: storage accounts (blob/file/queue/table), disks, Azure SQL, Cosmos DB, PostgreSQL/MySQL, Redis, analytics, and backup — and how to choose a data store." },
+  { id: "az-integration",    title: "Messaging & Integration",            icon: "🔗", order: 18,
+    blurb: "Loosely couple everything: messaging vs eventing, Service Bus, Event Hubs, Event Grid, Storage Queues, Logic Apps, and API Management." },
+  { id: "az-observability",  title: "Observability & Operations",         icon: "📈", order: 19,
+    blurb: "See what your system is doing: Azure Monitor, metrics, logs and KQL, Application Insights, alerts, dashboards, autoscale, and health." },
+  { id: "az-security",       title: "Security & Compliance",              icon: "🛡️", order: 20,
+    blurb: "Defense in depth, the Azure way: Defender for Cloud, Key Vault, encryption, Sentinel, and the shared responsibility model." },
+  { id: "az-devops",         title: "Delivery & Infrastructure as Code",  icon: "🧰", order: 21,
+    blurb: "Ship it repeatably: ARM/Bicep, Terraform, Azure DevOps, GitHub Actions (keyless OIDC), deployment strategies, and a reference-architecture capstone tying it all together." },
 ];
 const LANE_IDS = new Set(LANES.map((l) => l.id));
 const TYPES = new Set(["concept", "pattern", "teardown", "framework", "blueprint"]);

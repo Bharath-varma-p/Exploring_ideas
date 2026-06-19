@@ -1,0 +1,44 @@
+{
+  "id": "azo-health",
+  "title": "Azure Resource & Service Health",
+  "lane": "az-observability",
+  "type": "concept",
+  "order": 80,
+  "summary": "When your app goes offline, is it your code, or is Azure having an outage? Learn how Service Health and Resource Health provide the answer.",
+  "tags": [
+    "service-health",
+    "resource-health",
+    "outages",
+    "sla"
+  ],
+  "analogy": "Service Health checks if the entire highway is closed due to a snowstorm. Resource Health checks if your specific car has a flat tire.",
+  "diagram": "flowchart TD\n  Incident[App Goes Down] --> Check[Is it me or Azure?]\n  Check --> SH[Azure Service Health: Regional outage?]\n  Check --> RH[Azure Resource Health: My specific VM crashed?]\n  Check --> AI[App Insights: I deployed bad code?]",
+  "body": "## First principles\n\nWhen operating in the public cloud, you share physical infrastructure with millions of others. Sometimes, the underlying hardware (racks, network switches, data center power) fails. When your system breaks, the first step in triage is knowing whether the problem is inside your boundary of control, or on Microsoft's side of the shared responsibility model.\n\n## Why it exists\n\nIf you don't know the cloud provider is having a regional outage, your engineers might waste hours fruitlessly debugging perfectly good application code. **Service Health** and **Resource Health** exist to give you a definitive \"It's not you, it's us\" signal from Azure.\n\n## How it works\n\nAzure splits platform health reporting into macro and micro views:\n\n1. **Azure Service Health**: The macro view. It tracks global and regional platform events. If the entire \"East US\" region loses storage access, or there is scheduled platform maintenance that will cause downtime, it appears here.\n2. **Azure Resource Health**: The micro view. It tracks the health of your *individual* resources. If the specific physical host node your VM is running on experiences a hardware failure, Resource Health tells you that your specific VM is unavailable due to platform reasons.\n\n## In practice\n\nYou configure **Service Health Alerts** (using Action Groups, exactly like metric alerts) to notify your team if there is an Azure outage affecting your regions.\n\n```json\n// Mental model of a Service Health Alert\n{\n  \"Condition\": \"Incident type = Service Issue AND Region = East US\",\n  \"Action\": \"Page the On-Call Engineer\"\n}\n```\nWhen the pager goes off, the engineer sees the Service Health alert, updates the company status page to say \"Upstream provider outage,\" and goes back to sleep, knowing there is no code to fix.\n\n## Gotchas\n\n- **It doesn't know about your app.** Resource Health showing \"Available\" just means the underlying Azure host is running. It does *not* mean your Java application hasn't crashed. You still need App Insights or metrics to monitor your own software.\n- **Delay in reporting.** During a massive regional outage, it can take minutes or longer for the public Service Health dashboard to update. If your metrics plummet but Service Health is green, you still need to investigate.",
+  "teachItBack": "To determine if an outage is your fault or Microsoft's, you check health signals. Service Health tells you about broad regional outages and planned maintenance. Resource Health tells you if the specific underlying hardware for your resource has failed.",
+  "glossary": [
+    {
+      "term": "Azure Service Health",
+      "definition": "A personalized dashboard that alerts you to macro-level Azure platform incidents and maintenance affecting your subscriptions."
+    },
+    {
+      "term": "Azure Resource Health",
+      "definition": "A diagnostic signal showing if your specific Azure resource is available from the platform's perspective."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Dev docs — Azure Service Health overview",
+      "url": "https://learn.microsoft.com/en-us/azure/service-health/overview",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — Azure Resource Health overview",
+      "url": "https://learn.microsoft.com/en-us/azure/service-health/resource-health-overview",
+      "verified": true
+    }
+  ],
+  "related": [
+    "azo-intro",
+    "azo-metrics-alerts"
+  ]
+}

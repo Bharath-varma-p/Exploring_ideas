@@ -1,0 +1,64 @@
+{
+  "id": "azn-peering",
+  "title": "VNet Peering & the Hub-and-Spoke Topology",
+  "lane": "az-networking",
+  "type": "concept",
+  "order": 70,
+  "summary": "VNets are isolated by design — peering is how you stitch two of them into one low-latency private network without a gateway. Do it deliberately and you get hub-and-spoke: shared services in the middle, workloads radiating out, security centralized.",
+  "tags": [
+    "azure",
+    "vnet-peering",
+    "hub-spoke",
+    "topology",
+    "transitivity"
+  ],
+  "analogy": "Peering is building a private hallway between two office buildings so staff walk straight across without going outside. Hub-and-spoke is one central building (shared mailroom, security desk, exits) with hallways to every department building — but the hallways don't chain, so the hub has to relay between departments.",
+  "diagram": "flowchart TD\n  Hub[Hub VNet: firewall, gateway, DNS, Bastion]\n  Hub <-->|peering| S1[Spoke 1: app workload]\n  Hub <-->|peering| S2[Spoke 2: data workload]\n  Hub <-->|peering| S3[Spoke 3: dev/test]\n  S1 -. no direct peering .-x S2\n  S1 -->|via hub + UDR| Hub --> S2",
+  "body": "## First principles\n\nA VNet is a sealed box — that isolation is the whole point. But real organizations have *many* VNets (per team, per environment, per app) that need to talk privately. You have two ways to connect them: route traffic out and back through the public internet (slow and exposed), or build a **private link between the boxes**. Peering is that private link, and it rides Azure's own backbone — no public internet, no encryption overhead, no gateway in the path.\n\n## Why it exists\n\nYou *could* connect VNets with VPN gateways, but that means provisioning gateway resources, paying for them, and accepting the latency of encryption. For VNet-to-VNet traffic inside Azure, that's overkill — the traffic never leaves Microsoft's trusted network anyway. **VNet peering** connects two VNets so their resources communicate as if on one network, using only private IPs, at near wire speed, with no gateway and no bandwidth bottleneck.\n\nThe deeper reason peering matters is **topology**. Once you can cheaply join VNets, you stop building one giant flat VNet (which mixes blast radius and is hard to govern) and instead build many small VNets joined in a deliberate shape. The canonical shape is **hub-and-spoke**.\n\n## How it works\n\n**Peering basics.** You peer VNet A with VNet B; their address spaces must **not overlap** (routing would be ambiguous). Peering can be within a region or **global** (across regions). Once peered, VMs in A reach VMs in B by private IP with full bandwidth. Peering is a relationship you create on *both* sides (Azure does this for you in the portal/CLI).\n\n**The rule that shapes everything: peering is NOT transitive.** If A is peered to B, and B is peered to C, then A still **cannot** reach C. There's no automatic A→C path through B. This single fact is *why* hub-and-spoke needs extra plumbing — and why people get tripped up.\n\n**Hub-and-spoke.** You designate one **hub** VNet for shared infrastructure — the VPN/ExpressRoute gateway to on-prem, **Azure Firewall**, **Azure Bastion**, DNS resolvers — and peer every **spoke** (each workload's VNet) to the hub. Benefits:\n\n- **Centralize once, reuse everywhere.** One firewall, one gateway, one Bastion, shared by all spokes instead of duplicated per VNet.\n- **Isolate workloads.** Each spoke is its own blast radius; a compromise in dev doesn't sit on the same VNet as prod.\n- **Control the paths.** Spokes don't peer to each other, so spoke-to-spoke traffic is forced through the hub where you can inspect it.\n\nBut because peering isn't transitive, two things must be configured for the hub model to work end-to-end:\n\n1. **Spoke-to-spoke** traffic needs a **User-Defined Route (UDR / route table)** on each spoke that sends traffic destined for other spokes to the hub's firewall (the *next hop*), which then relays it. The hub becomes a transit router.\n2. **Gateway transit** lets spokes use the hub's VPN/ExpressRoute gateway to reach on-prem. You enable \"use remote gateways\" on the spoke peering and \"allow gateway transit\" on the hub peering — otherwise each spoke would need its own expensive gateway.\n\n## In practice\n\n```bash\n# Peer a spoke to the hub (run the mirror command for the other direction,\n# or let the portal create both sides).\naz network vnet peering create \\\n  --name spoke1-to-hub --resource-group <rg> \\\n  --vnet-name spoke1 --remote-vnet <hub-vnet-id> \\\n  --allow-vnet-access --allow-forwarded-traffic --use-remote-gateways\n\naz network vnet peering create \\\n  --name hub-to-spoke1 --resource-group <rg> \\\n  --vnet-name hub --remote-vnet <spoke1-vnet-id> \\\n  --allow-vnet-access --allow-forwarded-traffic --allow-gateway-transit\n```\n\nNote `--allow-forwarded-traffic` (so the hub can relay non-locally-originated packets) and the gateway-transit pair — those flags are exactly what make the non-transitive model behave like a connected network.\n\n## Gotchas\n\n- **Peering is not transitive — this is the #1 surprise.** A↔B and B↔C does not give A↔C. For spoke-to-spoke you must route through the hub with UDRs, or use Azure Virtual WAN (which manages this for you).\n- **Address spaces can't overlap.** Plan non-overlapping CIDRs across every VNet you might ever peer (see the VNet lesson). Overlap = no peering, ever.\n- **Each peering link is billed for data transferred** (and global/cross-region peering costs more than in-region). Lots of cross-region chatter adds up.\n- **Gateway transit needs both flags.** Spoke must `--use-remote-gateways`; hub must `--allow-gateway-transit`. Miss one and spokes can't reach on-prem through the hub.\n- **Forwarded traffic flag matters for transit.** If the hub appliance (firewall) is relaying spoke-to-spoke traffic, peerings need `--allow-forwarded-traffic`.\n- **At scale, consider Azure Virtual WAN.** Managing many UDRs and peerings by hand gets painful; Virtual WAN provides managed any-to-any connectivity and transitive routing.",
+  "teachItBack": "VNets are isolated, and peering privately joins two of them over Microsoft's backbone with full bandwidth and no gateway — but only if their address spaces don't overlap. The catch that defines real designs is that peering is not transitive: A peered to B and B to C does not connect A to C. That's why the hub-and-spoke topology puts shared services like the firewall, gateway, and Bastion in a central hub, peers every workload spoke to it, and then uses route tables plus gateway transit to relay spoke-to-spoke and on-prem traffic through the hub. At large scale, Azure Virtual WAN automates that transitive routing for you.",
+  "glossary": [
+    {
+      "term": "VNet peering",
+      "definition": "A private, high-bandwidth connection between two VNets over Azure's backbone, using private IPs and no gateway."
+    },
+    {
+      "term": "Transitive routing",
+      "definition": "The property where A↔B and B↔C implies A↔C; VNet peering is NOT transitive, so it must be engineered explicitly."
+    },
+    {
+      "term": "Hub-and-spoke",
+      "definition": "A topology with a central hub VNet hosting shared services and multiple workload spoke VNets peered to it."
+    },
+    {
+      "term": "User-Defined Route (UDR)",
+      "definition": "A custom route in a route table that overrides default routing, e.g. sending spoke-to-spoke traffic through the hub firewall."
+    },
+    {
+      "term": "Gateway transit",
+      "definition": "A peering setting that lets spoke VNets use the hub's VPN/ExpressRoute gateway instead of each having their own."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Dev docs — Virtual network peering overview",
+      "url": "https://learn.microsoft.com/en-us/azure/virtual-network/virtual-network-peering-overview",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — Hub-and-spoke network topology",
+      "url": "https://learn.microsoft.com/en-us/azure/architecture/networking/architecture/hub-spoke",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — What is Azure Virtual WAN?",
+      "url": "https://learn.microsoft.com/en-us/azure/virtual-wan/virtual-wan-about",
+      "verified": true
+    }
+  ],
+  "related": [
+    "azn-vnet",
+    "azn-hybrid",
+    "azn-firewall-waf",
+    "azn-dns"
+  ]
+}

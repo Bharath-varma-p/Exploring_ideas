@@ -1,0 +1,70 @@
+{
+  "id": "azg-intro",
+  "title": "Governance: Control Without Drag",
+  "lane": "az-governance",
+  "type": "concept",
+  "order": 10,
+  "summary": "Governance is the operating system for cloud freedom: teams can move fast because the dangerous, expensive, and noncompliant paths are already fenced off.",
+  "tags": [
+    "azure",
+    "governance",
+    "cost",
+    "policy",
+    "well-architected"
+  ],
+  "analogy": "Governance is a city building code: it does not design every room, but it makes sure every building has exits, wiring, permits, and a sane address.",
+  "diagram": "flowchart TD\n  Intent[Team wants to build] --> Scope[Choose scope]\n  Scope --> MG[Management groups]\n  Scope --> Sub[Subscriptions]\n  MG --> Policy[Policy guardrails]\n  Sub --> Cost[Cost signals]\n  Policy --> Safe[Safe default path]\n  Cost --> Safe\n  Safe --> Ship[Teams ship faster]",
+  "body": "## First principles\n\nCloud removes friction. That is the gift and the danger. A developer can create a database in minutes, but the same speed can create public endpoints, unsupported regions, surprise invoices, and resources nobody can explain six months later. **Governance** is how an organization keeps speed while making the unsafe path harder than the safe path.\n\nThe goal is not control for its own sake. The goal is useful freedom: teams know where to deploy, what names and tags to use, what regions are allowed, who pays, and which controls are nonnegotiable.\n\n## Why it exists\n\nBefore governance, every subscription becomes a snow globe: pretty, isolated, and impossible to operate at scale. One team tags `prod`, another tags `Production`, a third forgets tags entirely. Security asks for diagnostic logs after the incident. Finance sees a bill but not an owner. Platform teams become ticket routers instead of force multipliers.\n\nGood Azure governance turns those recurring arguments into platform defaults. It answers five questions before a workload lands: **where does it live, who can change it, what rules apply, how is cost understood, and how do we know it is healthy?**\n\n## How it works\n\nAzure governance is a stack, not a single product. **Management groups** organize subscriptions so policy and access can inherit downward. **Azure Policy** evaluates resource properties and can audit, deny, modify, append, or deploy supporting resources. **Resource locks** add a hard brake against accidental deletion or updates. **Tags** attach business context used by search, automation, and cost allocation. **Cost Management + Billing** makes spend visible and alerts humans before drift becomes pain. **Advisor** and the **Well-Architected Framework** turn best practices into a continuous improvement loop. **Quotas** prevent one subscription from consuming more than its assigned share of capacity.\n\nThe important pattern is inheritance. Put broad rules high in the hierarchy, then let teams operate inside those rails.\n\n## Analogy\n\nA city does not assign one inspector to follow every electrician. It writes a building code, creates zones, requires permits, tracks property records, and inspects the risky parts. Builders still design unique buildings; the city makes sure those buildings do not burn down the block. Azure governance is that city code for your cloud estate.\n\n## In practice\n\nA sane starting rule set is small:\n\n```bash\n# Inspect the governance shape before adding controls.\naz account management-group list -o table\naz policy assignment list --scope /subscriptions/<subscription-id> -o table\naz consumption budget list --subscription <subscription-id> -o table\n```\n\nThen ask: do production subscriptions inherit required regions, diagnostic settings, owner tags, and budgets? If not, governance is still tribal knowledge.\n\n## Gotchas\n\nGovernance can slow teams down when every rule becomes a ticket. Prefer paved roads over toll booths: deny only what must never happen, audit what you are still learning, and automate the boring fixes. Also remember that governance is not security by itself. It gives structure; identity, network, data protection, and monitoring still have to do their jobs.",
+  "teachItBack": "Azure governance is the set of scopes, rules, metadata, cost signals, and review loops that lets teams move quickly without creating chaos. Management groups and subscriptions define where controls apply; Policy, locks, and tags shape what can be deployed; Cost Management, Advisor, WAF, and quotas keep the estate understandable over time. The best governance feels like a paved road, not a wall.",
+  "glossary": [
+    {
+      "term": "Governance",
+      "definition": "The cloud operating model for organizing, constraining, tracking, and improving resources at scale."
+    },
+    {
+      "term": "Guardrail",
+      "definition": "A default rule or automation that keeps teams on a safe path without requiring manual approval for normal work."
+    },
+    {
+      "term": "Scope",
+      "definition": "The level in Azure where a control applies, such as management group, subscription, resource group, or resource."
+    },
+    {
+      "term": "Paved road",
+      "definition": "A preapproved path with the right defaults so teams can ship quickly and safely."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Dev docs — Organize your resources with management groups",
+      "url": "https://learn.microsoft.com/en-us/azure/governance/management-groups/overview",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — Overview of Azure Policy",
+      "url": "https://learn.microsoft.com/en-us/azure/governance/policy/overview",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — Overview of Microsoft Cost Management",
+      "url": "https://learn.microsoft.com/en-us/azure/cost-management-billing/costs/overview-cost-management",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — Azure Well-Architected Framework",
+      "url": "https://learn.microsoft.com/en-us/azure/well-architected/what-is-well-architected-framework",
+      "verified": true
+    },
+    {
+      "title": "John Savill — Azure Master Class 360 in 360",
+      "url": "https://www.youtube.com/watch?v=1NOZv2M3q2k",
+      "verified": true
+    }
+  ],
+  "related": [
+    "azg-management-groups",
+    "azg-policy",
+    "azg-cost-management",
+    "azg-waf"
+  ]
+}

@@ -1,0 +1,45 @@
+{
+  "id": "azo-azure-monitor",
+  "title": "Azure Monitor: The Platform Mental Model",
+  "lane": "az-observability",
+  "type": "concept",
+  "order": 20,
+  "summary": "Azure Monitor is the giant umbrella service that ingests, stores, and analyzes telemetry from your entire cloud footprint. Understand its fundamental architecture.",
+  "tags": [
+    "azure-monitor",
+    "platform",
+    "telemetry",
+    "architecture"
+  ],
+  "analogy": "Azure Monitor is the central nervous system. Every organ (resource) sends its nerve signals (telemetry) to this one spine, which decides if the brain needs to react.",
+  "diagram": "flowchart TD\n  A[Resources] -->|Metrics| B(Azure Monitor Metrics)\n  A -->|Logs| C(Log Analytics Workspace)\n  B --> D{Insights & Actions}\n  C --> D\n  D --> E[Alerts]\n  D --> F[Dashboards]\n  D --> G[Autoscale]",
+  "body": "## First principles\n\nIf every cloud service stored its logs and metrics in a different format and in a different place, correlating a database spike with a web server crash would be impossible. Telemetry needs a centralized ingestion engine and a unified data store.\n\n## Why it exists\n\nBefore centralized monitoring, operators had to SSH into individual machines to read text logs, and check a different vendor's dashboard for database performance. **Azure Monitor** exists to be the single pane of glass and the unified backend for all operational data across Azure, on-premises, and other clouds.\n\n## How it works\n\nAzure Monitor isn't just one tool; it's a massive suite of features with a dual-store architecture at its core:\n\n1. **Data Sources**: Things that generate data (VMs, App Services, Kubernetes, custom code, Azure platform logs).\n2. **Data Stores**: Azure Monitor routes incoming telemetry into two primary buckets:\n   - **Azure Monitor Metrics**: A lightweight, time-series database optimized for near real-time alerting.\n   - **Azure Monitor Logs (Log Analytics)**: A heavy-duty, searchable analytics engine for unstructured data.\n3. **Consumption**: Features built on top of those stores, like Alerts, Dashboards, Autoscale, and deeper \"Insights\" (like VM Insights or Container Insights).\n\n## In practice\n\nWhen you provision a new Azure SQL Database, it doesn't log its query history by default. You configure a **Diagnostic Setting** on the database, telling it: \"Send all your execution logs to this specific Azure Monitor Log Analytics workspace.\"\n\n```json\n// Mental model of a Diagnostic Setting\n{\n  \"source\": \"My-Azure-SQL-DB\",\n  \"destinations\": [ \"My-Central-Log-Analytics-Workspace\" ],\n  \"categories\": [ \"Errors\", \"QueryStoreRuntimeStatistics\" ]\n}\n```\n\n## Gotchas\n\n- **It's not turned on everywhere automatically.** While basic metrics (like CPU) are collected by default, detailed logs and guest-level OS logs require you to actively configure Diagnostic Settings or install agents.\n- **Data retention costs money.** Storing logs forever gets expensive. You must configure data retention policies (e.g., 30 days for routine logs, longer for compliance).",
+  "teachItBack": "Azure Monitor is the umbrella service for observability in Azure. It collects data from anywhere, routes it into either a time-series Metrics store or a searchable Logs store, and then layers alerts, visualizations, and insights on top of that unified data.",
+  "glossary": [
+    {
+      "term": "Azure Monitor",
+      "definition": "The comprehensive solution for collecting, analyzing, and acting on telemetry from your cloud and on-premises environments."
+    },
+    {
+      "term": "Diagnostic Settings",
+      "definition": "The configuration on an Azure resource that tells it where to route its logs and metrics."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Dev docs — Azure Monitor overview",
+      "url": "https://learn.microsoft.com/en-us/azure/azure-monitor/fundamentals/overview",
+      "verified": true
+    },
+    {
+      "title": "YouTube — Azure Monitor Master Class (John Savill)",
+      "url": "https://www.youtube.com/watch?v=1NOZv2M3q2k",
+      "verified": true
+    }
+  ],
+  "related": [
+    "azo-intro",
+    "azo-metrics-alerts",
+    "azo-logs-kql"
+  ]
+}

@@ -1,0 +1,78 @@
+{
+  "id": "azc-intro",
+  "title": "Azure Compute: The Management Spectrum",
+  "lane": "az-compute",
+  "type": "concept",
+  "order": 10,
+  "summary": "Azure compute is the set of ways to run code. The main trade-off is simple: the more Azure manages for you, the less infrastructure control you keep.",
+  "tags": [
+    "azure",
+    "compute",
+    "iaas",
+    "paas",
+    "serverless",
+    "mental-model"
+  ],
+  "analogy": "Azure compute is a kitchen spectrum: rent an empty kitchen, hire a managed restaurant line, or order catering that appears only when guests arrive.",
+  "diagram": "flowchart LR\n  VM[VMs: manage OS runtime app] --> VMSS[VM Scale Sets: many VMs]\n  VMSS --> APP[App Service: manage app code]\n  APP --> FUNC[Functions: run event handlers]\n  APP --> ACA[Container Apps: run serverless containers]\n  ACA --> AKS[AKS: managed Kubernetes control plane]\n  VM --> BATCH[Batch: many scheduled workers]",
+  "body": "## First principles\n\n**Compute** means rented execution: CPU, memory, network, and a place for your process to live. Every compute service answers the same question: *who owns each layer of the stack?* Someone must patch the operating system, scale capacity, restart failed processes, expose traffic, wire logs, and pay for idle time.\n\nThe Azure compute lane is not a pile of product names. It is a spectrum of responsibility.\n\n## The spectrum\n\nAt the **IaaS** end, Azure gives you virtualized hardware. **Virtual Machines** feel like computers: you pick the size, image, disks, network, and operating system behavior. You gain control, but you also inherit patching, hardening, capacity planning, and uptime architecture.\n\nIn the **PaaS** middle, Azure keeps the machine room mostly invisible. **App Service** runs web apps and APIs on an App Service Plan. You still choose runtime, region, SKU, scaling, and deployment style, but the OS and hosting fabric are not your daily chore.\n\nAt the **serverless** end, the unit shrinks from server to event or container revision. **Azure Functions** runs code when a trigger fires. **Azure Container Apps** runs containers with serverless scaling, including scale-to-zero. Your concern becomes behavior and boundaries, not servers.\n\n**AKS** sits in a special place: Azure manages the Kubernetes control plane, but you choose Kubernetes because you want an orchestration API, custom networking, scheduling, policies, and ecosystem control. It is managed, not magic.\n\n## Why it exists\n\nWithout these choices, every workload would be forced into one shape. A lifted-and-shifted legacy app may need VM-level control. A public website may only need managed web hosting. A queue processor may be idle 98% of the day and should not pay for a hot server. A platform team may standardize on Kubernetes because dozens of services need the same deployment language.\n\nAzure compute exists so the hosting model can match the workload instead of making the workload pretend.\n\n## The analogy\n\nRenting a VM is renting an empty kitchen: total freedom, total cleanup. App Service is a restaurant line: you bring recipes, the venue keeps stoves and staff ready. Functions is catering by doorbell: food appears when someone rings. AKS is running a food court: powerful, standardized, and worth it only if many stalls need shared rules.\n\n## In practice\n\n```bash\n# The first question is not \"which service is coolest?\"\n# It is \"which layer do I want Azure to operate for me?\"\naz vm list-sizes --location <region> -o table\naz functionapp list --resource-group <rg> -o table\naz containerapp list --resource-group <rg> -o table\n```\n\n## Gotchas\n\nDo not confuse **less management** with **less architecture**. Serverless still needs identity, networking, retries, observability, limits, and cost controls. Do not choose AKS because containers are fashionable; choose it when the Kubernetes API is the product surface your team needs. And do not lift everything to VMs forever: VM control is useful, but it is expensive mental rent.",
+  "teachItBack": "Azure compute is a responsibility spectrum. VMs maximize control and operational burden; App Service hides the host for web workloads; Functions and Container Apps make events and containers scale with minimal server thinking; AKS is for teams that specifically need Kubernetes orchestration. The right question is not “which service is best?” but “which layers should Azure own for this workload?”",
+  "glossary": [
+    {
+      "term": "Compute",
+      "definition": "Azure services that provide execution capacity for applications, jobs, containers, or virtual machines."
+    },
+    {
+      "term": "IaaS",
+      "definition": "Infrastructure as a Service: rented infrastructure where you manage the operating system and most runtime concerns."
+    },
+    {
+      "term": "PaaS",
+      "definition": "Platform as a Service: managed hosting where Azure operates much of the platform and you focus on app code and configuration."
+    },
+    {
+      "term": "Serverless",
+      "definition": "A hosting model where capacity is abstracted and scaling is handled by the platform, often with pay-for-use economics."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Dev docs — Choose an Azure compute service",
+      "url": "https://learn.microsoft.com/en-us/azure/architecture/guide/technology-choices/compute-decision-tree",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — Overview of Azure virtual machines",
+      "url": "https://learn.microsoft.com/en-us/azure/virtual-machines/overview",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — Overview of Azure App Service",
+      "url": "https://learn.microsoft.com/en-us/azure/app-service/overview",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — Azure Functions overview",
+      "url": "https://learn.microsoft.com/en-us/azure/azure-functions/functions-overview",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — Azure Container Apps overview",
+      "url": "https://learn.microsoft.com/en-us/azure/container-apps/overview",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — What is Azure Kubernetes Service (AKS)?",
+      "url": "https://learn.microsoft.com/en-us/azure/aks/what-is-aks",
+      "verified": true
+    }
+  ],
+  "related": [
+    "azc-vms",
+    "azc-app-service",
+    "azc-functions",
+    "azc-container-apps",
+    "azc-aks",
+    "azc-choosing-compute"
+  ]
+}

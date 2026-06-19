@@ -1,0 +1,60 @@
+{
+  "id": "azg-waf",
+  "title": "Azure Well-Architected Framework: Tradeoffs Made Explicit",
+  "lane": "az-governance",
+  "type": "concept",
+  "order": 100,
+  "summary": "The Azure Well-Architected Framework is a practical lens for improving workloads across reliability, security, cost optimization, operational excellence, and performance efficiency.",
+  "tags": [
+    "azure",
+    "well-architected-framework",
+    "architecture",
+    "tradeoffs",
+    "pillars"
+  ],
+  "analogy": "WAF is a building inspection checklist for software: structure, fire safety, energy use, maintainability, and usable flow all matter together.",
+  "diagram": "mindmap\n  root((Well-Architected))\n    Reliability\n    Security\n    Cost Optimization\n    Operational Excellence\n    Performance Efficiency\n    Tradeoffs",
+  "body": "## First principles\n\nArchitecture is choosing tradeoffs under constraints. If you optimize only for speed, you may increase cost. If you optimize only for cost, you may hurt reliability. If you optimize only for security, you may damage operability. The **Azure Well-Architected Framework** exists to make those cross-cutting tradeoffs visible.\n\nIt is not a deployment tool. It is a thinking tool and review system for improving workload quality over time.\n\n## Why it exists\n\nTeams often discover architecture gaps after production teaches them painfully: no recovery objective, no threat model, no budget owner, no rollback path, no performance baseline. The Well-Architected Framework moves those questions earlier and repeats them throughout the workload lifecycle.\n\nThe framework helps teams ask better questions: what happens when a zone fails, how do we protect secrets, how do we know cost is efficient, how do we deploy safely, and how do we meet latency needs without overbuilding?\n\n## How it works\n\nMicrosoft defines five pillars of architectural excellence: **Reliability**, **Security**, **Cost Optimization**, **Operational Excellence**, and **Performance Efficiency**. Each pillar includes design principles, checklists, key design strategies, risks, tradeoffs, and maturity guidance. The framework also includes workload guidance, service guides, design guides, and the Azure Well-Architected Review assessment.\n\nThe key move is balance. A highly available system with no budget discipline is not well-architected. A cheap system that loses customer data is not well-architected. A secure system nobody can deploy safely is not well-architected.\n\n## Analogy\n\nA building inspector does not only ask, 'Is the lobby beautiful?' They ask whether the building stands, exits are safe, energy use is reasonable, maintenance is possible, and people can move through it. WAF is that multi-angle inspection for Azure workloads.\n\n## In practice\n\nUse WAF at three moments:\n\n```text\nBefore build: identify design risks and nonnegotiables.\nBefore production: run a review and prioritize fixes.\nAfter production: revisit when usage, risk, or architecture changes.\n```\n\nTie WAF findings to governance tools. A repeated cost finding may become a budget or Advisor review. A repeated logging finding may become a Policy initiative. A repeated resiliency finding may become a landing zone requirement.\n\n## Gotchas\n\nDo not turn WAF into a paperwork ceremony. The value is the conversation and the resulting engineering decisions. Also remember WAF is workload-focused. If you are designing the enterprise platform and portfolio controls, pair it with the Cloud Adoption Framework and landing zones. The frameworks overlap, but their center of gravity is different.",
+  "teachItBack": "The Azure Well-Architected Framework is a review lens for workload quality. It uses five pillars—reliability, security, cost optimization, operational excellence, and performance efficiency—to surface tradeoffs and risks. Use it repeatedly, then turn recurring findings into platform defaults, Policy, Advisor review habits, or landing zone improvements.",
+  "glossary": [
+    {
+      "term": "Well-Architected Framework",
+      "definition": "Azure guidance for improving workload design across five pillars of architectural excellence."
+    },
+    {
+      "term": "Pillar",
+      "definition": "A major architectural concern area: reliability, security, cost, operational excellence, or performance."
+    },
+    {
+      "term": "Tradeoff",
+      "definition": "A design choice that improves one concern while potentially worsening another."
+    },
+    {
+      "term": "Well-Architected Review",
+      "definition": "A free Microsoft assessment that helps evaluate workload design against framework guidance."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Dev docs — Azure Well-Architected Framework",
+      "url": "https://learn.microsoft.com/en-us/azure/well-architected/what-is-well-architected-framework",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — Introduction to Azure Advisor",
+      "url": "https://learn.microsoft.com/en-us/azure/advisor/advisor-overview",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — What is an Azure landing zone?",
+      "url": "https://learn.microsoft.com/en-us/azure/cloud-adoption-framework/ready/landing-zone/",
+      "verified": true
+    }
+  ],
+  "related": [
+    "azg-advisor",
+    "azg-cost-management",
+    "azg-landing-zones",
+    "azg-policy"
+  ]
+}

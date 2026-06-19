@@ -1,0 +1,72 @@
+{
+  "id": "azs-key-vault",
+  "title": "Azure Key Vault: One Safe for Every Secret",
+  "lane": "az-security",
+  "type": "concept",
+  "order": 40,
+  "summary": "Apps need secrets — passwords, API keys, certificates, encryption keys — but secrets scattered in config files and code are a breach waiting to happen. Key Vault centralizes them in one hardened, access-controlled, audited place. And with managed identity, your app fetches them without storing any secret at all.",
+  "tags": [
+    "azure",
+    "security",
+    "key-vault",
+    "secrets",
+    "managed-identity"
+  ],
+  "analogy": "Key Vault is the hotel's central safe-deposit room instead of everyone hiding cash under their mattress. One hardened room, a guard who logs every visit, and you don't even carry the master key — you show your face (managed identity) and the guard opens the right box for you.",
+  "diagram": "flowchart LR\n  APP[App with managed identity] -->|Entra token, no stored secret| KV[Azure Key Vault]\n  KV --> S[Secrets: passwords, conn strings]\n  KV --> K[Keys: encryption / signing]\n  KV --> C[Certificates: TLS, auto-renew]\n  KV --> RBAC[RBAC / access policy gate]\n  KV --> LOG[Every access logged]\n  HSM[FIPS 140-2/3 validated HSM] -.protects.-> K",
+  "body": "## First principles\n\nEvery non-trivial app holds secrets: a database password, a third-party API key, a TLS certificate's private key, the key that encrypts your data. These secrets are the keys to the kingdom — and they have to live *somewhere*. The naive answer is \"in a config file\" or \"in an environment variable\" or, worst of all, \"in the code.\" Each of those means the secret is now copied across laptops, build servers, git history, and chat messages. The fundamental problem: **a secret stored in many places, in plaintext, by many people, will leak.** You need exactly one hardened place to keep secrets, with tight access control and a record of every touch. That place is **Azure Key Vault**.\n\n## Why it exists\n\nPicture life before a vault. The DB password sits in `appsettings.json`, which is in the repo, which means it's in everyone's clone and the full git history forever. To rotate it you must hunt down every service, every config, every developer machine that has a copy. A leaked key in a public repo can be exploited by automated scanners within *minutes*. Certificates expire silently and take down production at 2 a.m. because no human was tracking the date.\n\nKey Vault fixes all of this by making secrets a *managed service* instead of a file. It gives you: one central store, fine-grained access control via Microsoft Entra, an audit log of every read, versioning, soft-delete/purge-protection so a fat-finger can't destroy your keys, and automated certificate lifecycle. Secrets stop being scattered files and become a governed resource.\n\n## How it works\n\nKey Vault stores three kinds of object, and the distinction matters:\n\n- **Secrets** — arbitrary sensitive strings: passwords, connection strings, API keys. You store a value, you read it back. Simple.\n- **Keys** — cryptographic keys (RSA, EC) used for encryption, decryption, signing, or wrapping other keys. Crucially, with keys the private material can be configured so it **never leaves the vault** — you send data *to* the key and get the result back; the raw key stays inside, often inside a **hardware security module (HSM)** that is FIPS 140-validated. This is the backbone of *customer-managed keys* (see the encryption lesson).\n- **Certificates** — X.509 certs (e.g. for TLS), with lifecycle management: Key Vault can request, store, and **auto-renew** them with integrated CAs so they don't expire on you.\n\nAccess is gated by **Microsoft Entra**: a caller must authenticate, then be authorized — modern vaults use **Azure RBAC** roles (e.g. *Key Vault Secrets User*) scoped to the vault (the older *access policy* model still exists). And every operation is logged, so you can answer \"who read this secret, and when?\"\n\nThere are two tiers: **Standard** (keys protected in software) and **Premium** (keys in dedicated HSMs); for full single-tenant HSM control there's **Azure Managed HSM**.\n\n## The keyless payoff: managed identity\n\nHere's the beautiful part, and where this lane meets the 🔐 *Managed Identity* (foundry-auth) lane. Centralizing secrets seems to just move the problem: *how does my app authenticate to Key Vault without... a secret?* If the app needs a password to get its passwords, you've made no progress — a bootstrap secret still leaks.\n\n**Managed identity** dissolves this. Azure gives your app (VM, App Service, Function, container) an Entra identity that the platform manages. Your code asks the local token endpoint for an Entra token and presents it to Key Vault — **no credential is ever stored in your app**. You grant that identity an RBAC role on the vault, and it reads secrets. The chain of stored secrets is finally broken: the app holds nothing, yet authenticates strongly. (The foundry-auth lane goes deep on exactly this pattern, including `DefaultAzureCredential` and `ManagedIdentityCredential`.)\n\n## In practice\n\n```bash\n# Store a secret\naz keyvault secret set --vault-name <my-vault> --name DbPassword --value '<secret>'\n\n# Give an app's managed identity read access (modern RBAC model)\naz role assignment create \\\n  --assignee <managed-identity-object-id> \\\n  --role \"Key Vault Secrets User\" \\\n  --scope <key-vault-resource-id>\n```\n\n```python\n# App code: no secret stored anywhere\nfrom azure.identity import DefaultAzureCredential\nfrom azure.keyvault.secrets import SecretClient\n\nclient = SecretClient(\"https://<my-vault>.vault.azure.net\", DefaultAzureCredential())\ndb_password = client.get_secret(\"DbPassword\").value  # token-authenticated, audited\n```\n\n## Gotchas\n\n- **Centralizing is only safe if access is tight.** A vault that everyone can read is just a fancier plaintext file. The win comes from least-privilege RBAC plus auditing, not from the vault existing.\n- **Turn on soft-delete and purge protection.** They're on by default now, but confirm it. Without purge protection, a deleted (or maliciously purged) key can be unrecoverable — and if it was a *customer-managed encryption key*, your encrypted data becomes permanently unreadable.\n- **Mind throttling.** Key Vault has request limits. Apps that fetch a secret on every call will get throttled — read at startup and cache in memory, refresh periodically.\n- **Latency and availability matter.** Your app now depends on the vault being reachable. Cache secrets and handle transient failures; don't make every request a synchronous round-trip to the vault.\n- **Key Vault is a control plane for secrets, not a password manager for humans.** It's for *applications*. For end-user passwords you want Entra ID; for team password sharing you want a different tool.",
+  "teachItBack": "Apps need secrets, and secrets scattered across config files, code, and git history inevitably leak and are painful to rotate. Azure Key Vault centralizes secrets, cryptographic keys (optionally never leaving an HSM), and auto-renewing certificates into one hardened store gated by Entra RBAC and fully audited. The elegant twist is managed identity: your app presents an Entra token from the platform instead of storing any credential, so it can read from the vault while holding no secret of its own — finally breaking the chain of stored credentials. Just remember the vault only helps if access is least-privilege and you enable purge protection so keys can't be lost.",
+  "glossary": [
+    {
+      "term": "Azure Key Vault",
+      "definition": "A managed service that centrally stores and controls access to secrets, cryptographic keys, and certificates, with full audit logging."
+    },
+    {
+      "term": "Secret",
+      "definition": "A sensitive string stored in Key Vault — a password, connection string, or API key."
+    },
+    {
+      "term": "Key (cryptographic)",
+      "definition": "An RSA/EC key in Key Vault used for encryption or signing; its private material can be kept inside the vault/HSM and never exported."
+    },
+    {
+      "term": "HSM (Hardware Security Module)",
+      "definition": "Tamper-resistant, FIPS 140-validated hardware that protects keys; used by Key Vault Premium and Azure Managed HSM."
+    },
+    {
+      "term": "Managed identity",
+      "definition": "A platform-managed Entra identity for an Azure resource, letting it authenticate to services like Key Vault without storing any credential."
+    },
+    {
+      "term": "Purge protection",
+      "definition": "A Key Vault safeguard that prevents permanent deletion of soft-deleted keys/secrets during a retention period."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Dev docs — About Azure Key Vault",
+      "url": "https://learn.microsoft.com/en-us/azure/key-vault/general/overview",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — Azure Key Vault basic concepts",
+      "url": "https://learn.microsoft.com/en-us/azure/key-vault/general/basic-concepts",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — Azure Key Vault security (best practices)",
+      "url": "https://learn.microsoft.com/en-us/azure/key-vault/general/secure-key-vault",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — Managed identities for Azure resources",
+      "url": "https://learn.microsoft.com/en-us/entra/identity/managed-identities-azure-resources/overview",
+      "verified": true
+    }
+  ],
+  "related": [
+    "azs-encryption",
+    "azs-intro",
+    "azs-shared-responsibility"
+  ]
+}

@@ -1,0 +1,77 @@
+{
+  "id": "azs-encryption",
+  "title": "Encryption at Rest & in Transit: PMK vs CMK",
+  "lane": "az-security",
+  "type": "concept",
+  "order": 50,
+  "summary": "Encryption is the assume-breach layer: even if someone steals the disk or taps the wire, ciphertext is useless without the key. Learn the two states (at rest, in transit), the key-control choice (platform-managed vs customer-managed), and when double encryption earns its keep.",
+  "tags": [
+    "azure",
+    "security",
+    "encryption",
+    "pmk-cmk",
+    "tls"
+  ],
+  "analogy": "Encryption at rest is a safe for your data while it sits still; encryption in transit is an armored truck while it moves. PMK means Azure owns the safe's key for you; CMK means you bring your own key and can revoke it — repossess the safe — whenever you want.",
+  "diagram": "flowchart TD\n  D[Your data] --> R{At rest}\n  D --> T{In transit}\n  R -->|encrypted on disk| KEYS[Key encryption key]\n  KEYS --> PMK[PMK: Microsoft manages the key]\n  KEYS --> CMK[CMK: your key in Key Vault]\n  T -->|TLS 1.2+| WIRE[Encrypted over the network]\n  CMK -.revoke key.-> LOCK[Data becomes unreadable]\n  R --> DBL[Optional double encryption: two layers, two keys]",
+  "body": "## First principles\n\nAccess control tries to stop the wrong people from *reaching* your data. But \"assume breach\" says: plan for the day someone reaches it anyway — steals a disk, clones a backup, taps a network cable, or wanders into a misconfigured endpoint. **Encryption** is the layer that makes that theft worthless. Scramble the data with a key, and the bytes become meaningless noise to anyone without the key. The whole game then reduces to one question: *who controls the key?* Encryption doesn't protect data; it **transfers the secret from the data to the key**. Protect the key, and you protect everything.\n\n## The two states data lives in\n\nData is always in one of two states, and each needs its own protection:\n\n- **At rest** — sitting on a disk, in a database, in a blob, in a backup. Threat: someone obtains the physical or logical storage.\n- **In transit** — moving across a network between client and service, or service to service. Threat: someone intercepts the wire (man-in-the-middle).\n\n(There's a third frontier, **in use** — data while it's decrypted in memory — addressed by *confidential computing* with hardware enclaves. Worth knowing the term, but the two classic states are where you'll spend your time.)\n\n## At rest: it's already on, the question is the key\n\nHere's the reassuring part: **Azure encrypts data at rest by default**. Azure Storage automatically encrypts everything written to it (Storage Service Encryption) with AES-256; managed disks, Azure SQL (Transparent Data Encryption), and most services do the same. You generally *cannot* turn it off. So the interesting decision isn't \"should I encrypt at rest\" — it's **who holds the key**:\n\n- **PMK — Platform-Managed Keys.** Microsoft creates, stores, rotates, and guards the keys for you. Zero effort, solid security, and the right default for the vast majority of workloads. You never see the key.\n- **CMK — Customer-Managed Keys.** *You* generate and own the key, store it in **Azure Key Vault** (or Managed HSM), and point the service at it. Azure uses your key to encrypt the data-encryption keys (an *envelope* model). You gain control: your own rotation schedule, full audit of key use, and — the headline power — **revocation**. Disable or delete your key and the encrypted data instantly becomes unreadable, even to Azure. That's a compliance and 'right to be forgotten' superpower... and a loaded footgun.\n\nWhy choose CMK? Regulatory mandates (\"we must hold our own keys\"), separation of duties (the cloud admin can't read the data without the key owner), and the ability to cryptographically *shred* data by destroying the key. Why not? It's operational responsibility: lose the key, lose the data — permanently.\n\n## In transit: TLS everywhere\n\nData on the move is protected with **TLS** (Transport Layer Security — the 's' in HTTPS). Azure services require **TLS 1.2 or higher** for their endpoints (older TLS 1.0/1.1 are deprecated, and TLS 1.3 is increasingly supported). TLS does two jobs at once: it *encrypts* the channel so eavesdroppers see ciphertext, and it *authenticates* the server (via its certificate) so you know you're talking to the real service, not an impostor. Internally, Microsoft also encrypts traffic as it moves between its datacenters across the global backbone. Your job: enforce HTTPS-only / 'secure transfer required', set the minimum TLS version, and manage your TLS certs (Key Vault auto-renewal helps).\n\n## Double encryption: belt and suspenders\n\nFor the most sensitive workloads, Azure offers **double encryption** — two independent layers of encryption with two different keys (e.g. one at the infrastructure/hardware layer and one at the service layer). The point is defense in depth applied to crypto itself: a flaw or compromise in *one* algorithm or key doesn't expose the data, because a second, independent layer still stands. It's overkill for most apps and adds a small performance cost, but for regulated, high-value data it removes 'single algorithm/key' as a single point of failure.\n\n## In practice\n\n```bash\n# Enforce encryption in transit on a storage account\naz storage account update --name <acct> --resource-group <rg> \\\n  --https-only true --min-tls-version TLS1_2\n\n# Switch a storage account to a customer-managed key in Key Vault\naz storage account update --name <acct> --resource-group <rg> \\\n  --encryption-key-source Microsoft.Keyvault \\\n  --encryption-key-vault <vault-uri> --encryption-key-name <key> --encryption-key-version <ver>\n```\n\nMental model: leave at-rest encryption on (it always is), enforce TLS 1.2+ in transit, default to PMK, and reach for CMK only when a regulation or separation-of-duties requirement actually demands it.\n\n## Gotchas\n\n- **CMK is a footgun.** Delete or lose the key (or let purge protection lapse) and the data is gone forever — Azure cannot recover it. Always pair CMK with Key Vault soft-delete + purge protection, and guard the key like the crown jewel it now is.\n- **Encryption at rest ≠ access control.** Encrypted storage that's publicly reachable still serves your data to anyone allowed in — the service decrypts transparently for authorized callers. Encryption defends the *stolen disk* case, not the *open endpoint* case.\n- **'Encrypted in transit' depends on you not disabling it.** Many services let you set a minimum TLS version or require secure transfer — and let you weaken it. Enforce HTTPS-only and a modern TLS floor explicitly.\n- **PMK is not 'less secure'.** It uses the same strong algorithms; you're only choosing who manages the key. Don't adopt CMK for prestige — adopt it for a concrete control requirement, because it's real operational weight.\n- **Backups and replicas need encryption too.** A perfectly encrypted primary with an unencrypted backup or export is exactly as safe as that backup.",
+  "teachItBack": "Encryption is the assume-breach layer: it turns stolen data into useless ciphertext, shifting the whole problem onto protecting the key. Azure encrypts data at rest by default, so the real choice is who holds the key — platform-managed keys (PMK), where Microsoft handles everything and which fits most workloads, versus customer-managed keys (CMK) in Key Vault, where you gain rotation, audit, and the power to revoke and cryptographically shred data, at the cost of owning that key's safety. In transit, enforce TLS 1.2+ which both encrypts and authenticates the server, and for the most sensitive data, double encryption adds a second independent layer so no single key or algorithm is a single point of failure.",
+  "glossary": [
+    {
+      "term": "Encryption at rest",
+      "definition": "Encrypting stored data (disks, databases, blobs, backups) so a stolen copy is unreadable without the key; on by default in Azure."
+    },
+    {
+      "term": "Encryption in transit",
+      "definition": "Encrypting data moving over a network, typically via TLS, which also authenticates the server you're talking to."
+    },
+    {
+      "term": "PMK (Platform-Managed Key)",
+      "definition": "An encryption key created, stored, and rotated by Microsoft on your behalf; the zero-effort default."
+    },
+    {
+      "term": "CMK (Customer-Managed Key)",
+      "definition": "An encryption key you generate and control in Key Vault, giving you rotation, audit, and revocation — and full responsibility for not losing it."
+    },
+    {
+      "term": "TLS",
+      "definition": "Transport Layer Security; the protocol (the 's' in HTTPS) that encrypts and authenticates data in transit. Azure requires TLS 1.2+."
+    },
+    {
+      "term": "Double encryption",
+      "definition": "Two independent layers of encryption with separate keys, so compromise of one layer doesn't expose the data."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Dev docs — Azure encryption overview",
+      "url": "https://learn.microsoft.com/en-us/azure/security/fundamentals/encryption-overview",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — Azure data encryption at rest",
+      "url": "https://learn.microsoft.com/en-us/azure/security/fundamentals/encryption-atrest",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — Data encryption models (PMK vs CMK)",
+      "url": "https://learn.microsoft.com/en-us/azure/security/fundamentals/encryption-models",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — Double encryption",
+      "url": "https://learn.microsoft.com/en-us/azure/security/fundamentals/double-encryption",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — Azure Storage encryption for data at rest",
+      "url": "https://learn.microsoft.com/en-us/azure/storage/common/storage-service-encryption",
+      "verified": true
+    }
+  ],
+  "related": [
+    "azs-key-vault",
+    "azs-intro",
+    "azs-compliance"
+  ]
+}

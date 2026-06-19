@@ -1,0 +1,34 @@
+{
+  "id": "azo-dashboards-workbooks",
+  "title": "Dashboards & Workbooks",
+  "lane": "az-observability",
+  "type": "concept",
+  "order": 60,
+  "summary": "Turning raw telemetry into shared visual insights. Learn the difference between static Azure Dashboards and interactive Azure Workbooks.",
+  "tags": [
+    "dashboards",
+    "workbooks",
+    "visualization",
+    "reporting"
+  ],
+  "analogy": "A Dashboard is the big TV on the wall in a Network Operations Center—you glance at it to see if anything is red. A Workbook is an interactive investigative report you hand to an engineer to guide them through troubleshooting.",
+  "diagram": "flowchart LR\n  Data[Metrics & Logs] --> D[Azure Dashboards]\n  Data --> W[Azure Workbooks]\n  D -.-> Glance[At-a-glance monitoring]\n  W -.-> Investigate[Deep, interactive troubleshooting]",
+  "body": "## First principles\n\nRaw data is useless if you can't read it. Telemetry needs to be aggregated and visualized so humans can recognize patterns, spot anomalies, and share context across teams without making everyone write KQL queries from scratch.\n\n## Why it exists\n\nTeams need shared visibility. **Azure Dashboards** exist to pin key metrics to a grid. However, dashboards are rigid. **Azure Workbooks** were created because engineers needed dynamic, interactive playbooks where clicking on a chart updates the parameters for the text and tables below it.\n\n## How it works\n\n### Azure Dashboards\n- The classic \"tiles on a grid\" experience in the Azure Portal.\n- Best for: Operational overviews, \"single pane of glass\" for an app, throwing up on a wall monitor.\n- You can pin metrics charts, markdown text, and KQL query results.\n\n### Azure Workbooks\n- Think of them like Jupyter Notebooks for operations.\n- They combine rich Markdown text, interactive charts, and dynamic KQL queries into a scrollable document.\n- Best for: Post-mortem reports, guided troubleshooting steps, and complex analytical views.\n- When you click a pie slice in a Workbook, it can populate a variable that drives the query in the next section.\n\n## In practice\n\nA Tier 1 support team looks at a **Dashboard** to see that the \"Checkout API Error Rate\" tile has turned red.\n\nThey click a link to open a Troubleshooting **Workbook**. The Workbook asks them to select the failing region from a dropdown. It then runs a KQL query to show the top failing servers. The support tech clicks the worst server, and the Workbook dynamically loads the exact error logs for that machine below.\n\n## Gotchas\n\n- **Dashboards are tied to identity.** By default, dashboards are private. You must explicitly click \"Share\" (which creates a hidden Azure resource) to grant your team RBAC access to see it.\n- **Workbooks require KQL knowledge to build.** While they are easy for end-users to consume, authoring a good Workbook requires a strong grasp of Log Analytics and Kusto Query Language.",
+  "teachItBack": "Azure Dashboards provide static, at-a-glance grids of metrics and charts for operational monitoring. Azure Workbooks are dynamic, interactive documents that combine Markdown and live queries, used for guided troubleshooting and deep-dive reporting.",
+  "glossary": [
+    {
+      "term": "Azure Workbooks",
+      "definition": "Interactive, highly customizable reports in Azure Monitor that combine text, analytics queries, metrics, and parameters."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Dev docs — Azure Workbooks overview",
+      "url": "https://learn.microsoft.com/en-us/azure/azure-monitor/visualize/workbooks-overview",
+      "verified": true
+    }
+  ],
+  "related": [
+    "azo-logs-kql"
+  ]
+}

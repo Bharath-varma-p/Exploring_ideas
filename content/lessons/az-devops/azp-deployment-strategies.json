@@ -1,0 +1,67 @@
+{
+  "id": "azp-deployment-strategies",
+  "title": "Safe Rollouts — Blue-Green, Canary, Slots, and Rings",
+  "lane": "az-devops",
+  "type": "concept",
+  "order": 60,
+  "summary": "A deployment strategy controls blast radius. Blue-green, canary, slots, and rings let teams expose change gradually, measure health, and reverse before everyone feels pain.",
+  "tags": [
+    "azure",
+    "deployment",
+    "blue-green",
+    "canary",
+    "slots",
+    "rings",
+    "safe-rollout"
+  ],
+  "analogy": "Safe deployment is a dimmer switch, not a light switch: raise exposure gradually while watching whether the room catches fire.",
+  "diagram": "flowchart LR\n  Build[Build artifact] --> Stage[Deploy to inactive slot or small ring]\n  Stage --> Validate[Health checks and smoke tests]\n  Validate --> Canary[Small traffic slice]\n  Canary --> Ring[More regions or users]\n  Ring --> Prod[Full production]\n  Validate -.fail.-> Rollback[Rollback or swap back]\n  Canary -.fail.-> Rollback",
+  "body": "## First principles\n\nProduction is not one thing. It is many users, regions, instances, dependencies, and traffic paths. A release strategy decides **who is exposed to change first** and how quickly exposure grows.\n\nA naive deployment flips everyone at once. A safe rollout treats change like radiation: useful in controlled doses, dangerous when blasted across the whole system without measurement.\n\n## Why it exists\n\nTests prove what you thought to test. Production reveals everything else: real latency, real data shapes, old clients, cold caches, noisy neighbors, and surprising dependencies. Deployment strategies exist because the cheapest bug is the one only 1% of users saw for five minutes.\n\nAzure's Well-Architected guidance frames this as safe deployment practice: standardize how changes move through environments, reduce blast radius, monitor health, and make rollback or mitigation part of the design.\n\n## How it works\n\n**Blue-green** runs two production-capable environments: blue serves traffic while green receives the new version; traffic switches when green is healthy. **Deployment slots** are Azure App Service's version of this pattern: deploy to staging, warm it up, validate it, then swap. **Canary** routes a small percentage of users or requests to the new version. **Rings** expose change by group or geography: internal users, early adopters, one region, more regions, everyone.\n\nThe strategy is usually implemented by the platform: App Service slots, Front Door or load balancer routing, AKS rollout controls, feature flags, Azure DevOps deployment strategies, or GitHub workflows with environment protection.\n\n## Analogy\n\nYou do not test a new theater spotlight by turning it on during opening night over the lead actor. You point it at an empty stage, then a rehearsal, then one scene, then the full show.\n\n## In practice\n\n```bash\naz webapp deployment slot swap \\\\n  --resource-group <resource-group> \\\\n  --name <app-name> \\\\n  --slot staging \\\\n  --target-slot production\n```\n\nA slot swap is blue-green in miniature: two live endpoints, controlled traffic movement, fast reversal if the new version misbehaves.\n\n## Gotchas\n\nBlue-green needs compatibility between old and new data schemas; if green migrates the database destructively, blue may not be able to come back. Canary needs useful health signals, not just \"process is running.\" Rings are not a substitute for isolation: one shared broken dependency can still take down every ring. Rollback is not always undo; sometimes the fastest mitigation is disabling a feature flag or routing away from a region.",
+  "teachItBack": "Deployment strategy is blast-radius design. Blue-green and slots prepare a full alternate version, canaries expose a small slice first, and rings expand by user group or region. The safe pattern is deploy, validate, observe, expand, and keep a practiced path to reverse or mitigate.",
+  "glossary": [
+    {
+      "term": "Blue-green deployment",
+      "definition": "Two production-capable environments where traffic moves from the old version to the new version after validation."
+    },
+    {
+      "term": "Canary",
+      "definition": "A rollout that exposes a small percentage of traffic to a new version before broader release."
+    },
+    {
+      "term": "Deployment slot",
+      "definition": "An Azure App Service live app endpoint used for staging and swapping versions."
+    },
+    {
+      "term": "Ring",
+      "definition": "A release boundary, often users or regions, used to expand exposure gradually."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Dev docs — Safe deployment practices",
+      "url": "https://learn.microsoft.com/en-us/azure/well-architected/operational-excellence/safe-deployments",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — Azure App Service deployment slots",
+      "url": "https://learn.microsoft.com/en-us/azure/app-service/deploy-staging-slots",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — Configure continuous deployment for App Service",
+      "url": "https://learn.microsoft.com/en-us/azure/app-service/deploy-continuous-deployment",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — Azure Pipelines deployment jobs",
+      "url": "https://learn.microsoft.com/en-us/azure/devops/pipelines/process/deployment-jobs?view=azure-devops",
+      "verified": true
+    }
+  ],
+  "related": [
+    "azp-environments",
+    "azp-github-actions",
+    "azp-azure-devops",
+    "azp-capstone"
+  ]
+}

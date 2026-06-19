@@ -1,0 +1,38 @@
+{
+  "id": "azd-oss-databases",
+  "title": "Azure Database for PostgreSQL & MySQL",
+  "lane": "az-data",
+  "type": "concept",
+  "order": 70,
+  "summary": "Fully managed open-source relational databases. Bring your existing Postgres or MySQL apps to Azure without rewriting them for SQL Server.",
+  "tags": ["database", "postgres", "mysql", "oss", "relational"],
+  "analogy": "It's the exact same open-source engine you run on your laptop, but hosted on a chassis maintained by Microsoft mechanics. You keep the keys, they do the oil changes.",
+  "diagram": "flowchart TD\n  App[Your App\\nusing standard pg/mysql drivers] --> Flex[Flexible Server]\n  Flex --> Engine[Community MySQL / PostgreSQL Engine]\n  Flex -.Automates.-> Backups[Automated Backups]\n  Flex -.Automates.-> HA[High Availability / Failover]",
+  "body": "## First principles\n\nAzure SQL Database is excellent, but it is proprietary to Microsoft. Millions of applications—from WordPress sites to massive enterprise Django apps—are written specifically for open-source databases like PostgreSQL and MySQL. Rewriting those apps to use Azure SQL's specific dialect of SQL (T-SQL) is expensive and risky.\n\n## Why it exists\n\nMicrosoft wants your workload on Azure, regardless of the database it uses. **Azure Database for PostgreSQL** and **Azure Database for MySQL** provide the exact community editions of these databases as fully managed PaaS services. You get the open-source engine you love, paired with cloud benefits: automated backups, easy scaling, and automatic high-availability failover.\n\n## How it works\n\nThe modern deployment architecture for these databases is called **Flexible Server**. \n\nFlexible Server runs your database inside a Linux virtual machine managed by Azure. \n- **Control:** You have high control over database parameters and connection limits.\n- **Network:** It can be injected directly into your private Virtual Network (VNet) so it is completely hidden from the public internet.\n- **High Availability (HA):** You can enable Zone-Redundant HA. Azure automatically spins up a standby server in a different datacenter. If your primary server crashes, Azure reroutes the network traffic to the standby server in seconds.\n\n## In practice\n\nYour application code does not know it is running on Azure. You use the standard connection strings and drivers.\n\n```python\n# Standard python psycopg2 connection - no Azure-specific code required\nconn = psycopg2.connect(\n    host=\"my-flex-server.postgres.database.azure.com\",\n    database=\"myappdb\",\n    user=\"adminuser\",\n    password=\"supersecret\"\n)\n```\n\n## Gotchas\n\n- **Single Server Retirement:** You will see older docs mentioning \"Single Server.\" This is the legacy architecture and is being retired. **Always choose Flexible Server** for new workloads.\n- **Extensions:** PostgreSQL is famous for its extensions (like PostGIS for geographic data or pgvector for AI vector search). Flexible Server supports a curated list of the most popular extensions, but you cannot install arbitrary, unapproved C-code extensions like you could on a bare-metal VM.",
+  "teachItBack": "Azure offers PostgreSQL and MySQL as fully managed Flexible Servers. This allows developers to use community open-source database engines without managing the underlying VMs, backups, or high-availability failover infrastructure.",
+  "glossary": [
+    {
+      "term": "Flexible Server",
+      "definition": "The modern PaaS architecture in Azure for hosting open-source databases on managed Linux VMs."
+    },
+    {
+      "term": "High Availability (HA)",
+      "definition": "A configuration where a secondary standby database is kept in sync, ready to take over instantly if the primary fails."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Microsoft Learn: Azure Database for PostgreSQL - Flexible Server",
+      "url": "https://learn.microsoft.com/en-us/azure/postgresql/flexible-server/overview",
+      "verified": true
+    },
+    {
+      "title": "Microsoft Learn: Azure Database for MySQL - Flexible Server",
+      "url": "https://learn.microsoft.com/en-us/azure/mysql/flexible-server/overview",
+      "verified": true
+    }
+  ],
+  "related": [
+    "azd-azure-sql"
+  ]
+}

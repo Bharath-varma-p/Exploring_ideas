@@ -1,0 +1,49 @@
+{
+  "id": "azg-locks",
+  "title": "Resource Locks: The Big Red Safety Cover",
+  "lane": "az-governance",
+  "type": "concept",
+  "order": 40,
+  "summary": "Resource locks are blunt protection against accidental deletion or modification: CanNotDelete allows changes but blocks deletion; ReadOnly blocks updates and deletion.",
+  "tags": [
+    "azure",
+    "resource-locks",
+    "arm",
+    "control-plane",
+    "protection"
+  ],
+  "analogy": "A resource lock is a plastic cover over a launch button: authorized people are still in the room, but the accidental bump no longer counts.",
+  "diagram": "flowchart TD\n  Sub[Subscription lock] --> RG[Resource group]\n  RG --> Res[Resource]\n  Res --> Ext[Extension resource]\n  Can[CanNotDelete] --> BlocksDelete[Blocks delete]\n  Read[ReadOnly] --> BlocksUpdate[Blocks update and delete]\n  Locks[Most restrictive inherited lock wins] --> Res",
+  "body": "## First principles\n\nPermissions answer who is trusted. Accidents still happen to trusted people. A tired owner can delete the wrong resource group. A script can target production. A cleanup job can remove a shared public IP. **Resource locks** exist because authorization is not the same as intent.\n\nA lock adds a platform-level brake that overrides normal user permissions. Even an authorized user must remove the lock before performing the blocked management action.\n\n## Why it exists\n\nSome resources are boring until they disappear: production databases, ExpressRoute circuits, DNS zones, Log Analytics workspaces, key vaults, recovery vaults, static IPs. These resources often have small daily change volume but high deletion blast radius. Locking them is cheap insurance.\n\nLocks are not a replacement for RBAC. RBAC should still limit who can make changes. Locks protect critical objects from mistakes by the people and automations that do have access.\n\n## How it works\n\nAzure has two common lock levels. **CanNotDelete** means authorized users can read and modify the resource, but cannot delete it. In the portal this appears as a Delete lock. **ReadOnly** means authorized users can read the resource but cannot delete or update it; it behaves like forcing Reader-like management access. In the portal this appears as a Read-only lock.\n\nLocks can be applied at subscription, resource group, or resource scope. Child resources inherit parent locks, and the most restrictive lock in the chain wins. Extension resources, such as diagnostic settings, can inherit locks from the resource they extend.\n\nCrucially, locks apply to Azure control plane operations through Azure Resource Manager. They do not generally protect data plane operations that go directly to the service endpoint, such as data inside a storage account.\n\n## Analogy\n\nA lock is a safety cover over a launch button. The operator may have badge access to the control room, but they must consciously lift the cover before the dangerous action. That extra deliberate step is the point.\n\n## In practice\n\nUse CanNotDelete on long-lived shared resources. Reserve ReadOnly for rare cases because many operations that feel like reads use POST or write-like control plane calls.\n\n```bash\naz lock create \\\n  --name protect-prod-db \\\n  --lock-type CanNotDelete \\\n  --resource-group <rg> \\\n  --resource-name <name> \\\n  --resource-type <provider/type>\n```\n\nBefore deleting a locked resource group, remove child locks intentionally and document why.\n\n## Gotchas\n\nReadOnly can surprise you. It can block starting VMs, listing storage account keys, enabling diagnostics, scaling App Service plans, or letting Advisor store results, because those operations use management-plane POST/write behavior. CanNotDelete on a resource group can also block cleanup of deployment history. Use locks surgically, review them regularly, and never assume they protect service data from data-plane deletion.",
+  "teachItBack": "Resource locks protect important Azure scopes from accidental management-plane deletion or modification. CanNotDelete blocks deletion while still allowing updates; ReadOnly blocks updates and deletion and can interfere with operations that secretly require write-like control plane calls. Locks inherit downward and override normal user permissions, but they do not replace RBAC or data protection.",
+  "glossary": [
+    {
+      "term": "CanNotDelete",
+      "definition": "A lock level that allows reads and updates but blocks deletion."
+    },
+    {
+      "term": "ReadOnly",
+      "definition": "A lock level that blocks management-plane updates and deletion."
+    },
+    {
+      "term": "Control plane",
+      "definition": "Azure Resource Manager operations used to create, configure, update, or delete resources."
+    },
+    {
+      "term": "Data plane",
+      "definition": "Service-specific operations against the data or runtime endpoint, such as reading blobs or querying a database."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Dev docs — Lock Azure resources to protect infrastructure",
+      "url": "https://learn.microsoft.com/en-us/azure/azure-resource-manager/management/lock-resources",
+      "verified": true
+    }
+  ],
+  "related": [
+    "azg-policy",
+    "azg-tags",
+    "azg-landing-zones"
+  ]
+}

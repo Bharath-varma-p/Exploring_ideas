@@ -1,0 +1,70 @@
+{
+  "id": "azc-batch-hpc",
+  "title": "Azure Batch and HPC: Turn One Giant Job Into Many Small Ones",
+  "lane": "az-compute",
+  "type": "concept",
+  "order": 90,
+  "summary": "Azure Batch runs large parallel jobs by creating pools of compute nodes and scheduling tasks across them. It shines when work can be split into independent pieces.",
+  "tags": [
+    "azure",
+    "compute",
+    "batch",
+    "hpc",
+    "parallel-compute",
+    "jobs"
+  ],
+  "analogy": "Batch is a temporary exam-grading hall: hire hundreds of graders for one night, split the papers, collect results, then close the hall.",
+  "diagram": "flowchart TD\n  Job[Job: overall work] --> Tasks[Many tasks]\n  Pool[Pool: VM compute nodes] --> N1[Node 1]\n  Pool --> N2[Node 2]\n  Pool --> Nn[Node N]\n  Tasks --> Scheduler[Batch scheduler]\n  Scheduler --> N1\n  Scheduler --> N2\n  Scheduler --> Nn\n  Storage[Input output storage] --> Tasks",
+  "body": "## First principles\n\nSome compute problems are not “serve requests forever.” They are “finish a mountain of work.” Render 80,000 frames. Run 10 million simulations. Process every image in an archive. Train or preprocess across shards. The efficient shape is not one huge machine; it is many workers doing independent pieces.\n\n**Azure Batch** is managed scheduling for that shape.\n\n## Why it exists\n\nWithout Batch, teams build their own temporary clusters: provision VMs, install dependencies, distribute input, assign tasks, retry failures, collect output, scale down, and clean up. That is a job scheduler masquerading as scripts.\n\nBatch gives you the job scheduler and pool management so you can focus on the work units.\n\n## How it works\n\nA **Batch account** owns the service boundary. A **pool** is a set of compute nodes, usually Azure VMs, configured with size, image, networking, startup tasks, and scale rules. A **job** groups related work. **Tasks** are the individual commands that run on nodes.\n\nBatch is strongest for **intrinsically parallel** workloads: tasks can run independently, maybe reading common input and writing separate output, without constant chatter between nodes. That is why rendering, Monte Carlo simulations, file processing, and parameter sweeps are classic examples.\n\nAzure’s broader **HPC** story can also include specialized VM sizes, GPUs, high-throughput storage, InfiniBand/RDMA networking, schedulers, and managed services. Batch is the clean conceptual starting point: split, schedule, run, collect.\n\n## In practice\n\n```bash\naz batch account create --resource-group <rg> --name <batch-account> --location <region>\naz batch pool create --id <pool> --vm-size Standard_D4s_v5 --target-dedicated-nodes 4\naz batch job create --id <job> --pool-id <pool>\n```\n\nIn a real design, tasks would point to input data, application packages or containers, output storage, retry policy, and cleanup rules.\n\n## Gotchas\n\nBatch is not for low-latency web serving. It is for scheduled or submitted work. If tasks need constant tightly coupled communication, you may need specialized HPC architecture rather than simple task fan-out. Also, Batch itself has no extra service charge, but the underlying VMs, storage, and networking absolutely matter — idle pools are still rented capacity.",
+  "teachItBack": "Azure Batch runs large jobs by spreading tasks across a managed pool of compute nodes. It is ideal when work can be split into independent pieces and collected later. HPC on Azure expands that idea with specialized hardware and networking, but the mental model remains: divide work, schedule workers, gather results, release capacity.",
+  "glossary": [
+    {
+      "term": "Azure Batch",
+      "definition": "Managed Azure service for scheduling and running large-scale parallel and HPC jobs."
+    },
+    {
+      "term": "Pool",
+      "definition": "A group of compute nodes that run Batch tasks."
+    },
+    {
+      "term": "Job",
+      "definition": "A logical grouping of related tasks in Azure Batch."
+    },
+    {
+      "term": "Task",
+      "definition": "A command or unit of work scheduled onto a Batch compute node."
+    },
+    {
+      "term": "Intrinsically parallel",
+      "definition": "A workload whose pieces can run independently with little or no communication."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Dev docs — Azure Batch runs large parallel jobs in the cloud",
+      "url": "https://learn.microsoft.com/en-us/azure/batch/batch-technical-overview",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — High performance computing (HPC) on Azure",
+      "url": "https://learn.microsoft.com/en-us/azure/architecture/topics/high-performance-computing/",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — Virtual machine sizes overview",
+      "url": "https://learn.microsoft.com/en-us/azure/virtual-machines/sizes/overview",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — Choose an Azure compute service",
+      "url": "https://learn.microsoft.com/en-us/azure/architecture/guide/technology-choices/compute-decision-tree",
+      "verified": true
+    }
+  ],
+  "related": [
+    "azc-vms",
+    "azc-vmss",
+    "azc-containers",
+    "azc-choosing-compute"
+  ]
+}

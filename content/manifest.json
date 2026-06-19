@@ -1,10 +1,10 @@
 {
-  "generatedAt": "2026-06-19T07:07:53.421Z",
+  "generatedAt": "2026-06-19T07:24:07.648Z",
   "stats": {
-    "lessons": 196,
-    "glossaryTerms": 519,
+    "lessons": 291,
+    "glossaryTerms": 832,
     "quizQuestions": 189,
-    "changeEntries": 8
+    "changeEntries": 10
   },
   "lanes": [
     {
@@ -61,6 +61,56 @@
       "id": "foundry-capstone",
       "title": "Reference Architecture & Teaching Kit",
       "count": 3
+    },
+    {
+      "id": "az-foundations",
+      "title": "Azure Foundations & Mental Model",
+      "count": 11
+    },
+    {
+      "id": "az-identity",
+      "title": "Identity & Access (Entra ID)",
+      "count": 10
+    },
+    {
+      "id": "az-governance",
+      "title": "Governance, Cost & Well-Architected",
+      "count": 11
+    },
+    {
+      "id": "az-networking",
+      "title": "Networking & Connectivity",
+      "count": 10
+    },
+    {
+      "id": "az-compute",
+      "title": "Compute — Run Your Code",
+      "count": 10
+    },
+    {
+      "id": "az-data",
+      "title": "Storage & Databases",
+      "count": 11
+    },
+    {
+      "id": "az-integration",
+      "title": "Messaging & Integration",
+      "count": 8
+    },
+    {
+      "id": "az-observability",
+      "title": "Observability & Operations",
+      "count": 8
+    },
+    {
+      "id": "az-security",
+      "title": "Security & Compliance",
+      "count": 8
+    },
+    {
+      "id": "az-devops",
+      "title": "Delivery & Infrastructure as Code",
+      "count": 8
     }
   ],
   "files": [
@@ -1435,6 +1485,671 @@
       "lane": "foundry-capstone",
       "type": "concept",
       "file": "content/lessons/foundry-capstone/fdy-capstone-self-test.json"
+    },
+    {
+      "id": "azure-bootcamp-start",
+      "title": "Azure Bootcamp — Start Here (the whole map)",
+      "lane": "az-foundations",
+      "type": "concept",
+      "file": "content/lessons/az-foundations/azure-bootcamp-start.json"
+    },
+    {
+      "id": "azf-intro",
+      "title": "Foundations — the mental model that unlocks all of Azure",
+      "lane": "az-foundations",
+      "type": "concept",
+      "file": "content/lessons/az-foundations/azf-intro.json"
+    },
+    {
+      "id": "azf-what-is-cloud",
+      "title": "What \"the cloud\" actually is (and why it exists)",
+      "lane": "az-foundations",
+      "type": "concept",
+      "file": "content/lessons/az-foundations/azf-what-is-cloud.json"
+    },
+    {
+      "id": "azf-what-is-azure",
+      "title": "What Azure is: Microsoft's cloud platform",
+      "lane": "az-foundations",
+      "type": "concept",
+      "file": "content/lessons/az-foundations/azf-what-is-azure.json"
+    },
+    {
+      "id": "azf-regions-zones",
+      "title": "Regions, zones, geographies & region pairs",
+      "lane": "az-foundations",
+      "type": "concept",
+      "file": "content/lessons/az-foundations/azf-regions-zones.json"
+    },
+    {
+      "id": "azf-hierarchy",
+      "title": "The scope hierarchy: tenant → resource (deep dive)",
+      "lane": "az-foundations",
+      "type": "concept",
+      "file": "content/lessons/az-foundations/azf-hierarchy.json"
+    },
+    {
+      "id": "azf-resource-groups",
+      "title": "Resource groups, up close",
+      "lane": "az-foundations",
+      "type": "concept",
+      "file": "content/lessons/az-foundations/azf-resource-groups.json"
+    },
+    {
+      "id": "azf-subscriptions-tenants",
+      "title": "Subscriptions & tenants: billing vs identity",
+      "lane": "az-foundations",
+      "type": "concept",
+      "file": "content/lessons/az-foundations/azf-subscriptions-tenants.json"
+    },
+    {
+      "id": "azf-arm",
+      "title": "Azure Resource Manager: the one control plane",
+      "lane": "az-foundations",
+      "type": "concept",
+      "file": "content/lessons/az-foundations/azf-arm.json"
+    },
+    {
+      "id": "azf-interfaces",
+      "title": "How you actually talk to Azure",
+      "lane": "az-foundations",
+      "type": "concept",
+      "file": "content/lessons/az-foundations/azf-interfaces.json"
+    },
+    {
+      "id": "azf-shared-responsibility",
+      "title": "Shared responsibility, SLAs & the preview→GA lifecycle",
+      "lane": "az-foundations",
+      "type": "concept",
+      "file": "content/lessons/az-foundations/azf-shared-responsibility.json"
+    },
+    {
+      "id": "azi-intro",
+      "title": "Identity & Access — Start Here (the front door of Azure)",
+      "lane": "az-identity",
+      "type": "concept",
+      "file": "content/lessons/az-identity/azi-intro.json"
+    },
+    {
+      "id": "azi-why-identity",
+      "title": "Identity Is the New Perimeter (Zero Trust from scratch)",
+      "lane": "az-identity",
+      "type": "concept",
+      "file": "content/lessons/az-identity/azi-why-identity.json"
+    },
+    {
+      "id": "azi-entra-id",
+      "title": "Microsoft Entra ID: The Directory, Tenants, Users & Groups",
+      "lane": "az-identity",
+      "type": "concept",
+      "file": "content/lessons/az-identity/azi-entra-id.json"
+    },
+    {
+      "id": "azi-service-principals",
+      "title": "App Registrations & Service Principals (identities for software)",
+      "lane": "az-identity",
+      "type": "concept",
+      "file": "content/lessons/az-identity/azi-service-principals.json"
+    },
+    {
+      "id": "azi-managed-identities-bridge",
+      "title": "Managed Identities, in One Page (then go deeper)",
+      "lane": "az-identity",
+      "type": "concept",
+      "file": "content/lessons/az-identity/azi-managed-identities-bridge.json"
+    },
+    {
+      "id": "azi-rbac",
+      "title": "Azure RBAC Deep Dive (how permissions actually resolve)",
+      "lane": "az-identity",
+      "type": "concept",
+      "file": "content/lessons/az-identity/azi-rbac.json"
+    },
+    {
+      "id": "azi-builtin-roles",
+      "title": "Built-in Roles, Custom Roles & Least Privilege in Practice",
+      "lane": "az-identity",
+      "type": "concept",
+      "file": "content/lessons/az-identity/azi-builtin-roles.json"
+    },
+    {
+      "id": "azi-pim",
+      "title": "Privileged Identity Management: Power Without Standing Risk",
+      "lane": "az-identity",
+      "type": "concept",
+      "file": "content/lessons/az-identity/azi-pim.json"
+    },
+    {
+      "id": "azi-conditional-access",
+      "title": "Conditional Access & MFA: Judging the Sign-In Itself",
+      "lane": "az-identity",
+      "type": "concept",
+      "file": "content/lessons/az-identity/azi-conditional-access.json"
+    },
+    {
+      "id": "azi-hybrid-identity",
+      "title": "Hybrid Identity: Entra ID, On-Prem AD, B2B & B2C",
+      "lane": "az-identity",
+      "type": "concept",
+      "file": "content/lessons/az-identity/azi-hybrid-identity.json"
+    },
+    {
+      "id": "azg-intro",
+      "title": "Governance: Control Without Drag",
+      "lane": "az-governance",
+      "type": "concept",
+      "file": "content/lessons/az-governance/azg-intro.json"
+    },
+    {
+      "id": "azg-management-groups",
+      "title": "Management Groups: Governance Above Subscriptions",
+      "lane": "az-governance",
+      "type": "concept",
+      "file": "content/lessons/az-governance/azg-management-groups.json"
+    },
+    {
+      "id": "azg-policy",
+      "title": "Azure Policy: Guardrails, Not Guesswork",
+      "lane": "az-governance",
+      "type": "concept",
+      "file": "content/lessons/az-governance/azg-policy.json"
+    },
+    {
+      "id": "azg-locks",
+      "title": "Resource Locks: The Big Red Safety Cover",
+      "lane": "az-governance",
+      "type": "concept",
+      "file": "content/lessons/az-governance/azg-locks.json"
+    },
+    {
+      "id": "azg-tags",
+      "title": "Tags: Business Context for Cloud Resources",
+      "lane": "az-governance",
+      "type": "concept",
+      "file": "content/lessons/az-governance/azg-tags.json"
+    },
+    {
+      "id": "azg-cost-management",
+      "title": "Cost Management + Billing: Make Spend Visible Early",
+      "lane": "az-governance",
+      "type": "concept",
+      "file": "content/lessons/az-governance/azg-cost-management.json"
+    },
+    {
+      "id": "azg-pricing-models",
+      "title": "Pricing Models: Why Azure Has So Many Ways to Pay",
+      "lane": "az-governance",
+      "type": "concept",
+      "file": "content/lessons/az-governance/azg-pricing-models.json"
+    },
+    {
+      "id": "azg-landing-zones",
+      "title": "Azure Landing Zones: The Paved Road",
+      "lane": "az-governance",
+      "type": "concept",
+      "file": "content/lessons/az-governance/azg-landing-zones.json"
+    },
+    {
+      "id": "azg-advisor",
+      "title": "Azure Advisor: Your Built-In Cloud Coach",
+      "lane": "az-governance",
+      "type": "concept",
+      "file": "content/lessons/az-governance/azg-advisor.json"
+    },
+    {
+      "id": "azg-waf",
+      "title": "Azure Well-Architected Framework: Tradeoffs Made Explicit",
+      "lane": "az-governance",
+      "type": "concept",
+      "file": "content/lessons/az-governance/azg-waf.json"
+    },
+    {
+      "id": "azg-quotas",
+      "title": "Quotas and Limits: Cloud Capacity Has Guardrails Too",
+      "lane": "az-governance",
+      "type": "concept",
+      "file": "content/lessons/az-governance/azg-quotas.json"
+    },
+    {
+      "id": "azn-intro",
+      "title": "Why Cloud Networking Exists (the software-defined mental model)",
+      "lane": "az-networking",
+      "type": "concept",
+      "file": "content/lessons/az-networking/azn-intro.json"
+    },
+    {
+      "id": "azn-vnet",
+      "title": "Virtual Networks & Subnets: your private address space",
+      "lane": "az-networking",
+      "type": "concept",
+      "file": "content/lessons/az-networking/azn-vnet.json"
+    },
+    {
+      "id": "azn-nsg",
+      "title": "NSGs & ASGs: stateful firewall rules without the cables",
+      "lane": "az-networking",
+      "type": "concept",
+      "file": "content/lessons/az-networking/azn-nsg.json"
+    },
+    {
+      "id": "azn-ips-nat",
+      "title": "Public vs Private IPs, NAT Gateway & outbound connectivity",
+      "lane": "az-networking",
+      "type": "concept",
+      "file": "content/lessons/az-networking/azn-ips-nat.json"
+    },
+    {
+      "id": "azn-load-balancing",
+      "title": "The Four Load Balancers Compared: LB vs App Gateway vs Front Door vs Traffic Manager",
+      "lane": "az-networking",
+      "type": "framework",
+      "file": "content/lessons/az-networking/azn-load-balancing.json"
+    },
+    {
+      "id": "azn-dns",
+      "title": "Azure DNS: public zones, private zones & name resolution in a VNet",
+      "lane": "az-networking",
+      "type": "concept",
+      "file": "content/lessons/az-networking/azn-dns.json"
+    },
+    {
+      "id": "azn-peering",
+      "title": "VNet Peering & the Hub-and-Spoke Topology",
+      "lane": "az-networking",
+      "type": "concept",
+      "file": "content/lessons/az-networking/azn-peering.json"
+    },
+    {
+      "id": "azn-hybrid",
+      "title": "Connecting to On-Prem: VPN Gateway vs ExpressRoute (why each)",
+      "lane": "az-networking",
+      "type": "concept",
+      "file": "content/lessons/az-networking/azn-hybrid.json"
+    },
+    {
+      "id": "azn-private-link",
+      "title": "Private Link & Private Endpoints vs Service Endpoints",
+      "lane": "az-networking",
+      "type": "concept",
+      "file": "content/lessons/az-networking/azn-private-link.json"
+    },
+    {
+      "id": "azn-firewall-waf",
+      "title": "Defense in Depth: Azure Firewall, WAF & DDoS Protection",
+      "lane": "az-networking",
+      "type": "concept",
+      "file": "content/lessons/az-networking/azn-firewall-waf.json"
+    },
+    {
+      "id": "azc-intro",
+      "title": "Azure Compute: The Management Spectrum",
+      "lane": "az-compute",
+      "type": "concept",
+      "file": "content/lessons/az-compute/azc-intro.json"
+    },
+    {
+      "id": "azc-vms",
+      "title": "Virtual Machines: Control Has a Shape",
+      "lane": "az-compute",
+      "type": "concept",
+      "file": "content/lessons/az-compute/azc-vms.json"
+    },
+    {
+      "id": "azc-vmss",
+      "title": "VM Scale Sets: Herds, Not Pets",
+      "lane": "az-compute",
+      "type": "concept",
+      "file": "content/lessons/az-compute/azc-vmss.json"
+    },
+    {
+      "id": "azc-app-service",
+      "title": "App Service: Web Hosting Without the Server Chores",
+      "lane": "az-compute",
+      "type": "concept",
+      "file": "content/lessons/az-compute/azc-app-service.json"
+    },
+    {
+      "id": "azc-functions",
+      "title": "Azure Functions: Code That Wakes Up for Events",
+      "lane": "az-compute",
+      "type": "concept",
+      "file": "content/lessons/az-compute/azc-functions.json"
+    },
+    {
+      "id": "azc-containers",
+      "title": "Containers on Azure: Package Once, Run Deliberately",
+      "lane": "az-compute",
+      "type": "concept",
+      "file": "content/lessons/az-compute/azc-containers.json"
+    },
+    {
+      "id": "azc-aks",
+      "title": "AKS: Kubernetes When the Platform Is the Point",
+      "lane": "az-compute",
+      "type": "concept",
+      "file": "content/lessons/az-compute/azc-aks.json"
+    },
+    {
+      "id": "azc-container-apps",
+      "title": "Azure Container Apps: Serverless Containers With Useful Rails",
+      "lane": "az-compute",
+      "type": "concept",
+      "file": "content/lessons/az-compute/azc-container-apps.json"
+    },
+    {
+      "id": "azc-batch-hpc",
+      "title": "Azure Batch and HPC: Turn One Giant Job Into Many Small Ones",
+      "lane": "az-compute",
+      "type": "concept",
+      "file": "content/lessons/az-compute/azc-batch-hpc.json"
+    },
+    {
+      "id": "azc-choosing-compute",
+      "title": "Choosing Azure Compute: A Decision Framework",
+      "lane": "az-compute",
+      "type": "framework",
+      "file": "content/lessons/az-compute/azc-choosing-compute.json"
+    },
+    {
+      "id": "azd-intro",
+      "title": "The Azure Data Landscape: State & Storage",
+      "lane": "az-data",
+      "type": "concept",
+      "file": "content/lessons/az-data/azd-intro.json"
+    },
+    {
+      "id": "azd-storage-account",
+      "title": "Azure Storage Accounts: The Universal Bucket",
+      "lane": "az-data",
+      "type": "concept",
+      "file": "content/lessons/az-data/azd-storage-account.json"
+    },
+    {
+      "id": "azd-redundancy-tiers",
+      "title": "Redundancy & Access Tiers: Durability vs. Cost",
+      "lane": "az-data",
+      "type": "concept",
+      "file": "content/lessons/az-data/azd-redundancy-tiers.json"
+    },
+    {
+      "id": "azd-disks",
+      "title": "Managed Disks: The VM's Hard Drive",
+      "lane": "az-data",
+      "type": "concept",
+      "file": "content/lessons/az-data/azd-disks.json"
+    },
+    {
+      "id": "azd-azure-sql",
+      "title": "Azure SQL: The Relational Workhorse",
+      "lane": "az-data",
+      "type": "concept",
+      "file": "content/lessons/az-data/azd-azure-sql.json"
+    },
+    {
+      "id": "azd-cosmos",
+      "title": "Cosmos DB: Planet-Scale NoSQL",
+      "lane": "az-data",
+      "type": "concept",
+      "file": "content/lessons/az-data/azd-cosmos.json"
+    },
+    {
+      "id": "azd-oss-databases",
+      "title": "Azure Database for PostgreSQL & MySQL",
+      "lane": "az-data",
+      "type": "concept",
+      "file": "content/lessons/az-data/azd-oss-databases.json"
+    },
+    {
+      "id": "azd-redis",
+      "title": "Azure Managed Redis: The Memory Cache",
+      "lane": "az-data",
+      "type": "concept",
+      "file": "content/lessons/az-data/azd-redis.json"
+    },
+    {
+      "id": "azd-analytics",
+      "title": "Big Data: Data Lake, Synapse, and Fabric",
+      "lane": "az-data",
+      "type": "concept",
+      "file": "content/lessons/az-data/azd-analytics.json"
+    },
+    {
+      "id": "azd-backup-dr",
+      "title": "Azure Backup & Site Recovery (BCDR)",
+      "lane": "az-data",
+      "type": "concept",
+      "file": "content/lessons/az-data/azd-backup-dr.json"
+    },
+    {
+      "id": "azd-choosing-data",
+      "title": "Choosing a Data Store: A Decision Framework",
+      "lane": "az-data",
+      "type": "concept",
+      "file": "content/lessons/az-data/azd-choosing-data.json"
+    },
+    {
+      "id": "azx-intro",
+      "title": "Messaging vs Eventing",
+      "lane": "az-integration",
+      "type": "concept",
+      "file": "content/lessons/az-integration/azx-intro.json"
+    },
+    {
+      "id": "azx-queues",
+      "title": "Storage Queues vs Service Bus Queues",
+      "lane": "az-integration",
+      "type": "concept",
+      "file": "content/lessons/az-integration/azx-queues.json"
+    },
+    {
+      "id": "azx-service-bus",
+      "title": "Service Bus Deep-ish: Queues, Topics, Sessions, and DLQs",
+      "lane": "az-integration",
+      "type": "concept",
+      "file": "content/lessons/az-integration/azx-service-bus.json"
+    },
+    {
+      "id": "azx-event-hubs",
+      "title": "Event Hubs: The Telemetry Firehose",
+      "lane": "az-integration",
+      "type": "concept",
+      "file": "content/lessons/az-integration/azx-event-hubs.json"
+    },
+    {
+      "id": "azx-event-grid",
+      "title": "Event Grid: Reactive Pub/Sub",
+      "lane": "az-integration",
+      "type": "concept",
+      "file": "content/lessons/az-integration/azx-event-grid.json"
+    },
+    {
+      "id": "azx-logic-apps",
+      "title": "Logic Apps: Workflow Glue Without Hiding the Glue",
+      "lane": "az-integration",
+      "type": "concept",
+      "file": "content/lessons/az-integration/azx-logic-apps.json"
+    },
+    {
+      "id": "azx-apim",
+      "title": "API Management: The Gateway Pattern",
+      "lane": "az-integration",
+      "type": "concept",
+      "file": "content/lessons/az-integration/azx-apim.json"
+    },
+    {
+      "id": "azx-choosing-integration",
+      "title": "The Azure Integration Decision Map",
+      "lane": "az-integration",
+      "type": "concept",
+      "file": "content/lessons/az-integration/azx-choosing-integration.json"
+    },
+    {
+      "id": "azo-intro",
+      "title": "Observability Intro: The Three Pillars",
+      "lane": "az-observability",
+      "type": "concept",
+      "file": "content/lessons/az-observability/azo-intro.json"
+    },
+    {
+      "id": "azo-azure-monitor",
+      "title": "Azure Monitor: The Platform Mental Model",
+      "lane": "az-observability",
+      "type": "concept",
+      "file": "content/lessons/az-observability/azo-azure-monitor.json"
+    },
+    {
+      "id": "azo-metrics-alerts",
+      "title": "Metrics & Alerts",
+      "lane": "az-observability",
+      "type": "concept",
+      "file": "content/lessons/az-observability/azo-metrics-alerts.json"
+    },
+    {
+      "id": "azo-logs-kql",
+      "title": "Log Analytics & KQL basics",
+      "lane": "az-observability",
+      "type": "concept",
+      "file": "content/lessons/az-observability/azo-logs-kql.json"
+    },
+    {
+      "id": "azo-app-insights",
+      "title": "Application Insights: APM & Tracing",
+      "lane": "az-observability",
+      "type": "concept",
+      "file": "content/lessons/az-observability/azo-app-insights.json"
+    },
+    {
+      "id": "azo-dashboards-workbooks",
+      "title": "Dashboards & Workbooks",
+      "lane": "az-observability",
+      "type": "concept",
+      "file": "content/lessons/az-observability/azo-dashboards-workbooks.json"
+    },
+    {
+      "id": "azo-autoscale",
+      "title": "Autoscale: Rules-Based Elasticity",
+      "lane": "az-observability",
+      "type": "concept",
+      "file": "content/lessons/az-observability/azo-autoscale.json"
+    },
+    {
+      "id": "azo-health",
+      "title": "Azure Resource & Service Health",
+      "lane": "az-observability",
+      "type": "concept",
+      "file": "content/lessons/az-observability/azo-health.json"
+    },
+    {
+      "id": "azs-intro",
+      "title": "Security from First Principles: Defense in Depth & Zero Trust",
+      "lane": "az-security",
+      "type": "concept",
+      "file": "content/lessons/az-security/azs-intro.json"
+    },
+    {
+      "id": "azs-shared-responsibility",
+      "title": "Shared Responsibility: What's Always Yours",
+      "lane": "az-security",
+      "type": "concept",
+      "file": "content/lessons/az-security/azs-shared-responsibility.json"
+    },
+    {
+      "id": "azs-defender",
+      "title": "Microsoft Defender for Cloud: Posture & Protection",
+      "lane": "az-security",
+      "type": "concept",
+      "file": "content/lessons/az-security/azs-defender.json"
+    },
+    {
+      "id": "azs-key-vault",
+      "title": "Azure Key Vault: One Safe for Every Secret",
+      "lane": "az-security",
+      "type": "concept",
+      "file": "content/lessons/az-security/azs-key-vault.json"
+    },
+    {
+      "id": "azs-encryption",
+      "title": "Encryption at Rest & in Transit: PMK vs CMK",
+      "lane": "az-security",
+      "type": "concept",
+      "file": "content/lessons/az-security/azs-encryption.json"
+    },
+    {
+      "id": "azs-sentinel",
+      "title": "Microsoft Sentinel: Cloud-Native SIEM + SOAR",
+      "lane": "az-security",
+      "type": "concept",
+      "file": "content/lessons/az-security/azs-sentinel.json"
+    },
+    {
+      "id": "azs-network-security",
+      "title": "Network Security as a Defense Layer",
+      "lane": "az-security",
+      "type": "concept",
+      "file": "content/lessons/az-security/azs-network-security.json"
+    },
+    {
+      "id": "azs-compliance",
+      "title": "Compliance & Data Governance for Security",
+      "lane": "az-security",
+      "type": "concept",
+      "file": "content/lessons/az-security/azs-compliance.json"
+    },
+    {
+      "id": "azp-intro",
+      "title": "Delivery & IaC — Making Azure Repeatable",
+      "lane": "az-devops",
+      "type": "concept",
+      "file": "content/lessons/az-devops/azp-intro.json"
+    },
+    {
+      "id": "azp-arm-bicep",
+      "title": "ARM Templates to Bicep — Native Azure IaC",
+      "lane": "az-devops",
+      "type": "concept",
+      "file": "content/lessons/az-devops/azp-arm-bicep.json"
+    },
+    {
+      "id": "azp-terraform",
+      "title": "Terraform on Azure — State, Providers, and Team Boundaries",
+      "lane": "az-devops",
+      "type": "concept",
+      "file": "content/lessons/az-devops/azp-terraform.json"
+    },
+    {
+      "id": "azp-azure-devops",
+      "title": "Azure DevOps — The Suite Around the Work",
+      "lane": "az-devops",
+      "type": "concept",
+      "file": "content/lessons/az-devops/azp-azure-devops.json"
+    },
+    {
+      "id": "azp-github-actions",
+      "title": "GitHub Actions for Azure — Keyless Deploys with OIDC",
+      "lane": "az-devops",
+      "type": "concept",
+      "file": "content/lessons/az-devops/azp-github-actions.json"
+    },
+    {
+      "id": "azp-deployment-strategies",
+      "title": "Safe Rollouts — Blue-Green, Canary, Slots, and Rings",
+      "lane": "az-devops",
+      "type": "concept",
+      "file": "content/lessons/az-devops/azp-deployment-strategies.json"
+    },
+    {
+      "id": "azp-environments",
+      "title": "Environments, Stages, Approvals, and Gates",
+      "lane": "az-devops",
+      "type": "concept",
+      "file": "content/lessons/az-devops/azp-environments.json"
+    },
+    {
+      "id": "azp-capstone",
+      "title": "Azure Bootcamp Capstone — One Request Through the Whole Platform",
+      "lane": "az-devops",
+      "type": "concept",
+      "file": "content/lessons/az-devops/azp-capstone.json"
     }
   ]
 }

@@ -1,0 +1,78 @@
+{
+  "id": "azn-load-balancing",
+  "title": "The Four Load Balancers Compared: LB vs App Gateway vs Front Door vs Traffic Manager",
+  "lane": "az-networking",
+  "type": "framework",
+  "order": 50,
+  "summary": "Azure has four 'load balancing' services and people pick the wrong one constantly. The decision is two questions: do you balance at L4 (raw TCP/UDP) or L7 (HTTP/URLs), and is the scope regional or global? Two axes, four boxes, done.",
+  "tags": [
+    "azure",
+    "load-balancer",
+    "application-gateway",
+    "front-door",
+    "traffic-manager",
+    "decision"
+  ],
+  "analogy": "A regional L4 Load Balancer is a postal sorter that splits letters by zip code without opening them; an Application Gateway is a smart receptionist who reads each letter and routes by content; Front Door is a global chain of those receptionists at every city edge; Traffic Manager is the phone directory that just tells callers which city office to dial.",
+  "diagram": "flowchart TD\n  Q1{HTTP / URL-aware?}\n  Q1 -->|No, raw TCP/UDP L4| Q2{Scope?}\n  Q1 -->|Yes, L7| Q3{Scope?}\n  Q2 -->|Regional| LB[Azure Load Balancer]\n  Q2 -->|Global| CrossLB[Cross-region Load Balancer]\n  Q3 -->|Regional| AGW[Application Gateway + WAF]\n  Q3 -->|Global| AFD[Front Door + WAF + CDN]\n  TM[Traffic Manager: DNS-based, any endpoint, global] -.routes by DNS, not data path.-> AFD",
+  "body": "## First principles\n\nA single server eventually runs out of capacity, or it crashes. The fix is to run **many** identical servers and put a **distributor** in front that spreads requests across them and stops sending traffic to dead ones. That distributor is a **load balancer**. Every Azure load-balancing product does that same core job — the only real differences are *what part of the network they understand* and *how far they reach*.\n\n## The two axes that decide everything\n\nForget feature lists. There are only two questions:\n\n**Axis 1 — What layer? L4 vs L7.** This is the OSI model. **Layer 4** sees only IPs and ports (raw TCP/UDP). It's blazing fast and protocol-agnostic, but it has no idea what a URL is. **Layer 7** understands the *application protocol* — HTTP — so it can read hostnames, paths, cookies, and headers, and route on them (\"send `/api/*` to the API pool, `/images/*` to the image pool\"). L7 can also terminate TLS, inspect requests, and run a **Web Application Firewall**.\n\n**Axis 2 — What scope? Regional vs Global.** A **regional** balancer distributes across backends inside one Azure region. A **global** one distributes across *multiple regions* — for latency (serve users from the nearest region) and for disaster resilience (fail over if a whole region dies).\n\nCross those two axes and you get exactly the four products:\n\n| | **L4 (TCP/UDP)** | **L7 (HTTP/S)** |\n|---|---|---|\n| **Regional** | **Azure Load Balancer** | **Application Gateway** (+ WAF) |\n| **Global** | **Cross-region Load Balancer** | **Azure Front Door** (+ WAF + CDN) |\n\nAnd then there's a fifth oddball — **Traffic Manager** — which isn't in the data path at all.\n\n## The four (plus one), concretely\n\n**Azure Load Balancer (regional, L4).** Ultra-low-latency distribution of TCP/UDP to a backend pool (VMs, scale sets). It never sees your HTTP — it just balances flows by 5-tuple. Use it for non-HTTP traffic, internal tier-to-tier balancing, or when you need raw speed and don't need URL routing. Standard SKU only (Basic is retiring Sep 30, 2025).\n\n**Application Gateway (regional, L7).** A reverse proxy that understands HTTP. It does **path- and host-based routing**, **TLS termination**, session affinity, and hosts the regional **Web Application Firewall (WAF)**. Use it to front web apps *within one region* — e.g. one public entry point routing to several microservice pools.\n\n**Azure Front Door (global, L7).** Microsoft's global edge: it terminates user connections at the nearest of 100+ **points of presence**, applies WAF and **CDN caching**, and routes to the healthiest/closest backend region over Microsoft's private backbone. Use it for internet-facing apps that serve users worldwide and need global failover plus edge acceleration.\n\n**Cross-region Load Balancer (global, L4).** A global front for the L4 case — one static anycast IP that steers TCP/UDP to regional Load Balancers. Less common, for non-HTTP global workloads.\n\n**Traffic Manager (global, DNS-based).** The odd one out: it operates at the **DNS** layer, not the data path. When a client resolves your name, Traffic Manager *answers with the IP of the best endpoint* (by performance, priority, weighting, or geography) and then steps aside — traffic flows directly to that endpoint, not through Traffic Manager. Because it's just DNS, it can point at *anything* (Azure, on-prem, another cloud). The catch: DNS is cached by clients, so failover is as slow as the TTL. For HTTP, Front Door is usually the better global choice; Traffic Manager shines for non-HTTP endpoints or routing to external/hybrid targets.\n\n## In practice — choosing\n\n```text\nIs the traffic HTTP/HTTPS and do you want URL routing, TLS offload, or a WAF?\n  NO  -> Layer 4:  regional = Azure Load Balancer | global = Cross-region LB\n  YES -> Layer 7:  regional = Application Gateway  | global = Front Door\n\nNeed to route to non-Azure / on-prem / multi-cloud endpoints by DNS?\n  -> Traffic Manager (often combined WITH the above)\n```\n\nThey **compose**. A classic global design: **Front Door** at the edge (global L7 + WAF + caching) routing to a regional **Application Gateway** or **Load Balancer** in each region, which spreads across the VMs. Each layer does the job it's best at.\n\n## Gotchas\n\n- **Don't use Application Gateway for global, or Front Door for one region.** Matching scope to need saves money and latency. App Gateway is per-region; Front Door is inherently global.\n- **Traffic Manager isn't a proxy.** It can't do TLS termination, path routing, or WAF — it only hands out DNS answers, and its failover is bounded by DNS TTL caching.\n- **L4 can't see URLs.** If you need `/api` vs `/static` routing, host-based multi-site routing, or a WAF, you *must* be at L7 (App Gateway or Front Door).\n- **WAF lives on the L7 products.** Web Application Firewall attaches to Application Gateway (regional) and Front Door (global) — not to the L4 Load Balancer.\n- **Basic Load Balancer is retiring (Sep 30, 2025).** New designs use Standard.\n- **Front Door rides Microsoft's backbone; the L4 LB does not move you between regions.** Don't expect a single regional Load Balancer to give you geo-failover — that's a global product's job.",
+  "teachItBack": "Azure's four load balancers are just one job — spread requests and skip dead backends — split across two axes: layer and scope. Layer 4 (Azure Load Balancer regionally, Cross-region LB globally) is fast and sees only TCP/UDP; Layer 7 (Application Gateway regionally, Front Door globally) understands HTTP so it can route by URL, terminate TLS, and run a WAF. Traffic Manager is the outlier that works purely at DNS, handing callers the best endpoint and stepping aside, which makes it great for non-HTTP or hybrid targets but limited by DNS caching. In big designs you compose them: Front Door at the global edge in front of a regional App Gateway or Load Balancer.",
+  "glossary": [
+    {
+      "term": "Layer 4 (L4)",
+      "definition": "Transport-layer balancing that routes by IP and port only, without understanding the application protocol."
+    },
+    {
+      "term": "Layer 7 (L7)",
+      "definition": "Application-layer balancing that understands HTTP, enabling URL/host routing, TLS termination, and WAF."
+    },
+    {
+      "term": "Azure Load Balancer",
+      "definition": "Regional L4 distributor for TCP/UDP across a backend pool; very low latency, protocol-agnostic."
+    },
+    {
+      "term": "Application Gateway",
+      "definition": "Regional L7 reverse proxy with path/host routing, TLS offload, and an integrated Web Application Firewall."
+    },
+    {
+      "term": "Azure Front Door",
+      "definition": "Global L7 edge service with WAF and CDN caching that routes users to the best region over Microsoft's backbone."
+    },
+    {
+      "term": "Traffic Manager",
+      "definition": "DNS-based global traffic router that returns the best endpoint's address and then leaves the data path alone."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Dev docs — Load-balancing options (decision guide)",
+      "url": "https://learn.microsoft.com/en-us/azure/architecture/guide/technology-choices/load-balancing-overview",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — What is Azure Load Balancer?",
+      "url": "https://learn.microsoft.com/en-us/azure/load-balancer/load-balancer-overview",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — What is Azure Application Gateway?",
+      "url": "https://learn.microsoft.com/en-us/azure/application-gateway/overview",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — What is Azure Front Door?",
+      "url": "https://learn.microsoft.com/en-us/azure/frontdoor/front-door-overview",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — What is Traffic Manager?",
+      "url": "https://learn.microsoft.com/en-us/azure/traffic-manager/traffic-manager-overview",
+      "verified": true
+    }
+  ],
+  "related": [
+    "azn-ips-nat",
+    "azn-dns",
+    "azn-firewall-waf"
+  ]
+}

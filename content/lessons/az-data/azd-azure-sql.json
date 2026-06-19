@@ -1,0 +1,34 @@
+{
+  "id": "azd-azure-sql",
+  "title": "Azure SQL: The Relational Workhorse",
+  "lane": "az-data",
+  "type": "concept",
+  "order": 50,
+  "summary": "Microsoft SQL Server, delivered as a fully managed Platform-as-a-Service (PaaS). No OS patching, automated backups, and built-in high availability.",
+  "tags": ["database", "sql", "paas", "relational", "rdbms"],
+  "analogy": "Running SQL on a VM is like owning a cow for milk. Azure SQL Database is buying milk from the store. SQL Managed Instance is leasing the cow but hiring a farmer to feed it.",
+  "diagram": "flowchart TD\n  SQL[Azure SQL Family] --> VM[SQL on VM\\nIaaS: You do everything]\n  SQL --> MI[SQL Managed Instance\\nPaaS: High compatibility with old apps]\n  SQL --> DB[Azure SQL Database\\nPaaS: Modern cloud apps]",
+  "body": "## First principles\n\nRelational databases (like SQL Server) enforce strict schemas and guarantee ACID transactions (Atomicity, Consistency, Isolation, Durability). If a bank transfer deducts from Account A, it *must* add to Account B, or the entire operation fails. Relational engines are incredibly complex and resource-heavy.\n\n## Why it exists\n\nHistorically, running SQL Server meant provisioning a Windows Server VM, installing SQL, setting up complex failover clusters, configuring tape backups, and staying awake on weekends to patch the OS. **Azure SQL** abstracts the infrastructure away. You just ask for a database, and Azure gives you a connection string. Azure handles the patching, the clustering, and the backups automatically.\n\n## How it works\n\nThe Azure SQL family has three main deployment options:\n\n1. **SQL Server on Azure VMs (IaaS):** You manage the OS and SQL Server. Use this only if you need low-level OS access or third-party plugins that PaaS blocks.\n2. **Azure SQL Managed Instance (PaaS):** Almost 100% compatible with on-premises SQL Server. It sits inside your private Virtual Network and supports legacy features like SQL Server Agent and cross-database queries. Perfect for migrating older, complex apps to the cloud.\n3. **Azure SQL Database (PaaS):** A modern, single database optimized for the cloud. It doesn't support some legacy features, but it scales automatically and is the default choice for brand new cloud-native applications.\n\n### Sizing: DTU vs. vCore\nWhen you buy Azure SQL Database, you choose a purchasing model:\n- **vCore:** You explicitly choose the number of CPUs and GBs of RAM. This is transparent and predictable.\n- **DTU (Database Transaction Unit):** A legacy, blended measure of CPU, Memory, and Read/Write speed. A \"100 DTU\" database is simply faster than a \"50 DTU\" database. It's simpler, but harder to map to real-world server specs.\n\n## In practice\n\nYou secure Azure SQL using the integrated firewall. By default, it blocks all traffic, even from other Azure services.\n\n```bash\n# Create an Azure SQL logical server and database\naz sql server create -l eastus -g myRG -n myserver -u sqladmin -p SecurePassword123!\naz sql db create -g myRG -s myserver -n myDatabase --service-objective S0\n```\n\n## Gotchas\n\n- **Logical Servers:** When you create an Azure SQL Database, you must place it on a \"Logical Server.\" This is not a real VM; it's just an administrative container that holds logins, firewall rules, and policies for the databases inside it.\n- **Serverless Tier:** Azure SQL DB offers a \"Serverless\" compute tier that auto-pauses when inactive. It's brilliant for dev/test environments to save money, but the first query after a pause suffers a \"cold start\" delay while the database spins back up.",
+  "teachItBack": "Azure SQL provides SQL Server as a managed service. You choose between SQL on VMs for full control, Managed Instance for lifting-and-shifting complex legacy apps, and SQL Database for modern cloud-native apps. You trade administrative burden for ease of use.",
+  "glossary": [
+    {
+      "term": "ACID",
+      "definition": "Atomicity, Consistency, Isolation, Durability. The set of properties that guarantee database transactions are processed reliably."
+    },
+    {
+      "term": "PaaS",
+      "definition": "Platform as a Service. Azure manages the underlying hardware, OS, and software engine; you just manage the data and the schema."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Microsoft Learn: What is Azure SQL?",
+      "url": "https://learn.microsoft.com/en-us/azure/azure-sql/azure-sql-iaas-vs-paas-what-is-overview",
+      "verified": true
+    }
+  ],
+  "related": [
+    "azd-cosmos",
+    "azd-oss-databases"
+  ]
+}
