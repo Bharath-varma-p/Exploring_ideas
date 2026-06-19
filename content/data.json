@@ -1,5 +1,278 @@
 {
-  "generatedAt": "2026-06-19T03:25:25.341Z",
+  "generatedAt": "2026-06-19T07:07:53.421Z",
+  "repo": {
+    "branch": "bharath-varma-p/add-change-catalog-automation",
+    "slug": "Bharath-varma-p/Exploring_ideas",
+    "owner": "Bharath-varma-p",
+    "name": "Exploring_ideas"
+  },
+  "changeCatalog": {
+    "generatedAt": "2026-06-19T07:07:53.402Z",
+    "source": "git-log",
+    "branch": "bharath-varma-p/add-change-catalog-automation",
+    "limit": 40,
+    "entries": [
+      {
+        "sha": "e31d016ee298943ebbaaac4dba1fa5593259b0a9",
+        "shortSha": "e31d016",
+        "subject": "feat: add merge-driven website change catalog",
+        "body": "",
+        "author": {
+          "name": "Bharath-varma-p",
+          "email": "bharath-varma-p@users.noreply.github.com"
+        },
+        "committedAt": "2026-06-19T00:05:23-07:00",
+        "isMerge": false,
+        "mergeDomain": null,
+        "category": "feature",
+        "filesChanged": 9,
+        "areas": [
+          ".github",
+          "README.md",
+          "content",
+          "css",
+          "js",
+          "tools"
+        ],
+        "files": [
+          ".github/workflows/deploy.yml",
+          "README.md",
+          "content/data.json",
+          "content/manifest.json",
+          "css/styles.css",
+          "js/app.js",
+          "js/data.js",
+          "js/views.js",
+          "tools/build.mjs"
+        ],
+        "commitUrl": "https://github.com/Bharath-varma-p/Exploring_ideas/commit/e31d016ee298943ebbaaac4dba1fa5593259b0a9"
+      },
+      {
+        "sha": "49124176669aa6cfe7d1951fd1b609bf6f16e4fe",
+        "shortSha": "4912417",
+        "subject": "Merge pull request #1 from Bharath-varma-p/bharath-varma-p/foundry-sdk-learning-site",
+        "body": "",
+        "author": {
+          "name": "Penumatcha Bharath Varma",
+          "email": "50948937+Bharath-varma-p@users.noreply.github.com"
+        },
+        "committedAt": "2026-06-17T23:32:30-07:00",
+        "isMerge": true,
+        "mergeDomain": "foundry-sdk-learning-site",
+        "category": "merge",
+        "filesChanged": 0,
+        "areas": [],
+        "files": [],
+        "commitUrl": "https://github.com/Bharath-varma-p/Exploring_ideas/commit/49124176669aa6cfe7d1951fd1b609bf6f16e4fe"
+      },
+      {
+        "sha": "63b7c395c474244b4b0bcacbef21794921798c9e",
+        "shortSha": "63b7c39",
+        "subject": "Integrate Foundry SDK + MCP track into Agentic Design Academy",
+        "body": "",
+        "author": {
+          "name": "Bharath-varma-p",
+          "email": "bharath-varma-p@users.noreply.github.com"
+        },
+        "committedAt": "2026-06-17T23:27:41-07:00",
+        "isMerge": false,
+        "mergeDomain": null,
+        "category": "other",
+        "filesChanged": 158,
+        "areas": [
+          ".github",
+          "README.md",
+          "build.py",
+          "content",
+          "docs",
+          "tools"
+        ],
+        "files": [
+          ".github/workflows/pages.yml",
+          "README.md",
+          "build.py",
+          "content/data.json",
+          "content/lessons/foundry-auth/fdy-authn-vs-authz.json",
+          "content/lessons/foundry-auth/fdy-azure-identity-managedidentitycredential.json",
+          "content/lessons/foundry-auth/fdy-azure-rbac-scope-principal.json",
+          "content/lessons/foundry-auth/fdy-defaultazurecredential-local-to-prod.json",
+          "content/lessons/foundry-auth/fdy-end-to-end-keyless-foundry.json",
+          "content/lessons/foundry-auth/fdy-entra-tenants-identities.json",
+          "content/lessons/foundry-auth/fdy-foundry-ai-role-map.json",
+          "content/lessons/foundry-auth/fdy-grant-managed-identity-access.json",
+          "content/lessons/foundry-auth/fdy-managed-identity-imds.json",
+          "content/lessons/foundry-auth/fdy-mcp-target-access.json",
+          "content/lessons/foundry-auth/fdy-oauth-oidc-token-exchange.json",
+          "content/lessons/foundry-auth/fdy-system-vs-user-assigned.json",
+          "content/lessons/foundry-auth/fdy-troubleshooting-authz.json",
+          "content/lessons/foundry-auth/fdy-why-not-secrets-or-sps.json",
+          "content/lessons/foundry-auth/fdy-workload-identity-aks.json",
+          "content/lessons/foundry-capstone/fdy-capstone-self-test.json",
+          "content/lessons/foundry-capstone/fdy-reference-architecture.json",
+          "content/lessons/foundry-capstone/fdy-teaching-kit.json",
+          "content/lessons/foundry-connectors/fdy-adx-purpose.json",
+          "content/lessons/foundry-connectors/fdy-agent-interaction-traces.json",
+          "content/lessons/foundry-connectors/fdy-azure-devops-map.json"
+        ],
+        "commitUrl": "https://github.com/Bharath-varma-p/Exploring_ideas/commit/63b7c395c474244b4b0bcacbef21794921798c9e"
+      },
+      {
+        "sha": "28d8340125f2d4c3b3c2dfbb53d8f62f3573ef7c",
+        "shortSha": "28d8340",
+        "subject": "Merge main into foundry-sdk-learning-site, resolve conflicts in .gitignore and README.md",
+        "body": "",
+        "author": {
+          "name": "copilot-swe-agent[bot]",
+          "email": "198982749+Copilot@users.noreply.github.com"
+        },
+        "committedAt": "2026-06-18T06:05:19Z",
+        "isMerge": true,
+        "mergeDomain": null,
+        "category": "merge",
+        "filesChanged": 0,
+        "areas": [],
+        "files": [],
+        "commitUrl": "https://github.com/Bharath-varma-p/Exploring_ideas/commit/28d8340125f2d4c3b3c2dfbb53d8f62f3573ef7c"
+      },
+      {
+        "sha": "d32657091a9cb2b2dfbc032ec1d1ad14869a2058",
+        "shortSha": "d326570",
+        "subject": "Merge pull request #2 from Bharath-varma-p/bharath-varma-p/agentic-ai-learning-site",
+        "body": "",
+        "author": {
+          "name": "Penumatcha Bharath Varma",
+          "email": "50948937+Bharath-varma-p@users.noreply.github.com"
+        },
+        "committedAt": "2026-06-17T22:54:04-07:00",
+        "isMerge": true,
+        "mergeDomain": "agentic-ai-learning-site",
+        "category": "merge",
+        "filesChanged": 0,
+        "areas": [],
+        "files": [],
+        "commitUrl": "https://github.com/Bharath-varma-p/Exploring_ideas/commit/d32657091a9cb2b2dfbc032ec1d1ad14869a2058"
+      },
+      {
+        "sha": "588a715000ada001029398ba1205a6569361d2be",
+        "shortSha": "588a715",
+        "subject": "Build Agentic Design Academy: interactive context/platform-aware AI curriculum",
+        "body": "",
+        "author": {
+          "name": "Bharath-varma-p",
+          "email": "bharath-varma-p@users.noreply.github.com"
+        },
+        "committedAt": "2026-06-17T22:51:20-07:00",
+        "isMerge": false,
+        "mergeDomain": null,
+        "category": "build",
+        "filesChanged": 74,
+        "areas": [
+          ".github",
+          ".gitignore",
+          ".nojekyll",
+          "CONTENT_SCHEMA.md",
+          "LICENSE",
+          "README.md"
+        ],
+        "files": [
+          ".github/workflows/deploy.yml",
+          ".gitignore",
+          ".nojekyll",
+          "CONTENT_SCHEMA.md",
+          "LICENSE",
+          "README.md",
+          "content/data.json",
+          "content/glossary.json",
+          "content/lessons/architecture/agentic-patterns-overview.json",
+          "content/lessons/architecture/evaluator-optimizer.json",
+          "content/lessons/architecture/guardrails.json",
+          "content/lessons/architecture/human-in-the-loop.json",
+          "content/lessons/architecture/memory-long-term.json",
+          "content/lessons/architecture/memory-short-term.json",
+          "content/lessons/architecture/multi-agent-orchestration.json",
+          "content/lessons/architecture/planner-executor.json",
+          "content/lessons/architecture/prompt-chaining.json",
+          "content/lessons/architecture/rag.json",
+          "content/lessons/architecture/react.json",
+          "content/lessons/architecture/reflection.json",
+          "content/lessons/architecture/routing.json",
+          "content/lessons/architecture/tool-use.json",
+          "content/lessons/context-awareness/accessibility-apis-as-sensing.json",
+          "content/lessons/context-awareness/context-engineering.json",
+          "content/lessons/context-awareness/context-vs-platform.json"
+        ],
+        "commitUrl": "https://github.com/Bharath-varma-p/Exploring_ideas/commit/588a715000ada001029398ba1205a6569361d2be"
+      },
+      {
+        "sha": "4c2a554fee3b858e661f5e4e3a349f6c8734f3df",
+        "shortSha": "4c2a554",
+        "subject": "Add Foundry SDK Academy: interactive A–Z learning site",
+        "body": "",
+        "author": {
+          "name": "Bharath-varma-p",
+          "email": "bharath-varma-p@users.noreply.github.com"
+        },
+        "committedAt": "2026-06-17T22:46:18-07:00",
+        "isMerge": false,
+        "mergeDomain": null,
+        "category": "other",
+        "filesChanged": 21,
+        "areas": [
+          ".github",
+          ".gitignore",
+          "README.md",
+          "build.py",
+          "docs"
+        ],
+        "files": [
+          ".github/workflows/pages.yml",
+          ".gitignore",
+          "README.md",
+          "build.py",
+          "docs/css/styles.css",
+          "docs/data/curriculum.js",
+          "docs/data/extras.js",
+          "docs/data/lanes/agents-mcp.json",
+          "docs/data/lanes/auth-managed-identity.json",
+          "docs/data/lanes/foundry-fundamentals.json",
+          "docs/data/lanes/mcp-ado.json",
+          "docs/data/lanes/mcp-fundamentals.json",
+          "docs/data/lanes/mcp-icm.json",
+          "docs/data/lanes/mcp-kusto.json",
+          "docs/data/lanes/model-deployment.json",
+          "docs/data/lanes/model-inference.json",
+          "docs/data/lanes/sdk-core.json",
+          "docs/index.html",
+          "docs/js/app.js",
+          "docs/js/util.js",
+          "docs/js/views.js"
+        ],
+        "commitUrl": "https://github.com/Bharath-varma-p/Exploring_ideas/commit/4c2a554fee3b858e661f5e4e3a349f6c8734f3df"
+      },
+      {
+        "sha": "d56f4ba1343fd5af886151e0b0f1b583377212b3",
+        "shortSha": "d56f4ba",
+        "subject": "Initial commit",
+        "body": "",
+        "author": {
+          "name": "Penumatcha Bharath Varma",
+          "email": "50948937+Bharath-varma-p@users.noreply.github.com"
+        },
+        "committedAt": "2026-06-17T21:25:15-07:00",
+        "isMerge": false,
+        "mergeDomain": null,
+        "category": "other",
+        "filesChanged": 1,
+        "areas": [
+          "README.md"
+        ],
+        "files": [
+          "README.md"
+        ],
+        "commitUrl": "https://github.com/Bharath-varma-p/Exploring_ideas/commit/d56f4ba1343fd5af886151e0b0f1b583377212b3"
+      }
+    ]
+  },
   "lanes": [
     {
       "id": "architecture",
@@ -21900,6 +22173,7 @@
   "stats": {
     "lessons": 196,
     "glossaryTerms": 519,
-    "quizQuestions": 189
+    "quizQuestions": 189,
+    "changeEntries": 8
   }
 }

@@ -25,6 +25,7 @@ function route() {
       case "teardowns": node = Views.renderTeardowns(); break;
       case "glossary": node = Views.renderGlossary(); break;
       case "index": node = Views.renderIndex(); break;
+      case "changes": node = Views.renderChangeCatalog(); break;
       case "quiz": node = b ? Views.renderQuiz(b) : Views.renderQuizHub(); break;
       case "flashcards": node = Views.renderFlashcards(b || "all"); break;
       case "about": node = Views.renderAbout(); break;
@@ -77,7 +78,7 @@ function buildSidebar() {
   // tools
   const tools = h("div", { class: "side-group side-tools" }, h("div", { class: "side-section" }, "Explore"));
   tools.append(sideItem("🔤", "A–Z Index", "index"), sideItem("📚", "Glossary", "glossary"),
-    sideItem("🔍", "Teardowns", "teardowns"), sideItem("🧠", "Quizzes", "quiz"),
+    sideItem("🗂️", "Change Catalog", "changes"), sideItem("🔍", "Teardowns", "teardowns"), sideItem("🧠", "Quizzes", "quiz"),
     sideItem("🃏", "Flashcards", "flashcards"), sideItem("➕", "Extend", "about"));
   nav.append(tools);
 }
