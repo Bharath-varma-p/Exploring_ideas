@@ -1,0 +1,97 @@
+{
+  "id": "fdy-create-managed-identity-step-by-step",
+  "title": "Create a Managed Identity — Portal, CLI & Bicep (step by step)",
+  "lane": "foundry-auth",
+  "type": "concept",
+  "order": 116,
+  "summary": "A hands-on recipe for creating a managed identity three ways — Azure portal, Azure CLI, and Bicep — then granting it least-privilege RBAC and verifying it can mint a token. System-assigned is a checkbox on a resource; user-assigned is a standalone resource you attach.",
+  "tags": [
+    "managed-identity",
+    "how-to",
+    "azure-cli",
+    "bicep",
+    "rbac"
+  ],
+  "analogy": "Creating a managed identity is like issuing an employee badge. System-assigned prints the badge onto one specific machine; user-assigned makes a reusable badge you can clip onto many machines. Either way, the badge is useless until a door (RBAC role) is told to accept it.",
+  "diagram": "flowchart TD\n  Start[Need keyless auth] --> Choose{System or user assigned}\n  Choose -->|one resource, simple| SA[Enable system-assigned on resource]\n  Choose -->|shared or pre-provisioned| UA[az identity create]\n  UA --> Attach[Attach identity to compute]\n  SA --> Grant\n  Attach --> Grant[az role assignment create - least privilege scope]\n  Grant --> Verify[Acquire token via IMDS or DefaultAzureCredential]\n  Verify --> Done[Keyless access working]",
+  "body": "## First principles\n\nA managed identity is just a service principal in Microsoft Entra ID whose secret is managed by the Azure platform, not by you. \"Creating\" one means: (1) bring the identity into existence, (2) make sure your compute is associated with it, and (3) authorize it with RBAC. Skipping step 3 is the #1 reason a brand-new identity returns 403.\n\n## Definition\n\nThere are two kinds. A **system-assigned** identity is toggled on directly on a single resource (VM, App Service, Container App, Function, AKS pod, etc.) and shares that resource's lifecycle. A **user-assigned** identity is its own Azure resource (`Microsoft.ManagedIdentity/userAssignedIdentities`) that you create once and attach to one or many workloads.\n\n## Way 1 — Azure portal (fastest to learn)\n\n- **System-assigned:** open the resource (e.g. an App Service) -> **Settings -> Identity -> System assigned -> Status: On -> Save**. Azure creates the Entra object for you.\n- **User-assigned:** search **Managed Identities -> Create**, pick subscription/resource group/region/name, **Review + create**. Then on your compute resource go to **Identity -> User assigned -> Add** and select it.\n- Grant access from the target resource: open (say) the Key Vault -> **Access control (IAM) -> Add role assignment -> Managed identity -> select your identity**.\n\n## Way 2 — Azure CLI (scriptable)\n\n```bash\n# --- User-assigned: create the standalone identity ---\naz identity create \\\n  --name <uami-name> \\\n  --resource-group <rg> \\\n  --location <region>\n\n# Capture the IDs you will need next.\nPRINCIPAL_ID=$(az identity show -n <uami-name> -g <rg> --query principalId -o tsv)\nCLIENT_ID=$(az identity show -n <uami-name> -g <rg> --query clientId -o tsv)\nUAMI_ID=$(az identity show -n <uami-name> -g <rg> --query id -o tsv)\n\n# --- Attach it to compute (App Service example) ---\naz webapp identity assign \\\n  --name <app-name> -g <rg> \\\n  --identities \"$UAMI_ID\"\n\n# --- OR enable a system-assigned identity on the same app ---\naz webapp identity assign --name <app-name> -g <rg>\n\n# --- Grant least-privilege RBAC (use the PRINCIPAL/object id, scope it tightly) ---\naz role assignment create \\\n  --assignee-object-id \"$PRINCIPAL_ID\" \\\n  --assignee-principal-type ServicePrincipal \\\n  --role \"Key Vault Secrets User\" \\\n  --scope \"/subscriptions/<sub>/resourceGroups/<rg>/providers/Microsoft.KeyVault/vaults/<kv-name>\"\n```\n\nUse `--assignee-object-id` + `--assignee-principal-type ServicePrincipal` (not `--assignee`) for managed identities — it skips a Graph lookup and avoids replication-timing failures.\n\n## Way 3 — Bicep (infrastructure as code, the production default)\n\n```bicep\nparam location string = resourceGroup().location\n\nresource uami 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' = {\n  name: 'uami-app'\n  location: location\n}\n\n// Reference an existing Key Vault and grant the identity a built-in role.\nresource kv 'Microsoft.KeyVault/vaults@2023-07-01' existing = { name: '<kv-name>' }\n\nvar kvSecretsUser = '4633458b-17de-408a-b874-0445c86b69e6' // Key Vault Secrets User\n\nresource ra 'Microsoft.Authorization/roleAssignments@2022-04-01' = {\n  name: guid(uami.id, kv.id, kvSecretsUser)\n  scope: kv\n  properties: {\n    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', kvSecretsUser)\n    principalId: uami.properties.principalId\n    principalType: 'ServicePrincipal' // avoids the 'principal not found' race on fresh identities\n  }\n}\n```\n\n## Verify it actually works\n\n```bash\n# From inside the Azure compute host, ask IMDS for a token (no secrets involved):\ncurl -s -H \"Metadata: true\" \\\n  \"http://169.254.169.254/metadata/identity/oauth2/token?api-version=2018-02-01&resource=https://vault.azure.net\" \\\n  | python3 -c \"import sys,json;print('token length', len(json.load(sys.stdin)['access_token']))\"\n```\n\nIn application code you almost never call IMDS directly — you let `DefaultAzureCredential` (or `ManagedIdentityCredential`) do it. A successful token but a 403 on the data call means the identity exists and is attached, but the RBAC role/scope is missing or hasn't propagated yet (give it a minute).\n\n*Three creation paths, one mental model: exist -> attach -> authorize -> verify.*",
+  "examples": [
+    {
+      "product": "Azure App Service + Key Vault",
+      "what": "Enable a managed identity on the web app, grant it 'Key Vault Secrets User' on the vault, and read secrets with DefaultAzureCredential — zero connection strings in config.",
+      "source": "https://learn.microsoft.com/en-us/entra/identity/managed-identities-azure-resources/how-to-configure-managed-identities"
+    }
+  ],
+  "drills": [
+    {
+      "q": "What three steps must always happen before a new managed identity can call a resource?",
+      "a": "The identity must exist, be associated with the compute, and be granted an RBAC role at the right scope."
+    },
+    {
+      "q": "Which CLI flags should you use to assign a role to a managed identity, and why?",
+      "a": "--assignee-object-id with --assignee-principal-type ServicePrincipal, to skip the Graph lookup and avoid replication-timing errors."
+    },
+    {
+      "q": "You get a valid token but a 403 on the data call. What is wrong?",
+      "a": "Authentication works; authorization does not — the role assignment or scope is missing, wrong, or not yet propagated."
+    },
+    {
+      "q": "Why set principalType: 'ServicePrincipal' in a Bicep role assignment for a fresh identity?",
+      "a": "It prevents the 'principal does not exist' race when the identity was just created in the same deployment."
+    }
+  ],
+  "teachItBack": "To create a managed identity, decide system-assigned (a toggle on one resource) or user-assigned (a standalone resource you attach). Make the identity exist, associate it with your compute, then grant it a least-privilege RBAC role at a tight scope. Finally verify by acquiring a token — if the token works but the call 403s, it is an RBAC problem, not an identity problem.",
+  "glossary": [
+    {
+      "term": "userAssignedIdentities",
+      "definition": "The Azure resource type for a standalone user-assigned managed identity."
+    },
+    {
+      "term": "Principal ID (object ID)",
+      "definition": "The Entra object ID of the identity used as the assignee in role assignments."
+    },
+    {
+      "term": "Role assignment",
+      "definition": "A binding of (principal, role definition, scope) that grants RBAC access."
+    },
+    {
+      "term": "IMDS token endpoint",
+      "definition": "The 169.254.169.254 metadata endpoint a host calls to obtain a managed-identity token."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Dev docs — Configure managed identities (system & user-assigned, step by step)",
+      "url": "https://learn.microsoft.com/en-us/entra/identity/managed-identities-azure-resources/how-to-configure-managed-identities",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — Managed identities for Azure resources (overview)",
+      "url": "https://learn.microsoft.com/en-us/entra/identity/managed-identities-azure-resources/overview",
+      "verified": true
+    },
+    {
+      "title": "YouTube — John Savill: Microsoft Azure Managed Identity Deep Dive",
+      "url": "https://www.youtube.com/watch?v=rC1TV0_sIrM",
+      "verified": true
+    },
+    {
+      "title": "YouTube — dotnet (official): Using Azure Managed identities",
+      "url": "https://www.youtube.com/watch?v=vYUKC0mZFqI",
+      "verified": true
+    }
+  ],
+  "quiz": [
+    {
+      "q": "What is the most reliable way to grant a brand-new user-assigned identity access to a Key Vault in a single Bicep deployment?",
+      "choices": [
+        "Add a roleAssignment resource using the identity's principalId with principalType 'ServicePrincipal'",
+        "Put the Key Vault access key in an app setting",
+        "Assign Owner at the subscription scope",
+        "Wait 24 hours, then add the assignment by hand in the portal"
+      ],
+      "answer": 0,
+      "explanation": "A scoped built-in role assignment using the identity's principalId (with principalType ServicePrincipal to avoid the creation race) is least-privilege and deployable as code."
+    }
+  ]
+}

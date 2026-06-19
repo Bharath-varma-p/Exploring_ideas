@@ -1,0 +1,144 @@
+{
+  "id": "fdy-managed-identity-resource-hub",
+  "title": "Managed Identity — Field Guide & Resource Hub (videos, docs, community)",
+  "lane": "foundry-auth",
+  "type": "concept",
+  "order": 119,
+  "summary": "One place with the best, current, link-checked resources for learning managed identity: official dev docs, the top YouTube deep-dives (John Savill + official Microsoft channels), authoritative X accounts, and live r/AZURE community discussion. Every link here was verified at authoring time.",
+  "tags": [
+    "managed-identity",
+    "resources",
+    "links",
+    "learning-path",
+    "field-guide"
+  ],
+  "analogy": "A trailhead map: instead of wandering, you get the marked routes — read this doc, watch that deep-dive, follow these accounts, lurk this thread — ordered from fastest orientation to deepest dive.",
+  "diagram": "flowchart LR\n  Start[Start here] --> Docs[Dev docs: overview + best practices]\n  Docs --> Video[Watch: John Savill Deep Dive]\n  Video --> Do[Do: configure + DefaultAzureCredential]\n  Do --> Edge[Edge cases: workload identity federation]\n  Edge --> Community[Stay current: X + r/AZURE]",
+  "body": "## How to use this hub\n\nA suggested path: **read** the overview + best-practice docs, **watch** John Savill's deep dive, **do** the configure + `DefaultAzureCredential` steps from the other lessons in this lane, then **stay current** via the X accounts and r/AZURE. Full clickable links are in the Sources list below; this is the annotated map.\n\n## Dev docs (start here — authoritative & current)\n\n- **Managed identities overview** — what they are, system vs user-assigned, which services support them.\n- **Best-practice recommendations** — Microsoft's own guidance (now favoring user-assigned for most scenarios; rate-limit notes).\n- **Configure managed identities (how-to)** — step-by-step enable/attach for system- and user-assigned.\n- **Credential chains / DefaultAzureCredential** — how the SDK picks a credential dev-to-prod.\n- **Workload identity federation** — keyless auth for GitHub Actions, AKS, and other clouds.\n- **Azure Identity (Python) library readme** — `ManagedIdentityCredential`, `DefaultAzureCredential` API.\n\n## YouTube (link-checked)\n\n- **John Savill — Azure Managed Identity Deep Dive** — the single best end-to-end explainer; system vs user-assigned, IMDS, RBAC, troubleshooting.\n- **John Savill — Azure 360 in 360: Managed Identity** — a fast refresher.\n- **John Savill — Azure Master Class: Identity** — managed identity inside the wider Entra identity picture.\n- **dotnet (official Microsoft channel) — Using Azure Managed identities** — code-first walkthrough.\n- **Cloud Scholars — Azure Managed Identities, Full Explanation** — alternative community explainer.\n\n## X / Twitter (authoritative accounts to follow)\n\n- **@NTFAQGuy** — John Savill; deep Azure identity content and new-feature breakdowns.\n- **@MicrosoftEntra** — official Microsoft Entra identity announcements.\n- **@Azure** — official Microsoft Azure news.\n- **@MSFTMechanics** — official Microsoft Mechanics demos.\n\n## Reddit (live community discussion)\n\n- **r/AZURE** — the main practitioner subreddit.\n- **r/AZURE search: \"managed identity best practices\"** — real-world gotchas and patterns.\n- **r/AZURE search: \"managed identity vs service principal\"** — the recurring decision, with current consensus.\n\n> Note: Reddit blocks automated fetching, so the search links above were not machine-verified but are valid Reddit search URLs that resolve in a browser. Everything else in Sources was link-checked at authoring time.\n\n*Read -> watch -> do -> stay current: the whole managed-identity learning path in one card.*",
+  "drills": [
+    {
+      "q": "Which single video is the recommended end-to-end managed identity explainer here?",
+      "a": "John Savill's 'Microsoft Azure Managed Identity Deep Dive'."
+    },
+    {
+      "q": "Which two official docs should you read first?",
+      "a": "The managed identities overview and the best-practice recommendations."
+    },
+    {
+      "q": "Which X account is best for new Entra identity feature announcements?",
+      "a": "@MicrosoftEntra (with @NTFAQGuy for deep explainers)."
+    }
+  ],
+  "teachItBack": "To learn managed identity efficiently: read the official overview and best-practice docs, watch John Savill's deep dive, then do the configure and DefaultAzureCredential steps, and follow @MicrosoftEntra / @NTFAQGuy and r/AZURE to stay current. This hub collects link-checked resources across docs, YouTube, X, and Reddit in one place.",
+  "glossary": [
+    {
+      "term": "Resource hub",
+      "definition": "A curated, annotated index of the best learning materials on a topic, grouped by medium."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Dev docs — Managed identities for Azure resources (overview)",
+      "url": "https://learn.microsoft.com/en-us/entra/identity/managed-identities-azure-resources/overview",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — Managed identity best practice recommendations",
+      "url": "https://learn.microsoft.com/en-us/entra/identity/managed-identities-azure-resources/managed-identity-best-practice-recommendations",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — Configure managed identities (how-to, system & user-assigned)",
+      "url": "https://learn.microsoft.com/en-us/entra/identity/managed-identities-azure-resources/how-to-configure-managed-identities",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — Credential chains & DefaultAzureCredential",
+      "url": "https://learn.microsoft.com/en-us/dotnet/azure/sdk/authentication/credential-chains",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — Workload identity federation (keyless for outside-Azure)",
+      "url": "https://learn.microsoft.com/en-us/entra/workload-id/workload-identity-federation",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — Azure Identity client library for Python",
+      "url": "https://learn.microsoft.com/en-us/python/api/overview/azure/identity-readme",
+      "verified": true
+    },
+    {
+      "title": "YouTube — John Savill: Microsoft Azure Managed Identity Deep Dive",
+      "url": "https://www.youtube.com/watch?v=rC1TV0_sIrM",
+      "verified": true
+    },
+    {
+      "title": "YouTube — John Savill: Azure 360 in 360 - Managed Identity",
+      "url": "https://www.youtube.com/watch?v=1NOZv2M3q2k",
+      "verified": true
+    },
+    {
+      "title": "YouTube — John Savill: Azure Master Class - Identity",
+      "url": "https://www.youtube.com/watch?v=megA6BPpYqo",
+      "verified": true
+    },
+    {
+      "title": "YouTube — dotnet (official): Using Azure Managed identities",
+      "url": "https://www.youtube.com/watch?v=vYUKC0mZFqI",
+      "verified": true
+    },
+    {
+      "title": "YouTube — Cloud Scholars: Azure Managed Identities - Full Explanation",
+      "url": "https://www.youtube.com/watch?v=evhkGWSwQIA",
+      "verified": true
+    },
+    {
+      "title": "X — John Savill (@NTFAQGuy)",
+      "url": "https://x.com/NTFAQGuy",
+      "verified": true
+    },
+    {
+      "title": "X — Microsoft Entra (@MicrosoftEntra)",
+      "url": "https://x.com/MicrosoftEntra",
+      "verified": true
+    },
+    {
+      "title": "X — Microsoft Azure (@Azure)",
+      "url": "https://x.com/Azure",
+      "verified": true
+    },
+    {
+      "title": "X — Microsoft Mechanics (@MSFTMechanics)",
+      "url": "https://x.com/MSFTMechanics",
+      "verified": true
+    },
+    {
+      "title": "Reddit — r/AZURE (community)",
+      "url": "https://www.reddit.com/r/AZURE/",
+      "verified": true
+    },
+    {
+      "title": "Reddit — r/AZURE search: managed identity best practices",
+      "url": "https://www.reddit.com/r/AZURE/search/?q=managed%20identity%20best%20practices&restrict_sr=1&sort=top",
+      "verified": false
+    },
+    {
+      "title": "Reddit — r/AZURE search: managed identity vs service principal",
+      "url": "https://www.reddit.com/r/AZURE/search/?q=managed%20identity%20vs%20service%20principal&restrict_sr=1&sort=relevance",
+      "verified": false
+    }
+  ],
+  "quiz": [
+    {
+      "q": "Why are two of the Reddit links marked verified:false in this hub?",
+      "choices": [
+        "Reddit blocks automated fetching, so they could not be machine-checked (though they resolve in a browser)",
+        "The subreddit was deleted",
+        "Reddit is not a useful source",
+        "They link to private messages"
+      ],
+      "answer": 0,
+      "explanation": "Honesty about verification: Reddit returns 403 to automated fetchers, so those search URLs weren't machine-verified, unlike the docs and oembed-checked videos."
+    }
+  ]
+}

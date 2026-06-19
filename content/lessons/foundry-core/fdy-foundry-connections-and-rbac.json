@@ -1,0 +1,97 @@
+{
+  "id": "fdy-foundry-connections-and-rbac",
+  "title": "Wire Connections and Assign RBAC to the Managed Identity",
+  "lane": "foundry-core",
+  "type": "concept",
+  "order": 217,
+  "summary": "A hands-on recipe for connecting a Foundry project to dependent Azure resources (AI Search, Storage, Cosmos DB, Azure OpenAI) and granting the workload's managed identity the right Foundry roles — keyless end to end. The minimum to get going is Foundry User on the resource for both your user and the project's managed identity.",
+  "tags": [
+    "connections",
+    "rbac",
+    "managed-identity",
+    "how-to",
+    "keyless"
+  ],
+  "analogy": "A connection is an address-book entry telling the project where a resource lives; an RBAC role assignment is the guard roster saying whose badge opens that door. Without the role, the address is just a locked building — Entra-authenticated connections need the managed identity on the guest list.",
+  "diagram": "flowchart TD\n  Project[Foundry project] --> Conn[Connection to dependent resource]\n  Conn --> Search[Azure AI Search]\n  Conn --> Storage[Azure Storage]\n  Conn --> Cosmos[Cosmos DB preview, code only]\n  MI[Project managed identity] --> Role[Role assignment]\n  Role --> FoundryUser[Foundry User on Foundry resource]\n  Role --> DataRole[Data role on target e.g. Search Index Data Contributor]\n  FoundryUser --> Keyless[Keyless access works]\n  DataRole --> Keyless",
+  "body": "## First principles\n\nReal projects rarely stand alone — agents need a search index, datasets need storage, threads need Cosmos DB. A **connection** records where that dependent resource is and how the project authenticates to it. Prefer **Microsoft Entra ID** connections over API keys: with Entra, access is governed by **RBAC role assignments** on the workload's **managed identity**, so there are no secrets to leak or rotate. The recurring failure mode is a connection that exists but a missing role — the address is known, but the door is shut.\n\n## Definition\n\nA Foundry **connection** is a project (or resource-level) object naming a target service and an authentication method. Common types include **Azure AI Search**, **Azure Storage**, **Azure Cosmos DB** (preview, code-only), **Azure OpenAI**, **Application Insights**, **Azure Key Vault**, and another **Foundry** resource. The **Standard Agent** setup specifically requires AI Search + Storage + Cosmos DB. Some connection types (Cosmos DB, Serverless Model, Databricks, SharePoint) can only be created through code/Bicep, not the portal.\n\n## Way 1 — Foundry portal (create a connection)\n\n- Sign in to https://ai.azure.com (New Foundry on). Select **Operate -> Admin**.\n- Select your project, then **Add connection** (upper right).\n- Pick the service (for example **Azure AI Search**), browse to the resource, and choose the **Authentication** method. Prefer **Microsoft Entra ID** over key-based. Select **Add connection** and confirm it appears in connected resources.\n\n## Way 2 — Bicep (connections as code)\n\nUse Microsoft's connection templates and customize them:\n\n```bash\ngit clone https://github.com/microsoft-foundry/foundry-samples\ncd foundry-samples/infrastructure/infrastructure-setup-bicep/01-connections\naz deployment group create -g my-foundry-rg --template-file main.bicep\n```\n\nA connection is a child of the account/project and points at a target's resource ID, with Entra-based auth so no key is stored:\n\n```bicep\nparam aiFoundryName string\n\nresource foundry 'Microsoft.CognitiveServices/accounts@2025-04-01-preview' existing = {\n  name: aiFoundryName\n}\n\nresource searchConn 'Microsoft.CognitiveServices/accounts/connections@2025-04-01-preview' = {\n  parent: foundry\n  name: 'my-search'\n  properties: {\n    category: 'CognitiveSearch'\n    target: 'https://<search-name>.search.windows.net'\n    authType: 'AAD'           // Entra ID — no key in the connection\n    isSharedToAll: true\n    metadata: { ApiType: 'Azure' }\n  }\n}\n```\n\n## Way 3 — Assign RBAC to the managed identity (the part people forget)\n\n**Minimum to get going:** assign **Foundry User** on the Foundry resource to *both* your user principal *and* the project's managed identity. If the project creator is an Azure **Owner**, these two are added automatically.\n\n```bash\n# Foundry role on the Foundry resource for the project's managed identity.\nFOUNDRY_ID=\"/subscriptions/<sub>/resourceGroups/my-foundry-rg/providers/Microsoft.CognitiveServices/accounts/my-foundry-resource\"\nMI_PRINCIPAL_ID=$(az cognitiveservices account project show \\\n  --name my-foundry-resource -g my-foundry-rg --project-name my-foundry-project \\\n  --query identity.principalId -o tsv)\n\naz role assignment create \\\n  --assignee-object-id \"$MI_PRINCIPAL_ID\" \\\n  --assignee-principal-type ServicePrincipal \\\n  --role \"Foundry User\" \\\n  --scope \"$FOUNDRY_ID\"\n\n# Data-plane role on the TARGET so the identity can actually use the connection.\nSEARCH_ID=\"/subscriptions/<sub>/resourceGroups/my-foundry-rg/providers/Microsoft.Search/searchServices/<search-name>\"\naz role assignment create \\\n  --assignee-object-id \"$MI_PRINCIPAL_ID\" \\\n  --assignee-principal-type ServicePrincipal \\\n  --role \"Search Index Data Contributor\" \\\n  --scope \"$SEARCH_ID\"\n```\n\nThe Foundry built-in roles are **Foundry User** (least-privilege data role), **Foundry Project Manager**, **Foundry Account Owner**, and **Foundry Owner** — recently renamed from the Azure AI * names (role IDs unchanged). Do **not** use roles starting with **Cognitive Services**, nor **Azure AI Developer** (that one targets ML workspaces and hub-based projects), for modern Foundry project access.\n\n## Verify keyless end to end\n\n```python\n# pip install \"azure-ai-projects>=2.0.0\" azure-identity\nimport os\nfrom azure.identity import DefaultAzureCredential\nfrom azure.ai.projects import AIProjectClient\n\nproject = AIProjectClient(\n    endpoint=os.environ[\"FOUNDRY_PROJECT_ENDPOINT\"],\n    credential=DefaultAzureCredential(),\n)\nfor c in project.connections.list():\n    print(c.name, c.type, c.target)   # discovered without a single stored key\n```\n\n*Connect the resource -> prefer Entra auth -> grant Foundry User plus a target data role to the managed identity -> verify, all keyless.*",
+  "examples": [
+    {
+      "product": "Standard Agent setup",
+      "what": "Connect the project to Azure AI Search, Azure Storage, and Cosmos DB, then grant the project managed identity Foundry User plus the target data roles so the agent reads indexes and writes threads with no keys.",
+      "source": "https://learn.microsoft.com/en-us/azure/foundry/how-to/connections-add"
+    }
+  ],
+  "drills": [
+    {
+      "q": "What is the minimum RBAC needed for a new user and a project to use Foundry?",
+      "a": "Assign Foundry User on the Foundry resource to both the user principal and the project's managed identity (auto-assigned if the creator is an Owner)."
+    },
+    {
+      "q": "Why prefer an Entra ID connection over an API key connection?",
+      "a": "Entra connections are governed by RBAC on the managed identity, so there are no secrets to store, leak, or rotate."
+    },
+    {
+      "q": "Which Foundry roles should you avoid for modern project access, and why?",
+      "a": "Roles starting with Cognitive Services and the Azure AI Developer role — they target AI Services directly or ML workspaces/hubs, not modern Foundry projects."
+    },
+    {
+      "q": "A connection exists but the agent gets 403 using it. What is the likely fix?",
+      "a": "Grant the managed identity the right data-plane role on the target resource (for example Search Index Data Contributor); the connection alone does not authorize access."
+    }
+  ],
+  "teachItBack": "A Foundry connection tells the project where a dependent resource lives and how to authenticate; favor Entra ID so RBAC, not keys, controls access. The minimum is Foundry User on the resource for both your user and the project's managed identity, then a data-plane role on each target the identity must use. Skip Cognitive Services * and Azure AI Developer roles for modern projects. Verify by listing connections with AIProjectClient and DefaultAzureCredential — no secrets anywhere.",
+  "glossary": [
+    {
+      "term": "Connection",
+      "definition": "A Foundry object naming a dependent resource target and its authentication method, scoped to a project or resource."
+    },
+    {
+      "term": "Foundry User",
+      "definition": "Least-privilege Foundry built-in role granting project data actions; the recommended minimum for users and project managed identities."
+    },
+    {
+      "term": "Project managed identity",
+      "definition": "The system-assigned identity on a Foundry project used to access connected resources without keys."
+    },
+    {
+      "term": "Standard Agent requirement",
+      "definition": "The agent setup that requires connections to Azure AI Search, Azure Storage, and Cosmos DB."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Microsoft Learn: Add a new connection to your project (types, portal, Bicep)",
+      "url": "https://learn.microsoft.com/en-us/azure/foundry/how-to/connections-add",
+      "verified": true
+    },
+    {
+      "title": "Microsoft Learn: Role-based access control for Microsoft Foundry",
+      "url": "https://learn.microsoft.com/en-us/azure/foundry/concepts/rbac-foundry",
+      "verified": true
+    },
+    {
+      "title": "Microsoft Learn: AI + Machine Learning built-in roles",
+      "url": "https://learn.microsoft.com/en-us/azure/role-based-access-control/built-in-roles/ai-machine-learning",
+      "verified": true
+    },
+    {
+      "title": "GitHub: foundry-samples — infrastructure-setup-bicep/01-connections",
+      "url": "https://github.com/microsoft-foundry/foundry-samples/tree/main/infrastructure/infrastructure-setup-bicep",
+      "verified": true
+    }
+  ],
+  "quiz": [
+    {
+      "q": "What is the recommended minimum role assignment for a project's managed identity to use Foundry?",
+      "choices": [
+        "Foundry User on the Foundry resource",
+        "Owner on the subscription",
+        "A Cognitive Services key stored in the connection",
+        "Azure AI Developer on the project"
+      ],
+      "answer": 0,
+      "explanation": "Foundry User is the least-privilege data role; assign it on the Foundry resource to the project's managed identity. Cognitive Services keys and the Azure AI Developer role are explicitly discouraged for modern Foundry projects."
+    }
+  ]
+}
