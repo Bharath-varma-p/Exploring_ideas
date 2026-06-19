@@ -5,6 +5,48 @@ import { h } from "./render.js";
 import * as Views from "./views.js";
 
 const view = () => document.getElementById("view");
+const SIDEBAR_COLLAPSE_KEY = "ada.sidebar.collapsed-lanes.v1";
+let collapsedLanes = readCollapsedLanes();
+
+function readCollapsedLanes() {
+  try {
+    const raw = JSON.parse(localStorage.getItem(SIDEBAR_COLLAPSE_KEY) || "{}");
+    return raw && typeof raw === "object" ? raw : {};
+  } catch {
+    return {};
+  }
+}
+
+function writeCollapsedLanes(next) {
+  try { localStorage.setItem(SIDEBAR_COLLAPSE_KEY, JSON.stringify(next)); } catch {}
+}
+
+function setLaneCollapsed(laneId, collapsed, laneTitle = laneId, persist = true) {
+  if (collapsed) collapsedLanes[laneId] = true;
+  else delete collapsedLanes[laneId];
+  if (persist) writeCollapsedLanes(collapsedLanes);
+
+  const group = document.querySelector(`.side-group[data-lane="${laneId}"]`);
+  if (!group) return;
+  group.classList.toggle("is-collapsed", collapsed);
+  const toggle = group.querySelector(".side-collapse");
+  if (toggle) {
+    toggle.setAttribute("aria-expanded", String(!collapsed));
+    toggle.setAttribute("aria-label", `${collapsed ? "Expand" : "Collapse"} ${laneTitle} lessons`);
+    toggle.title = collapsed ? "Expand lessons" : "Collapse lessons";
+  }
+}
+
+function toggleLaneCollapsed(laneId, laneTitle = laneId) {
+  setLaneCollapsed(laneId, !collapsedLanes[laneId], laneTitle);
+}
+
+function ensureRouteLaneVisible(parts) {
+  const [a, b] = parts;
+  const laneId = a === "lane" ? b : (a === "lesson" ? lesson(b)?.lane : null);
+  if (!laneId || !collapsedLanes[laneId]) return;
+  setLaneCollapsed(laneId, false, lane(laneId)?.title || laneId);
+}
 
 // ---------------- Router ----------------
 function parseHash() {
@@ -49,7 +91,8 @@ function route() {
 }
 
 function highlightNav() {
-  const { raw } = parseHash();
+  const { raw, parts } = parseHash();
+  ensureRouteLaneVisible(parts);
   document.querySelectorAll(".side-link").forEach((el) => {
     const target = el.getAttribute("data-route");
     el.classList.toggle("active", target === raw || (target && raw.startsWith(target)));
@@ -58,15 +101,31 @@ function highlightNav() {
 
 // ---------------- Sidebar ----------------
 function buildSidebar() {
+  collapsedLanes = readCollapsedLanes();
   const nav = document.getElementById("sidenav");
   nav.innerHTML = "";
   nav.append(sideItem("🏠", "Home", ""));
   // lanes with nested lessons
   for (const l of State.lanes) {
-    const group = h("div", { class: "side-group" });
+    const isCollapsed = !!collapsedLanes[l.id];
+    const group = h("div", { class: "side-group" + (isCollapsed ? " is-collapsed" : ""), dataset: { lane: l.id } });
+    const row = h("div", { class: "side-lane-row" });
     const head = h("a", { class: "side-link side-lane", href: `#/lane/${l.id}`, dataset: { route: `lane/${l.id}` } },
       h("span", { class: "side-ico" }, l.icon), h("span", { class: "side-label" }, l.title), h("span", { class: "side-count" }, String(l.count)));
-    group.append(head);
+    const collapseBtn = h("button", {
+      class: "side-collapse",
+      type: "button",
+      "aria-expanded": String(!isCollapsed),
+      "aria-label": `${isCollapsed ? "Expand" : "Collapse"} ${l.title} lessons`,
+      title: isCollapsed ? "Expand lessons" : "Collapse lessons",
+    }, "▾");
+    collapseBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      toggleLaneCollapsed(l.id, l.title);
+    });
+    row.append(head, collapseBtn);
+    group.append(row);
     const sub = h("div", { class: "side-sub" });
     for (const les of lessonsIn(l.id)) {
       sub.append(h("a", { class: "side-link side-lesson", href: `#/lesson/${les.id}`, dataset: { route: `lesson/${les.id}` } },

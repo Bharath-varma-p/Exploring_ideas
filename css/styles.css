@@ -82,7 +82,17 @@ h1,h2,h3,h4 { line-height: 1.2; letter-spacing: -.02em; }
 .side-ico { width: 18px; text-align: center; }
 .side-label { flex: 1; }
 .side-count { font-size: 11px; color: var(--muted); background: var(--bg-3); border-radius: 20px; padding: 1px 8px; }
-.side-lane { font-weight: 650; color: var(--text); margin-top: 8px; }
+.side-lane-row { display: flex; align-items: center; gap: 6px; margin-top: 8px; }
+.side-lane { font-weight: 650; color: var(--text); margin-top: 0; flex: 1; }
+.side-collapse {
+  width: 24px; height: 24px; flex: none; border: 1px solid var(--border);
+  border-radius: 7px; background: var(--bg-3); color: var(--muted);
+  cursor: pointer; display: grid; place-items: center; font-size: 11px;
+  line-height: 1; transition: .15s var(--ease);
+}
+.side-collapse:hover { border-color: var(--accent); color: var(--accent); }
+.side-group.is-collapsed .side-collapse { transform: rotate(-90deg); }
+.side-group.is-collapsed .side-sub { display: none; }
 .side-sub { display: flex; flex-direction: column; gap: 1px; margin: 2px 0 2px 6px; padding-left: 8px; border-left: 1px solid var(--border); }
 .side-lesson { font-size: 12.5px; padding: 5px 9px; color: var(--muted); }
 .side-lesson:hover { color: var(--text); }
