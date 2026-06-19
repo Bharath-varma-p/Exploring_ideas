@@ -1,0 +1,34 @@
+{
+  "id": "azd-cosmos",
+  "title": "Cosmos DB: Planet-Scale NoSQL",
+  "lane": "az-data",
+  "type": "concept",
+  "order": 60,
+  "summary": "Azure's flagship NoSQL database. Built to distribute data globally with guaranteed single-digit millisecond response times and flexible schemas.",
+  "tags": ["database", "nosql", "cosmos", "global", "json"],
+  "analogy": "Cosmos DB is a magic whiteboard. If you write on it in Tokyo, the text instantly appears on the same whiteboard in New York. The 'Consistency Levels' are you choosing how instantly it appears versus how much you want to pay.",
+  "diagram": "flowchart TD\n  App[App] --> Cosmos[Cosmos DB Account]\n  Cosmos --> DB[Database]\n  DB --> Container[Container]\n  Container -.Partition Key.-> Physical[Physical Partitions under the hood]\n  Cosmos -.Replicates.-> Region1[East US]\n  Cosmos -.Replicates.-> Region2[Japan East]",
+  "body": "## First principles\n\nRelational databases struggle to scale globally. If your master database is in New York, users in Tokyo will suffer 200ms of lag on every click. Furthermore, relational schemas are rigid. If you want to add a `favorite_color` field to your user table, you have to lock the database and alter the schema. Modern internet-scale apps need low latency everywhere and the ability to evolve data shapes rapidly.\n\n## Why it exists\n\nAzure Cosmos DB was built from the ground up to solve global distribution. It is a distributed NoSQL database. You click a map in the Azure Portal to add a region (like \"Australia East\"), and Cosmos instantly begins replicating your data there. It guarantees reads and writes in less than 10 milliseconds anywhere in the world.\n\n## How it works\n\n### Multiple APIs\nCosmos DB stores data as standard formats (like JSON documents) under the hood, but it allows your application to talk to it using the language it already knows. When you create an account, you pick an API:\n- **NoSQL API:** The native, default JSON document API.\n- **MongoDB API:** Lets existing MongoDB apps talk to Cosmos without changing code.\n- **PostgreSQL API:** (Newly integrated) for relational distributed workloads.\n- **Cassandra / Gremlin / Table:** For column-family, graph, and simple key-value data.\n\n### Request Units (RU/s)\nThe currency of Cosmos DB is the **Request Unit (RU)**. It abstracts CPU, Memory, and IOPS into a single number. A 1 KB read costs exactly 1 RU. You provision throughput in RU/s (e.g., \"Give me 400 RU/s\"). If you exceed it, Cosmos rate-limits your app.\n\n### The 5 Consistency Levels\nBecause data takes time to travel at the speed of light, you must choose a consistency model:\n1. **Strong:** Reads are guaranteed to see the latest write. Slowest, most expensive.\n2. **Bounded Staleness:** Reads might lag behind writes by a specific time (e.g., 5 seconds).\n3. **Session:** (The default). You always read your own writes within your current session.\n4. **Consistent Prefix:** You never see out-of-order writes.\n5. **Eventual:** Fastest, cheapest. Data replicates when it can. Good for social media likes.\n\n## In practice\n\nData is stored in **Containers**. To scale infinitely, Cosmos splits your data across hidden physical servers based on a **Partition Key**. \n\nIf you build an IoT app collecting temperature from smart thermostats, `deviceId` is a great partition key. All data for Device 123 lives on the same physical server, making queries for that device lightning fast.\n\n## Gotchas\n\n- **Choosing a bad Partition Key:** This is the #1 Cosmos DB mistake. If your partition key is `tenantId` and Tenant A produces 90% of your traffic, one physical partition will overheat (a \"hot partition\") while the rest sit idle. You will hit RU limits constantly.\n- **Cost:** Cosmos DB is a premium service. For small, single-region applications, Azure SQL or PostgreSQL is often significantly cheaper.",
+  "teachItBack": "Cosmos DB is a globally distributed NoSQL database. It scales infinitely by partitioning data, charges you in Request Units (RU/s), and lets you tune the tradeoff between read speed and data accuracy using five consistency levels. It supports multiple APIs so existing apps can migrate easily.",
+  "glossary": [
+    {
+      "term": "RU/s",
+      "definition": "Request Units per second. The blended metric of compute and IO used to provision and bill Cosmos DB."
+    },
+    {
+      "term": "Partition Key",
+      "definition": "A property in your data that Cosmos DB uses to route data to the correct underlying physical server."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Microsoft Learn: Introduction to Azure Cosmos DB",
+      "url": "https://learn.microsoft.com/en-us/azure/cosmos-db/introduction",
+      "verified": true
+    }
+  ],
+  "related": [
+    "azd-azure-sql",
+    "azd-oss-databases"
+  ]
+}

@@ -1,0 +1,34 @@
+{
+  "id": "azd-storage-account",
+  "title": "Azure Storage Accounts: The Universal Bucket",
+  "lane": "az-data",
+  "type": "concept",
+  "order": 20,
+  "summary": "The fundamental data container in Azure. A single Storage Account provides Blob, File, Queue, and Table services for wildly cheap, infinitely scalable storage.",
+  "tags": ["storage", "blob", "file", "queue", "table"],
+  "analogy": "A Storage Account is a self-storage facility with four specialized doors: a massive garage for boxes (Blob), a shared office filing cabinet (File), a conveyor belt for tasks (Queue), and a simple address book (Table).",
+  "diagram": "flowchart TD\n  SA[Storage Account] --> B[Blob: Unstructured objects/files]\n  SA --> F[File: SMB/NFS shared drives]\n  SA --> Q[Queue: Async message passing]\n  SA --> T[Table: Cheap NoSQL key-value]",
+  "body": "## First principles\n\nBefore you need a complex database, you usually just need a place to put *stuff*. Images, log files, backups, or simple configuration flags. That storage needs to be accessible over the internet via HTTP, highly durable, and incredibly cheap.\n\n## Why it exists\n\nIn the past, if you wanted to host a million user avatars, you had to buy physical hard drives, attach them to web servers, and write code to serve the files. If the drive filled up, you bought another. An **Azure Storage Account** abstracts the disks away completely. It is a massive, managed bucket of storage that scales to petabytes automatically.\n\n## How it works\n\nA Storage Account is the top-level resource. Inside it, you can enable four distinct services:\n\n1. **Blob Storage (Binary Large Object):** Object storage for unstructured data. Images, videos, backups. It has no folder structure (just flat containers with prefixes), making it infinitely scalable.\n2. **File Storage:** Fully managed file shares accessible via standard SMB or NFS protocols. You can mount it directly as a `Z:` drive on Windows or a mount point on Linux.\n3. **Queue Storage:** A simple, cheap message queue. Component A drops a task message in; Component B picks it up and processes it. \n4. **Table Storage:** A bare-bones NoSQL key-value store. It stores simple rows and columns without a strict schema, perfect for massive, cheap logging where Cosmos DB would be overkill.\n\n## In practice\n\nYou use the Azure CLI to upload a file to a Blob container:\n\n```bash\n# Upload a local image to a container named 'images' in your storage account\naz storage blob upload \\\n  --account-name mystorageaccount \\\n  --container-name images \\\n  --name profile.png \\\n  --file /local/path/profile.png\n```\n\n## Gotchas\n\n- **Public Access:** By default in older setups, Blob containers could be made public. A massive source of security breaches is accidentally leaving Blob containers open to the internet. Always disable public access at the account level unless explicitly hosting a public website.\n- **Account Names:** Storage account names must be globally unique across all of Azure (because they form the URL, e.g., `mystorageaccount.blob.core.windows.net`), and they can only contain lowercase letters and numbers. No hyphens!",
+  "teachItBack": "An Azure Storage Account is the foundational storage service providing four APIs: Blob for objects, File for mounted network drives, Queue for simple messaging, and Table for cheap key-value data. It abstracts away disks to provide infinite, HTTP-accessible storage.",
+  "glossary": [
+    {
+      "term": "Blob Storage",
+      "definition": "Azure's object storage service for unstructured data, accessible via HTTP/REST."
+    },
+    {
+      "term": "SMB/NFS",
+      "definition": "Standard network protocols used by Azure Files to mount cloud storage as local drives."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Microsoft Learn: Storage account overview",
+      "url": "https://learn.microsoft.com/en-us/azure/storage/common/storage-account-overview",
+      "verified": true
+    }
+  ],
+  "related": [
+    "azd-redundancy-tiers",
+    "azd-disks"
+  ]
+}

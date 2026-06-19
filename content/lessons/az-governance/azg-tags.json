@@ -1,0 +1,59 @@
+{
+  "id": "azg-tags",
+  "title": "Tags: Business Context for Cloud Resources",
+  "lane": "az-governance",
+  "type": "concept",
+  "order": 50,
+  "summary": "Tags are key-value metadata that make Azure resources findable, billable, automatable, and governable—but only if the taxonomy is small, consistent, and enforced.",
+  "tags": [
+    "azure",
+    "tags",
+    "metadata",
+    "cost-allocation",
+    "organization"
+  ],
+  "analogy": "Tags are luggage labels for cloud resources: the suitcase may be a database, but the label says who owns it, where it is going, and who pays for it.",
+  "diagram": "flowchart LR\n  Resource[Resource] --> Tags[Tags]\n  Tags --> Owner[Owner]\n  Tags --> Env[Environment]\n  Tags --> Cost[CostCenter]\n  Tags --> Data[DataClass]\n  Tags --> Reports[Cost reports]\n  Tags --> Automation[Automation]\n  Tags --> Policy[Policy compliance]",
+  "body": "## First principles\n\nAzure resources know technical facts about themselves: SKU, region, provider, network. They do not naturally know business facts: who owns this, what application is it part of, what cost center pays, whether it is production, or whether it handles regulated data. **Tags** add that missing business metadata.\n\nA tag is a key-value pair like `Environment = Production` or `CostCenter = FIN-042`. That tiny label becomes powerful because cost reports, search, automation, and policy can all read it.\n\n## Why it exists\n\nWithout tags, your cloud estate becomes a parking lot with no license plates. You can see vehicles, but not owners. Finance cannot split costs cleanly. Operations cannot page the right team. Automation cannot safely decide what to shut down. Security cannot prioritize unknown resources.\n\nTags turn anonymous infrastructure into accountable infrastructure. They are especially valuable for cost allocation and chargeback/showback: if every cost-accruing resource carries an owner and cost center, the bill becomes a conversation with evidence instead of a monthly mystery.\n\n## How it works\n\nAzure supports tags on resources, resource groups, and subscriptions, but not on management groups. Resources do not automatically inherit tags from a subscription or resource group; use Azure Policy when you need inheritance-like behavior or required tag compliance.\n\nImportant current limits matter. Most resources, resource groups, and subscriptions can have up to 50 tag name-value pairs. Tag names are case-insensitive for operations, but values are case-sensitive, so `Production` and `production` can split reports. Tags are stored as plain text, so never put secrets, tokens, personal data, or sensitive business data in them.\n\n## Analogy\n\nA suitcase label does not change what is inside the suitcase. It tells the airport where to route it, who to call, and which flight it belongs to. Tags do the same for Azure resources: they do not run the workload, but they let the organization route cost, ownership, automation, and governance.\n\n## In practice\n\nStart with a tiny required vocabulary:\n\n```text\nOwner       = team email or group\nEnvironment = Production | NonProduction | Sandbox\nCostCenter  = finance-approved code\nApplication = product or workload name\nDataClass   = Public | Internal | Confidential | Regulated\n```\n\nThen enforce it with Policy. Use `audit` first to discover drift, then `deny` or `modify` when the taxonomy is stable.\n\n## Gotchas\n\nMore tags are not better. A 30-tag taxonomy becomes tax paperwork and teams route around it. Avoid free-text values where reports need grouping. Do not rely on tags as a security boundary; they are metadata, not access control. And fix casing early—cost reports are merciless about inconsistent values.",
+  "teachItBack": "Tags attach business metadata to Azure resources so humans and automation know owner, environment, application, cost center, and data context. They are central to cost allocation and operations, but they need a small controlled vocabulary and Azure Policy enforcement. Tags are plain text, limited, and not inherited automatically, so treat them as governed labels rather than magic structure.",
+  "glossary": [
+    {
+      "term": "Tag",
+      "definition": "A key-value metadata pair attached to an Azure resource, resource group, or subscription."
+    },
+    {
+      "term": "Taxonomy",
+      "definition": "The agreed set of tag keys and allowed values an organization uses consistently."
+    },
+    {
+      "term": "Showback",
+      "definition": "Reporting cloud costs back to teams without directly billing them."
+    },
+    {
+      "term": "Chargeback",
+      "definition": "Allocating or billing cloud costs to the teams or business units that caused them."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Dev docs — Use tags to organize Azure resources",
+      "url": "https://learn.microsoft.com/en-us/azure/azure-resource-manager/management/tag-resources",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — Overview of Azure Policy",
+      "url": "https://learn.microsoft.com/en-us/azure/governance/policy/overview",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — Overview of Microsoft Cost Management",
+      "url": "https://learn.microsoft.com/en-us/azure/cost-management-billing/costs/overview-cost-management",
+      "verified": true
+    }
+  ],
+  "related": [
+    "azg-policy",
+    "azg-cost-management",
+    "azg-management-groups"
+  ]
+}

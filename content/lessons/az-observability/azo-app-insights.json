@@ -1,0 +1,39 @@
+{
+  "id": "azo-app-insights",
+  "title": "Application Insights: APM & Tracing",
+  "lane": "az-observability",
+  "type": "concept",
+  "order": 50,
+  "summary": "Application Insights is Azure's Application Performance Management (APM) tool. It looks inside your code to trace requests, map dependencies, and catch exceptions automatically.",
+  "tags": [
+    "application-insights",
+    "apm",
+    "tracing",
+    "performance"
+  ],
+  "analogy": "If Azure Monitor is looking at the outside of your house (power usage, water consumption), App Insights is installing security cameras inside every room to see exactly where people are tripping over the furniture.",
+  "diagram": "flowchart TD\n  User --> App[Your Web App]\n  App --> DB[(SQL DB)]\n  App --> API[External API]\n  App -.->|Auto-instrumented SDK| AI[Application Insights]\n  AI --> Map[Application Map]\n  AI --> E2E[End-to-End Tracing]",
+  "body": "## First principles\n\nPlatform metrics (like \"VM CPU is at 80%\") don't tell you *why* an application is slow. To know that a specific database query is taking 3 seconds, or that a null reference exception is happening on line 42, the telemetry engine needs to be inside the application process itself.\n\n## Why it exists\n\nBefore Application Performance Management (APM), developers had to manually write `console.log(\"Started DB call\")` and calculate timestamps everywhere. **Application Insights** exists to auto-instrument your code, giving you code-level visibility, distributed tracing, and exception tracking out of the box with near-zero code changes.\n\n## How it works\n\nApp Insights works via an **SDK** installed in your code (or an auto-instrumentation agent attached to the runtime, like .NET or Java on App Service). \n\nIt automatically catches:\n- Incoming HTTP requests (URLs, response times, success rates).\n- Outgoing dependencies (calls your app makes to SQL, Redis, or external HTTP APIs).\n- Unhandled exceptions (complete with stack traces).\n\nBecause it tracks incoming and outgoing calls, it automatically builds an **Application Map**—a visual architecture diagram showing how your microservices talk to each other and where the failures are.\n\n## In practice\n\nImagine a user complains checkout is slow. In the Azure Portal, you open App Insights and look at **End-to-End Transaction Details** (Distributed Tracing). You see a visual waterfall timeline:\n1. Frontend took `3.2s` total.\n2. ↳ Frontend called Inventory API (`0.1s`).\n3. ↳ Frontend called Payment API (`3.0s`). \n4.   ↳ Payment API called legacy database (`2.9s`).\n\nWithout writing any logging code, you immediately know the legacy database is the bottleneck.\n\n## Gotchas\n\n- **Sampling.** High-traffic apps generate too much telemetry. App Insights uses \"adaptive sampling\" to throw away redundant data (e.g., \"keep 10% of successful 200 OKs, but keep 100% of errors\"). Don't panic if your log counts don't exactly match your web server hits.\n- **It's a frontend for Log Analytics.** Under the hood, App Insights data is actually stored in a Log Analytics Workspace. App Insights is simply a customized APM UI layered on top of that workspace.",
+  "teachItBack": "App Insights is an APM tool that lives inside your application code. It automatically tracks requests, exceptions, and dependency calls. It uses this data to generate distributed traces and visual application maps so you can pinpoint exactly which line of code or downstream database is causing slowness.",
+  "glossary": [
+    {
+      "term": "APM (Application Performance Management)",
+      "definition": "Tools that monitor the performance and availability of software applications at the code level."
+    },
+    {
+      "term": "Distributed Tracing",
+      "definition": "Tracking a single user request as it traverses multiple different microservices or cloud components."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Dev docs — Application Insights overview",
+      "url": "https://learn.microsoft.com/en-us/azure/azure-monitor/app/app-insights-overview",
+      "verified": true
+    }
+  ],
+  "related": [
+    "azo-azure-monitor",
+    "azo-logs-kql"
+  ]
+}

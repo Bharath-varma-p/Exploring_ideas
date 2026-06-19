@@ -1,0 +1,66 @@
+{
+  "id": "azp-intro",
+  "title": "Delivery & IaC — Making Azure Repeatable",
+  "lane": "az-devops",
+  "type": "concept",
+  "order": 10,
+  "summary": "Infrastructure as Code turns cloud setup from fragile memory into declarative, idempotent, reviewable intent. Delivery is how that intent safely becomes real Azure resources again and again.",
+  "tags": [
+    "azure",
+    "devops",
+    "iac",
+    "delivery",
+    "bicep",
+    "terraform"
+  ],
+  "analogy": "IaC is a recipe card for a restaurant kitchen: cooks can repeat the dish, reviewers can inspect the ingredients, and the same recipe works tomorrow without relying on one chef's memory.",
+  "diagram": "flowchart LR\n  Need[Need an environment] --> Declare[Declare desired state]\n  Declare --> Review[Pull request review]\n  Review --> Plan[What-if or plan]\n  Plan --> Deploy[Pipeline deploys]\n  Deploy --> Observe[Monitor and improve]\n  Observe --> Declare",
+  "body": "## First principles\n\nCloud infrastructure is not a pile of machines; it is a pile of **decisions**: names, regions, SKUs, networks, identities, policies, diagnostics, secrets boundaries, and dependencies. If those decisions live only in a person's memory or in portal clicks, the environment is unreproducible.\n\n**Infrastructure as Code (IaC)** writes those decisions down as desired state. The file says, *this is the network, this is the app, this is the database, these are the roles*. Azure tooling compares that desired state to reality and applies the changes.\n\n## Why it exists\n\nBefore IaC, teams built environments like stage sets: someone clicked through the portal, copied settings from a wiki, and hoped production matched staging. Six months later nobody knew which checkbox mattered. Disaster recovery meant archaeology. Security review meant screenshots. Cost cleanup meant guessing.\n\nIaC changes the unit of infrastructure from **click** to **commit**. A pull request can review a subnet rule before it opens production. A failed region can be rebuilt from the same files. A test environment can be deleted and recreated instead of nursed forever.\n\n## How it works\n\nThe core properties are simple:\n\n- **Declarative**: describe the end state, not every click required to get there.\n- **Idempotent**: running the same deployment twice should converge on the same result, not create duplicates.\n- **Repeatable**: the same code can stamp dev, test, and prod with parameter differences.\n- **Reviewable**: infrastructure changes pass through version control and code review.\n\nAzure has native IaC through ARM templates and Bicep. Terraform adds a cloud-agnostic workflow with providers and state. Delivery platforms such as Azure DevOps and GitHub Actions run these tools from pipelines, usually after validation and human/environment gates.\n\n## Analogy\n\nPortal-only infrastructure is cooking from memory while the kitchen is on fire. IaC is the recipe card: ingredients, quantities, order, and a place for another chef to spot that you accidentally wrote \"one cup of salt.\"\n\n## In practice\n\n```bash\naz deployment group what-if \\\\n  --resource-group <resource-group> \\\\n  --template-file main.bicep \\\\n  --parameters envName=prod\n```\n\nThat command teaches the whole mental model: code expresses intent, Azure computes a diff, humans and automation decide whether the diff is safe, then the pipeline applies it.\n\n## Gotchas\n\nIaC is not magic backup. If a database contains customer data, the template can recreate the database resource, not the lost rows. IaC also does not remove architecture judgment: a bad network design is still bad when written in beautiful Bicep. Finally, idempotent does not mean harmless; deleting a property from code can delete or reset the real setting depending on the resource and deployment mode, so use what-if/plan output seriously.",
+  "teachItBack": "IaC exists because cloud environments are too detailed to recreate from memory. The file is the desired state, version control makes it reviewable, and a pipeline applies it repeatedly. A good delivery system previews the blast radius, uses approvals where risk rises, and treats infrastructure changes like production code.",
+  "glossary": [
+    {
+      "term": "Infrastructure as Code",
+      "definition": "Defining infrastructure in versioned files so environments can be reviewed, deployed, and reproduced."
+    },
+    {
+      "term": "Declarative",
+      "definition": "A style where you describe the desired end state rather than every procedural step."
+    },
+    {
+      "term": "Idempotent",
+      "definition": "Safe to run repeatedly because repeated runs converge on the same intended result."
+    },
+    {
+      "term": "What-if / plan",
+      "definition": "A preview of the changes a deployment tool intends to make before it changes real resources."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Dev docs — What is infrastructure as code?",
+      "url": "https://learn.microsoft.com/en-us/devops/deliver/what-is-infrastructure-as-code",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — Azure Resource Manager overview",
+      "url": "https://learn.microsoft.com/en-us/azure/azure-resource-manager/management/overview",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — Template deployment what-if",
+      "url": "https://learn.microsoft.com/en-us/azure/azure-resource-manager/templates/deploy-what-if",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — Bicep overview",
+      "url": "https://learn.microsoft.com/en-us/azure/azure-resource-manager/bicep/overview",
+      "verified": true
+    }
+  ],
+  "related": [
+    "azp-arm-bicep",
+    "azp-terraform",
+    "azp-azure-devops",
+    "azp-github-actions"
+  ]
+}

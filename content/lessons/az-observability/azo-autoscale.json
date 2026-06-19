@@ -1,0 +1,42 @@
+{
+  "id": "azo-autoscale",
+  "title": "Autoscale: Rules-Based Elasticity",
+  "lane": "az-observability",
+  "type": "concept",
+  "order": 70,
+  "summary": "Cloud elasticity isn't magic; it's just metrics wired to provisioning APIs. Learn how Azure Autoscale adds or removes compute instances automatically.",
+  "tags": [
+    "autoscale",
+    "metrics",
+    "elasticity",
+    "compute"
+  ],
+  "analogy": "Autoscale is a smart thermostat. You don't manually turn the AC up when you get hot; you set a rule (\"if temp > 72°F, run AC\"), and the system reads the thermometer (metrics) and adjusts the environment automatically.",
+  "diagram": "flowchart LR\n  Metric[CPU > 75% for 10m] --> Rule[Scale Out Rule]\n  Rule --> Action[Add 2 Instances]\n  Action --> VM[Web Farm expands]\n  Metric2[CPU < 30% for 10m] --> Rule2[Scale In Rule]\n  Rule2 --> Action2[Remove 1 Instance]",
+  "body": "## First principles\n\nPaying for peak-capacity compute 24/7 is a massive waste of money. The cloud allows you to rent servers by the minute. To take advantage of this, you need a mechanism that watches your traffic and automatically buys more servers when busy, and returns them when quiet.\n\n## Why it exists\n\nWithout autoscale, operations teams had to guess capacity or wake up at 3 AM to manually slide a \"number of servers\" slider to keep a site from crashing during a viral traffic spike. Azure Monitor **Autoscale** exists to bind your application's telemetry directly to the Azure Resource Manager (ARM) deployment engine.\n\n## How it works\n\nAutoscale applies to resources like Virtual Machine Scale Sets (VMSS) or App Service Plans. It scales **out/in** (adding or removing nodes), not up/down (changing a small VM to a large VM).\n\nAn Autoscale setting contains:\n1. **Minimum / Maximum / Default instances**: Guardrails so a bad rule doesn't bankrupt you or scale you down to zero.\n2. **Scale Out rules**: E.g., \"If average CPU > 75% for 10 minutes, add 2 instances.\"\n3. **Scale In rules**: E.g., \"If average CPU < 30% for 10 minutes, decrease by 1 instance.\"\n\nIt can scale based on standard metrics (CPU, Memory) or custom metrics (e.g., \"number of messages waiting in a Service Bus queue\").\n\n## In practice\n\nYour background worker app processes images. Instead of scaling on CPU, you scale on queue length. You configure an Autoscale rule: \"If `Active Messages > 100` per instance, increase count by 1.\" As users upload thousands of images, Azure sees the queue grow, fires the autoscale event, and boots up more workers to chew through the backlog.\n\n## Gotchas\n\n- **Flapping (The Yo-Yo effect).** If your scale-out threshold is `CPU > 60%` and scale-in is `CPU < 55%`, the system might constantly add and remove servers, degrading performance. Always leave an adequate \"cool-down\" margin between out and in thresholds.\n- **Boot time.** Scaling out takes time (provisioning the VM, running startup scripts). By the time a new server is ready, the traffic spike might be over. If traffic is predictable, use **Scheduled Autoscale** (e.g., \"Scale out to 10 instances every Friday at 8 AM\") rather than purely metric-based reactive scaling.",
+  "teachItBack": "Autoscale connects Azure Monitor metrics to compute resources. By defining scale-out and scale-in rules based on thresholds or schedules, the system automatically adjusts the number of running instances to match demand, saving money during quiet times and protecting performance during spikes.",
+  "glossary": [
+    {
+      "term": "Scale Out / Scale In",
+      "definition": "Horizontal scaling: changing the *number* of running instances."
+    },
+    {
+      "term": "Scale Up / Scale Down",
+      "definition": "Vertical scaling: changing the *size* or power of a single instance."
+    },
+    {
+      "term": "Flapping",
+      "definition": "A harmful condition where the system continuously scales out and in because the thresholds are too close together."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Dev docs — Autoscale overview in Azure Monitor",
+      "url": "https://learn.microsoft.com/en-us/azure/azure-monitor/autoscale/autoscale-overview",
+      "verified": true
+    }
+  ],
+  "related": [
+    "azo-metrics-alerts"
+  ]
+}

@@ -1,0 +1,66 @@
+{
+  "id": "azc-vmss",
+  "title": "VM Scale Sets: Herds, Not Pets",
+  "lane": "az-compute",
+  "type": "concept",
+  "order": 30,
+  "summary": "VM Scale Sets turn many VMs into one managed fleet, so capacity can grow, shrink, and survive failures without treating each machine as special.",
+  "tags": [
+    "azure",
+    "compute",
+    "vm-scale-sets",
+    "availability",
+    "autoscale",
+    "zones"
+  ],
+  "analogy": "A scale set is a taxi fleet: dispatch adds more cars when the city gets busy, but no single taxi should be the whole business.",
+  "diagram": "flowchart TD\n  Template[VM model or image] --> VMSS[Virtual Machine Scale Set]\n  VMSS --> I1[Instance 1]\n  VMSS --> I2[Instance 2]\n  VMSS --> I3[Instance N]\n  Metrics[Metrics or schedule] --> Auto[Autoscale rule]\n  Auto --> VMSS\n  VMSS --> LB[Load balancer or app gateway]\n  VMSS --> Zones[Zones or fault domains]",
+  "body": "## First principles\n\nOne server is a fragile unit. It can run out of CPU, need patching, lose its host, or sit in the wrong fault domain during an outage. Reliable compute starts when your app can run on **many replaceable instances** behind a stable entry point.\n\n**Virtual Machine Scale Sets** are Azure’s way to manage that herd.\n\n## Why it exists\n\nBefore scale sets, teams had to script fleets of individual VMs: create the same image repeatedly, attach them to load balancers, spread them across failure boundaries, update them, drain them, and delete them when demand fell. That is possible, but it creates snowflake servers and brittle automation.\n\nA scale set turns “many VMs” into one resource with one model, one desired capacity, and fleet operations.\n\n## How it works\n\nA scale set defines how instances are created: image, size, networking, disks, extensions, health, and upgrade behavior. Azure then creates VM instances from that model and can distribute them across **availability zones** or **fault domains**.\n\nTwo older-but-important availability ideas often get mixed up:\n\n- **Availability set**: spreads VMs across fault domains and update domains within a region datacenter fabric. Good for classic multi-VM apps where each VM is individually managed.\n- **Availability zone**: physically separate datacenter locations inside a supported region. Stronger isolation, but your app must tolerate zone-to-zone latency and cross-zone design.\n\n**Autoscale** watches metrics or schedules and changes instance count. For example: add instances when average CPU stays above 70%, remove them when it stays below 30%, but never go below two.\n\n## In practice\n\n```bash\naz vmss create   --resource-group <rg>   --name <scale-set>   --image Ubuntu2204   --instance-count 3   --zones 1 2 3   --upgrade-policy-mode automatic\n```\n\nA real production design would add health probes, a load balancer or Application Gateway, monitoring, update strategy, and autoscale rules.\n\n## Gotchas\n\nA scale set does not make a stateful app magically safe. If each VM stores unique local state, scaling and replacement become dangerous. Put shared state in managed disks, databases, or storage services with an intentional design. Also remember that autoscale is reactive: it follows signals. Bad metrics produce bad scaling, just like a thermostat placed in sunlight will cool the wrong room.",
+  "teachItBack": "VM Scale Sets are for fleets of replaceable VMs. They apply one model to many instances, spread capacity across failure boundaries, and connect naturally to load balancing and autoscale. Availability sets protect groups of individual VMs within fault/update domains; zones separate capacity across physically distinct locations. The app still has to be designed for replacement and shared state.",
+  "glossary": [
+    {
+      "term": "Virtual Machine Scale Set",
+      "definition": "An Azure resource for creating and managing a fleet of load-balanced VM instances."
+    },
+    {
+      "term": "Availability set",
+      "definition": "A grouping that spreads VMs across fault and update domains within a region fabric."
+    },
+    {
+      "term": "Availability zone",
+      "definition": "A physically separate datacenter location inside a supported Azure region."
+    },
+    {
+      "term": "Autoscale",
+      "definition": "Rules that change instance count based on metrics, schedules, or both."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Dev docs — Azure Virtual Machine Scale Sets overview",
+      "url": "https://learn.microsoft.com/en-us/azure/virtual-machine-scale-sets/overview",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — Availability sets overview",
+      "url": "https://learn.microsoft.com/en-us/azure/virtual-machines/availability-set-overview",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — Availability zones overview",
+      "url": "https://learn.microsoft.com/en-us/azure/reliability/availability-zones-overview",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — Autoscale overview",
+      "url": "https://learn.microsoft.com/en-us/azure/azure-monitor/autoscale/autoscale-overview",
+      "verified": true
+    }
+  ],
+  "related": [
+    "azc-vms",
+    "azc-app-service",
+    "azc-aks",
+    "azc-choosing-compute"
+  ]
+}

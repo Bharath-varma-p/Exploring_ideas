@@ -1,0 +1,60 @@
+{
+  "id": "azf-subscriptions-tenants",
+  "title": "Subscriptions & tenants: billing vs identity",
+  "lane": "az-foundations",
+  "type": "concept",
+  "order": 70,
+  "summary": "Two boundaries people constantly conflate. A tenant is your identity boundary (the Entra directory of who exists). A subscription is your billing-and-limits boundary (where costs and quotas roll up). A subscription trusts exactly one tenant — but one tenant can hold many subscriptions.",
+  "tags": [
+    "azure",
+    "subscriptions",
+    "tenants",
+    "billing",
+    "identity",
+    "quotas"
+  ],
+  "analogy": "A tenant is the office building's keycard system (it knows every employee); a subscription is a department's corporate credit card (it pays the bills and has a spending limit). The same employee badge can be authorized on several cards, but each card is tied to one building's badge system.",
+  "diagram": "flowchart TD\n  Tenant[Microsoft Entra Tenant\\nidentity boundary: users, groups, apps] --> S1[Subscription A\\nbilling + limits]\n  Tenant --> S2[Subscription B\\nbilling + limits]\n  Tenant --> S3[Subscription C\\nbilling + limits]\n  Billing[Billing account: EA / MCA / Pay-as-you-go] -.invoices.-> S1\n  Billing -.-> S2\n  S1 -.trusts for sign-in.-> Tenant",
+  "body": "## First principles\n\nTwo questions are fundamentally different and must not share a box: **\"who are you?\"** (authentication) and **\"who pays and what are your limits?\"** (commerce + capacity). Azure splits them into two boundaries. The **tenant** answers identity. The **subscription** answers billing and limits. Almost every confusion in early Azure comes from blurring these two.\n\n## Why it exists\n\nIf identity and billing were the same object, you couldn't give one company (one set of employees) several independent budgets, environments, or blast-radius boundaries. And you couldn't let the same person work across a dev budget and a prod budget without re-creating their identity in each. Separating the axes lets **one organization (one tenant) own many subscriptions** — prod, dev, per-team, per-cost-center — while everyone authenticates against the *same* directory.\n\nIt also makes the *limits* problem tractable. Cloud capacity isn't infinite per customer; Azure enforces **quotas** (e.g. vCPUs per region). Pinning those to the subscription means a runaway dev environment can't starve production, and you can scale by adding subscriptions.\n\n## How it works\n\n**Tenant (Microsoft Entra ID) — identity boundary.** The directory of all users, groups, service principals, and app registrations. It's *who can sign in* and *who things are*. One organization usually has one primary tenant. Identity lives here and nowhere else.\n\n**Subscription — billing + limits boundary.** Two jobs:\n- **Billing:** every resource's cost rolls up to its subscription; the subscription rolls up to a **billing account** that produces the invoice.\n- **Limits/quotas:** service limits apply per subscription per region. Hit one and you request a quota increase or spread across subscriptions.\n\n**The trust relationship.** A subscription **trusts exactly one tenant** for authentication at a time (you can move a subscription to another tenant, but it's a deliberate operation). A tenant can have **zero, one, or many** subscriptions. So the mental model is: *one directory of people, many wallets.*\n\n**Billing account flavors (in one breath).** How you *buy* Azure sits above the subscription in a billing hierarchy:\n- **Pay-as-you-go** — a credit card, one subscription, no commitment; great for individuals and small teams.\n- **Microsoft Customer Agreement (MCA)** — the modern default for most commercial customers; you buy directly or via a partner, with billing profiles and invoice sections organizing many subscriptions.\n- **Enterprise Agreement (EA)** — the legacy large-enterprise contract with an enrollment, departments, and accounts; still widespread, gradually being succeeded by MCA.\nAll three ultimately *contain subscriptions* — they're different commercial wrappers around the same billing boundary.\n\n## In practice\n\n```bash\n# Which tenant am I in, and which subscriptions can I see?\naz account show --query \"{subscription:name, subId:id, tenant:tenantId}\" -o table\naz account list --query \"[].{name:name, id:id, state:state}\" -o table\n\n# Switch the active billing/limits context (identity stays the same)\naz account set --subscription \"<subscription-name-or-id>\"\n\n# Inspect a quota before you deploy a big fleet\naz vm list-usage --location <region> -o table   # current vs limit for compute\n```\n\nNotice your *login* (identity) never changed — only the *wallet* you're pointed at did.\n\n## Gotchas\n\n- **Deleting a subscription does not delete users.** Users live in the tenant. This is the #1 conflation — keep \"who you are\" and \"who pays\" mentally separate.\n- **Quotas are per subscription, per region.** \"Out of cores\" usually means *this subscription* in *this region* is capped — request an increase or use another subscription/region; a bigger resource group won't help.\n- **One subscription = one tenant at a time.** Multi-tenant scenarios (MSPs, mergers, B2B) need guest access or an explicit subscription move, not magic.\n- **Subscriptions are a blast-radius tool, not just a bill.** Separating prod and non-prod into different subscriptions limits damage and isolates limits — use them as isolation boundaries, not only accounting buckets.",
+  "teachItBack": "A tenant is your identity boundary — the single Microsoft Entra directory of everyone and everything that can sign in — while a subscription is your billing-and-limits boundary, where costs and quotas roll up. One tenant can own many subscriptions, but each subscription trusts exactly one tenant, so the model is one directory of people and many wallets. Quotas are enforced per subscription per region, and the way you buy Azure (pay-as-you-go, MCA, or EA) is just a commercial wrapper that contains those subscriptions.",
+  "glossary": [
+    {
+      "term": "Tenant",
+      "definition": "The Microsoft Entra ID directory that forms an organization's identity boundary."
+    },
+    {
+      "term": "Subscription",
+      "definition": "The billing and limits boundary where resource costs and service quotas roll up."
+    },
+    {
+      "term": "Quota / service limit",
+      "definition": "A per-subscription, often per-region cap on a resource (e.g. vCPUs) that you can request to raise."
+    },
+    {
+      "term": "Billing account (EA / MCA / PAYG)",
+      "definition": "The commercial agreement above subscriptions that produces invoices: Enterprise Agreement, Microsoft Customer Agreement, or Pay-as-you-go."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Dev docs — Azure subscription and service limits, quotas",
+      "url": "https://learn.microsoft.com/en-us/azure/azure-resource-manager/management/azure-subscription-service-limits",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — Azure billing account administrative tasks (EA/MCA/PAYG)",
+      "url": "https://learn.microsoft.com/en-us/azure/cost-management-billing/manage/account-admin-tasks",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — Move a subscription / resources across subscriptions",
+      "url": "https://learn.microsoft.com/en-us/azure/azure-resource-manager/management/move-resource-group-and-subscription",
+      "verified": true
+    }
+  ],
+  "related": [
+    "azf-hierarchy",
+    "azf-resource-groups",
+    "azf-interfaces"
+  ]
+}

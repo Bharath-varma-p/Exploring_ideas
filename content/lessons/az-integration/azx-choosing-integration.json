@@ -1,0 +1,73 @@
+{
+  "id": "azx-choosing-integration",
+  "title": "The Azure Integration Decision Map",
+  "lane": "az-integration",
+  "type": "concept",
+  "order": 80,
+  "summary": "A first-principles map for choosing queue vs topic vs event vs stream vs workflow vs gateway by asking what kind of coordination you actually need.",
+  "tags": [
+    "azure",
+    "integration",
+    "decision-map",
+    "architecture",
+    "service-selection"
+  ],
+  "analogy": "Choosing integration services is choosing transport: courier for required work, bulletin board for facts, conveyor belt for telemetry, checklist for workflows, and front desk for APIs.",
+  "diagram": "flowchart TD\n  Start[What are you integrating?] --> Sync{Need immediate request response?}\n  Sync -->|Yes| APIM[API Management front APIs]\n  Sync -->|No| Required{Must one handler perform work?}\n  Required -->|Yes simple backlog| Storage[Storage Queue]\n  Required -->|Yes enterprise command| SBQ[Service Bus Queue]\n  Required -->|No fact happened| Many{Who needs it?}\n  Many -->|Multiple durable subscribers| SBT[Service Bus Topic]\n  Many -->|Reactive handlers| EG[Event Grid]\n  Many -->|High volume time series| EH[Event Hubs]\n  Start --> Procedure{Mostly a business procedure?}\n  Procedure -->|Yes| LA[Logic Apps workflow]",
+  "body": "## First principles\n\nDo not start with a service name. Start with the coordination problem.\n\nAre you asking for work, announcing a fact, recording a stream, choreographing a process, or exposing a synchronous contract? Azure integration services look overlapping only when that question is vague.\n\n## The decision map\n\n| Need | Reach for | Why |\n|---|---|---|\n| One worker must process a simple background task | **Storage Queue** | Cheap, simple backlog for asynchronous work. |\n| One worker must process a high-value command | **Service Bus Queue** | Broker semantics: locks, DLQ, sessions, duplicate detection, transactions. |\n| Many independent consumers need their own durable copy | **Service Bus Topic** | Publish once, subscriptions each own filtering and lifecycle. |\n| Azure or app fact should trigger reactive handlers | **Event Grid** | Event routing for discrete state changes. |\n| Massive ordered telemetry needs ingestion and replay | **Event Hubs** | Partitioned append-only event stream with consumer groups. |\n| Multi-step integration across apps and connectors | **Logic Apps** | Workflow orchestration with triggers, actions, and connectors. |\n| External or internal clients need a stable API front door | **API Management** | Gateway policies, products, subscriptions, security, observability. |\n\n## Ask these questions in order\n\n1. **Is the caller waiting for an answer?** If yes, you are in API territory. Front it with APIM when the API is shared, secured, metered, or published.\n2. **Is this required work?** If a specific kind of handler must do the job, use a queue. Choose Storage Queue for simple backlog; Service Bus for enterprise command semantics.\n3. **Do multiple consumers need the same thing?** If each consumer needs a durable copy and broker behavior, use a Service Bus topic. If they are reacting to a fact, use Event Grid.\n4. **Is this high-volume time-series data?** If consumers read positions in a stream and throughput dominates, use Event Hubs.\n5. **Is the logic mostly a procedure across systems?** Use Logic Apps to make the runbook explicit, and call APIs/Functions for custom code.\n\n## Common compositions\n\nReal architectures mix services:\n\n- **APIM -> Service Bus**: accept an HTTP command quickly, enqueue work, return `202 Accepted`.\n- **Event Grid -> Logic Apps**: react to a blob-created event with a workflow.\n- **Service Bus Topic -> multiple subscriptions**: order event fans out to billing, fulfillment, and loyalty, each with a DLQ.\n- **Event Hubs -> analytics consumers**: telemetry stream read by real-time dashboard and archival pipeline.\n\n## Analogy\n\n💡 A courier ticket, town-crier announcement, factory conveyor, operations checklist, and reception desk are all \"moving information,\" but nobody confuses them in real life. Azure integration gets clear when you keep those shapes separate.\n\n## Gotchas\n\nDo not choose by throughput alone. A fast service with the wrong semantics creates fast failure.\n\nDo not confuse pub/sub flavors. Service Bus topics are brokered message fan-out with subscriptions. Event Grid is event notification routing. Event Hubs consumer groups are independent stream readers.\n\nDo not turn every integration into synchronous HTTP because it is easy to debug locally. Synchronous calls couple uptime and latency; asynchronous messaging buys resilience when the business process does not need an immediate answer.",
+  "teachItBack": "Choose Azure integration services by the coordination shape. API Management fronts synchronous API contracts; queues handle required work; Service Bus topics fan out brokered messages; Event Grid routes discrete facts; Event Hubs ingests streams; Logic Apps orchestrates procedures. The best architecture often composes several of these instead of forcing one service to do every job.",
+  "glossary": [
+    {
+      "term": "Command",
+      "definition": "A request for required work that should have an accountable handler."
+    },
+    {
+      "term": "Fan-out",
+      "definition": "Publishing once so multiple independent consumers receive their own copy or notification."
+    },
+    {
+      "term": "Stream",
+      "definition": "A time-ordered sequence of events read by consumers from positions or offsets."
+    },
+    {
+      "term": "Gateway pattern",
+      "definition": "Putting a managed front door in front of APIs to centralize edge concerns."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Dev docs — Compare Azure messaging services",
+      "url": "https://learn.microsoft.com/en-us/azure/service-bus-messaging/compare-messaging-services",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — Azure messaging services documentation",
+      "url": "https://learn.microsoft.com/en-us/azure/messaging-services/",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — Introduction to Azure Queue Storage",
+      "url": "https://learn.microsoft.com/en-us/azure/storage/queues/storage-queues-introduction",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — Workflow integration and automation with Azure Logic Apps",
+      "url": "https://learn.microsoft.com/en-us/azure/logic-apps/logic-apps-overview",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — Azure API Management overview and key concepts",
+      "url": "https://learn.microsoft.com/en-us/azure/api-management/api-management-key-concepts",
+      "verified": true
+    }
+  ],
+  "related": [
+    "azx-intro",
+    "azx-queues",
+    "azx-service-bus",
+    "azx-event-hubs",
+    "azx-event-grid",
+    "azx-logic-apps",
+    "azx-apim"
+  ]
+}

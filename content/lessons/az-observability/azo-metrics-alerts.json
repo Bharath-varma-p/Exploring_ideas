@@ -1,0 +1,44 @@
+{
+  "id": "azo-metrics-alerts",
+  "title": "Metrics & Alerts",
+  "lane": "az-observability",
+  "type": "concept",
+  "order": 30,
+  "summary": "How to measure health with numerical data, and how to wake people up (or trigger automation) when thresholds are crossed using Alert Rules and Action Groups.",
+  "tags": [
+    "metrics",
+    "alerts",
+    "action-groups",
+    "monitoring"
+  ],
+  "analogy": "Metrics are the dashboard warning lights on your car. Alert Rules are the mechanism that decides when a light should flash. Action Groups are the actual process of calling a tow truck or pulling over.",
+  "diagram": "flowchart LR\n  M[Metrics Data] --> AR{Alert Rule}\n  AR -- Condition Met --> AG[Action Group]\n  AG --> SMS[SMS / Email]\n  AG --> Webhook[Webhook / Logic App]\n  AG --> ITSM[Create Ticket]",
+  "body": "## First principles\n\nHumans cannot watch dashboards 24/7. Systems must evaluate their own health against defined thresholds and actively notify operators or trigger automated remediation when those thresholds are breached.\n\n## Why it exists\n\nPolling systems manually is slow and error-prone. We need a declarative way to say \"If X goes above Y for Z minutes, do something.\" Azure separates the *logic* of the alert from the *delivery* of the notification, allowing you to reuse notification logic across hundreds of alerts.\n\n## How it works\n\nAlerting in Azure Monitor is broken into three distinct components:\n\n1. **Metrics**: Time-series numerical data (e.g., CPU %, queue length). Evaluated constantly at low latency.\n2. **Alert Rules**: The condition. For example: `Average CPU > 90% for 5 minutes`. When the condition is met, the alert fires.\n3. **Action Groups**: The \"who to call\" or \"what to do.\" This is a reusable object containing a list of actions: send an email, text a phone number, call a webhook, or trigger an Azure Function.\n\nAlerts have **States**: \n- *Fired*: The condition is currently met.\n- *Resolved*: The condition is no longer met (the CPU dropped back down).\n\n## In practice\n\nImagine you have 50 web apps. Instead of defining \"Email Alice and Bob\" inside every single alert rule, you create **one** Action Group called `Prod-OnCall-Team`.\n\n```json\n// Mental model of an Alert Rule binding to an Action Group\n{\n  \"AlertRule\": \"High-CPU-Web-App\",\n  \"Condition\": \"CPU > 90%\",\n  \"Severity\": \"Sev1\",\n  \"TargetResource\": \"My-AppService\",\n  \"ActionGroupId\": \"/subscriptions/.../actionGroups/Prod-OnCall-Team\"\n}\n```\nIf Bob leaves the company, you update the Action Group once, and all 50 alerts instantly route to his replacement.\n\n## Gotchas\n\n- **Alert Fatigue.** If you set thresholds too aggressively, the team gets spammed with emails, starts ignoring them, and misses real outages. Only alert on actionable pain.\n- **Dynamic Thresholds.** Hardcoding `CPU > 80%` is often flawed (e.g., batch jobs at midnight). Azure offers \"Dynamic Thresholds\" using machine learning to detect anomalies based on historical patterns.",
+  "teachItBack": "Azure handles alerting by separating the rule from the action. You define an Alert Rule based on metrics, and when it triggers, it calls an Action Group. The Action Group is responsible for the actual notification (email, SMS) or automation (webhook).",
+  "glossary": [
+    {
+      "term": "Alert Rule",
+      "definition": "The condition that must be met to trigger an alert (e.g., CPU > 90%)."
+    },
+    {
+      "term": "Action Group",
+      "definition": "A reusable collection of notification preferences and automated actions to take when an alert fires."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Dev docs — Azure Monitor Metrics",
+      "url": "https://learn.microsoft.com/en-us/azure/azure-monitor/metrics/data-platform-metrics",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — Azure Monitor Alerts overview",
+      "url": "https://learn.microsoft.com/en-us/azure/azure-monitor/alerts/alerts-overview",
+      "verified": true
+    }
+  ],
+  "related": [
+    "azo-azure-monitor",
+    "azo-autoscale"
+  ]
+}

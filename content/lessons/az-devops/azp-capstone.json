@@ -1,0 +1,83 @@
+{
+  "id": "azp-capstone",
+  "title": "Azure Bootcamp Capstone — One Request Through the Whole Platform",
+  "lane": "az-devops",
+  "type": "concept",
+  "order": 80,
+  "summary": "The finale: follow one production request through identity, governance, networking, compute, data, integration, observability, security, and delivery. The platform becomes one system, not ten lanes.",
+  "tags": [
+    "azure",
+    "capstone",
+    "reference-architecture",
+    "well-architected",
+    "iac",
+    "devops"
+  ],
+  "analogy": "Azure is a city: identity is the passport office, governance is city law, networking is roads, compute is buildings, data is vaults, integration is mail, observability is traffic cameras, security is emergency services, and IaC is the city plan.",
+  "diagram": "flowchart LR\n  User[User request] --> DNS[DNS and edge]\n  DNS --> Net[VNet Private Link firewalls routing]\n  Net --> App[Compute: App Service AKS Functions or Container Apps]\n  App --> ID[Managed identity and Entra ID]\n  ID --> Data[Storage and databases]\n  App --> Bus[Service Bus Event Grid Event Hubs]\n  App --> Obs[Monitor App Insights Log Analytics]\n  Sec[Defender Key Vault Policy RBAC] -.guards.-> App\n  IaC[Bicep Terraform pipelines approvals] -.creates and changes.-> DNS\n  IaC -.creates and changes.-> Net\n  IaC -.creates and changes.-> App\n  IaC -.creates and changes.-> Data",
+  "body": "## First principles\n\nA cloud architecture is a chain of promises. The user promises who they are. The network promises where traffic may flow. Compute promises to run code. Data services promise durability. Integration promises loose coupling. Observability promises evidence. Security promises constraints. Delivery promises the whole thing can be recreated and safely changed.\n\nThe Azure Bootcamp's ten domains are not ten drawers of trivia. They are ten views of one living system.\n\n## Why it exists\n\nBeginners often learn Azure service-by-service and feel like they are memorizing a mall directory. Production architects think flow-by-flow: *What happens when a request arrives? Who can deploy the system? What can it reach? Where does state live? How do we know it is healthy? What stops a mistake from becoming an outage?*\n\nThis capstone ties the lanes together by walking one request through a reference architecture: a web API receives a request, authenticates it, talks to private data, publishes an event, emits telemetry, and is deployed by keyless CI/CD from IaC.\n\n## How it fits together\n\n**Foundations (`azf-intro`)** define the hierarchy: tenant, management groups, subscriptions, resource groups, resources, regions, and ARM. **Identity (`azi-intro`)** decides who humans and workloads are. **Governance (`azg-intro`)** sets guardrails with Policy, tags, budgets, and landing zones. **Networking (`azn-intro`)** shapes traffic with DNS, VNets, subnets, NSGs, Private Link, and load balancing.\n\n**Compute (`azc-intro`)** runs code: App Service, Functions, VMs, AKS, Container Apps, or whatever abstraction matches the workload. **Data (`azd-intro`)** holds state: Storage, Azure SQL, Cosmos DB, PostgreSQL, Redis, backups, replication, and consistency choices. **Integration (`azx-intro`)** decouples time and failure with Service Bus, Event Grid, Event Hubs, Logic Apps, and API Management.\n\n**Observability (`azo-intro`)** turns behavior into evidence: metrics, logs, traces, KQL, alerts, dashboards, SLOs, and incident learning. **Security (`azs-intro`)** adds defense in depth: Key Vault, Defender for Cloud, encryption, Sentinel, conditional access, threat modeling, and least privilege. **Delivery (`azp-intro`)** makes change safe: Bicep or Terraform, pull requests, OIDC keyless pipelines, environments, approvals, slots, canaries, and rings.\n\n## One request, end to end\n\nA user opens `https://api.<company>.com`. DNS and the edge route the request to the public entry point. Networking rules allow only the intended path into the workload; private dependencies stay off the public internet.\n\nThe app runs on a compute platform. It validates the user's token from Microsoft Entra ID and then uses its own managed identity to fetch secrets or keys from Key Vault and access data. No connection string with a permanent password needs to sit in code.\n\nThe app reads customer state from Azure SQL or Cosmos DB, stores documents in Blob Storage, and publishes a message to Service Bus so a slower background process can send email or update analytics without delaying the user. If another service needs to react to a fact, Event Grid or Event Hubs carries the signal.\n\nEvery hop emits telemetry: request duration, dependency calls, exceptions, custom events, and logs. Azure Monitor and Application Insights make the request traceable. Alerts watch symptoms users care about, not just CPU. Security tools watch posture and threats. Governance keeps the workload inside approved regions, SKUs, tags, and budgets.\n\n## How it is deployed\n\nThe infrastructure is declared in Bicep or Terraform. A pull request previews the plan. GitHub Actions or Azure Pipelines authenticates to Azure with OIDC/workload identity federation instead of a stored service-principal secret. The pipeline deploys to dev, then staging, then production only after environment checks pass. A slot, canary, or ring limits blast radius. If health degrades, traffic rolls back or the feature flag closes.\n\n## Analogy\n\nA city works because departments coordinate. The passport office does not pave roads; the road crew does not run hospitals; emergency services do not write zoning law. But one ambulance ride depends on all of them. Azure is the same: one request succeeds because every domain did its job.\n\n## Gotchas\n\nDo not design lanes in isolation. A private database without observability is a dark vault. A perfect pipeline with standing secrets is a supply-chain risk. A locked-down network with no deployment path becomes a museum. A microservice architecture without integration discipline becomes distributed spaghetti. The final skill is not knowing every Azure product; it is asking the right cross-domain questions before production asks them for you.",
+  "teachItBack": "Azure is one system with ten viewpoints. A request enters through networking, runs on compute, uses identity to access data, emits messages, creates telemetry, and is protected by governance and security. Delivery and IaC are the control loop that create and safely change that system without relying on portal memory or long-lived CI secrets.",
+  "glossary": [
+    {
+      "term": "Reference architecture",
+      "definition": "A reusable architecture pattern that shows how major components fit together for a realistic workload."
+    },
+    {
+      "term": "Control loop",
+      "definition": "A repeating cycle of declaring, reviewing, deploying, observing, and improving a system."
+    },
+    {
+      "term": "Blast radius",
+      "definition": "The amount of the system or user base affected when a change fails."
+    },
+    {
+      "term": "Landing zone",
+      "definition": "A governed Azure foundation for subscriptions, networking, identity, security, and operations at scale."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Dev docs — Azure landing zones",
+      "url": "https://learn.microsoft.com/en-us/azure/cloud-adoption-framework/ready/landing-zone/",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — Azure Resource Manager overview",
+      "url": "https://learn.microsoft.com/en-us/azure/azure-resource-manager/management/overview",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — Safe deployment practices",
+      "url": "https://learn.microsoft.com/en-us/azure/well-architected/operational-excellence/safe-deployments",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — Workload identity federation",
+      "url": "https://learn.microsoft.com/en-us/entra/workload-id/workload-identity-federation",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — Operational excellence",
+      "url": "https://learn.microsoft.com/en-us/azure/well-architected/operational-excellence/",
+      "verified": true
+    }
+  ],
+  "related": [
+    "azp-intro",
+    "azp-arm-bicep",
+    "azp-terraform",
+    "azp-azure-devops",
+    "azp-github-actions",
+    "azp-deployment-strategies",
+    "azp-environments",
+    "azf-intro",
+    "azi-intro",
+    "azg-intro",
+    "azn-intro",
+    "azc-intro",
+    "azd-intro",
+    "azx-intro",
+    "azo-intro",
+    "azs-intro"
+  ]
+}

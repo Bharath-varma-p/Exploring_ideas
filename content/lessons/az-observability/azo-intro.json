@@ -1,0 +1,43 @@
+{
+  "id": "azo-intro",
+  "title": "Observability Intro: The Three Pillars",
+  "lane": "az-observability",
+  "type": "concept",
+  "order": 10,
+  "summary": "Moving beyond basic monitoring to true observability. Learn how metrics, logs, and traces let you answer questions about your systems that you didn't know you needed to ask.",
+  "tags": [
+    "observability",
+    "metrics",
+    "logs",
+    "traces",
+    "overview"
+  ],
+  "analogy": "Monitoring is the altimeter dial telling you you're losing altitude. Observability is the flight data recorder that lets you figure out *why* you lost altitude.",
+  "diagram": "flowchart TD\n  System[Your System] --> M[Metrics: Is there a problem?]\n  System --> L[Logs: What exactly happened?]\n  System --> T[Traces: Where did the request travel?]\n  M -.-> Alert[Alerts]\n  L -.-> RootCause[Root Cause Analysis]\n  T -.-> Bottleneck[Bottleneck Discovery]",
+  "body": "## First principles\n\nWhen you build a system, you are blind to what it is doing unless it tells you. Systems emit data as they run. The challenge is collecting and structuring that data so you can reconstruct the system's state at any given moment in the past.\n\n## Why it exists\n\nIn the old days, we had **monitoring**. You decided in advance what might break (e.g., \"CPU might hit 100%\"), set up a check for it, and waited for a pager to beep. But cloud systems are complex and distributed; they fail in novel, unpredictable ways. **Observability** exists so that when something weird happens, you have enough raw telemetry to ask, \"Can I answer questions I didn't pre-plan?\" without deploying new code.\n\n## How it works\n\nTrue observability is built on three pillars of telemetry:\n\n1. **Metrics**: Numbers over time (e.g., CPU %, memory usage, request count). They are cheap to store, highly compressible, and perfect for alerting: *\"Is there a problem right now?\"*\n2. **Logs**: Discrete records of events that happened (e.g., \"User X failed login\"). They are rich, unstructured or semi-structured text. They are expensive to store but essential for deep investigation: *\"What exactly happened?\"*\n3. **Traces**: The journey of a single user request as it hops across multiple microservices or components. They connect the dots: *\"Where is the bottleneck in this specific transaction?\"*\n\n## In practice\n\nA typical incident response flow uses all three:\n- A **Metric** threshold is breached (Response time > 2s) and fires an alert.\n- You look at a **Trace** to see which specific microservice caused the delay.\n- You read the **Logs** from that microservice at that exact millisecond to see the error message.\n\n## Gotchas\n\n- **Logging everything is a trap.** Logs are expensive to ingest and store. If you log every successful loop iteration, you will drown in noise and run up massive bills.\n- **Observability isn't a tool.** You can't just \"buy observability.\" It's a property of your system—you have to instrument your code and architecture to emit the right signals.",
+  "teachItBack": "Observability is the ability to understand a system's internal state purely from its external outputs. It relies on metrics to tell us when something is wrong, traces to tell us where the problem is, and logs to tell us what exactly happened.",
+  "glossary": [
+    {
+      "term": "Telemetry",
+      "definition": "The raw data (metrics, logs, traces) emitted by a system."
+    },
+    {
+      "term": "Monitoring",
+      "definition": "Watching predefined metrics to detect known failure modes."
+    },
+    {
+      "term": "Observability",
+      "definition": "Instrumenting a system so you can debug novel, unpredictable failure modes."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Microsoft Learn: Observability in Azure",
+      "url": "https://learn.microsoft.com/en-us/azure/architecture/guide/operations/observability",
+      "verified": true
+    }
+  ],
+  "related": [
+    "azo-azure-monitor"
+  ]
+}

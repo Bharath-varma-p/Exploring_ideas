@@ -1,0 +1,78 @@
+{
+  "id": "azc-choosing-compute",
+  "title": "Choosing Azure Compute: A Decision Framework",
+  "lane": "az-compute",
+  "type": "framework",
+  "order": 100,
+  "summary": "Pick compute by asking what the workload needs: control, packaging, event shape, scale behavior, orchestration, state, latency, and team operating appetite.",
+  "tags": [
+    "azure",
+    "compute",
+    "decision-framework",
+    "architecture",
+    "tradeoffs"
+  ],
+  "analogy": "Choosing compute is choosing transportation: skateboard, car, bus, train, or cargo ship depends on distance, load, schedule, route control, and maintenance appetite.",
+  "diagram": "flowchart TD\n  Start[Workload] --> Existing{Existing OS or vendor dependency?}\n  Existing -- yes --> VM[VMs or VM Scale Sets]\n  Existing -- no --> Web{HTTP web app or API?}\n  Web -- yes --> AppSvc[App Service]\n  Web -- containerized and bursty --> ACA[Container Apps]\n  Web -- no --> Event{Event driven small code?}\n  Event -- yes --> Func[Functions]\n  Event -- no --> Orchestrate{Need Kubernetes API or custom orchestration?}\n  Orchestrate -- yes --> AKS[AKS]\n  Orchestrate -- no --> Parallel{Large parallel batch job?}\n  Parallel -- yes --> Batch[Azure Batch]\n  Parallel -- no --> Recheck[Recheck constraints cost and ops model]",
+  "body": "## First principles\n\nA compute choice is a commitment about responsibility. The wrong service is rarely wrong because it cannot run code. It is wrong because its scaling model, control boundary, cost shape, deployment style, or operational burden fights the workload.\n\nUse questions, not vibes.\n\n## The framework\n\nStart with **control**. Do you need OS-level access, custom drivers, legacy installers, domain join behavior, or a vendor support matrix that names virtual machines? Choose **VMs**. If you need many replaceable VMs, choose **VM Scale Sets**.\n\nAsk about **shape**. Is it a normal web app, API, or web container where the team wants managed hosting and deployment slots? Choose **App Service**. Is it small code reacting to events, queues, timers, or HTTP hooks? Choose **Functions**.\n\nAsk about **packaging**. Is the container image the contract, but Kubernetes would be too much? Choose **Container Apps**. Do you just need to run a simple container quickly? Consider **Container Instances**. Do you need Kubernetes API compatibility, custom controllers, service mesh patterns, platform policies, or a shared cluster model? Choose **AKS**.\n\nAsk about **work pattern**. Is the workload a mountain of independent tasks rather than a live service? Choose **Azure Batch** or a broader HPC architecture.\n\n## The hidden questions\n\n1. **Who patches the OS?** If the answer is “us,” make sure that control is worth it.\n2. **What happens at zero traffic?** App Service plans may stay allocated; Functions and Container Apps can have more elastic economics depending on plan and configuration.\n3. **How does it fail?** Single VMs fail differently from zone-redundant fleets, stateless replicas, or retried events.\n4. **Where does state live?** Compute should be disposable whenever possible; state belongs in storage, databases, queues, or explicit durable systems.\n5. **Can the team operate it at 2 a.m.?** AKS may be correct for the platform team and reckless for a two-person app team.\n\n## In practice\n\n```text\nIf it is legacy and OS-bound        -> VM / VMSS\nIf it is web-shaped                 -> App Service\nIf it is event-shaped code          -> Functions\nIf it is container-shaped, not K8s   -> Container Apps\nIf it needs Kubernetes as a platform -> AKS\nIf it is many independent tasks      -> Batch\n```\n\n## Gotchas\n\nDo not optimize for resume keywords. Optimize for the workload’s physics. A tiny API on AKS may work, but the platform tax can dwarf the app. A monolith on Functions may work until execution limits, cold starts, and distributed state make it strange. The cleanest architecture is often the most boring service that satisfies the real constraints.",
+  "teachItBack": "Choose Azure compute by matching workload constraints to responsibility boundaries. Use VMs for OS control, App Service for managed web hosting, Functions for event-driven code, Container Apps for serverless containers, AKS for Kubernetes-as-platform, and Batch for large parallel jobs. The best choice is the service whose failure, cost, scale, and operations model fit the workload.",
+  "glossary": [
+    {
+      "term": "Decision framework",
+      "definition": "A repeatable set of questions for mapping workload constraints to a compute service."
+    },
+    {
+      "term": "Platform tax",
+      "definition": "The extra operational cost a team pays to run a more complex platform than the workload requires."
+    },
+    {
+      "term": "Workload shape",
+      "definition": "The natural execution pattern of an app: web request, event reaction, container service, orchestrated platform, or batch job."
+    },
+    {
+      "term": "Disposable compute",
+      "definition": "Compute instances that can be replaced without data loss because durable state lives elsewhere."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Dev docs — Choose an Azure compute service",
+      "url": "https://learn.microsoft.com/en-us/azure/architecture/guide/technology-choices/compute-decision-tree",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — Compare AKS with other Azure container options",
+      "url": "https://learn.microsoft.com/en-us/azure/aks/compare-container-options-with-aks",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — Overview of Azure App Service",
+      "url": "https://learn.microsoft.com/en-us/azure/app-service/overview",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — Azure Functions scale and hosting",
+      "url": "https://learn.microsoft.com/en-us/azure/azure-functions/functions-scale",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — Azure Container Apps overview",
+      "url": "https://learn.microsoft.com/en-us/azure/container-apps/overview",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — Azure Batch runs large parallel jobs in the cloud",
+      "url": "https://learn.microsoft.com/en-us/azure/batch/batch-technical-overview",
+      "verified": true
+    }
+  ],
+  "related": [
+    "azc-intro",
+    "azc-vms",
+    "azc-app-service",
+    "azc-functions",
+    "azc-container-apps",
+    "azc-aks",
+    "azc-batch-hpc"
+  ]
+}

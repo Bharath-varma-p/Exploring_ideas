@@ -1,0 +1,73 @@
+{
+  "id": "azn-dns",
+  "title": "Azure DNS: public zones, private zones & name resolution in a VNet",
+  "lane": "az-networking",
+  "type": "concept",
+  "order": 60,
+  "summary": "DNS turns names humans remember into IPs machines route to. Azure splits it in two: public zones publish your domain to the world, private zones give resources friendly internal names inside a VNet — and Private DNS zones are the secret sauce that makes Private Link actually usable.",
+  "tags": [
+    "azure",
+    "dns",
+    "private-dns",
+    "name-resolution",
+    "168.63.129.16"
+  ],
+  "analogy": "DNS is the internet's contacts app: you remember 'Mum', it dials the number. A public DNS zone is the published phone book everyone can read; a private DNS zone is your personal contacts that only work inside your own building (VNet).",
+  "diagram": "flowchart TD\n  VM[VM asks: where is db.internal?] --> WS[Azure DNS resolver 168.63.129.16]\n  WS --> PZ{Linked private zone?}\n  PZ -->|Yes - internal name| Priv[Return private IP 10.0.2.4]\n  PZ -->|No - public name| Pub[Recurse to public DNS]\n  Pub --> Ext[Return public IP]\n  Reg[Auto-registration] -.VM names added automatically.-> Priv",
+  "body": "## First principles\n\nMachines route on **IP addresses**, but humans can't remember `20.112.52.29` — we remember `microsoft.com`. **DNS (Domain Name System)** is the global lookup service that translates names into addresses. Without it, every connection would require knowing a raw IP, and IPs change constantly. DNS is the indirection layer that lets the address underneath change while the *name* stays stable. Azure has to answer two separate versions of this: \"what's the public address the *world* should use for my domain?\" and \"what's the private address *my own VMs* should use for each other?\"\n\n## Why it exists\n\nTwo very different problems hide inside \"DNS\":\n\n1. **Public resolution** — you own `contoso.com` and need the internet to find your web app. You need an authoritative, globally distributed, highly available place to host those records. That's **Azure DNS public zones**.\n2. **Private resolution** — inside your VNet you have a database at `10.0.2.4` and you'd rather your app connect to `db.internal.contoso.com` than hard-code an IP that might change. You do *not* want that name leaking to the public internet. That's **Azure Private DNS zones**.\n\nBefore private zones, teams ran their own DNS VMs inside the VNet just to get internal names — extra servers to patch and keep alive. Private DNS zones make internal naming a managed, serverless feature.\n\n## How it works\n\n**The magic address: `168.63.129.16`.** Every VNet has a built-in Azure-provided DNS resolver reachable at this special virtual IP. By default your VMs use it, and it can resolve both Azure-internal names and public internet names. Remember this address — it shows up constantly in troubleshooting.\n\n**Public zones.** You create a zone for `contoso.com`, Azure gives you four name servers, and you update your domain registrar to delegate to them. Now you manage A, CNAME, MX, TXT records in Azure, served from a global anycast network.\n\n**Private zones.** You create a private zone (e.g. `privatelink.database.windows.net` or your own `internal.contoso.com`) and **link it to one or more VNets**. Now resources in those VNets resolve names in that zone — and the same name is invisible outside. Two killer features:\n\n- **Auto-registration**: link a VNet with registration enabled and every VM's hostname is automatically added as an A record. New VM, instant name, no manual records.\n- **Split-horizon**: the same name can resolve to a *private* IP inside the VNet and a *public* IP outside it. This is the mechanism that makes **Private Link** seamless — the PaaS service's public hostname quietly resolves to a private IP for VNet clients.\n\n**Resolution order**, simplified: a VM asks `168.63.129.16` → if the name matches a **linked private zone**, return the private record → otherwise recurse out to public DNS. For hybrid setups where on-prem must resolve Azure private names (or vice versa), you add the **Azure DNS Private Resolver**, a managed service with inbound/outbound endpoints that forwards queries between on-prem DNS and Azure — replacing the old habit of running DNS forwarder VMs.\n\n## In practice\n\n```bash\n# Public zone: host contoso.com in Azure, then delegate at your registrar.\naz network dns zone create --resource-group <rg> --name contoso.com\naz network dns record-set a add-record \\\n  --resource-group <rg> --zone-name contoso.com \\\n  --record-set-name www --ipv4-address <public-ip>\n\n# Private zone: internal names, auto-registered, linked to a VNet.\naz network private-dns zone create \\\n  --resource-group <rg> --name internal.contoso.com\naz network private-dns link vnet create \\\n  --resource-group <rg> --zone-name internal.contoso.com \\\n  --name link1 --virtual-network <vnet> --registration-enabled true\n```\n\nAfter the link, a VM named `app01` is reachable at `app01.internal.contoso.com` from anywhere in the VNet — and that name means nothing on the public internet.\n\n## Gotchas\n\n- **`168.63.129.16` is not a typo and not optional.** It's the platform DNS resolver inside every VNet. If custom DNS is misconfigured and traffic can't reach it, *all* name resolution breaks. Allow it.\n- **A private zone does nothing until it's linked.** Creating the zone isn't enough — link it to the VNet(s) that should use it (and enable registration if you want auto A-records).\n- **Custom DNS overrides Azure DNS for the whole VNet.** If you set custom DNS servers on the VNet, those servers must themselves be able to resolve Azure names (often by forwarding to `168.63.129.16` or using the Private Resolver), or private zones silently won't resolve.\n- **Private Link uses very specific zone names.** Each PaaS service expects an exact `privatelink.*` zone name (e.g. `privatelink.blob.core.windows.net`). Get the name wrong and the private IP override won't apply.\n- **DNS is cached (TTL).** Lower TTLs before a planned IP change; expect old answers to linger for the TTL duration. This is also why DNS-based failover (Traffic Manager) isn't instant.",
+  "teachItBack": "DNS maps memorable names to routable IPs, and Azure splits the job into public zones that publish your domain to the world and private zones that give VNet resources friendly internal names. Inside every VNet a built-in resolver at 168.63.129.16 answers queries: it returns private records when a name matches a linked private zone and otherwise recurses to public DNS. Private zones add auto-registration and split-horizon resolution — the same hostname resolving to a private IP inside the VNet — which is exactly what makes Private Link transparent. Just remember a private zone is inert until you link it to a VNet, and custom DNS servers must still be able to reach Azure's resolver.",
+  "glossary": [
+    {
+      "term": "DNS (Domain Name System)",
+      "definition": "The system that translates human-readable names into IP addresses."
+    },
+    {
+      "term": "Public DNS zone",
+      "definition": "An Azure-hosted authoritative zone that publishes your domain's records to the internet."
+    },
+    {
+      "term": "Private DNS zone",
+      "definition": "An Azure-managed zone linked to VNets that resolves names privately, invisible to the public internet."
+    },
+    {
+      "term": "168.63.129.16",
+      "definition": "The special Azure virtual IP that provides DNS (and platform services) inside every VNet."
+    },
+    {
+      "term": "Auto-registration",
+      "definition": "A private-zone feature that automatically creates A records for VMs in a linked VNet."
+    },
+    {
+      "term": "Split-horizon DNS",
+      "definition": "Returning a different answer for the same name depending on whether the query comes from inside or outside the VNet."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Dev docs — What is Azure DNS?",
+      "url": "https://learn.microsoft.com/en-us/azure/dns/dns-overview",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — What is Azure Private DNS?",
+      "url": "https://learn.microsoft.com/en-us/azure/dns/private-dns-overview",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — Name resolution for VMs and role instances",
+      "url": "https://learn.microsoft.com/en-us/azure/virtual-network/virtual-networks-name-resolution-for-vms-and-role-instances",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — What is Azure DNS Private Resolver?",
+      "url": "https://learn.microsoft.com/en-us/azure/dns/dns-private-resolver-overview",
+      "verified": true
+    }
+  ],
+  "related": [
+    "azn-vnet",
+    "azn-private-link",
+    "azn-load-balancing",
+    "azn-peering"
+  ]
+}

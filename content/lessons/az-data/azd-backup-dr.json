@@ -1,0 +1,38 @@
+{
+  "id": "azd-backup-dr",
+  "title": "Azure Backup & Site Recovery (BCDR)",
+  "lane": "az-data",
+  "type": "concept",
+  "order": 100,
+  "summary": "Business Continuity and Disaster Recovery. How to ensure your data survives accidental deletion, ransomware, or the complete loss of an Azure region.",
+  "tags": ["backup", "disaster-recovery", "bcdr", "asr"],
+  "analogy": "Azure Backup is the time machine (recover a deleted file from yesterday). Azure Site Recovery (ASR) is the teleportation device (spin up a replica of your burning datacenter in a new city in 15 minutes).",
+  "diagram": "flowchart TD\n  Primary[Primary Region\\ne.g. East US] -- Daily Snapshots --> Backup[Azure Backup\\nRecovery Services Vault]\n  Primary -- Continuous Async Sync --> ASR[Azure Site Recovery]\n  ASR -. In case of disaster .-> Secondary[Secondary Region\\ne.g. West US]\n  Secondary -- Boots up VMs --> Online[Back Online in minutes]",
+  "body": "## First principles\n\nRedundancy (like ZRS or GRS storage) protects you against hardware failure. But if a tired admin runs `DROP TABLE users`, or ransomware encrypts your disk, redundancy just faithfully copies the deleted or encrypted data to three different datacenters. You need a way to go back in time, and you need a way to spin up your infrastructure somewhere else if a hurricane takes out a region.\n\n## Why it exists\n\n**BCDR** (Business Continuity and Disaster Recovery) is the discipline of keeping the business alive. \n- **Azure Backup** handles the \"going back in time\" part. \n- **Azure Site Recovery (ASR)** handles the \"teleporting to a new datacenter\" part.\n\n## How it works\n\n### The Two Metrics: RPO and RTO\nEvery DR conversation starts with these two business metrics:\n- **RPO (Recovery Point Objective):** How much data can you afford to lose? (e.g., \"We back up every 24 hours, so we might lose 24 hours of data.\")\n- **RTO (Recovery Time Objective):** How long can the system be down before it hurts the business? (e.g., \"We must be back online in 2 hours.\")\n\n### Azure Backup\nAzure Backup takes automated snapshots of VMs, SQL Databases, and File Shares. It stores them in a **Recovery Services Vault** or a **Backup Vault**. \n- It isolates the backups from the primary storage so ransomware can't reach them.\n- It supports \"Soft Delete\": if a hacker gets admin access and tries to delete the backups, Azure holds the data secretly for 14 days anyway.\n\n### Azure Site Recovery (ASR)\nASR is for minimizing RTO and RPO during a catastrophic failure. \nIt continuously replicates your running VMs from your primary region to a secondary region. The VMs in the secondary region are kept powered off (so you don't pay compute costs for them). If the primary region goes down, you click \"Failover,\" and ASR boots up the secondary VMs with data that is only seconds or minutes old.\n\n## In practice\n\nYou configure Backup Policies to balance cost and compliance. A standard \"GFS\" (Grandfather-Father-Son) policy looks like:\n- Keep daily backups for 7 days.\n- Keep weekly backups for 4 weeks.\n- Keep monthly backups for 12 months.\n- Keep yearly backups for 10 years.\n\n## Gotchas\n\n- **Testing the DR Plan:** Having Azure Site Recovery configured is useless if you've never tested it. ASR allows \"Test Failovers\" which spin up the secondary VMs in an isolated network so you can verify they work without impacting production.\n- **PaaS Databases:** ASR is primarily for VMs (IaaS). If you are using Azure SQL or Cosmos DB, they have their own built-in geo-replication and backup mechanisms. You don't use ASR for PaaS databases.",
+  "teachItBack": "Redundancy handles hardware failure; BCDR handles human error, ransomware, and regional disasters. RPO measures allowable data loss, and RTO measures allowable downtime. Azure Backup provides the time machine for data, while Azure Site Recovery provides continuous replication to failover to a new region.",
+  "glossary": [
+    {
+      "term": "RPO",
+      "definition": "Recovery Point Objective. The maximum acceptable amount of data loss measured in time."
+    },
+    {
+      "term": "RTO",
+      "definition": "Recovery Time Objective. The maximum acceptable amount of time the application can be offline."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Microsoft Learn: About Azure Backup",
+      "url": "https://learn.microsoft.com/en-us/azure/backup/backup-overview",
+      "verified": true
+    },
+    {
+      "title": "Microsoft Learn: About Site Recovery",
+      "url": "https://learn.microsoft.com/en-us/azure/site-recovery/site-recovery-overview",
+      "verified": true
+    }
+  ],
+  "related": [
+    "azd-redundancy-tiers"
+  ]
+}

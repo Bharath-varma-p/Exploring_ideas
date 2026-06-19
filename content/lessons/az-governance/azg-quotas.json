@@ -1,0 +1,55 @@
+{
+  "id": "azg-quotas",
+  "title": "Quotas and Limits: Cloud Capacity Has Guardrails Too",
+  "lane": "az-governance",
+  "type": "concept",
+  "order": 110,
+  "summary": "Azure quotas are assigned resource limits for subscriptions; they protect customers and the platform, but they must be monitored and raised before growth hits a wall.",
+  "tags": [
+    "azure",
+    "quotas",
+    "limits",
+    "capacity",
+    "subscriptions"
+  ],
+  "analogy": "A quota is a warehouse loading dock limit: it prevents chaos, but you must book more dock space before a giant shipment arrives.",
+  "diagram": "flowchart TD\n  Subscription[Subscription] --> Quotas[Service quotas]\n  Quotas --> Compute[vCPU limits]\n  Quotas --> Storage[Storage account counts]\n  Quotas --> Network[Networking resources]\n  Quotas --> API[API rate limits]\n  Usage[Current usage] --> Monitor[Monitor and alert]\n  Monitor --> Request[Request increase]\n  Request --> Review[Microsoft review and capacity]",
+  "body": "## First principles\n\nCloud feels infinite because you do not rack servers yourself. It is not actually infinite. Capacity must be shared fairly, protected from mistakes, and defended against abusive consumption. **Quotas** are the assigned number of countable resources a subscription can consume for a service, region, or resource type.\n\nQuotas are not punishment. They are circuit breakers for both you and Azure.\n\n## Why it exists\n\nWithout quotas, a bad script could request thousands of cores, a compromised account could burn capacity, and one customer could disrupt regional availability. Quotas reduce blast radius by giving each subscription a default allowance.\n\nThey also force planning. If your production launch needs 300 vCPUs in a region and the subscription quota is 100, you want to learn that during readiness review, not during deploy night.\n\n## How it works\n\nMany Azure services have quotas. Examples include number of VMs or regional vCPUs, storage accounts, networking resources, or API calls. Azure docs note that quotas were previously referred to as limits, and each subscription has default quota values. Some quotas are **adjustable**, meaning you can request increases. Others are **non-adjustable**, meaning they are hard limits or require support-assisted alternatives.\n\nThere is no cost for requesting a quota increase; costs come from actual resource usage, not the quota itself. But an approved quota does not reserve or guarantee capacity. Microsoft may review requests based on usage, service availability, and capacity constraints.\n\nYou can manage quotas in the Azure portal through Quotas/My quotas or subscription Quotas + usage. Programmatically, the Azure Quota Service REST API supports certain providers such as Compute and Machine Learning; the Support API can create quota support tickets where appropriate.\n\n## Analogy\n\nA warehouse loading dock has a limit on trucks per hour. The limit prevents gridlock. If holiday volume is coming, you request more dock time early. Approval gives you permission to use more dock capacity, but it does not teleport trucks or guarantee a snowstorm will not affect the road.\n\n## In practice\n\nMake quota checks part of launch readiness:\n\n```bash\naz vm list-usage --location <region> -o table\naz network list-usages --location <region> -o table\n```\n\nTrack quota usage for regions where you actually deploy. Alert before critical thresholds, especially for production subscriptions and subscription vending pipelines.\n\n## Gotchas\n\nDo not confuse quotas with budgets. A quota can block resource creation but does not express money; a budget expresses spend but does not stop resources. Do not request huge quota increases everywhere 'just in case'—that weakens blast-radius control. And remember quotas are often regional and provider-specific, so success in `eastus` says little about `westus3`.",
+  "teachItBack": "Azure quotas are subscription-scoped allowances for countable resources such as cores, accounts, networking objects, or API usage. They protect customers and Azure from mistakes, abuse, and capacity shocks. Monitor quota usage, request increases early for adjustable quotas, and remember that approval raises permission to consume—it does not reserve capacity or replace budgets.",
+  "glossary": [
+    {
+      "term": "Quota",
+      "definition": "An assigned maximum amount of a countable Azure resource that a subscription can consume."
+    },
+    {
+      "term": "Adjustable quota",
+      "definition": "A quota for which you can request an increase."
+    },
+    {
+      "term": "Non-adjustable quota",
+      "definition": "A hard or constrained limit that cannot be directly raised through the normal quota request path."
+    },
+    {
+      "term": "Quota increase",
+      "definition": "A request to raise an assigned quota, subject to Microsoft review and capacity."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Dev docs — Azure Quotas overview",
+      "url": "https://learn.microsoft.com/en-us/azure/quotas/quotas-overview",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — Overview of Microsoft Cost Management",
+      "url": "https://learn.microsoft.com/en-us/azure/cost-management-billing/costs/overview-cost-management",
+      "verified": true
+    }
+  ],
+  "related": [
+    "azg-cost-management",
+    "azg-pricing-models",
+    "azg-management-groups",
+    "azg-landing-zones"
+  ]
+}

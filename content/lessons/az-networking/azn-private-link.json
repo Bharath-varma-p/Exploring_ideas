@@ -1,0 +1,69 @@
+{
+  "id": "azn-private-link",
+  "title": "Private Link & Private Endpoints vs Service Endpoints",
+  "lane": "az-networking",
+  "type": "concept",
+  "order": 90,
+  "summary": "Azure PaaS services (Storage, SQL, Key Vault) live on public endpoints by default. Private Link gives them a private IP *inside your VNet*, so your traffic to them never touches the public internet. Understand how that differs from the older Service Endpoints and you'll know why Private Link became the default for serious security.",
+  "tags": [
+    "azure",
+    "private-link",
+    "private-endpoint",
+    "service-endpoint",
+    "paas-security"
+  ],
+  "analogy": "A Private Endpoint is installing a private door from your office straight into the bank vault — you walk in without ever stepping onto the public street. A Service Endpoint is still using the bank's public front door, but the guard now recognizes your office badge and trusts you faster.",
+  "diagram": "flowchart TD\n  VM[VM in subnet 10.0.1.4] --> PE[Private Endpoint 10.0.1.9 - a NIC in YOUR subnet]\n  PE -->|Private Link over Microsoft backbone| PaaS[(Azure SQL / Storage / Key Vault)]\n  DNS[Private DNS zone privatelink.*] -.resolves public name to 10.0.1.9.-> VM\n  Internet((Public endpoint)) -. can be disabled .-x PaaS",
+  "body": "## First principles\n\nWhen you create an Azure Storage account or SQL database, it gets a **public endpoint** — a name like `mystore.blob.core.windows.net` resolving to a public IP, reachable (subject to auth) from the internet. That's convenient, but it means your private VM talking to your own database sends traffic *out* to a public endpoint and back. Two problems follow: the data path touches the public internet, and the service is exposed to the world (protected only by keys and firewalls). The first-principles fix: bring the PaaS service *onto your private network* so the traffic never leaves it.\n\n## Why it exists\n\nSecurity teams hate that PaaS resources are internet-facing. Even with access keys and IP firewalls, a publicly reachable endpoint is an attack surface and a data-exfiltration path. The goal is **\"my app should reach Storage over a private IP, and Storage should refuse the public internet entirely.\"** Azure built two mechanisms toward that goal, and they work very differently:\n\n1. **Service Endpoints** (the older, lighter approach).\n2. **Private Link / Private Endpoints** (the newer, stronger approach — now the recommended default).\n\nKnowing why the second largely replaced the first is the heart of this lesson.\n\n## How it works\n\n**Service Endpoints.** You enable a service endpoint on a *subnet* for a service type (e.g. `Microsoft.Storage`). This does two things: it gives traffic from that subnet an **optimized route** to the service over Microsoft's backbone (not the public internet), and it lets the service's firewall accept that subnet by **VNet identity** rather than by IP. But — crucially — the service **keeps its public endpoint and public IP**. You're still talking *to* the public resource; you've just made the path better and the firewall smarter. Service endpoints are free, simple, but don't extend to on-prem and don't give the resource a private address.\n\n**Private Link / Private Endpoints.** This is categorically different. A **Private Endpoint** is an actual **network interface with a private IP from your subnet** that maps to a specific PaaS resource. Your `mystore` storage account now answers at `10.0.1.9` *inside your VNet*. Traffic flows over **Azure Private Link** across Microsoft's backbone directly to that one resource. Now you can:\n\n- **Disable the public endpoint entirely** — the resource becomes unreachable from the internet, full stop.\n- **Reach it from on-prem** through your VPN/ExpressRoute, because it's just a private IP in your VNet.\n- **Map to one specific resource instance**, not a whole service class — tighter blast radius.\n\n**The DNS piece is essential.** Your app still uses the public name `mystore.blob.core.windows.net`. For that name to resolve to the private IP, Azure uses a **Private DNS zone** (e.g. `privatelink.blob.core.windows.net`) linked to your VNet. Inside the VNet the name now resolves to `10.0.1.9`; outside it still resolves publicly. If you create a Private Endpoint but **forget to wire up the private DNS zone**, your app keeps resolving the public IP and the whole exercise silently fails — this is the single most common Private Link mistake.\n\n## In practice\n\n```bash\n# Create a Private Endpoint into your subnet for a specific Storage account.\naz network private-endpoint create \\\n  --resource-group <rg> --name <pe-name> \\\n  --vnet-name <vnet> --subnet <subnet> \\\n  --private-connection-resource-id <storage-account-id> \\\n  --group-id blob --connection-name <conn>\n\n# Wire DNS so the public name resolves to the private IP inside the VNet.\naz network private-dns zone create \\\n  --resource-group <rg> --name privatelink.blob.core.windows.net\naz network private-dns link vnet create \\\n  --resource-group <rg> --zone-name privatelink.blob.core.windows.net \\\n  --name dnslink --virtual-network <vnet> --registration-enabled false\n# (then create the A record / DNS zone group binding the PE to the zone)\n```\n\nFinish by setting the storage account's public network access to **Disabled** — now the only way in is your private endpoint.\n\n## When to use which\n\n- **Private Endpoint** when you want the resource off the public internet, need on-prem access to it, or have compliance/exfiltration concerns. This is the modern default for sensitive PaaS.\n- **Service Endpoint** when you just want a fast, free way to let a subnet reach a service and lock the service firewall to your VNet, and you're fine with the public endpoint remaining. Lighter, but weaker.\n\n## Gotchas\n\n- **Forgetting Private DNS = silent failure.** The #1 mistake. Without the linked `privatelink.*` zone and its records, the app resolves the public IP and bypasses your private endpoint.\n- **Service Endpoints don't remove the public endpoint.** The resource is still internet-facing; you've optimized the route and firewall identity, not privatized the resource.\n- **Service Endpoints don't reach on-prem.** They apply to traffic *from the VNet subnet*; your datacenter can't use them. Private Endpoints can be reached from on-prem over VPN/ExpressRoute.\n- **Private Endpoints cost money and consume an IP.** Each is a billed resource using a private IP per linked resource — plan address space and budget for many of them.\n- **Lock down after you privatize.** A private endpoint is only half the win; also set the resource's public network access to Disabled, or the public door stays open.\n- **One PE targets one resource (sub-resource).** Storage blob vs file vs table need separate `group-id` endpoints — they're not one-size-fits-all.",
+  "teachItBack": "Azure PaaS services default to public endpoints, which means private-to-private traffic can still ride the internet and the resource stays internet-exposed. Service Endpoints partly fix this by giving a subnet an optimized backbone route and letting the service firewall trust the VNet — but the public endpoint remains and on-prem can't use it. Private Link goes further: a Private Endpoint is a real NIC with a private IP in your subnet mapped to one specific resource, letting you disable the public endpoint entirely and reach the resource privately, even from on-prem. The catch is DNS — you must link the privatelink.* private zone so the public name resolves to the private IP, or the whole thing silently falls back to public.",
+  "glossary": [
+    {
+      "term": "Private Link",
+      "definition": "The Azure technology that delivers a PaaS (or partner) service privately into your VNet over Microsoft's backbone."
+    },
+    {
+      "term": "Private Endpoint",
+      "definition": "A network interface with a private IP in your subnet that maps to a specific PaaS resource, making it reachable privately."
+    },
+    {
+      "term": "Service Endpoint",
+      "definition": "A subnet setting that optimizes the route to a PaaS service and lets its firewall trust the VNet, while the service keeps its public endpoint."
+    },
+    {
+      "term": "privatelink DNS zone",
+      "definition": "A Private DNS zone (e.g. privatelink.blob.core.windows.net) that resolves a service's public name to its private endpoint IP inside the VNet."
+    },
+    {
+      "term": "Public network access (Disabled)",
+      "definition": "A resource setting that turns off the public endpoint, leaving the private endpoint as the only way in."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Dev docs — What is Azure Private Link?",
+      "url": "https://learn.microsoft.com/en-us/azure/private-link/private-link-overview",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — What is a private endpoint?",
+      "url": "https://learn.microsoft.com/en-us/azure/private-link/private-endpoint-overview",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — Virtual network service endpoints",
+      "url": "https://learn.microsoft.com/en-us/azure/virtual-network/virtual-network-service-endpoints-overview",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — Azure Private Endpoint DNS configuration",
+      "url": "https://learn.microsoft.com/en-us/azure/private-link/private-endpoint-dns",
+      "verified": true
+    }
+  ],
+  "related": [
+    "azn-dns",
+    "azn-vnet",
+    "azn-ips-nat",
+    "azn-hybrid"
+  ]
+}

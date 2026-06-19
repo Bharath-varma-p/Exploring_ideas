@@ -1,0 +1,72 @@
+{
+  "id": "azx-intro",
+  "title": "Messaging vs Eventing",
+  "lane": "az-integration",
+  "type": "concept",
+  "order": 10,
+  "summary": "Integration begins with one question: are you sending a command that must be handled, or announcing a fact that already happened? That distinction unlocks queues, topics, events, streams, workflows, and gateways.",
+  "tags": [
+    "azure",
+    "integration",
+    "messaging",
+    "eventing",
+    "decoupling",
+    "mental-model"
+  ],
+  "analogy": "Messaging is handing a sealed work order to a responsible team; eventing is ringing a bell so any interested team can react.",
+  "diagram": "flowchart LR\n  Producer[Producer] --> Decision{What is being sent?}\n  Decision -->|Command or work item| Queue[Queue or Service Bus]\n  Decision -->|Fact that happened| Event[Event Grid or Event Hubs]\n  Queue --> Worker[One responsible handler]\n  Event --> Subscribers[Zero many subscribers]",
+  "body": "## First principles\n\nDistributed systems fail at the seams. One service is busy, another is restarting, a third is deployed by a different team, and yet the business process must keep moving. **Integration** is the discipline of making independent pieces cooperate without pretending they are one big program.\n\nThe first split is not product names. It is intent: **message** or **event**.\n\nA message usually means, \"please do this work.\" It carries a payload the receiver is expected to handle: charge this card, resize this image, reserve this seat. An event means, \"this happened.\" The publisher is not asking a specific receiver to do anything; it is announcing a fact: blob created, order paid, sensor reading recorded.\n\n## Why it exists\n\nWithout integration services, applications call each other directly and inherit each other's pain. If checkout calls inventory, email, analytics, and billing synchronously, checkout is only as reliable as the weakest downstream service. A temporary email outage can break buying.\n\nA broker changes the physics. Producers hand off work or facts to Azure, and consumers process at their own pace. This gives you **temporal decoupling**: sender and receiver no longer need to be alive, fast, or deployed at the same moment.\n\n## How it works\n\nAzure has several integration shapes:\n\n- **Storage Queues**: simple, cheap backlog for asynchronous work.\n- **Service Bus Queues**: enterprise commands with stronger broker features like sessions, duplicate detection, transactions, and dead-letter queues.\n- **Service Bus Topics**: one published message copied to multiple subscriptions, each with its own filter and lifecycle.\n- **Event Grid**: discrete event routing for reactive systems: a fact happened, notify handlers.\n- **Event Hubs**: high-throughput event stream ingestion: many facts over time, read by analytics consumers.\n- **Logic Apps**: workflow glue: if this trigger fires, run these connector steps.\n- **API Management**: the front door for synchronous APIs: secure, shape, observe, and publish HTTP contracts.\n\n## Analogy\n\n💡 A **queue** is a job inbox: someone must take each ticket. An **event** is a newsroom bulletin: nobody owes the bulletin a response, but many teams may choose to react. A **stream** is a flight recorder: consumers replay the timeline from their own position. A **workflow** is the operations runbook. A **gateway** is reception, security, and traffic control at the building entrance.\n\n## In practice\n\nA checkout service might use all of these without becoming tangled:\n\n```bash\n# Command: one worker must process payment.\naz servicebus queue create -g <rg> --namespace-name <ns> --name charge-card\n\n# Fact: many systems may react to a paid order.\naz eventgrid event-subscription create --name <sub> --source-resource-id <topic-id> --endpoint <webhook-url>\n```\n\nThe command path protects the business transaction. The event path lets analytics, email, shipping, and fraud systems evolve independently.\n\n## Gotchas\n\nDo not call everything an event because it sounds modern. If the sender expects the receiver to perform required work, model it as a message/command and design for retries, poison messages, and ownership.\n\nDo not use a queue when you need many independent consumers to see the same fact; use a topic or eventing service. Do not use Event Hubs because it is \"fast\" if you actually need per-message settlement and dead-letter handling; speed and command accountability are different jobs.",
+  "teachItBack": "Messaging sends work that some responsible consumer is expected to handle. Eventing announces facts that already happened and lets interested subscribers react. Decoupling matters because producers and consumers can fail, scale, deploy, and evolve independently. Choose the Azure service by the communication shape before you choose it by brand name.",
+  "glossary": [
+    {
+      "term": "Message",
+      "definition": "A payload sent under a contract where a consumer is expected to do something with it."
+    },
+    {
+      "term": "Event",
+      "definition": "A notification that a state change or condition happened; the publisher does not require a specific handler."
+    },
+    {
+      "term": "Temporal decoupling",
+      "definition": "Separating sender and receiver in time so both do not need to be online or equally fast."
+    },
+    {
+      "term": "Broker",
+      "definition": "A managed intermediary that stores, routes, or streams messages/events between producers and consumers."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Dev docs — Azure messaging services documentation",
+      "url": "https://learn.microsoft.com/en-us/azure/messaging-services/",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — Compare Azure messaging services",
+      "url": "https://learn.microsoft.com/en-us/azure/service-bus-messaging/compare-messaging-services",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — Introduction to Azure Service Bus Messaging",
+      "url": "https://learn.microsoft.com/en-us/azure/service-bus-messaging/service-bus-messaging-overview",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — Introduction to Azure Event Grid",
+      "url": "https://learn.microsoft.com/en-us/azure/event-grid/overview",
+      "verified": true
+    },
+    {
+      "title": "John Savill — Azure 360-in-360 overview video",
+      "url": "https://www.youtube.com/watch?v=1NOZv2M3q2k",
+      "verified": true
+    }
+  ],
+  "related": [
+    "azx-queues",
+    "azx-service-bus",
+    "azx-event-grid",
+    "azx-event-hubs",
+    "azx-choosing-integration"
+  ]
+}

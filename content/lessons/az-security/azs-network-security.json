@@ -1,0 +1,68 @@
+{
+  "id": "azs-network-security",
+  "title": "Network Security as a Defense Layer",
+  "lane": "az-security",
+  "type": "concept",
+  "order": 70,
+  "summary": "Through a security lens, the network is one ring in defense in depth: a stack of controls — NSGs, Azure Firewall, WAF, DDoS Protection, and Private Link — each defeating a different class of attack. The networking lane covers how they work; here's how to think about them as security.",
+  "tags": [
+    "azure",
+    "security",
+    "network-security",
+    "firewall",
+    "private-link"
+  ],
+  "analogy": "Network security is layered building security: DDoS Protection is the crowd barrier stopping a mob from jamming the entrance, the Firewall is the front-desk guard checking everyone in and out, NSGs are keycard locks on each interior door, the WAF is the bouncer frisking visitors for weapons (malicious requests), and Private Link is a private underground tunnel so sensitive deliveries never touch the public street at all.",
+  "diagram": "flowchart TD\n  NET[Internet] --> DDOS[DDoS Protection: absorb volumetric floods]\n  DDOS --> WAF[WAF: block app-layer attacks - SQLi, XSS]\n  WAF --> FW[Azure Firewall: central egress/ingress filtering]\n  FW --> NSG[NSG: subnet/NIC allow-deny rules]\n  NSG --> WL[Workload]\n  WL -.private IP only.-> PL[Private Link to PaaS - no public endpoint]",
+  "body": "## First principles\n\nEven in a Zero Trust world where identity is the primary perimeter, the network still matters — because *assume breach* means you want an attacker who lands somewhere to be boxed in, not free to roam. The network is where you **segment** (limit lateral movement), **filter** (allow only intended traffic), and **hide** (keep sensitive services off the public internet entirely). This lesson is deliberately a *security recap* of networking: the **🌐 Networking lane** teaches how VNets, subnets, and routing actually work. Here we only ask one question of each tool: *which attack does this layer stop?*\n\n## Why it exists\n\nIf every resource had a public IP and accepted traffic from anywhere, one exposed port is all an attacker needs. Historically, breaches spread because internal networks were flat: get a foothold on one machine and you could reach everything else. Network security controls exist to break that — to make the network itself enforce least privilege, so reachability is a deliberate decision, not an accident. 'It's only reachable because someone explicitly allowed it' is the goal.\n\n## How it works: the layers, by the attack they stop\n\nLine them up from the outside in, each defeating a *different* threat — that independence is what makes them defense in depth rather than redundancy:\n\n- **DDoS Protection** — stops **volumetric floods**. Attackers fire massive traffic to exhaust your capacity and knock you offline. Azure's platform provides basic DDoS protection for free; **DDoS Protection (Network/IP tiers)** adds tuned mitigation, telemetry, and cost protection for public-facing apps.\n- **Web Application Firewall (WAF)** — stops **application-layer attacks**. Firewalls and NSGs see IPs and ports, not *intent*. A request to port 443 can still carry SQL injection or cross-site scripting. The WAF (in Application Gateway or Front Door) inspects HTTP payloads and blocks known web exploits (e.g. the OWASP rule set).\n- **Azure Firewall** — **central, stateful filtering** of traffic in and out of your networks, with FQDN/application rules, threat intelligence feeds, and centralized logging. It's the managed front-desk guard for whole networks, especially controlling *egress* (what your workloads are allowed to call out to).\n- **Network Security Groups (NSGs)** — **fine-grained segmentation**. Simple allow/deny rules on subnets and NICs (by IP, port, protocol). They're how you stop lateral movement: the web tier can reach the app tier on one port, but nothing can reach the database tier except the app tier. Cheap, everywhere, essential.\n- **Private Link / Private Endpoints** — **removes public exposure entirely**. Instead of reaching a PaaS service (storage, SQL, Key Vault) over its public endpoint, Private Link gives it a *private IP inside your VNet*, so traffic never traverses the public internet. The strongest control is the attack surface that doesn't exist.\n\nNotice these are complementary, not interchangeable: a WAF won't stop a volumetric flood, an NSG won't parse a SQL-injection payload, and Private Link won't help a service that must stay public. You layer them.\n\n## In practice\n\n```bash\n# NSG rule: only the app subnet may reach SQL (1433); deny the rest\naz network nsg rule create -g <rg> --nsg-name <db-nsg> -n Allow-App-To-SQL \\\n  --priority 100 --access Allow --protocol Tcp --direction Inbound \\\n  --destination-port-ranges 1433 --source-address-prefixes <app-subnet-cidr>\n```\n\nA layered posture for a typical web app: Front Door + **WAF** out front, **DDoS Protection** on the public IP, **Azure Firewall** governing egress, **NSGs** segmenting the web/app/data tiers, and **Private Endpoints** so the database and Key Vault have *no* public endpoint. Each layer assumes the one in front of it failed.\n\n## Gotchas\n\n- **NSGs filter by IP/port, not by content.** They cannot see that an allowed HTTPS request carries an exploit — that's the WAF's job. Don't expect an NSG to do application security.\n- **A WAF in front of a still-public backend is a side door.** If your app's origin remains directly reachable, attackers bypass the WAF and hit it straight on. Lock the backend to accept traffic only from the WAF/Front Door.\n- **Private Endpoints have DNS gotchas.** They work by resolving the service name to a private IP — get the private DNS zone wrong and clients silently fall back to the public endpoint (or fail). DNS is where most Private Link setups break.\n- **Free DDoS basic ≠ tuned protection.** The platform absorbs broad attacks, but app-specific volumetric defense, alerting, and cost protection need the paid tier. Know which you have before an attack tells you.\n- **Network controls complement identity — they don't replace it.** Reaching a service is not the same as being authorized to use it. You still need RBAC and authentication behind the network layer; that's Zero Trust.",
+  "teachItBack": "Through a security lens, the Azure network is one ring of defense in depth, and each control stops a different class of attack: DDoS Protection absorbs volumetric floods, the WAF blocks application-layer exploits like SQL injection, Azure Firewall centrally filters ingress and egress, NSGs segment traffic to stop lateral movement, and Private Link removes a service's public endpoint entirely. They're complementary, not interchangeable — you stack them, and each assumes the layer in front of it failed. But reachability isn't authorization, so network security always works alongside identity and RBAC, never instead of them; the networking lane covers the mechanics in depth.",
+  "glossary": [
+    {
+      "term": "NSG (Network Security Group)",
+      "definition": "Allow/deny rules on subnets and NICs (by IP, port, protocol) used to segment networks and limit lateral movement."
+    },
+    {
+      "term": "Azure Firewall",
+      "definition": "A managed, stateful firewall for centralized filtering of network traffic, including FQDN-based egress control and threat intelligence."
+    },
+    {
+      "term": "WAF (Web Application Firewall)",
+      "definition": "A control (in Application Gateway or Front Door) that inspects HTTP traffic and blocks web exploits like SQL injection and XSS."
+    },
+    {
+      "term": "DDoS Protection",
+      "definition": "Mitigation against volumetric flooding attacks; a basic tier is free, with paid tiers adding tuned defense, telemetry, and cost protection."
+    },
+    {
+      "term": "Private Link / Private Endpoint",
+      "definition": "Gives a PaaS service a private IP inside your VNet so traffic avoids the public internet, eliminating its public attack surface."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Dev docs — Azure network security overview",
+      "url": "https://learn.microsoft.com/en-us/azure/security/fundamentals/network-overview",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — What is Azure Private Link?",
+      "url": "https://learn.microsoft.com/en-us/azure/private-link/private-link-overview",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — What is Azure Web Application Firewall?",
+      "url": "https://learn.microsoft.com/en-us/azure/web-application-firewall/overview",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — Azure DDoS Protection overview",
+      "url": "https://learn.microsoft.com/en-us/azure/ddos-protection/ddos-protection-overview",
+      "verified": true
+    }
+  ],
+  "related": [
+    "azs-intro",
+    "azs-sentinel",
+    "azs-defender"
+  ]
+}

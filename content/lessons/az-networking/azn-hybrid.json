@@ -1,0 +1,64 @@
+{
+  "id": "azn-hybrid",
+  "title": "Connecting to On-Prem: VPN Gateway vs ExpressRoute (why each)",
+  "lane": "az-networking",
+  "type": "concept",
+  "order": 80,
+  "summary": "Your datacenter and your Azure VNet are two private networks that can't see each other. Two bridges exist: a VPN Gateway (an encrypted tunnel over the public internet) and ExpressRoute (a private, dedicated circuit that never touches the internet). The choice is a trade between cost, bandwidth, and how much you distrust the internet.",
+  "tags": [
+    "azure",
+    "vpn-gateway",
+    "expressroute",
+    "hybrid",
+    "on-premises"
+  ],
+  "analogy": "A VPN Gateway is an armored courier driving your mail down public highways — encrypted, cheap, but sharing the road with everyone. ExpressRoute is a private underground tunnel dug straight from your building to Azure — no public traffic, predictable, fast, and far more expensive to build.",
+  "diagram": "flowchart LR\n  subgraph OnPrem[On-premises datacenter]\n    DC[Servers + VPN device / edge router]\n  end\n  subgraph Azure[Azure region]\n    GW[Gateway in GatewaySubnet]\n    VNet[Hub VNet]\n  end\n  DC -->|Option A: IPsec tunnel over Internet| GW\n  DC -->|Option B: ExpressRoute private circuit via partner| GW\n  GW --> VNet",
+  "body": "## First principles\n\nYour on-prem network and your Azure VNet are both *private* networks with their own address spaces. By default they have no idea the other exists — there's no path between them. To make a server in your datacenter talk privately to a VM in Azure, you must build a **bridge** and teach both sides to route across it. There are exactly two kinds of bridge, and they differ in one fundamental way: **does the traffic cross the public internet or not?**\n\n## Why it exists\n\nMost organizations don't move to the cloud overnight — they run **hybrid** for years. Identity servers, legacy databases, and file shares stay on-prem while new workloads go to Azure, and the two must communicate as one network. The question is how much you're willing to pay (in money and effort) for privacy, bandwidth, and predictability.\n\n- If you just need a secure connection and can tolerate the internet's variable latency, you want the cheap, fast-to-stand-up option: a **VPN Gateway**.\n- If you move large volumes, need consistent low latency, have compliance rules against internet transit, or want an SLA you can stake production on, you want the premium option: **ExpressRoute**.\n\nBoth solve \"connect on-prem to Azure privately.\" They differ entirely on *how*.\n\n## How it works\n\n**VPN Gateway (encrypted tunnel over the internet).** You deploy a **virtual network gateway** (of type VPN) into a dedicated subnet that must be named **`GatewaySubnet`**. On-prem you have a compatible VPN device. The two establish an **IPsec/IKE** tunnel: traffic is encrypted, shot across the ordinary public internet, and decrypted on the far side. Flavors:\n\n- **Site-to-Site (S2S):** datacenter ↔ Azure, the classic hybrid bridge.\n- **Point-to-Site (P2S):** a single laptop ↔ Azure, for individual remote developers.\n\nBandwidth depends on the gateway **SKU** (roughly hundreds of Mbps to a few Gbps), and because it rides the public internet, latency is *best-effort* — you can't promise a number. Quick to deploy, low cost, encrypted by design.\n\n**ExpressRoute (private dedicated circuit).** You don't use the public internet at all. Through a **connectivity provider** you provision a private circuit that connects your network to Microsoft's edge at a peering location. Traffic flows over this dedicated path into Azure. Because it bypasses the internet:\n\n- **Bandwidth** is high and provisioned (50 Mbps up to 10 Gbps, or 100 Gbps on ExpressRoute Direct).\n- **Latency** is low and *consistent* — predictable enough for chatty, latency-sensitive systems.\n- **Reliability** carries a strong SLA, and the traffic never traverses the public internet, which satisfies many compliance regimes.\n- It can also reach Microsoft 365 and other Microsoft services privately, not just your VNet.\n\nThe cost: ExpressRoute involves a provider, a circuit, port fees, and lead time measured in weeks — versus a VPN you can spin up in an hour. A common best practice is to use **ExpressRoute as primary with a VPN Gateway as encrypted failover**, so a circuit problem doesn't sever hybrid connectivity.\n\nIn a **hub-and-spoke** design, the gateway (VPN or ExpressRoute) lives in the **hub**, and spokes reach on-prem through it via **gateway transit** — one bridge serving every workload.\n\n## In practice\n\n```bash\n# VPN Gateway needs a dedicated subnet literally named GatewaySubnet.\naz network vnet subnet create \\\n  --resource-group <rg> --vnet-name <hub-vnet> \\\n  --name GatewaySubnet --address-prefix 10.0.255.0/27\n\n# Create the VPN gateway (deployment takes ~30-45 min).\naz network vnet-gateway create \\\n  --resource-group <rg> --name <vpn-gw> \\\n  --vnet <hub-vnet> --gateway-type Vpn --vpn-type RouteBased \\\n  --sku VpnGw2 --public-ip-addresses <gw-pip>\n```\n\nFrom there you define a **local network gateway** (describing your on-prem side) and a **connection** with a shared key to bring the tunnel up. ExpressRoute instead starts with `az network express-route create` and coordination with your provider.\n\n## Gotchas\n\n- **The subnet must be named exactly `GatewaySubnet`.** Azure looks for that name; anything else and gateway deployment fails. Size it at least `/27`.\n- **Gateways are slow to deploy and not free.** A gateway takes tens of minutes to provision and bills hourly by SKU. Pick the SKU for your bandwidth/SLA needs.\n- **VPN latency is best-effort.** It's encrypted and reliable enough for most, but you cannot promise a latency number over the public internet — that's what ExpressRoute is for.\n- **ExpressRoute is private but NOT encrypted by default.** \"Doesn't cross the internet\" is not the same as \"encrypted.\" For end-to-end encryption over ExpressRoute you add MACsec/IPsec on top.\n- **ExpressRoute needs a provider and lead time.** It's weeks, not minutes — plan ahead. Many teams run VPN first, then cut over to ExpressRoute.\n- **Put the gateway in the hub.** Don't give every spoke its own gateway; use one hub gateway with gateway transit.",
+  "teachItBack": "On-prem and Azure are separate private networks, and you bridge them one of two ways that differ on whether traffic touches the public internet. A VPN Gateway builds an encrypted IPsec tunnel over the internet — cheap, quick to deploy, but with best-effort latency — and lives in a subnet that must be named GatewaySubnet. ExpressRoute provisions a private dedicated circuit through a provider that bypasses the internet entirely, giving high bandwidth, consistent low latency, and a strong SLA, at higher cost and weeks of lead time. Many production designs run ExpressRoute as primary with a VPN as failover, and in hub-and-spoke the single gateway sits in the hub and serves all spokes via gateway transit.",
+  "glossary": [
+    {
+      "term": "VPN Gateway",
+      "definition": "A virtual network gateway that builds an encrypted IPsec/IKE tunnel between on-prem (or a client) and an Azure VNet over the public internet."
+    },
+    {
+      "term": "Site-to-Site / Point-to-Site",
+      "definition": "S2S connects a whole datacenter to Azure; P2S connects an individual device to Azure."
+    },
+    {
+      "term": "ExpressRoute",
+      "definition": "A private, dedicated circuit (via a connectivity provider) connecting on-prem to Microsoft's network without traversing the public internet."
+    },
+    {
+      "term": "GatewaySubnet",
+      "definition": "The mandatory, specially-named subnet a virtual network gateway must be deployed into."
+    },
+    {
+      "term": "Local network gateway",
+      "definition": "An Azure object that represents your on-premises network (its public IP and address ranges) for a VPN connection."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Dev docs — About Azure VPN Gateway",
+      "url": "https://learn.microsoft.com/en-us/azure/vpn-gateway/vpn-gateway-about-vpngateways",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — What is Azure ExpressRoute?",
+      "url": "https://learn.microsoft.com/en-us/azure/expressroute/expressroute-introduction",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — Connect an on-premises network to Azure (decision guide)",
+      "url": "https://learn.microsoft.com/en-us/azure/architecture/reference-architectures/hybrid-networking/",
+      "verified": true
+    }
+  ],
+  "related": [
+    "azn-peering",
+    "azn-vnet",
+    "azn-private-link",
+    "azn-firewall-waf"
+  ]
+}
