@@ -25,6 +25,7 @@ with **managed identity only — never keys**.
 | **182 quiz questions** | Instant-feedback drills, per-lane quizzes, and a final self-test |
 | **Flashcard drill mode** | Auto-generated from every lesson's drills, filterable by lane |
 | **Progress tracking** | Mark concepts learned; persists in `localStorage` |
+| **Change catalog** | One place to see merged updates, with category filters and live GitHub refresh |
 | **Command palette** | `⌘K` / `Ctrl+K` global search across patterns, teardowns, terms, and the Foundry track |
 
 ### The lanes
@@ -104,6 +105,7 @@ content/
 
 This repo ships a GitHub Actions workflow ([`.github/workflows/deploy.yml`](.github/workflows/deploy.yml))
 that builds the content bundle and deploys on every push to `main`.
+That same build now regenerates a structured **Change Catalog** from git history, so each merge to `main` updates the catalog automatically.
 
 **One-time setup:**
 1. Push this code to GitHub on the **`main`** branch (the repo must be **public** for free Pages).
@@ -139,7 +141,8 @@ You can also trigger a deploy manually from the **Actions** tab → *Deploy to G
 
 `tools/build.mjs` (zero-dep Node) walks `content/lessons/**`, validates every file against the schema
 (required fields, unique kebab-case ids, valid enums, in-range quiz answers, lane/folder match), then emits
-`content/data.json` (the bundle the site loads) and `content/manifest.json`. CI runs it before every deploy.
+`content/data.json` (the bundle the site loads) and `content/manifest.json`. It also builds a structured
+change catalog (recent commits, merge detection, impacted areas) inside `content/data.json`. CI runs it before every deploy.
 
 ---
 

@@ -6,14 +6,18 @@
  * Extensibility: drop a JSON file in content/lessons/<lane>/ and re-run.
  * To add a lane, add an entry to LANES below and create the matching folder.
  */
-import { readdir, readFile, writeFile, stat } from "node:fs/promises";
+import { readdir, readFile, writeFile } from "node:fs/promises";
+import { execFile } from "node:child_process";
 import { join, dirname, basename } from "node:path";
 import { fileURLToPath } from "node:url";
+import { promisify } from "node:util";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const LESSONS_DIR = join(ROOT, "content", "lessons");
 const OUT_DATA = join(ROOT, "content", "data.json");
 const OUT_MANIFEST = join(ROOT, "content", "manifest.json");
+const CHANGE_CATALOG_LIMIT = 40;
+const execFileAsync = promisify(execFile);
 
 // ---- Lane registry: edit here to add a lane ----
 const LANES = [
@@ -45,6 +49,154 @@ const TYPES = new Set(["concept", "pattern", "teardown", "framework", "blueprint
 
 const errors = [];
 const warnings = [];
+
+function parseRepoSlug(remote = "") {
+  const match = String(remote).trim().match(/github\.com[:/]([^/]+\/[^/.]+)(?:\.git)?$/i);
+  return match ? match[1] : null;
+}
+
+async function readRepoInfo() {
+  let branch = "unknown";
+  try {
+    const { stdout } = await execFileAsync("git", ["branch", "--show-current"], { cwd: ROOT });
+    branch = stdout.trim() || branch;
+  } catch {
+    // optional outside a git checkout
+  }
+
+  let slug = null;
+  try {
+    const { stdout } = await execFileAsync("git", ["remote", "get-url", "origin"], { cwd: ROOT });
+    slug = parseRepoSlug(stdout);
+  } catch {
+    // optional outside a git checkout
+  }
+
+  if (!slug) return { branch, slug: null, owner: null, name: null };
+  const [owner, name] = slug.split("/");
+  return { branch, slug, owner, name };
+}
+
+function classifyChange(subject = "", isMerge = false) {
+  if (isMerge) return "merge";
+  const s = String(subject).trim().toLowerCase();
+  if (/^feat(\(|:|!)/.test(s) || s.startsWith("feat ")) return "feature";
+  if (/^fix(\(|:|!)/.test(s) || s.startsWith("fix ")) return "fix";
+  if (/^docs(\(|:|!)/.test(s) || s.startsWith("docs ")) return "docs";
+  if (/^build(\(|:|!)/.test(s) || s.startsWith("build ")) return "build";
+  if (/^content(\(|:|!)/.test(s) || s.startsWith("content ")) return "content";
+  if (/^chore(\(|:|!)/.test(s) || s.startsWith("chore ")) return "chore";
+  return "other";
+}
+
+function inferMergeDomain(subject = "") {
+  const match = String(subject).match(/ from ([^\s]+)/i);
+  if (!match) return null;
+  const ref = match[1].trim();
+  const parts = ref.split("/");
+  return parts[parts.length - 1] || ref;
+}
+
+function inferAreas(files = []) {
+  const out = [];
+  const seen = new Set();
+  for (const file of files) {
+    const top = String(file).split("/")[0];
+    if (!top || seen.has(top)) continue;
+    seen.add(top);
+    out.push(top);
+    if (out.length >= 6) break;
+  }
+  return out;
+}
+
+async function resolveCatalogBranch(currentBranch = "") {
+  const envBranch = process.env.CHANGE_CATALOG_BRANCH || process.env.GITHUB_REF_NAME || "";
+  const candidates = [envBranch, "main", "origin/main", currentBranch, "HEAD"].filter(Boolean);
+  const seen = new Set();
+  for (const candidate of candidates) {
+    if (seen.has(candidate) || candidate === "unknown") continue;
+    seen.add(candidate);
+    try {
+      await execFileAsync("git", ["rev-parse", "--verify", "--quiet", candidate], { cwd: ROOT });
+      return candidate;
+    } catch {
+      // keep trying fallbacks
+    }
+  }
+  return "HEAD";
+}
+
+async function buildChangeCatalog(repo) {
+  const generatedAt = new Date().toISOString();
+  const catalogBranch = await resolveCatalogBranch(repo.branch);
+  const catalog = {
+    generatedAt,
+    source: "git-log",
+    branch: catalogBranch,
+    limit: CHANGE_CATALOG_LIMIT,
+    entries: [],
+  };
+
+  try {
+    const format = "@@@%H%x1f%h%x1f%P%x1f%an%x1f%ae%x1f%ad%x1f%s";
+    const { stdout } = await execFileAsync(
+      "git",
+      ["log", catalogBranch, "-n", String(CHANGE_CATALOG_LIMIT), "--date=iso-strict", "--name-only", `--pretty=format:${format}`],
+      { cwd: ROOT, maxBuffer: 20 * 1024 * 1024 }
+    );
+
+    const lines = stdout.split("\n");
+    let current = null;
+    const flush = () => {
+      if (!current) return;
+      const parentCount = current.parents.split(/\s+/).filter(Boolean).length;
+      const isMerge = parentCount > 1 || /^merge\b/i.test(current.subject);
+      catalog.entries.push({
+        sha: current.sha,
+        shortSha: current.shortSha,
+        subject: current.subject,
+        body: "",
+        author: { name: current.authorName, email: current.authorEmail },
+        committedAt: current.committedAt,
+        isMerge,
+        mergeDomain: isMerge ? inferMergeDomain(current.subject) : null,
+        category: classifyChange(current.subject, isMerge),
+        filesChanged: current.files.length,
+        areas: inferAreas(current.files),
+        files: current.files.slice(0, 25),
+        commitUrl: repo.slug ? `https://github.com/${repo.slug}/commit/${current.sha}` : null,
+      });
+      current = null;
+    };
+
+    for (const rawLine of lines) {
+      if (rawLine.startsWith("@@@")) {
+        flush();
+        const [sha, shortSha, parents, authorName, authorEmail, committedAt, subject] = rawLine.slice(3).split("\x1f");
+        current = {
+          sha,
+          shortSha,
+          parents,
+          authorName,
+          authorEmail,
+          committedAt,
+          subject: (subject || shortSha || "").trim(),
+          files: [],
+        };
+        continue;
+      }
+      if (!current) continue;
+      const file = rawLine.trim();
+      if (file) current.files.push(file);
+    }
+    flush();
+  } catch (e) {
+    warnings.push(`change catalog not generated from git history — ${e.message}`);
+  }
+
+  return catalog;
+}
 
 async function walk(dir) {
   let entries;
@@ -87,6 +239,7 @@ async function main() {
   const files = await walk(LESSONS_DIR);
   const lessons = [];
   const ids = new Map();
+  const repo = await readRepoInfo();
 
   for (const file of files) {
     let raw;
@@ -144,16 +297,24 @@ async function main() {
     } catch (e) { warnings.push(`${f.replace(ROOT + "/", "")}: bad quiz bank — ${e.message}`); }
   }
   const bankQ = Object.values(quizBanks).reduce((n, b) => n + b.questions.length, 0);
+  const changeCatalog = await buildChangeCatalog(repo);
 
   const laneCounts = Object.fromEntries(LANES.map((l) => [l.id, lessons.filter((x) => x.lane === l.id).length]));
   const data = {
     generatedAt: new Date().toISOString(),
+    repo,
+    changeCatalog,
     lanes: LANES.map((l) => ({ ...l, count: laneCounts[l.id] || 0 })),
     lessons,
     glossary,
     quiz,
     quizBanks,
-    stats: { lessons: lessons.length, glossaryTerms: glossary.length, quizQuestions: quiz.length + bankQ },
+    stats: {
+      lessons: lessons.length,
+      glossaryTerms: glossary.length,
+      quizQuestions: quiz.length + bankQ,
+      changeEntries: changeCatalog.entries.length,
+    },
   };
   const manifest = {
     generatedAt: data.generatedAt,
