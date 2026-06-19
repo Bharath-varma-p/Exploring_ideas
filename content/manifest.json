@@ -1,9 +1,9 @@
 {
-  "generatedAt": "2026-06-19T03:19:12.445Z",
+  "generatedAt": "2026-06-19T03:25:25.341Z",
   "stats": {
-    "lessons": 193,
-    "glossaryTerms": 513,
-    "quizQuestions": 186
+    "lessons": 196,
+    "glossaryTerms": 519,
+    "quizQuestions": 189
   },
   "lanes": [
     {
@@ -34,7 +34,7 @@
     {
       "id": "foundry-core",
       "title": "Azure AI Foundry & SDK",
-      "count": 27
+      "count": 30
     },
     {
       "id": "foundry-auth",
@@ -629,6 +629,27 @@
       "lane": "foundry-core",
       "type": "concept",
       "file": "content/lessons/foundry-core/fdy-error-handling.json"
+    },
+    {
+      "id": "fdy-create-foundry-resource-and-project",
+      "title": "Create a Foundry Resource and Project — Portal, CLI & Bicep",
+      "lane": "foundry-core",
+      "type": "concept",
+      "file": "content/lessons/foundry-core/fdy-create-foundry-resource-and-project.json"
+    },
+    {
+      "id": "fdy-deploy-a-model-in-foundry",
+      "title": "Deploy a Model in Foundry and Call It Keyless",
+      "lane": "foundry-core",
+      "type": "concept",
+      "file": "content/lessons/foundry-core/fdy-deploy-a-model-in-foundry.json"
+    },
+    {
+      "id": "fdy-foundry-connections-and-rbac",
+      "title": "Wire Connections and Assign RBAC to the Managed Identity",
+      "lane": "foundry-core",
+      "type": "concept",
+      "file": "content/lessons/foundry-core/fdy-foundry-connections-and-rbac.json"
     },
     {
       "id": "fdy-authn-vs-authz",
