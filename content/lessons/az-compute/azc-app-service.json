@@ -1,0 +1,70 @@
+{
+  "id": "azc-app-service",
+  "title": "App Service: Web Hosting Without the Server Chores",
+  "lane": "az-compute",
+  "type": "concept",
+  "order": 40,
+  "summary": "Azure App Service is managed hosting for web apps, APIs, and containers. The key object is the App Service Plan: the paid compute pool your apps run on.",
+  "tags": [
+    "azure",
+    "compute",
+    "app-service",
+    "paas",
+    "web-apps",
+    "deployment-slots"
+  ],
+  "analogy": "App Service is a managed theater: you bring the show, Azure runs the building, stage lights, entrances, and backstage swap before opening night.",
+  "diagram": "flowchart TD\n  Plan[App Service Plan: paid workers SKU region] --> App1[Web App]\n  Plan --> App2[API App]\n  Plan --> Slot[Staging Slot]\n  Repo[Code or container image] --> Slot\n  Slot -- swap --> Prod[Production Slot]\n  Plan --> Scale[Scale up SKU or scale out instances]",
+  "body": "## First principles\n\nA web app needs a process that listens for HTTP, a runtime, TLS, custom domains, deployment, logs, restarts, scale, and a public or private entry point. None of those require you to personally operate a general-purpose server.\n\n**Azure App Service** exists for the common case: “I have a web app or API. Please run it reliably while I focus on the application.”\n\n## Why it exists\n\nWith raw VMs, web hosting becomes infrastructure work: install runtimes, patch OS packages, configure IIS/Nginx, rotate certificates, wire deployment, build health checks, and script scale-out. App Service compresses those chores into platform features.\n\nYou still make architectural choices, but they are app-shaped choices: runtime stack, environment variables, identity, networking, deployment source, slots, scale, and plan SKU.\n\n## How it works\n\nThe important concept is the **App Service Plan**. It defines the compute resources: region, operating system, pricing tier, worker size, and instance count. One or more apps can run in the same plan. If three apps share a plan, they share that paid capacity; if one app burns CPU, neighbors can feel it.\n\nAn **App Service app** is the application container: settings, hostname, deployment configuration, identity, and runtime. It can run code stacks such as .NET, Java, Node.js, Python, PHP, or a custom container.\n\n**Deployment slots** are separate live environments under the same app, often `staging` and `production`. Deploy to staging, warm it up, validate it, then swap. The hostname routing flips faster and safer than copying files directly into production.\n\n## In practice\n\n```bash\naz appservice plan create   --resource-group <rg>   --name <plan>   --sku P1v3   --is-linux\n\naz webapp create   --resource-group <rg>   --plan <plan>   --name <app-name>   --runtime \"NODE:20-lts\"\n```\n\n## Gotchas\n\nApp Service is not “serverless” in the pure sense: the plan is capacity you provision and pay for, even when traffic is quiet, unless you are using tiers/features with their own economics. Slots are not free magic; slot counts depend on tier and slots share plan resources. And App Service is excellent for web-shaped workloads, but not a replacement for Kubernetes when you need custom orchestration primitives.",
+  "teachItBack": "App Service is PaaS for web apps and APIs. The App Service Plan is the paid worker pool; apps and slots consume that pool. Deployment slots let you stage and swap releases with less production risk. Use App Service when the workload is HTTP/web-shaped and you want Azure to own most hosting mechanics.",
+  "glossary": [
+    {
+      "term": "App Service",
+      "definition": "Azure managed platform for hosting web apps, APIs, mobile back ends, and custom containers."
+    },
+    {
+      "term": "App Service Plan",
+      "definition": "The compute pool, region, OS, pricing tier, and scale settings used by App Service apps."
+    },
+    {
+      "term": "Deployment slot",
+      "definition": "A separate live app environment that can be swapped with production for safer releases."
+    },
+    {
+      "term": "Scale up",
+      "definition": "Changing to a larger SKU or worker size."
+    },
+    {
+      "term": "Scale out",
+      "definition": "Increasing the number of worker instances."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Dev docs — Overview of Azure App Service",
+      "url": "https://learn.microsoft.com/en-us/azure/app-service/overview",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — Azure App Service plans",
+      "url": "https://learn.microsoft.com/en-us/azure/app-service/overview-hosting-plans",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — Set up staging environments in Azure App Service",
+      "url": "https://learn.microsoft.com/en-us/azure/app-service/deploy-staging-slots",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — Autoscale overview",
+      "url": "https://learn.microsoft.com/en-us/azure/azure-monitor/autoscale/autoscale-overview",
+      "verified": true
+    }
+  ],
+  "related": [
+    "azc-intro",
+    "azc-functions",
+    "azc-container-apps",
+    "azc-choosing-compute"
+  ]
+}

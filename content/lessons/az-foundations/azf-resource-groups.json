@@ -1,0 +1,58 @@
+{
+  "id": "azf-resource-groups",
+  "title": "Resource groups, up close",
+  "lane": "az-foundations",
+  "type": "concept",
+  "order": 60,
+  "summary": "A resource group is a container for resources that share a lifecycle — deployed and deleted together. It's the everyday unit of organization in Azure: cheap, free, and the right home for one app or one environment. Plus the nuance everyone trips on: the group has its own region, separate from the resources inside it.",
+  "tags": [
+    "azure",
+    "resource-groups",
+    "lifecycle",
+    "organization"
+  ],
+  "analogy": "A resource group is a moving box labeled for one room: everything that ships and gets thrown out together goes in it — and the label has a 'packed-in city' stamp (the group's region) even though the contents came from all over.",
+  "diagram": "flowchart TD\n  RG[Resource Group: shop-prod\\nmetadata stored in: East US] --> A[App Service - West Europe]\n  RG --> B[SQL Database - West Europe]\n  RG --> C[Storage Account - West Europe]\n  RG --> D[Application Insights]\n  Del[Delete resource group] -.removes ALL contents.-> A\n  Del -.-> B\n  Del -.-> C",
+  "body": "## First principles\n\nResources rarely live alone. A web app needs a database, some storage, a few networking bits, and monitoring — and they're born together, change together, and should die together when the project ends. You need a **unit of shared fate**. That unit is the **resource group**: the smallest container in which you naturally manage a set of resources as one thing.\n\n## Why it exists\n\nWithout grouping, a subscription is a flat sprawl of hundreds of resources with no notion of \"these belong to the same app.\" Cleaning up an old project means hunting down every stray piece and hoping you got them all (leftover resources quietly bill you forever). Granting a team access to *their* app means listing resources one by one. Applying a tag or a role to a logical unit is impossible because no logical unit exists.\n\nThe resource group creates that logical unit. **Delete the group → every resource in it is gone**, cleanly, no orphans. Grant a role on the group → it covers the whole app. Tag the group → reporting rolls up. It turns a pile of resources into a managed bundle.\n\n## How it works\n\n- **Every resource belongs to exactly one resource group.** No resource is groupless, and it can't be in two groups at once.\n- **The group is a management + RBAC + policy scope.** Assign roles or policy at the group and they inherit to every resource inside (see the hierarchy lesson).\n- **Lifecycle is the organizing principle.** Put things together when they share a deployment cadence and a deletion moment. A common pattern is *one resource group per app per environment*: `shop-dev`, `shop-prod`.\n- **The region-metadata nuance.** A resource group itself has a **location** — but that location only stores the group's *metadata* (its record in Azure Resource Manager). The resources inside can live in **completely different regions**. So a group stamped *East US* can legitimately hold resources running in *West Europe*. Why care? If the region holding a group's metadata has an outage, management operations on the group can be affected even if the resources themselves are elsewhere — so teams often align the metadata region sensibly rather than at random.\n\n## In practice\n\n```bash\n# Create a group (this 'location' is the metadata home)\naz group create --name shop-prod --location eastus\n\n# Put resources in it — they can be in OTHER regions\naz webapp create --resource-group shop-prod --plan <plan> --name <app>   # could be westeurope\n\n# Tear the whole app down in one shot — no orphans left billing you\naz group delete --name shop-prod --yes --no-wait\n\n# Need to reorganize? Move resources between groups/subscriptions\naz resource move --destination-group <new-rg> --ids <resource-id-1> <resource-id-2>\n```\n\n## Gotchas\n\n- **The group's region ≠ the resources' region.** This is the classic confusion. The group location is just where its metadata record lives; contents can be anywhere. Don't assume \"resource group in East US\" means \"app runs in East US.\"\n- **Moving resources is real but fiddly.** `az resource move` works, but **not every resource type supports moving**, the operation locks the resources during the move, and some references (like certain IDs) must be updated afterward. Check the move-support docs before relying on it; design groups well up front to avoid moves.\n- **Group by lifecycle, not by type.** A group called \"all-databases\" spanning ten unrelated apps is an anti-pattern — you can't delete or grant cleanly. Group what's born and buried together.\n- **Deleting is total and (mostly) irreversible.** `az group delete` removes *everything* inside. Production groups deserve a **resource lock** (CanNotDelete) to prevent a fat-fingered wipe.",
+  "teachItBack": "A resource group is the everyday container for resources that share a lifecycle — they deploy together and, when you delete the group, they all disappear together with no orphans left billing you. Every resource lives in exactly one group, and the group doubles as a scope for access and policy. The nuance to remember: the group has its own region that only stores its metadata, so the resources inside can run in entirely different regions — group by shared fate, not by location or type.",
+  "glossary": [
+    {
+      "term": "Resource group",
+      "definition": "A container holding resources that share a lifecycle and a common management, access, and policy scope."
+    },
+    {
+      "term": "Lifecycle",
+      "definition": "The span from creation to deletion that a set of resources shares; the basis for deciding what belongs in a group."
+    },
+    {
+      "term": "Resource group location",
+      "definition": "The region that stores the group's metadata record; independent of where the contained resources physically run."
+    },
+    {
+      "term": "Resource lock",
+      "definition": "A CanNotDelete or ReadOnly lock applied to a group or resource to prevent accidental deletion or change."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Dev docs — Manage resource groups (portal)",
+      "url": "https://learn.microsoft.com/en-us/azure/azure-resource-manager/management/manage-resource-groups-portal",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — Azure Resource Manager overview (resource groups)",
+      "url": "https://learn.microsoft.com/en-us/azure/azure-resource-manager/management/overview",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — Move resources to a new resource group or subscription",
+      "url": "https://learn.microsoft.com/en-us/azure/azure-resource-manager/management/move-resource-group-and-subscription",
+      "verified": true
+    }
+  ],
+  "related": [
+    "azf-hierarchy",
+    "azf-subscriptions-tenants",
+    "azf-regions-zones"
+  ]
+}

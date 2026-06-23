@@ -1,0 +1,52 @@
+{
+  "id": "fdy-tracing-observability",
+  "title": "Tracing and Observability",
+  "lane": "foundry-mcp",
+  "type": "concept",
+  "order": 212,
+  "summary": "Microsoft Foundry tracing captures inputs, outputs, tool usage, retries, latency, token consumption, and costs using OpenTelemetry concepts such as traces and spans, with storage and inspection through Foundry and Application Insights.",
+  "tags": [
+    "observability",
+    "opentelemetry",
+    "tracing"
+  ],
+  "analogy": "Tracing is the mission recorder. It shows who asked, which route was chosen, which tools fired, how long each step took, and where the mission failed.",
+  "diagram": "graph TD\nRequest[User request] --> Trace[Trace]\nTrace --> SpanA[Model span]\nTrace --> SpanB[Tool call span]\nTrace --> SpanC[MCP server span]\nTrace --> Metrics[Latency tokens cost]\nTrace --> AppInsights[Application Insights]",
+  "body": "## First principles\n\nFirst principles: you cannot operate what you cannot see. Agent failures often hide in intermediate tool calls, bad arguments, slow backends, or missing context, so every step needs telemetry.\n\n## Definition\n\nMicrosoft Foundry tracing captures inputs, outputs, tool usage, retries, latency, token consumption, and costs using OpenTelemetry concepts such as traces and spans, with storage and inspection through Foundry and Application Insights. Prompt-agent tracing is generally available, while some hosted and external agent tracing is preview.\n\n## How it fits together\n\nEnable tracing before production. Redact sensitive content from prompts, tool arguments, and span attributes. Use trace IDs in support tickets so engineers can jump from a bad answer to the exact model and tool sequence.\n\n## Worked example\n\n```python\n# pip install opentelemetry-api\n# Foundry provides platform tracing; app spans help correlate your UI or API request with Foundry work.\nfrom opentelemetry import trace\n\ntracer = trace.get_tracer(\"foundry-sdk-academy\")\n\ndef ask_agent(openai, agent_name: str, question: str):\n    with tracer.start_as_current_span(\"academy.ask_agent\") as span:\n        span.set_attribute(\"agent.name\", agent_name)\n        span.set_attribute(\"question.length\", len(question))\n        response = openai.responses.create(\n            input=question,\n            extra_body={\"agent_reference\": {\"name\": agent_name, \"type\": \"agent_reference\"}},\n        )\n        span.set_attribute(\"response.id\", response.id)\n        return response.output_text\n```\n\n*Add application side OpenTelemetry span around an agent request*",
+  "drills": [
+    {
+      "q": "What does a span represent?",
+      "a": "One operation inside a trace, such as a model call or tool call."
+    },
+    {
+      "q": "Why redact telemetry?",
+      "a": "Traces may contain prompts, outputs, tool arguments, and sensitive data."
+    },
+    {
+      "q": "Where can Foundry traces be inspected?",
+      "a": "In the Foundry portal and Azure Monitor Application Insights when configured."
+    }
+  ],
+  "teachItBack": "Tracing is the black box for agent missions. It turns invisible reasoning and tool calls into inspectable spans. Production agents need tracing, redaction, and access controls from day one.",
+  "glossary": [
+    {
+      "term": "Trace",
+      "definition": "End-to-end record of one request or workflow."
+    },
+    {
+      "term": "Span",
+      "definition": "Single timed operation within a trace."
+    },
+    {
+      "term": "OpenTelemetry",
+      "definition": "Open standard for telemetry signals such as traces and metrics."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Microsoft Learn: Agent tracing in Microsoft Foundry",
+      "url": "https://learn.microsoft.com/en-us/azure/foundry/observability/concepts/trace-agent-concept",
+      "verified": false
+    }
+  ]
+}

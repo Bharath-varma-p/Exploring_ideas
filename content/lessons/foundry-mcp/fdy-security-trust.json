@@ -1,0 +1,71 @@
+{
+  "id": "fdy-security-trust",
+  "title": "Security and Trust",
+  "lane": "foundry-mcp",
+  "type": "concept",
+  "order": 112,
+  "summary": "MCP security guidance emphasizes user consent and control, data privacy, tool safety, sampling controls, and robust authorization. Tool annotations are untrusted unless from trusted servers.",
+  "tags": [
+    "security",
+    "consent",
+    "managed-identity"
+  ],
+  "analogy": "Treat each MCP server like a contractor entering a secure facility. It needs a badge, a job-specific area, an escort for dangerous actions, and a logbook.",
+  "diagram": "graph TD\nUser[User consent]\nHost[Host UI]\nClient[MCP client]\nServer[MCP server]\nAzure[Azure resource]\nUser --> Host\nHost --> Client\nClient --> Server\nServer --> MI[Managed identity token]\nMI --> Azure\nServer --> Audit[Audit log]\nHost --> Confirm[Tool confirmation]",
+  "body": "## First principles\n\nFirst principles: MCP can expose data access and code execution. That means the safe default is not trust; it is explicit consent, least privilege, validation, audit, and clear boundaries. Any server connected to cloud resources becomes part of the user's security chain.\n\n## Definition\n\nMCP security guidance emphasizes user consent and control, data privacy, tool safety, sampling controls, and robust authorization. Tool annotations are untrusted unless from trusted servers. Known risks include prompt injection, accidental data exfiltration, confused deputy problems, token passthrough, SSRF, and overbroad tool permissions. When an MCP server calls Azure resources, prefer managed identity so Azure issues scoped tokens to the workload instead of embedding keys or secrets.\n\n## How it fits together\n\nSecurity is shared. The server validates inputs and enforces access controls. The client shows what tools and data are being exposed. The host asks for consent on sensitive operations. Azure managed identity fits this model because identity is assigned to the running workload and governed by RBAC, reducing secret sprawl.\n\n## Worked example\n\n```python\n# Conceptual Azure-side pattern for a remote MCP server.\n# Do not put API keys, secrets, or service principal credentials in MCP config.\n# In Azure, assign a managed identity to the server workload and grant only\n# the exact RBAC role it needs on the target resource.\n\nfrom azure.identity import DefaultAzureCredential\n\ncredential = DefaultAzureCredential()  # Uses managed identity when running in Azure.\n# Example: pass credential to an Azure SDK client for the specific resource.\n# client = SomeAzureClient(endpoint=\"https://resource.example\", credential=credential)\n```\n\n*Azure access concept using managed identity aware credentials*",
+  "drills": [
+    {
+      "q": "Why should hosts show tool inputs before sensitive calls?",
+      "a": "To prevent malicious or accidental data exfiltration and preserve user control."
+    },
+    {
+      "q": "Why are tool annotations not automatically trusted?",
+      "a": "A malicious server could misdescribe behavior, so clients must treat annotations as untrusted unless the server is trusted."
+    },
+    {
+      "q": "When a server calls Azure, what auth pattern should you prefer?",
+      "a": "Managed identity with least-privilege RBAC, not embedded keys or secrets."
+    }
+  ],
+  "teachItBack": "MCP security starts with consent and least privilege. Tools can run code, resources can reveal data, and prompts can influence behavior, so hosts and servers must validate, disclose, and audit. For Azure-facing servers, managed identity is the forward path because it avoids storing secrets and supports RBAC-scoped access.",
+  "glossary": [
+    {
+      "term": "Prompt injection",
+      "definition": "Malicious instructions in data or tool output that try to override intended behavior."
+    },
+    {
+      "term": "Confused deputy",
+      "definition": "Attack where a trusted component is tricked into using its authority for an attacker."
+    },
+    {
+      "term": "Managed identity",
+      "definition": "Azure workload identity that obtains tokens without application-managed secrets."
+    },
+    {
+      "term": "Token passthrough",
+      "definition": "Forbidden pattern where a server accepts and forwards tokens not issued for that server."
+    }
+  ],
+  "sources": [
+    {
+      "title": "MCP Specification 2025-11-25",
+      "url": "https://modelcontextprotocol.io/specification/2025-11-25.md",
+      "verified": true
+    },
+    {
+      "title": "MCP Tools",
+      "url": "https://modelcontextprotocol.io/specification/2025-11-25/server/tools.md",
+      "verified": true
+    },
+    {
+      "title": "MCP Security Best Practices",
+      "url": "https://modelcontextprotocol.io/docs/tutorials/security/security_best_practices.md",
+      "verified": true
+    },
+    {
+      "title": "MCP Transports",
+      "url": "https://modelcontextprotocol.io/specification/2025-11-25/basic/transports.md",
+      "verified": true
+    }
+  ]
+}

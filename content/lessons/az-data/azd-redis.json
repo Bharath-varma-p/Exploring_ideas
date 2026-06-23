@@ -1,0 +1,33 @@
+{
+  "id": "azd-redis",
+  "title": "Azure Managed Redis: The Memory Cache",
+  "lane": "az-data",
+  "type": "concept",
+  "order": 80,
+  "summary": "A blazing fast, in-memory data store used to cache frequently accessed data, offloading pressure from your primary database.",
+  "tags": ["cache", "redis", "performance", "memory"],
+  "analogy": "Redis is your short-term memory. The SQL database is your filing cabinet. If you need a phone number, you check your memory first; if it's not there, you walk to the cabinet, read it, and keep it in memory for next time.",
+  "diagram": "flowchart TD\n  App[Application] --> Check{Is it in Redis?}\n  Check -- Yes (Cache Hit) --> Return[Return Data instantly]\n  Check -- No (Cache Miss) --> DB[Query heavy Azure SQL DB]\n  DB --> Save[Save result in Redis]\n  Save --> Return",
+  "body": "## First principles\n\nDisk access is slow. Even with Premium SSDs, reading data from a disk takes milliseconds. Reading data directly from RAM takes microseconds. If thousands of users are loading the exact same product catalog page, querying the primary relational database over and over is a massive waste of resources and will eventually crash the database.\n\n## Why it exists\n\nYou need a scratchpad. **Redis** is the industry standard open-source, in-memory data structure store. Microsoft offers **Azure Cache for Redis** (and the newer **Azure Managed Redis**) as a fully managed service so you don't have to configure Redis clusters or patch Linux nodes.\n\n## How it works\n\nRedis is a key-value store. You store a string (or a JSON object) against a key (like `product:123`). \n\nThe standard pattern is the **Cache-Aside pattern**:\n1. The app asks Redis: \"Do you have `product:123`?\"\n2. If yes (**Cache Hit**), the app returns the data instantly. The database does no work.\n3. If no (**Cache Miss**), the app queries Azure SQL, gets the data, writes it into Redis with an expiration timer (Time-To-Live or TTL), and then returns it.\n\nBecause Redis lives entirely in memory, it is violently fast, routinely serving millions of requests per second.\n\n## In practice\n\nBeyond simple caching, Redis is used for:\n- **Session State:** Storing user login sessions so stateless web servers don't forget who you are.\n- **Rate Limiting:** Tracking how many times IP `192.168.1.1` has hit your API in the last minute.\n- **Pub/Sub:** A fast, lightweight messaging system for real-time chat apps.\n\n## Gotchas\n\n- **Volatile by design:** By default, if a Redis node restarts, the data in memory is gone. Do not use Redis as your primary, authoritative database for critical data unless you have specifically configured data persistence (which slows it down).\n- **Stale data:** If someone updates the product price in Azure SQL, the Redis cache will still serve the old price until the TTL expires, unless your application explicitly tells Redis to delete the old key on update (cache invalidation).\n- **Naming shift:** Azure is currently transitioning the product lineup from \"Azure Cache for Redis\" to \"Azure Managed Redis\" to provide better performance and integration with Redis Inc's latest features.",
+  "teachItBack": "Azure Managed Redis is an in-memory key-value store used primarily as a cache. By storing frequently accessed data in RAM, it drastically reduces latency and saves the primary database from being overwhelmed. Applications must manage cache misses and data staleness.",
+  "glossary": [
+    {
+      "term": "Cache Hit / Miss",
+      "definition": "A hit is when requested data is found in the cache. A miss requires falling back to the slower primary database."
+    },
+    {
+      "term": "TTL",
+      "definition": "Time-To-Live. A countdown timer placed on cached data. When it hits zero, Redis deletes the data."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Microsoft Learn: About Azure Cache for Redis",
+      "url": "https://learn.microsoft.com/en-us/azure/azure-cache-for-redis/cache-overview",
+      "verified": true
+    }
+  ],
+  "related": [
+    "azd-choosing-data"
+  ]
+}

@@ -1,0 +1,60 @@
+{
+  "id": "azg-advisor",
+  "title": "Azure Advisor: Your Built-In Cloud Coach",
+  "lane": "az-governance",
+  "type": "concept",
+  "order": 90,
+  "summary": "Azure Advisor analyzes resource configuration and telemetry, then recommends concrete improvements for reliability, security, performance, cost, and operational excellence.",
+  "tags": [
+    "azure",
+    "advisor",
+    "recommendations",
+    "optimization",
+    "operations"
+  ],
+  "analogy": "Advisor is a mechanic who reads the car computer and says: your tires are wearing, fuel economy is poor, and this part is overdue.",
+  "diagram": "flowchart TD\n  Resources[Azure resources] --> Telemetry[Configuration and usage telemetry]\n  Telemetry --> Advisor[Azure Advisor]\n  Advisor --> Reliability\n  Advisor --> Security\n  Advisor --> Performance\n  Advisor --> Cost\n  Advisor --> Ops[Operational excellence]\n  Advisor --> Actions[Recommended actions]",
+  "body": "## First principles\n\nRunning cloud well requires continuous comparison between how resources are configured and what good looks like. Humans cannot manually inspect every VM, database, gateway, and storage account every day. **Azure Advisor** automates part of that inspection by analyzing configuration and usage telemetry, then recommending improvements.\n\nAdvisor is not a judge handing down architecture law. It is a signal generator: here are specific places where your deployed estate may be cheaper, safer, faster, more reliable, or easier to operate.\n\n## Why it exists\n\nCloud drift is normal. A VM is oversized for launch week and forgotten. A gateway lacks zone redundancy. A disk is unattached. A security recommendation from Defender for Cloud needs attention. The architecture may have been sound on day one but no workload stays day one.\n\nAdvisor exists because optimization is not a one-time design activity. It turns operational telemetry into a prioritized to-do list.\n\n## How it works\n\nAzure Advisor recommendations are divided into five categories: **Reliability**, **Security**, **Performance**, **Cost**, and **Operational Excellence**. It analyzes Azure resources you can access and displays personalized recommendations in the portal. Security recommendations can include Microsoft Defender for Cloud recommendations. You can filter by subscription and resource type, open a recommendation, and often take a proposed action inline or follow linked documentation.\n\nAdvisor recommendation state is workflow-aware. You can postpone, dismiss, or manually mark recommendations completed. After implementation, Advisor may take up to a day to recognize the change.\n\n## Analogy\n\nAdvisor is the mechanic who plugs into the diagnostic port. It does not drive the car for you, and it does not know your road trip plans, but it can tell you the tire pressure is wrong, the engine is wasting fuel, and a safety recall applies. Ignore it long enough and small warnings become expensive failures.\n\n## In practice\n\nMake Advisor part of the governance rhythm:\n\n```bash\naz advisor recommendation list \\\n  --subscription <subscription-id> \\\n  --query '[].{category:category, impact:impact, resource:resourceMetadata.resourceId}' \\\n  -o table\n```\n\nA useful weekly review asks: which recommendations are high impact, which are false positives for our context, which need platform fixes, and which should become Policy so the same problem stops recurring?\n\n## Gotchas\n\nAdvisor is broad but not omniscient. A recommendation can be technically valid and business-wrong: maybe a VM is intentionally oversized for quarter-end batch work. Dismiss with a reason, do not silently ignore. Also avoid treating Advisor as your whole governance program. It recommends; Policy enforces; Cost Management reports; WAF frames tradeoffs.",
+  "teachItBack": "Azure Advisor is an always-on recommendation service that reviews resource configuration and telemetry. It groups recommendations into reliability, security, performance, cost, and operational excellence, and often provides concrete next actions. Use Advisor as a recurring signal source, then convert repeated findings into design changes, policy, or platform defaults.",
+  "glossary": [
+    {
+      "term": "Azure Advisor",
+      "definition": "A Microsoft service that provides personalized best-practice recommendations for Azure resources."
+    },
+    {
+      "term": "Recommendation",
+      "definition": "An Advisor finding with category, impact, affected resource, and proposed remediation."
+    },
+    {
+      "term": "Postponed",
+      "definition": "A recommendation state that hides the item temporarily for later review."
+    },
+    {
+      "term": "Dismissed",
+      "definition": "A recommendation state indicating the finding is not relevant for the current context."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Dev docs — Introduction to Azure Advisor",
+      "url": "https://learn.microsoft.com/en-us/azure/advisor/advisor-overview",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — Overview of Microsoft Cost Management",
+      "url": "https://learn.microsoft.com/en-us/azure/cost-management-billing/costs/overview-cost-management",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — Azure Well-Architected Framework",
+      "url": "https://learn.microsoft.com/en-us/azure/well-architected/what-is-well-architected-framework",
+      "verified": true
+    }
+  ],
+  "related": [
+    "azg-cost-management",
+    "azg-waf",
+    "azg-policy",
+    "azg-pricing-models"
+  ]
+}

@@ -1,0 +1,70 @@
+{
+  "id": "azc-functions",
+  "title": "Azure Functions: Code That Wakes Up for Events",
+  "lane": "az-compute",
+  "type": "concept",
+  "order": 50,
+  "summary": "Azure Functions is event-driven serverless compute. The core model is trigger in, function runs, bindings connect services, hosting plan controls scaling and cost.",
+  "tags": [
+    "azure",
+    "compute",
+    "functions",
+    "serverless",
+    "event-driven",
+    "bindings"
+  ],
+  "analogy": "A function is a motion-sensor light: it stays dark until a specific event walks by, then it turns on just long enough to do useful work.",
+  "diagram": "flowchart LR\n  Event[HTTP queue timer blob event] --> Trigger[Trigger]\n  Trigger --> Function[Function code]\n  Function --> BindingIn[Input binding]\n  Function --> BindingOut[Output binding]\n  Function --> Plan[Hosting plan: Consumption Flex Premium Dedicated Container Apps]",
+  "body": "## First principles\n\nSome code should not be a server. It should be a reaction. A file arrives, a queue message appears, a timer ticks, an HTTP request hits, an Event Grid notification fires. Keeping a full web host alive just to wait for those moments wastes money and attention.\n\n**Azure Functions** makes the event the unit of compute.\n\n## Why it exists\n\nBefore serverless, small automation often became awkward infrastructure: a VM with a cron job, a daemon polling a queue, or a tiny web app that existed only to run 30 lines of code. Functions removes the always-on wrapper. You write the behavior; Azure wires it to events and scales instances as demand changes.\n\n## How it works\n\nA **function app** is the hosting container for related functions. Each function has exactly one **trigger**: the event source that starts execution. Common triggers include HTTP, Timer, Queue Storage, Service Bus, Event Hub, Event Grid, and Blob Storage.\n\n**Bindings** are declarative connectors. An input binding can fetch data; an output binding can write to a queue, table, blob, or other service without hand-writing all plumbing. Bindings are not mandatory, but they are the signature Functions move.\n\nThe **hosting plan** decides scale, cold-start behavior, networking, runtime constraints, and cost. Classic **Consumption** is pay-per-execution and scales automatically, good for bursty event work. **Premium** keeps pre-warmed capacity and supports stronger networking and longer-running needs. Current Azure Functions also includes options such as Flex Consumption, Dedicated/App Service, and Container Apps hosting; the right plan is a workload decision, not a badge.\n\n## In practice\n\n```bash\naz functionapp create   --resource-group <rg>   --name <function-app>   --storage-account <storage>   --consumption-plan-location <region>   --runtime python   --functions-version 4\n```\n\nA timer-triggered cleanup function, a queue-triggered invoice worker, and an HTTP webhook can live in the same function app when they share lifecycle and settings.\n\n## Gotchas\n\nFunctions are not ideal for every long-running workflow. Timeouts, concurrency, dependency size, cold starts, and idempotency matter. Event systems retry, so your function must tolerate duplicate execution. If you need a permanently warm HTTP API with predictable latency, App Service or Container Apps may be simpler. If you need complex container orchestration, AKS may be the honest answer.",
+  "teachItBack": "Azure Functions runs code in response to events. A trigger starts a function; bindings simplify input and output connections; the hosting plan controls cost, scale, cold starts, and networking. Use Functions for event-shaped work, not as a default replacement for every app server.",
+  "glossary": [
+    {
+      "term": "Function app",
+      "definition": "The Azure resource that hosts one or more related Azure Functions."
+    },
+    {
+      "term": "Trigger",
+      "definition": "The event source that starts a function execution."
+    },
+    {
+      "term": "Binding",
+      "definition": "A declarative connection between a function and another service for input or output."
+    },
+    {
+      "term": "Consumption plan",
+      "definition": "A serverless hosting option that automatically scales and charges based largely on executions and resource use."
+    },
+    {
+      "term": "Premium plan",
+      "definition": "A Functions hosting option with pre-warmed instances and additional networking/performance capabilities."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Dev docs — Azure Functions overview",
+      "url": "https://learn.microsoft.com/en-us/azure/azure-functions/functions-overview",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — Azure Functions triggers and bindings",
+      "url": "https://learn.microsoft.com/en-us/azure/azure-functions/functions-triggers-bindings",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — Azure Functions scale and hosting",
+      "url": "https://learn.microsoft.com/en-us/azure/azure-functions/functions-scale",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — Choose an Azure compute service",
+      "url": "https://learn.microsoft.com/en-us/azure/architecture/guide/technology-choices/compute-decision-tree",
+      "verified": true
+    }
+  ],
+  "related": [
+    "azc-intro",
+    "azc-app-service",
+    "azc-container-apps",
+    "azc-choosing-compute"
+  ]
+}

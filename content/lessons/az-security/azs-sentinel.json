@@ -1,0 +1,67 @@
+{
+  "id": "azs-sentinel",
+  "title": "Microsoft Sentinel: Cloud-Native SIEM + SOAR",
+  "lane": "az-security",
+  "type": "concept",
+  "order": 60,
+  "summary": "When attacks unfold across hundreds of services, you need one place that collects every log, correlates them into incidents, and can respond automatically. That's a SIEM + SOAR. Microsoft Sentinel is Azure's cloud-native version — and it now lives inside the unified Defender portal.",
+  "tags": [
+    "azure",
+    "security",
+    "sentinel",
+    "siem",
+    "soar"
+  ],
+  "analogy": "Sentinel is the security operations center for your entire cloud: a wall of monitors (SIEM) pulling every camera and door sensor into one room and flagging the suspicious patterns, plus a set of pre-programmed response playbooks (SOAR) that can lock a door or alert a guard the instant a threat is confirmed — without waiting for a human to wake up.",
+  "diagram": "flowchart TD\n  L1[Entra sign-in logs] --> SEN[Microsoft Sentinel]\n  L2[Azure resource logs] --> SEN\n  L3[Defender for Cloud alerts] --> SEN\n  L4[Firewall / network logs] --> SEN\n  L5[Non-Azure: AWS, M365, on-prem] --> SEN\n  SEN --> COR[Analytics rules correlate -> Incidents]\n  COR --> HUNT[KQL hunting + UEBA]\n  COR --> SOAR[Playbooks: automated response]\n  SOAR --> ACT[Disable user, isolate VM, open ticket]\n  SEN -.now surfaced in.-> DEF[Unified Defender portal]",
+  "body": "## First principles\n\nA real attack is rarely one loud event. It's a *story* told in fragments scattered across systems: a suspicious sign-in in the identity logs, an odd process on a VM, an unusual outbound connection in the firewall logs, a mass download in storage. Each fragment alone looks like nothing. The attack is only visible when you **collect everything in one place and connect the dots**. No human can watch a hundred separate log streams. You need a system that ingests all of them, correlates them, and shouts when the *combination* looks malicious. That category is a **SIEM** — Security Information and Event Management. **Microsoft Sentinel** is Azure's cloud-native SIEM, with **SOAR** (automated response) built in.\n\n## Why it exists\n\nBefore SIEM, security logs lived wherever they were generated — the firewall kept its logs, the servers kept theirs, the identity system kept its own. Investigating an incident meant manually logging into a dozen consoles, exporting CSVs, and trying to line up timestamps by hand. Slow, error-prone, and far too late.\n\nClassic on-prem SIEMs collected the logs centrally but came with brutal baggage: you had to buy and rack servers sized for your *peak* log volume, scaling meant procurement, and storage was a constant fight. Sentinel reimagines SIEM as a **cloud-native, pay-as-you-go service**: no infrastructure to manage, near-infinite elastic scale, and you pay for the data you ingest and keep. It also adds AI/ML and, increasingly, generative-AI assistance (Security Copilot) to cut through alert noise.\n\n## How it works: SIEM + SOAR\n\n**SIEM — the collect-and-correlate half:**\n\n- **Connect data.** Built-in **data connectors** pull logs from Entra ID, Azure resources, Microsoft 365, Defender, firewalls — and crucially from *non-Microsoft* sources too: AWS, GCP, on-prem servers, third-party appliances. Sentinel is meant to be your *single* pane across everything, not just Azure.\n- **Correlate into incidents.** **Analytics rules** watch the incoming data for known-bad patterns and anomalies, and group related alerts into **incidents** — one investigable story instead of 50 disconnected pings. **UEBA** (User and Entity Behavior Analytics) baselines normal behavior and flags deviations ('this account never logs in from this country at 3 a.m.').\n- **Hunt.** Analysts query the data proactively with **KQL** (Kusto Query Language) — the same language used across Azure Monitor/Log Analytics — to chase hypotheses before an alert ever fires.\n\n**SOAR — the respond half:** SOAR stands for Security Orchestration, Automation, and Response. **Playbooks** (built on Azure Logic Apps) are automated workflows that fire when an incident is detected: disable a compromised user, isolate a VM, block an IP, post to Teams, open a ticket — in seconds, at machine speed, even while your analysts sleep. This is the difference between *detecting* a breach and *containing* one.\n\n## How it works: the 2025 home — the unified Defender portal\n\nA big, current shift: Microsoft is unifying its security operations. Sentinel (SIEM) and **Microsoft Defender XDR** (which protects endpoints, identities, email, and cloud apps) now share **one 'single pane of glass' — the Microsoft Defender portal** — under the banner of **unified security operations (unified SecOps)**. New Sentinel onboardings default to the Defender portal, and management is moving off the standalone Azure portal experience over time (Microsoft has set a deprecation timeline for the Azure-portal experience). There's also a newer **Sentinel data lake** for cost-effective long-term retention of high-volume security data. The mental model to carry: **SIEM (Sentinel) + XDR (Defender) = one SOC console.**\n\n## In practice\n\n```kql\n// Hunt: successful sign-ins right after a burst of failures from one IP\nSigninLogs\n| where ResultType == 0\n| join kind=inner (\n    SigninLogs\n    | where ResultType != 0\n    | summarize fails=count() by IPAddress, bin(TimeGenerated, 10m)\n    | where fails > 20\n  ) on IPAddress\n| project TimeGenerated, UserPrincipalName, IPAddress, fails\n```\n\nA typical flow: Defender for Cloud and Entra raise alerts -> they flow into Sentinel -> an analytics rule correlates them into a single incident -> a playbook auto-disables the account and notifies the SOC -> an analyst uses KQL to confirm scope. Detection becomes response without a 2 a.m. phone tree.\n\n## Gotchas\n\n- **Sentinel and Defender for Cloud are partners, not rivals.** Defender for Cloud *finds and protects* your Azure workloads (posture + workload alerts); Sentinel *correlates and responds* across everything, Azure or not. Defender alerts are one of Sentinel's best data sources.\n- **Ingestion is the cost lever.** You pay largely by data volume ingested/retained. Pipe in *everything* blindly and the bill explodes; tune which logs are worth keeping, and use the data lake / archive tiers for cheap long-term storage.\n- **It's portal-moving — check where you're working.** Because Sentinel is consolidating into the Defender portal with a deprecation timeline for the old Azure-portal experience, follow current docs; screenshots from a year ago may point at the wrong place.\n- **Garbage in, garbage out.** A SIEM is only as good as its connectors and rules. Connect the wrong sources or leave rules untuned and you get either silence or alert fatigue. The value is in curation, not in turning everything on.\n- **SOAR needs guardrails.** Automated response is powerful and *dangerous* — a playbook that auto-disables accounts can lock out your whole company on a false positive. Scope playbooks carefully and test them.",
+  "teachItBack": "Attacks reveal themselves only when scattered log fragments are collected and correlated, which is what a SIEM does — and Microsoft Sentinel is Azure's cloud-native SIEM, pulling logs from Entra, Azure, Microsoft 365, Defender, and even AWS and on-prem into correlated incidents you hunt with KQL. Its built-in SOAR runs Logic Apps playbooks that respond automatically — disabling users or isolating VMs at machine speed — turning detection into containment. Sentinel partners with Defender for Cloud (which finds and protects workloads) rather than replacing it, and in 2025 it lives inside the unified Microsoft Defender portal alongside Defender XDR. Watch your ingestion volume, because that's what you pay for.",
+  "glossary": [
+    {
+      "term": "SIEM",
+      "definition": "Security Information and Event Management; a system that centrally collects logs and correlates them to detect threats."
+    },
+    {
+      "term": "SOAR",
+      "definition": "Security Orchestration, Automation, and Response; automated workflows (playbooks) that react to incidents at machine speed."
+    },
+    {
+      "term": "Microsoft Sentinel",
+      "definition": "Azure's cloud-native, pay-as-you-go SIEM + SOAR, now surfaced in the unified Microsoft Defender portal."
+    },
+    {
+      "term": "Analytics rule",
+      "definition": "A Sentinel rule that watches incoming data for malicious patterns or anomalies and groups related alerts into incidents."
+    },
+    {
+      "term": "KQL (Kusto Query Language)",
+      "definition": "The query language used to hunt and analyze data across Sentinel, Log Analytics, and Azure Monitor."
+    },
+    {
+      "term": "Unified SecOps / Defender portal",
+      "definition": "Microsoft's consolidated security operations experience combining Sentinel (SIEM) and Defender XDR in one console."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Dev docs — What is Microsoft Sentinel?",
+      "url": "https://learn.microsoft.com/en-us/azure/sentinel/overview",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — Unified security operations with Microsoft Defender",
+      "url": "https://learn.microsoft.com/en-us/unified-secops/",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — Automate threat response with playbooks (SOAR)",
+      "url": "https://learn.microsoft.com/en-us/azure/sentinel/sentinel-soar-content",
+      "verified": true
+    }
+  ],
+  "related": [
+    "azs-defender",
+    "azs-intro",
+    "azs-network-security"
+  ]
+}

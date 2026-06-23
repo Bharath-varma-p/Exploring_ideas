@@ -1,0 +1,70 @@
+{
+  "id": "fdy-incident-vocabulary",
+  "title": "Incident Domain Vocabulary",
+  "lane": "foundry-connectors",
+  "type": "concept",
+  "order": 102,
+  "summary": "Incident vocabulary names the control points of response: severity expresses impact, service or team owns the problem, on-call identifies the first responder, escalation brings more authority or expertise, mitigation reduces impact, resolution closes active response, and postmortem captures learn...",
+  "tags": [
+    "severity",
+    "on-call",
+    "postmortem"
+  ],
+  "analogy": "It is like radio procedure in a fire department. Everyone knows the difference between dispatched, on scene, contained, all clear, and after-action review, so the team coordinates without long explanations.",
+  "diagram": "graph TD\nSeverity[Severity] --> Urgency[Response urgency]\nOwner[Owning team] --> Accountability[Accountability]\nOnCall[On call] --> FirstResponse[First response]\nEscalation[Escalation] --> Experts[More help]\nPostmortem[Postmortem] --> Learning[Future prevention]",
+  "body": "## First principles\n\nFirst principles: emergencies punish vague language. If responders disagree about words like acknowledged, mitigated, resolved, severity, or escalation, they waste time when minutes matter. A shared vocabulary creates speed and safety.\n\n## Definition\n\nIncident vocabulary names the control points of response: severity expresses impact, service or team owns the problem, on-call identifies the first responder, escalation brings more authority or expertise, mitigation reduces impact, resolution closes active response, and postmortem captures learning.\n\n## How it fits together\n\nRead an incident record like a cockpit panel. Severity tells altitude loss, status tells flight phase, owner tells who has the controls, discussion tells what was tried, and postmortem tells how the aircraft design or checklist must improve.\n\n## Worked example\n\n```python\n# Representative normalization table for an incident MCP connector.\n# A real backend may use different names and values.\nSTATUS_MEANING = {\n    \"new\": \"Created but not yet owned by a responder\",\n    \"acknowledged\": \"A responder accepted responsibility\",\n    \"mitigated\": \"Customer impact is reduced or stopped\",\n    \"resolved\": \"Active response is complete\",\n    \"postmortem\": \"Learning and follow-up actions are being captured\",\n}\nfor status, meaning in STATUS_MEANING.items():\n    print(f\"{status}: {meaning}\")\n```\n\n*Representative status vocabulary*",
+  "drills": [
+    {
+      "q": "What does mitigation mean?",
+      "a": "Reducing or stopping customer impact, even if the final root-cause fix is not complete."
+    },
+    {
+      "q": "Why separate mitigated from resolved?",
+      "a": "Because service impact can be stopped before cleanup, validation, and final closure are complete."
+    },
+    {
+      "q": "What is escalation?",
+      "a": "Bringing in more authority, expertise, or management attention when the current responder cannot finish safely or quickly."
+    }
+  ],
+  "teachItBack": "Incident vocabulary is the shared language of emergency engineering. Severity, owner, on-call, escalation, mitigation, resolution, and postmortem each answer a different operational question. Knowing those words lets an agent summarize and act without confusing response phases.",
+  "glossary": [
+    {
+      "term": "Mitigation",
+      "definition": "Action that reduces current customer or service impact."
+    },
+    {
+      "term": "Resolution",
+      "definition": "Closure of active incident response after validation."
+    },
+    {
+      "term": "Postmortem",
+      "definition": "A structured review of causes, response, and prevention work."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Microsoft Service Assurance: Security incident management overview",
+      "url": "https://learn.microsoft.com/en-us/compliance/assurance/assurance-incident-management",
+      "verified": true
+    },
+    {
+      "title": "Microsoft Well-Architected Framework: Develop an incident management practice",
+      "url": "https://github.com/MicrosoftDocs/well-architected/blob/main/well-architected/design-guides/incident-management.md",
+      "verified": true
+    }
+  ],
+  "quiz": [
+    {
+      "q": "Which incident lifecycle order is the best mental model?",
+      "choices": [
+        "new, acknowledged, mitigated, resolved, postmortem",
+        "postmortem, new, resolved, acknowledged, mitigated",
+        "resolved, new, mitigated, acknowledged, postmortem",
+        "acknowledged, postmortem, new, resolved, mitigated"
+      ],
+      "answer": 0,
+      "explanation": "The practical flow is ownership, impact reduction, closure, and learning."
+    }
+  ]
+}

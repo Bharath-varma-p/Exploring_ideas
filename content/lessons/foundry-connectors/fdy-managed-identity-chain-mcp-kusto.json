@@ -1,0 +1,70 @@
+{
+  "id": "fdy-managed-identity-chain-mcp-kusto",
+  "title": "Managed Identity End to End",
+  "lane": "foundry-connectors",
+  "type": "concept",
+  "order": 208,
+  "summary": "In this lane, the identity that runs the Kusto MCP server or Foundry tool host authenticates with DefaultAzureCredential or ManagedIdentityCredential.",
+  "tags": [
+    "identity",
+    "no-secrets",
+    "rbac"
+  ],
+  "analogy": "Managed identity is a government ID badge printed by the base every morning. It proves who the workload is today, expires quickly, and can be revoked centrally.",
+  "diagram": "sequenceDiagram\n  participant A as Foundry agent\n  participant M as Kusto MCP host\n  participant I as Managed identity\n  participant E as Entra ID\n  participant K as ADX cluster\n  A->>M: request KQL tool\n  M->>I: ask for token\n  I->>E: authenticate workload\n  E-->>M: ADX access token\n  M->>K: query with token\n  K-->>M: table result\n  M-->>A: structured rows",
+  "body": "## First principles\n\nA secret is a reusable password. A managed identity is a cloud-issued identity that gets short-lived tokens. For agents that query production telemetry, short-lived tokens plus least privilege are the safer primitive.\n\n## Definition\n\nIn this lane, the identity that runs the Kusto MCP server or Foundry tool host authenticates with DefaultAzureCredential or ManagedIdentityCredential. Azure issues an Entra ID token for ADX; ADX authorizes that identity using Azure RBAC and Kusto database roles. No keys, client secrets, or connection-string secrets are needed.\n\n## How it fits together\n\nThere are two gates: Azure Resource Manager sees whether the identity can read the cluster resource, and Kusto database security roles decide whether the identity can read tables in a database.\n\n## Worked example\n\n```python\nimport os\nfrom azure.identity import DefaultAzureCredential, ManagedIdentityCredential\n\n# For user-assigned managed identity in Azure hosting, set AZURE_CLIENT_ID.\nclient_id = os.getenv(\"AZURE_CLIENT_ID\")\ncredential = (\n    ManagedIdentityCredential(client_id=client_id)\n    if client_id\n    else DefaultAzureCredential(exclude_interactive_browser_credential=True)\n)\n\ntoken = credential.get_token(\"https://kusto.kusto.windows.net/.default\")\nprint(\"Got ADX token that expires at\", token.expires_on)\n```\n\n*Acquire an ADX token with managed identity only.*",
+  "drills": [
+    {
+      "q": "What replaces a connection-string secret?",
+      "a": "A managed identity obtaining short-lived Entra ID tokens."
+    },
+    {
+      "q": "Which credential is convenient in code that runs locally and in Azure?",
+      "a": "DefaultAzureCredential, with managed identity used automatically in Azure hosting."
+    },
+    {
+      "q": "What should you use for a specific user-assigned identity?",
+      "a": "ManagedIdentityCredential with the managed identity client ID."
+    }
+  ],
+  "teachItBack": "Managed identity gives the MCP host a secretless Azure identity. The SDK asks Entra ID for an ADX token. ADX still checks whether that identity has the right resource and database permissions.",
+  "glossary": [
+    {
+      "term": "Managed identity",
+      "definition": "An Azure-managed Entra identity assigned to a workload."
+    },
+    {
+      "term": "DefaultAzureCredential",
+      "definition": "Azure SDK credential chain that can use developer identity locally and managed identity in Azure."
+    },
+    {
+      "term": "Access token",
+      "definition": "Short-lived bearer token issued by Entra ID for a resource audience."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Azure AI Projects client library for Python",
+      "url": "https://learn.microsoft.com/en-us/python/api/overview/azure/ai-projects-readme?view=azure-python-preview",
+      "verified": true
+    },
+    {
+      "title": "Manage database security roles",
+      "url": "https://learn.microsoft.com/en-us/kusto/management/manage-database-security-roles?view=azure-data-explorer&preserve-view=true",
+      "verified": true
+    }
+  ],
+  "quiz": [
+    {
+      "q": "In the resource-to-tool mapping, what is run query?",
+      "choices": [
+        "A tool action that executes KQL and returns rows",
+        "A database resource",
+        "A table column",
+        "A managed identity role"
+      ],
+      "answer": 0,
+      "explanation": "Databases and tables are resources; run query is the tool action."
+    }
+  ]
+}

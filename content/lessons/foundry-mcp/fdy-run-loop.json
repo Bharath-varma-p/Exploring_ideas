@@ -1,0 +1,71 @@
+{
+  "id": "fdy-run-loop",
+  "title": "The Run Loop",
+  "lane": "foundry-mcp",
+  "type": "concept",
+  "order": 204,
+  "summary": "The run loop is the control flow that creates or reuses conversation state, adds user input, starts a run or response, waits for completion, handles required tool actions such as MCP approvals, and reads the final messages or output text.",
+  "tags": [
+    "execution",
+    "polling",
+    "sequence"
+  ],
+  "analogy": "It is like air traffic control: clear the plane for takeoff, watch status, approve special maneuvers, and log the landing before closing the flight.",
+  "diagram": "sequenceDiagram\nparticipant User as User\nparticipant App as Client app\nparticipant Agent as Foundry agent\nparticipant MCP as MCP server\nUser->>App: ask question\nApp->>Agent: create thread or conversation\nApp->>Agent: add message and start run\nAgent->>Agent: reason over instructions and state\nAgent-->>App: approval needed for tool\nApp->>App: review tool name and arguments\nApp->>Agent: approve or deny\nAgent->>MCP: call allowed tool\nMCP-->>Agent: tool result\nAgent-->>App: final answer\nApp-->>User: show answer and trace id",
+  "body": "## First principles\n\nFirst principles: tool-using agents are not a single request-response. The model may need to pause, ask for a tool, wait for approval, receive the result, and only then answer. The client must drive or monitor that state machine safely.\n\n## Definition\n\nThe run loop is the control flow that creates or reuses conversation state, adds user input, starts a run or response, waits for completion, handles required tool actions such as MCP approvals, and reads the final messages or output text.\n\n## How it fits together\n\nNever assume the first response is final. Check status or output items. If the agent asks for approval or tool output, provide it, then continue the same run or previous response ID.\n\n## Worked example\n\n```python\n# pip install azure-ai-projects>=2.0.0 azure-identity openai\n# Uses the current prompt-agent Responses pattern from Microsoft Learn.\nimport json, os\nfrom azure.identity import DefaultAzureCredential\nfrom azure.ai.projects import AIProjectClient\nfrom openai.types.responses.response_input_param import McpApprovalResponse\n\nproject = AIProjectClient(endpoint=os.environ[\"PROJECT_ENDPOINT\"], credential=DefaultAzureCredential())\nopenai = project.get_openai_client()\nconversation = openai.conversations.create()\n\nresponse = openai.responses.create(\n    conversation=conversation.id,\n    input=\"Use the attached MCP server to answer with one cited fact.\",\n    extra_body={\"agent_reference\": {\"name\": os.environ[\"AGENT_NAME\"], \"type\": \"agent_reference\"}},\n)\n\napprovals = []\nfor item in response.output:\n    if item.type == \"mcp_approval_request\":\n        print(\"Review MCP call\", item.server_label, getattr(item, \"name\", \"unknown\"))\n        print(json.dumps(getattr(item, \"arguments\", {}), indent=2, default=str))\n        # Production policy belongs here. This demo approves only read style tools by name.\n        tool_name = getattr(item, \"name\", \"\")\n        approve = tool_name.startswith((\"get_\", \"list_\", \"search_\", \"read_\"))\n        approvals.append(McpApprovalResponse(type=\"mcp_approval_response\", approval_request_id=item.id, approve=approve))\n\nif approvals:\n    response = openai.responses.create(\n        previous_response_id=response.id,\n        input=approvals,\n        extra_body={\"agent_reference\": {\"name\": os.environ[\"AGENT_NAME\"], \"type\": \"agent_reference\"}},\n    )\n\nprint(response.output_text)\n```\n\n*Responses API run loop with MCP approval items*",
+  "drills": [
+    {
+      "q": "Why can a run pause?",
+      "a": "The agent may require tool output, MCP approval, OAuth consent, or other action before it can finish."
+    },
+    {
+      "q": "What should the client review before approving an MCP call?",
+      "a": "Server label, tool name, arguments, risk, and whether the tool is in policy."
+    },
+    {
+      "q": "What ties a follow-up approval to the paused work?",
+      "a": "The previous response ID or run ID, depending on API family."
+    }
+  ],
+  "teachItBack": "A tool-using agent is a state machine, not a plain chat completion. Your app must watch for required action, safely answer it, and resume the same work item. The approval point is a security control, not a nuisance.",
+  "glossary": [
+    {
+      "term": "Required action",
+      "definition": "A paused state where the agent needs external input such as approval or tool output."
+    },
+    {
+      "term": "Approval response",
+      "definition": "A client response that allows or denies a requested MCP call."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Microsoft Learn: Connect to MCP server endpoints for agents",
+      "url": "https://learn.microsoft.com/en-us/azure/foundry/agents/how-to/tools/model-context-protocol",
+      "verified": true
+    },
+    {
+      "title": "Microsoft Learn: Foundry quickstart with Azure AI Projects 2.x",
+      "url": "https://learn.microsoft.com/en-us/azure/foundry/quickstarts/get-started-code",
+      "verified": true
+    },
+    {
+      "title": "Azure SDK for Python: MCP create and process sample",
+      "url": "https://github.com/Azure/azure-sdk-for-python/blob/main/sdk/ai/azure-ai-agents/samples/agents_tools/sample_agents_mcp_in_create_and_process.py",
+      "verified": true
+    }
+  ],
+  "quiz": [
+    {
+      "q": "What should your app inspect before approving an MCP tool call?",
+      "choices": [
+        "Server label, tool name, arguments, risk, and policy",
+        "Only the final answer",
+        "Only token count",
+        "Only the model deployment name"
+      ],
+      "answer": 0,
+      "explanation": "Approval is an authorization decision over the requested tool action."
+    }
+  ]
+}

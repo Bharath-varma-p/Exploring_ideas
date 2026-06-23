@@ -1,0 +1,66 @@
+{
+  "id": "azc-containers",
+  "title": "Containers on Azure: Package Once, Run Deliberately",
+  "lane": "az-compute",
+  "type": "concept",
+  "order": 60,
+  "summary": "Containers package an app with its runtime dependencies. On Azure, ACR stores images, ACI runs simple containers fast, and higher-level services run containers at scale.",
+  "tags": [
+    "azure",
+    "compute",
+    "containers",
+    "acr",
+    "aci",
+    "images"
+  ],
+  "analogy": "A container image is a sealed shipping container: predictable contents, portable handling, but you still need a port, yard, and traffic plan.",
+  "diagram": "flowchart LR\n  Code[App code] --> Build[Build image]\n  Build --> ACR[Azure Container Registry]\n  ACR --> ACI[Container Instances: simple run]\n  ACR --> ACA[Container Apps: serverless containers]\n  ACR --> AKS[AKS: orchestrated containers]\n  Identity[Managed identity or registry auth] --> ACR",
+  "body": "## First principles\n\nA deployment fails when the runtime on the server does not match the runtime in the developer’s head. Containers attack that mismatch by packaging the app, libraries, runtime, and startup command into a standard image.\n\nThe image is not the whole system. It is the artifact you hand to a host.\n\n## Why it exists\n\nWithout containers, teams ship instructions: install this package, set this environment variable, use this runtime version, copy these files, start this process. Instructions drift. Images make the runtime boundary explicit and repeatable.\n\nAzure’s container story has layers. **Azure Container Registry (ACR)** stores private images close to your Azure workloads. **Azure Container Instances (ACI)** runs a container quickly without managing VMs or an orchestrator. **Container Apps** and **AKS** are higher-level choices when the app needs scaling, revisions, traffic splitting, service discovery, or orchestration.\n\n## How it works\n\nA container image is built from a Dockerfile or build system and pushed to a registry. A runtime pulls that image and starts one or more containers with CPU, memory, environment variables, ports, volumes, identity, and networking.\n\nACR is the warehouse. It supports private repositories, tags, authentication, geo-replication in higher tiers, image import, and integration with Azure identities. ACI is the quick loading dock: run one container group, give it resources and optional public IP, then stop when done.\n\n## In practice\n\n```bash\naz acr create --resource-group <rg> --name <registry> --sku Basic\naz acr build --registry <registry> --image api:1.0 .\naz container create   --resource-group <rg>   --name <container-name>   --image <registry>.azurecr.io/api:1.0   --cpu 1 --memory 1.5\n```\n\nThat is enough for a short-lived worker, demo service, or one-off job. It is not yet a production platform.\n\n## Gotchas\n\nDo not treat tags like `latest` as a release strategy; immutable version tags are safer. Keep secrets out of images because every host that pulls the image can inspect layers. ACI is intentionally simple: great for quick isolated runs, weak for complex multi-service apps. Once you need autoscale, revisions, ingress rules, or service-to-service patterns, compare Container Apps and AKS.",
+  "teachItBack": "Containers solve packaging drift by turning runtime expectations into an image. ACR stores those images; ACI runs simple containers without VM management; Container Apps and AKS run containers when scaling and orchestration matter. The image is portable, but the hosting choice still decides networking, identity, scale, and operations.",
+  "glossary": [
+    {
+      "term": "Container image",
+      "definition": "A packaged filesystem and metadata used to start one or more containers."
+    },
+    {
+      "term": "Azure Container Registry",
+      "definition": "Azure’s managed private registry service for storing and distributing container images and artifacts."
+    },
+    {
+      "term": "Azure Container Instances",
+      "definition": "A serverless way to run isolated container groups without managing VMs or Kubernetes."
+    },
+    {
+      "term": "Tag",
+      "definition": "A human-readable label pointing to an image version in a registry."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Dev docs — Introduction to Azure Container Registry",
+      "url": "https://learn.microsoft.com/en-us/azure/container-registry/container-registry-intro",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — Serverless containers in Azure Container Instances",
+      "url": "https://learn.microsoft.com/en-us/azure/container-instances/container-instances-overview",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — Azure Container Apps overview",
+      "url": "https://learn.microsoft.com/en-us/azure/container-apps/overview",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — Compare AKS with other Azure container options",
+      "url": "https://learn.microsoft.com/en-us/azure/aks/compare-container-options-with-aks",
+      "verified": true
+    }
+  ],
+  "related": [
+    "azc-container-apps",
+    "azc-aks",
+    "azc-app-service",
+    "azc-choosing-compute"
+  ]
+}

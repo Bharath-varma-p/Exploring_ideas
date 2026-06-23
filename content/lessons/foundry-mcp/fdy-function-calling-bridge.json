@@ -1,0 +1,62 @@
+{
+  "id": "fdy-function-calling-bridge",
+  "title": "Relationship to LLM Tool Calling",
+  "lane": "foundry-mcp",
+  "type": "concept",
+  "order": 111,
+  "summary": "MCP does not replace LLM function calling. The host typically translates MCP tool definitions into the model provider's tool or function format, lets the model choose a call, then translates that choice into MCP tools/call.",
+  "tags": [
+    "llm",
+    "tool-calling",
+    "bridge"
+  ],
+  "analogy": "Provider tool calling is the pilot saying which instrument to use. MCP is the standardized avionics bay that tells the aircraft what instruments are installed and how to operate them.",
+  "diagram": "graph TD\nServer[MCP server tool schemas]\nServer --> Client[MCP client]\nClient --> Host[Host bridge]\nHost --> ModelTools[Provider tool definitions]\nLLM[LLM] --> ToolIntent[Tool call intent]\nToolIntent --> Host\nHost --> Client\nClient --> ServerCall[tools call]",
+  "body": "## First principles\n\nFirst principles: the model provider and the integration protocol solve different halves of the problem. Provider tool calling lets a model express intent to call a function. MCP standardizes where those functions come from, how they are discovered, and how calls cross the app-server boundary.\n\n## Definition\n\nMCP does not replace LLM function calling. The host typically translates MCP tool definitions into the model provider's tool or function format, lets the model choose a call, then translates that choice into MCP tools/call. MCP standardizes the tool layer across servers; the model still emits tool-use intent through its own API.\n\n## How it fits together\n\nSeparate three layers: MCP server schema, host bridge, model API call. Bugs happen when learners think the server talks directly to the model. Usually it does not. The host mediates the model, user consent, and protocol client.\n\n## Worked example\n\n```python\ndef mcp_tool_to_provider_tool(mcp_tool: dict) -> dict:\n    \"\"\"Illustrative only: each LLM provider has its own exact shape.\"\"\"\n    return {\n        \"name\": mcp_tool[\"name\"],\n        \"description\": mcp_tool.get(\"description\", \"\"),\n        \"parameters\": mcp_tool[\"inputSchema\"],\n    }\n\n# Flow: list MCP tools, present provider tools to the model, then map\n# the model's chosen name and arguments back to MCP tools/call.\n```\n\n*Conceptual bridge from MCP tools to provider tools*",
+  "drills": [
+    {
+      "q": "Does MCP itself decide which tool the model should call?",
+      "a": "No. The model emits tool-use intent; the host bridges that intent to MCP."
+    },
+    {
+      "q": "What does MCP standardize in this bridge?",
+      "a": "Tool discovery, schemas, invocation, and results between host clients and servers."
+    },
+    {
+      "q": "Who usually mediates consent?",
+      "a": "The host application."
+    }
+  ],
+  "teachItBack": "LLM tool calling and MCP are complementary. The model expresses a desired function call; MCP defines the interoperable source and invocation path for tools. The host bridges between provider-specific model APIs and protocol-standard MCP servers.",
+  "glossary": [
+    {
+      "term": "Function calling",
+      "definition": "Provider feature where an LLM emits a structured request to call a function or tool."
+    },
+    {
+      "term": "Host bridge",
+      "definition": "Host logic that maps MCP tool schemas and calls to the model provider's tool-calling format and back."
+    },
+    {
+      "term": "Tool-use intent",
+      "definition": "The model's structured choice of a tool name and arguments."
+    }
+  ],
+  "sources": [
+    {
+      "title": "MCP Tools",
+      "url": "https://modelcontextprotocol.io/specification/2025-11-25/server/tools.md",
+      "verified": true
+    },
+    {
+      "title": "MCP Sampling",
+      "url": "https://modelcontextprotocol.io/specification/2025-11-25/client/sampling.md",
+      "verified": true
+    },
+    {
+      "title": "MCP Architecture overview",
+      "url": "https://modelcontextprotocol.io/docs/learn/architecture.md",
+      "verified": true
+    }
+  ]
+}

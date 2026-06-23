@@ -1,0 +1,62 @@
+{
+  "id": "fdy-minimal-python-server",
+  "title": "Minimal Python MCP Server",
+  "lane": "foundry-mcp",
+  "type": "concept",
+  "order": 113,
+  "summary": "The official Python SDK package is mcp. Its FastMCP interface can define tools with decorators, resources with URI patterns, and prompts with prompt decorators, then run over stdio or Streamable HTTP.",
+  "tags": [
+    "sdk",
+    "python",
+    "server"
+  ],
+  "analogy": "The SDK is a protocol radio kit. You still decide what messages and tools exist, but the kit handles the wiring, framing, and dispatch.",
+  "diagram": "graph TD\nPython[server py]\nPython --> FastMCP[FastMCP]\nFastMCP --> Tool[add tool]\nFastMCP --> Resource[greeting resource]\nFastMCP --> Prompt[greet prompt]\nFastMCP --> Transport[stdio or streamable http]",
+  "body": "## First principles\n\nFirst principles: an MCP server is just a program that declares capabilities and responds to protocol methods. The SDK removes JSON-RPC plumbing so you can focus on useful tools, resources, and prompts.\n\n## Definition\n\nThe official Python SDK package is mcp. Its FastMCP interface can define tools with decorators, resources with URI patterns, and prompts with prompt decorators, then run over stdio or Streamable HTTP.\n\n## How it fits together\n\nStart small: one pure tool, one read-only resource, one prompt. Avoid cloud credentials in code. If the server later needs Azure access, deploy it with managed identity and least-privilege RBAC rather than embedding secrets.\n\n## Worked example\n\n```python\n# server.py\n# Install in a project environment: python -m pip install mcp\n# Run locally over stdio: python server.py\n\nfrom mcp.server.fastmcp import FastMCP\n\nmcp = FastMCP(\"academy-demo\")\n\n@mcp.tool()\ndef add(a: int, b: int) -> int:\n    \"\"\"Add two integers. The docstring becomes tool description metadata.\"\"\"\n    return a + b\n\n@mcp.resource(\"greeting://{name}\")\ndef greeting(name: str) -> str:\n    \"\"\"Read-only context returned as a resource.\"\"\"\n    return f\"Hello, {name}. Welcome to MCP.\"\n\n@mcp.prompt()\ndef explain_term(term: str) -> str:\n    \"\"\"Reusable prompt template selected by a user.\"\"\"\n    return f\"Explain {term} using first principles and one analogy.\"\n\nif __name__ == \"__main__\":\n    # stdio is ideal when a host launches this as a local subprocess.\n    mcp.run(transport=\"stdio\")\n```\n\n*Runnable minimal server using the official Python mcp SDK*",
+  "drills": [
+    {
+      "q": "What package name does the Python SDK use?",
+      "a": "mcp."
+    },
+    {
+      "q": "What decorator defines a tool in FastMCP?",
+      "a": "@mcp.tool()."
+    },
+    {
+      "q": "Why start with stdio?",
+      "a": "It is simple for local subprocess servers and avoids deploying a remote service while learning."
+    }
+  ],
+  "teachItBack": "A Python MCP server can be tiny. FastMCP lets you declare tools, resources, and prompts with decorators, then run them over a transport. Keep server code free of secrets; use managed identity later when cloud resources are needed.",
+  "glossary": [
+    {
+      "term": "FastMCP",
+      "definition": "High-level Python SDK interface for building MCP servers."
+    },
+    {
+      "term": "Decorator",
+      "definition": "Python syntax used by FastMCP to register tools, resources, and prompts."
+    },
+    {
+      "term": "stdio server",
+      "definition": "Local server process launched by the host and connected through standard streams."
+    }
+  ],
+  "sources": [
+    {
+      "title": "modelcontextprotocol Python SDK",
+      "url": "https://github.com/modelcontextprotocol/python-sdk",
+      "verified": true
+    },
+    {
+      "title": "Official MCP SDKs",
+      "url": "https://modelcontextprotocol.io/docs/sdk.md",
+      "verified": true
+    },
+    {
+      "title": "MCP Transports",
+      "url": "https://modelcontextprotocol.io/specification/2025-11-25/basic/transports.md",
+      "verified": true
+    }
+  ]
+}

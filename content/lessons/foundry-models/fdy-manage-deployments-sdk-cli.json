@@ -1,0 +1,67 @@
+{
+  "id": "fdy-manage-deployments-sdk-cli",
+  "title": "List, inspect, and delete deployments",
+  "lane": "foundry-models",
+  "type": "concept",
+  "order": 110,
+  "summary": "The current stable azure.ai.projects AIProjectClient exposes client.deployments. Microsoft Learn documents DeploymentsOperations.list and DeploymentsOperations.get; list can filter by model publisher, model name, and deployment type.",
+  "tags": [
+    "sdk",
+    "aiprojectclient",
+    "delete",
+    "operations"
+  ],
+  "analogy": "The SDK is the clipboard for inventory. The portal or management CLI is the loading dock for removal when the clipboard has no delete button.",
+  "diagram": "flowchart LR\n  SDK[AIProjectClient.deployments] --> List[list]\n  SDK --> Get[get]\n  Delete[delete] --> CLI[az or portal]\n  CLI --> Removed[removed deployment]",
+  "body": "## First principles\n\nDeployments are inventory and cost-bearing resources. You need to know what exists, inspect its backing model, and delete stale deployments without guessing.\n\n## Definition\n\nThe current stable azure.ai.projects AIProjectClient exposes client.deployments. Microsoft Learn documents DeploymentsOperations.list and DeploymentsOperations.get; list can filter by model publisher, model name, and deployment type. The same stable page does not document delete, so deletion should use the portal, Azure Resource Manager, or Azure CLI for account deployments unless a future SDK version adds delete.\n\n## How it fits together\n\nUse AIProjectClient.deployments.list for project inventory and get for one deployment. Use az cognitiveservices account deployment delete or portal cleanup where supported. Confirm the alias and resource before deleting because deletion removes a callable route and can free quota or stop apps.\n\n## Worked example\n\n```python\nfrom azure.ai.projects import AIProjectClient\nfrom azure.identity import DefaultAzureCredential\n\nclient = AIProjectClient(\n    endpoint=\"https://<account>.services.ai.azure.com/api/projects/<project>\",\n    credential=DefaultAzureCredential(),\n)\n\nfor deployment in client.deployments.list():\n    print(deployment.get(\"name\"), deployment.get(\"type\"), deployment.get(\"model_name\"))\n\none = client.deployments.get(\"<deployment-name>\")\nprint(one)\n\n# Stable AIProjectClient.deployments docs currently show list and get, not delete.\n# For deletion, use portal, ARM, or Azure CLI where supported.\n```\n\n*List and inspect deployments with AIProjectClient using managed identity.*",
+  "drills": [
+    {
+      "q": "What operations are documented on stable AIProjectClient.deployments?",
+      "a": "list and get."
+    },
+    {
+      "q": "Is delete documented on stable AIProjectClient.deployments?",
+      "a": "No."
+    },
+    {
+      "q": "How can deletion be performed today?",
+      "a": "Use portal, Azure Resource Manager, or Azure CLI such as az cognitiveservices account deployment delete when applicable."
+    }
+  ],
+  "teachItBack": "AIProjectClient gives me deployment inventory and inspection. Current stable docs show list and get only. For deletion, I use a supported management path and verify the alias before removal.",
+  "glossary": [
+    {
+      "term": "DeploymentsOperations",
+      "definition": "AIProjectClient sub-client for deployment inventory."
+    },
+    {
+      "term": "list",
+      "definition": "Return deployed models in a project."
+    },
+    {
+      "term": "get",
+      "definition": "Retrieve a deployment by name."
+    },
+    {
+      "term": "delete",
+      "definition": "Cleanup operation not shown on current stable AIProjectClient.deployments docs."
+    }
+  ],
+  "sources": [
+    {
+      "title": "AIProjectClient class",
+      "url": "https://learn.microsoft.com/en-us/python/api/azure-ai-projects/azure.ai.projects.aiprojectclient?view=azure-python",
+      "verified": true
+    },
+    {
+      "title": "DeploymentsOperations class",
+      "url": "https://learn.microsoft.com/en-us/python/api/azure-ai-projects/azure.ai.projects.operations.deploymentsoperations?view=azure-python",
+      "verified": true
+    },
+    {
+      "title": "Deploy Microsoft Foundry Models in the Foundry portal",
+      "url": "https://learn.microsoft.com/en-us/azure/foundry/foundry-models/how-to/deploy-foundry-models",
+      "verified": true
+    }
+  ]
+}

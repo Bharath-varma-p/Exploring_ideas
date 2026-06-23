@@ -1,0 +1,75 @@
+{
+  "id": "fdy-managed-identity-auth-story",
+  "title": "Managed Identity Authentication Story",
+  "lane": "foundry-connectors",
+  "type": "concept",
+  "order": 305,
+  "summary": "Microsoft recommends Microsoft Entra authentication for new Azure DevOps integrations.",
+  "tags": [
+    "auth",
+    "managed-identity",
+    "entra"
+  ],
+  "analogy": "Managed identity is a military ID badge minted by headquarters just in time. It is not a photocopied key. The door still opens only if the base security office added that badge to the access roster.",
+  "diagram": "sequenceDiagram\n    participant Host as Azure host\n    participant Entra as Microsoft Entra\n    participant ADO as Azure DevOps\n    Host->>Entra: Request ADO access token\n    Entra-->>Host: Short lived bearer token\n    Host->>ADO: API call with token\n    ADO-->>Host: Authorized result",
+  "body": "## First principles\n\nFirst principles: the safest automation identity is not a password. It is a workload identity issued by the cloud, granted only the permissions it needs, and represented as short lived access tokens.\n\n## Definition\n\nMicrosoft recommends Microsoft Entra authentication for new Azure DevOps integrations. For Azure hosted workloads, a managed identity can request an Azure DevOps access token using the Azure DevOps audience or scope, including 499b84ac-1321-427f-aa17-267ca6975798/.default or https://app.vssps.visualstudio.com/.default. That identity must also be explicitly added to the Azure DevOps organization and granted permissions.\n\n## How it fits together\n\nDo not call a PAT managed identity. If the official MCP path you use only accepts interactive OAuth, Azure CLI, or PAT, treat PAT as a gap or temporary anti-pattern. The target pattern is bearer tokens from DefaultAzureCredential or ManagedIdentityCredential plus Azure DevOps permissions for that identity.\n\n## Worked example\n\n```python\n# pip install azure-identity requests\n# Run on Azure with a system assigned or user assigned managed identity.\nfrom azure.identity import DefaultAzureCredential\n\n# The GUID scope is the Azure DevOps resource audience requested by the lane.\nADO_SCOPE = '499b84ac-1321-427f-aa17-267ca6975798/.default'\n# Microsoft docs also show this equivalent Azure DevOps scope.\nALT_SCOPE = 'https://app.vssps.visualstudio.com/.default'\n\ncredential = DefaultAzureCredential(exclude_interactive_browser_credential=True)\ntoken = credential.get_token(ADO_SCOPE)\n\nprint('Token acquired for Azure DevOps')\nprint('Expires at unix seconds:', token.expires_on)\n# Do not print token.token in real logs. Treat tokens as opaque secrets.\n```\n\n*Acquire an Azure DevOps token with managed identity*",
+  "drills": [
+    {
+      "q": "Is a PAT managed identity?",
+      "a": "No. A PAT is a long lived user scoped secret; managed identity uses Entra issued short lived tokens."
+    },
+    {
+      "q": "What must happen after creating a managed identity?",
+      "a": "Add it to the Azure DevOps organization or project and grant least privilege permissions."
+    },
+    {
+      "q": "Which Python credential should be the default recommendation?",
+      "a": "DefaultAzureCredential or ManagedIdentityCredential from azure-identity."
+    }
+  ],
+  "teachItBack": "Managed identity removes stored secrets from the connector. It still needs Azure DevOps membership and permissions. The current MCP auth surface is changing, so the safe lesson is to recommend Entra tokens and clearly flag any MCP path that cannot yet accept raw MI bearer tokens.",
+  "glossary": [
+    {
+      "term": "Managed identity",
+      "definition": "Azure managed service principal for an Azure resource, with automatic credential management."
+    },
+    {
+      "term": "Audience",
+      "definition": "The API resource a token is issued for."
+    },
+    {
+      "term": "Bearer token",
+      "definition": "Short lived access token sent in an Authorization header."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Microsoft Learn: Authentication methods for Azure DevOps",
+      "url": "https://learn.microsoft.com/en-us/azure/devops/integrate/get-started/authentication/authentication-guidance?view=azure-devops",
+      "verified": false
+    },
+    {
+      "title": "Microsoft Learn: Authenticate with Microsoft Entra ID",
+      "url": "https://learn.microsoft.com/en-us/azure/devops/integrate/get-started/authentication/entra?view=azure-devops",
+      "verified": false
+    },
+    {
+      "title": "Microsoft Learn: Use service principals and managed identities",
+      "url": "https://learn.microsoft.com/en-us/azure/devops/integrate/get-started/authentication/service-principal-managed-identity?view=azure-devops",
+      "verified": false
+    }
+  ],
+  "quiz": [
+    {
+      "q": "What does WIQL primarily query?",
+      "choices": [
+        "Azure Boards work items",
+        "NuGet packages",
+        "Azure subscriptions",
+        "Managed identity assignments"
+      ],
+      "answer": 0,
+      "explanation": "WIQL is Work Item Query Language for Azure Boards."
+    }
+  ]
+}

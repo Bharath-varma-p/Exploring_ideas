@@ -1,0 +1,67 @@
+{
+  "id": "fdy-telemetry-wiring",
+  "title": "Tracing and Observability Wiring",
+  "lane": "foundry-core",
+  "type": "concept",
+  "order": 213,
+  "summary": "Current docs describe Foundry tracing through Application Insights and OpenTelemetry. AIProjectClient exposes a telemetry operation with get application insights connection string.",
+  "tags": [
+    "telemetry",
+    "opentelemetry",
+    "azure-monitor"
+  ],
+  "analogy": "Telemetry is the aircraft black box. It should record enough to investigate turbulence, but you must protect what it records and who can read it.",
+  "diagram": "flowchart LR\nFoundryProject[Foundry project] --> AppInsights[Application Insights]\nPythonApp[Python app] --> OpenTelemetry[OpenTelemetry]\nOpenTelemetry --> AzureMonitor[Azure Monitor]\nSDKCalls[SDK calls] --> OpenTelemetry",
+  "body": "## First principles\n\nYou cannot operate what you cannot see. SDK plumbing needs visibility into latency, failures, and request paths, but tracing must be wired deliberately because telemetry can contain sensitive data.\n\n## Definition\n\nCurrent docs describe Foundry tracing through Application Insights and OpenTelemetry. AIProjectClient exposes a telemetry operation with get_application_insights_connection_string. Azure Monitor OpenTelemetry Distro provides configure_azure_monitor, and azure-core tracing can be enabled with OpenTelemetry packages. Some docs and samples discuss tracing as preview or experimental for GenAI spans, so mark detailed span semantics as unstable.\n\n## How it fits together\n\nFirst connect Application Insights to the Foundry project. Then retrieve or provide the connection string through configuration, call configure_azure_monitor, and run SDK calls with tracing packages installed. Do not print or commit telemetry connection strings in real apps.\n\n## Worked example\n\n```python\nimport os\nfrom azure.monitor.opentelemetry import configure_azure_monitor\n\nconnection_string = os.environ.get(\"APPLICATIONINSIGHTS_CONNECTION_STRING\")\nif not connection_string:\n    raise SystemExit(\"Set APPLICATIONINSIGHTS_CONNECTION_STRING from your monitored environment\")\n\nconfigure_azure_monitor(connection_string=connection_string)\nprint(\"Azure Monitor OpenTelemetry wiring is configured\")\n```\n\n*Wire Azure Monitor using the connection string from environment.*",
+  "drills": [
+    {
+      "q": "What project operation can retrieve the Application Insights connection string?",
+      "a": "project_client.telemetry.get_application_insights_connection_string."
+    },
+    {
+      "q": "What package provides configure_azure_monitor?",
+      "a": "azure-monitor-opentelemetry."
+    },
+    {
+      "q": "Why be cautious with traces?",
+      "a": "They can capture prompts, outputs, tool arguments, latency, exceptions, and other sensitive operational data."
+    }
+  ],
+  "teachItBack": "Teach it back as: Observability is wiring, not magic. Foundry can connect to Application Insights, Python can use OpenTelemetry, and Azure Monitor can collect the spans. I treat detailed GenAI tracing semantics as evolving and protect telemetry like production logs.",
+  "glossary": [
+    {
+      "term": "OpenTelemetry",
+      "definition": "An open standard for traces, metrics, and logs across applications and services."
+    },
+    {
+      "term": "Application Insights",
+      "definition": "Azure Monitor application performance and telemetry resource used to store and query traces."
+    },
+    {
+      "term": "telemetry",
+      "definition": "Operational data such as spans, latency, exceptions, logs, and metrics emitted by an application or service."
+    }
+  ],
+  "sources": [
+    {
+      "title": "TelemetryOperations class reference",
+      "url": "https://learn.microsoft.com/en-us/python/api/azure-ai-projects/azure.ai.projects.operations.telemetryoperations?view=azure-python",
+      "verified": false
+    },
+    {
+      "title": "Set Up Tracing for AI Agents in Microsoft Foundry",
+      "url": "https://learn.microsoft.com/en-us/azure/foundry/observability/how-to/trace-agent-setup",
+      "verified": false
+    },
+    {
+      "title": "Azure Monitor OpenTelemetry Distro for Python",
+      "url": "https://learn.microsoft.com/en-us/python/api/overview/azure/monitor-opentelemetry-readme?view=azure-python",
+      "verified": false
+    },
+    {
+      "title": "azure-ai-projects telemetry sample",
+      "url": "https://raw.githubusercontent.com/Azure/azure-sdk-for-python/main/sdk/ai/azure-ai-projects/samples/telemetry/sample_telemetry.py",
+      "verified": false
+    }
+  ]
+}

@@ -1,0 +1,79 @@
+{
+  "id": "fdy-operation-groups-current",
+  "title": "Operation Groups Current Map",
+  "lane": "foundry-core",
+  "type": "concept",
+  "order": 206,
+  "summary": "Current GA reference lists AIProjectClient variables beta, agents, evaluation rules, connections, datasets, deployments, and indexes.",
+  "tags": [
+    "operation-groups",
+    "api-surface",
+    "versioning"
+  ],
+  "analogy": "The client is a command center with labeled desks. Agents sit at one desk, connections at another, deployments at another. If a desk was renamed between previews, read the map for the version you installed before giving orders.",
+  "diagram": "flowchart TD\nClient[AIProjectClient] --> Agents[agents]\nClient --> Connections[connections]\nClient --> Deployments[deployments]\nClient --> Datasets[datasets]\nClient --> Indexes[indexes]\nClient --> EvalRules[evaluation rules]\nClient --> Beta[beta preview groups]\nClient --> OpenAI[get openai client]",
+  "body": "## First principles\n\nA big client becomes learnable when related operations are grouped. Instead of one giant method list, AIProjectClient exposes named operation groups that match project resource families.\n\n## Definition\n\nCurrent GA reference lists AIProjectClient variables beta, agents, evaluation_rules, connections, datasets, deployments, and indexes. The README also describes OpenAI client access with get_openai_client and evaluation tools through evaluation_rules plus beta evaluation sub-clients. The older or requested names .inference and .evaluations are not listed in the current GA AIProjectClient reference, so treat them as version-sensitive until the exact installed package confirms them.\n\n## How it fits together\n\nUse dir or hasattr for exploration, but rely on the official reference and changelog for course material. Teach the stable names first and mark preview or renamed surfaces clearly.\n\n## Worked example\n\n```python\nimport os\nfrom azure.identity import DefaultAzureCredential\nfrom azure.ai.projects import AIProjectClient\n\nexpected = [\n    \"agents\", \"connections\", \"datasets\", \"deployments\",\n    \"indexes\", \"evaluation_rules\", \"beta\", \"telemetry\",\n    \"inference\", \"evaluations\",\n]\n\nwith DefaultAzureCredential() as credential, AIProjectClient(\n    endpoint=os.environ[\"FOUNDRY_PROJECT_ENDPOINT\"],\n    credential=credential,\n) as project_client:\n    for name in expected:\n        print(f\"{name}: {hasattr(project_client, name)}\")\n```\n\n*Show the learner how to inspect operation groups without calling the service.*",
+  "drills": [
+    {
+      "q": "Which current GA operation groups are clearly listed in the AIProjectClient reference?",
+      "a": "agents, connections, datasets, deployments, indexes, evaluation_rules, beta, plus methods such as get_openai_client."
+    },
+    {
+      "q": "What should you do if a tutorial uses project_client.inference?",
+      "a": "Check the installed azure-ai-projects version and current reference; that surface appears version-sensitive and is not in the current GA reference I verified."
+    },
+    {
+      "q": "Where do preview operation groups tend to live?",
+      "a": "Under project_client.beta or behind explicit preview opt-in depending on the feature."
+    }
+  ],
+  "teachItBack": "Teach it back as: Operation groups are the client’s labeled departments. Current GA docs list agents, connections, datasets, deployments, indexes, evaluation_rules, and beta; OpenAI access comes through get_openai_client. If I see .inference or .evaluations in older material, I verify the installed SDK and mark it as version-sensitive.",
+  "glossary": [
+    {
+      "term": "agents",
+      "definition": "Operation group for creating and managing Foundry agents and agent versions at a high level."
+    },
+    {
+      "term": "connections",
+      "definition": "Operation group for enumerating and retrieving project connections to external or Azure resources."
+    },
+    {
+      "term": "deployments",
+      "definition": "Operation group for enumerating AI models deployed to the Foundry project."
+    },
+    {
+      "term": "evaluation_rules",
+      "definition": "Current GA operation group for evaluation rule operations; broader evaluator tools may appear under beta surfaces."
+    }
+  ],
+  "sources": [
+    {
+      "title": "AIProjectClient class reference",
+      "url": "https://learn.microsoft.com/en-us/python/api/azure-ai-projects/azure.ai.projects.aiprojectclient?view=azure-python",
+      "verified": false
+    },
+    {
+      "title": "Azure AI Projects client library for Python",
+      "url": "https://learn.microsoft.com/en-us/python/api/overview/azure/ai-projects-readme?view=azure-python",
+      "verified": false
+    },
+    {
+      "title": "azure-ai-projects changelog",
+      "url": "https://github.com/Azure/azure-sdk-for-python/blob/main/sdk/ai/azure-ai-projects/CHANGELOG.md",
+      "verified": false
+    }
+  ],
+  "quiz": [
+    {
+      "q": "Which namespace contains the async project client?",
+      "choices": [
+        "azure.ai.projects.aio",
+        "azure.ai.projects.asyncio",
+        "azure.ai.async.projects",
+        "azure.projects.aio.ai"
+      ],
+      "answer": 0,
+      "explanation": "Azure SDK async clients commonly live under the aio namespace."
+    }
+  ]
+}

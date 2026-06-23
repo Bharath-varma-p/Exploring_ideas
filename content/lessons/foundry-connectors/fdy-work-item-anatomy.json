@@ -1,0 +1,74 @@
+{
+  "id": "fdy-work-item-anatomy",
+  "title": "Work Item Anatomy",
+  "lane": "foundry-connectors",
+  "type": "concept",
+  "order": 302,
+  "summary": "A work item is an Azure Boards record for a unit of work, such as an Epic, Feature, User Story, Bug, or Task.",
+  "tags": [
+    "boards",
+    "work-items",
+    "fields"
+  ],
+  "analogy": "A work item is a logistics ticket. The type says whether it is a campaign, mission, defect, or chore. Fields are the stamped boxes on the form. State is the current checkpoint.",
+  "diagram": "graph TD\nEpic[Epic] --> Feature[Feature]\nFeature --> Story[User Story]\nFeature --> Bug[Bug]\nStory --> Task[Task]\nBug --> FixTask[Task]\nTask --> State[State field]",
+  "body": "## First principles\n\nFirst principles: planning data must be queryable and auditable. A sticky note is useful to humans, but an enterprise team needs IDs, owners, states, history, links, and fields so automation can reason over work without guessing.\n\n## Definition\n\nA work item is an Azure Boards record for a unit of work, such as an Epic, Feature, User Story, Bug, or Task. It has a type, a unique ID, fields like Title, Assigned To, State, Area Path, Iteration Path, history, comments, and links to code or other work.\n\n## How it fits together\n\nEpics contain Features; Features contain User Stories or similar requirement items; User Stories and Bugs break down into Tasks. The MCP server can read, create, update, link, and comment on these records when permissions allow.\n\n## Worked example\n\n```python\n# Azure DevOps creates work items with JSON Patch operations.\n# This example is representative and safe because it only builds a payload.\npatch = [\n    {'op': 'add', 'path': '/fields/System.Title', 'value': 'Teach ADO MCP connector'},\n    {'op': 'add', 'path': '/fields/System.Description', 'value': 'Create beginner friendly lesson content.'},\n    {'op': 'add', 'path': '/fields/System.Tags', 'value': 'foundry; mcp; ado'},\n]\nprint(patch)\n```\n\n*Construct a work item patch body*",
+  "drills": [
+    {
+      "q": "What field changes as work moves across a board?",
+      "a": "System.State."
+    },
+    {
+      "q": "Why does every work item need an ID?",
+      "a": "The ID gives stable addressing for queries, links, comments, and audit history."
+    },
+    {
+      "q": "Name two common work item types.",
+      "a": "Bug and Task, plus Epic, Feature, and User Story."
+    }
+  ],
+  "teachItBack": "A work item is structured delivery memory. Its type gives intent, its fields give facts, and its state gives flow. Agents should never treat work items as free text blobs when fields and links exist.",
+  "glossary": [
+    {
+      "term": "Epic",
+      "definition": "Large business initiative grouping features."
+    },
+    {
+      "term": "Feature",
+      "definition": "Capability that usually contains user stories or requirements."
+    },
+    {
+      "term": "Bug",
+      "definition": "Work item that tracks a defect."
+    },
+    {
+      "term": "Task",
+      "definition": "Small implementation or operational unit of work."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Microsoft Learn: About work items and work item types",
+      "url": "https://learn.microsoft.com/en-us/azure/devops/boards/work-items/about-work-items?view=azure-devops",
+      "verified": true
+    },
+    {
+      "title": "Microsoft Learn REST: Create work item",
+      "url": "https://learn.microsoft.com/en-us/rest/api/azure/devops/wit/work-items/create?view=azure-devops-rest-7.1",
+      "verified": true
+    }
+  ],
+  "quiz": [
+    {
+      "q": "What is the safest recommended auth pattern for an Azure hosted connector workload?",
+      "choices": [
+        "Managed identity with Microsoft Entra token",
+        "Hard coded PAT",
+        "Shared password",
+        "Unchecked anonymous access"
+      ],
+      "answer": 0,
+      "explanation": "Managed identity avoids stored secrets and gets short lived Entra tokens."
+    }
+  ]
+}

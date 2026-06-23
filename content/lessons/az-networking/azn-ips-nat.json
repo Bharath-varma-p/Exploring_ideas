@@ -1,0 +1,74 @@
+{
+  "id": "azn-ips-nat",
+  "title": "Public vs Private IPs, NAT Gateway & outbound connectivity",
+  "lane": "az-networking",
+  "type": "concept",
+  "order": 40,
+  "summary": "Private IPs let your resources talk inside the VNet; public IPs are needed to face the internet. NAT Gateway is the modern, scalable way for private VMs to reach *out* without being reachable from the *in* — and as of late 2025, Azure stopped giving outbound access away for free.",
+  "tags": [
+    "azure",
+    "public-ip",
+    "private-ip",
+    "nat-gateway",
+    "outbound",
+    "snat"
+  ],
+  "analogy": "Private IPs are office extension numbers (only dialable inside the building); a public IP is the company's main switchboard number. NAT Gateway is the switchboard that lets staff call out and routes the replies back, without publishing everyone's extension to the world.",
+  "diagram": "flowchart LR\n  subgraph VNet[VNet - private 10.0.0.0/16]\n    VM1[VM 10.0.1.4]\n    VM2[VM 10.0.1.5]\n  end\n  VM1 --> NAT[NAT Gateway + Standard Public IP]\n  VM2 --> NAT\n  NAT -->|SNAT: many private IPs -> one public IP| Internet((Internet))\n  Internet -. cannot initiate inbound .-> VNet",
+  "body": "## First principles\n\nThere are two kinds of address, and the difference is *reachability*. A **private IP** (from RFC 1918 ranges like `10.x`) is only meaningful inside your VNet — the public internet can't route to it. A **public IP** is globally unique and routable, so the whole internet can find it. The natural question: if a private VM has no public IP, how does it download an OS update or call an API? That gap between \"I want to reach out\" and \"I don't want to be reachable\" is what this lesson resolves.\n\n## Why it exists\n\nMost workloads should be **private**: a database, an app server, a worker. Giving each one a public IP would be a security disaster — every public IP is an open door the internet can knock on. But those private VMs still need **outbound** access (patch, pull packages, call SaaS APIs). So you need a one-way valve: traffic can go out and replies can come back, but nobody outside can *start* a conversation.\n\nThe trick that makes this work is **NAT — Network Address Translation**. Specifically **SNAT** (source NAT): as a packet leaves your private VM, its source address is rewritten from the private `10.0.1.4` to a shared public IP. Replies come back to that public IP and the platform maps them back to the right VM. Many private VMs share one public identity going out, and none of them are individually reachable coming in.\n\nHistorically Azure quietly gave every VM **default outbound access** — implicit SNAT through a platform-managed address. It worked, but the address was unpredictable and shared, and it lulled people into not designing outbound on purpose. **As of September 30, 2025, Azure is retiring default outbound access for new deployments** — new subnets won't get free implicit internet egress, and you must provide an *explicit* outbound method. Microsoft's recommended one is **NAT Gateway**.\n\n## How it works\n\nThe ways a private VM can reach the internet, from best to legacy:\n\n1. **NAT Gateway (recommended).** A dedicated outbound resource you attach to a subnet. You give it one or more **Standard public IPs**, and every VM in that subnet egresses through it. It's fully managed, zone-resilient, scales to massive numbers of connections, and — critically — provides a huge pool of **SNAT ports** so you don't run out under load. It is outbound-only; it never makes your VMs inbound-reachable.\n2. **Public IP on the VM/load balancer (when you actually need inbound).** A public IP attached to a resource (or a Standard Load Balancer's frontend) provides bidirectional reach. Use this only for things that *must* accept inbound from the internet.\n3. **Default outbound access (legacy, being retired).** The old implicit egress — don't design new systems around it.\n\nPublic IPs themselves come in SKUs: **Standard** (the only one to use — zone-aware, secure-by-default/closed until an NSG opens it) and **Basic** (retiring September 30, 2025, alongside Basic Load Balancer). Allocation can be dynamic or **static** (a fixed address that won't change — needed for DNS records and firewall allow-lists).\n\nWhy NAT Gateway beats load-balancer-based outbound: a Standard Load Balancer *can* do outbound SNAT, but you must manually pre-allocate SNAT ports per VM, and busy workloads exhaust them and fail with connection errors. NAT Gateway allocates ports on demand from a large shared pool, which all but eliminates **SNAT port exhaustion** — the classic \"my app randomly can't connect outbound\" bug.\n\n## In practice\n\n```bash\n# 1) A static Standard public IP for the gateway to SNAT through.\naz network public-ip create \\\n  --resource-group <rg> --name nat-pip \\\n  --sku Standard --allocation-method Static\n\n# 2) Create the NAT Gateway and give it that IP.\naz network nat gateway create \\\n  --resource-group <rg> --name <natgw> \\\n  --public-ip-addresses nat-pip --idle-timeout 10\n\n# 3) Attach it to the subnet — every VM there now egresses through it.\naz network vnet subnet update \\\n  --resource-group <rg> --vnet-name <vnet> --name app \\\n  --nat-gateway <natgw>\n```\n\nResult: every app VM reaches the internet through one predictable public IP (great for partner allow-lists), and none of them are reachable *from* the internet.\n\n## Gotchas\n\n- **Default outbound is going away (Sep 30, 2025).** New subnets need an explicit egress (NAT Gateway, or a public IP / LB outbound rule). Don't assume internet \"just works\" anymore.\n- **Basic SKU is retiring (Sep 30, 2025).** Use **Standard** public IPs and Standard Load Balancer; migrate any Basic resources.\n- **SNAT port exhaustion is the silent killer.** Heavy outbound to few destinations (e.g. one API) burns ports. NAT Gateway is the fix; LB-based outbound needs careful port planning.\n- **Outbound ≠ inbound.** NAT Gateway gives reach *out* only. To accept connections *in*, you still need a public IP on a load balancer/app gateway/VM plus NSG rules.\n- **Static when it must be stable.** Anything referenced by DNS, a partner firewall, or a certificate needs a *static* public IP so the address doesn't change.\n- **A public IP is closed by default on Standard.** Attaching one doesn't expose the VM until an NSG rule allows the traffic — secure by default.",
+  "teachItBack": "Private IPs are reachable only inside your VNet; public IPs are globally routable and should be rare. Most VMs need to reach out but not be reachable in, which is exactly what NAT Gateway provides: it SNATs many private VMs through one or more Standard public IPs, outbound-only, with a big port pool that avoids SNAT exhaustion. Azure is retiring free default outbound access and the Basic SKU on September 30, 2025, so design explicit egress with NAT Gateway and Standard public IPs, using static allocation wherever an address must stay fixed.",
+  "glossary": [
+    {
+      "term": "Private IP",
+      "definition": "A non-internet-routable address (RFC 1918) used for communication inside a VNet."
+    },
+    {
+      "term": "Public IP",
+      "definition": "A globally unique, internet-routable address; in Azure a Standard-SKU public IP is closed until an NSG opens it."
+    },
+    {
+      "term": "SNAT (source NAT)",
+      "definition": "Rewriting a packet's private source address to a shared public address on the way out, so replies can find their way back."
+    },
+    {
+      "term": "NAT Gateway",
+      "definition": "Azure's recommended managed outbound resource: attaches to a subnet, SNATs all its VMs through assigned public IPs, and scales connection ports on demand."
+    },
+    {
+      "term": "SNAT port exhaustion",
+      "definition": "Running out of available source ports for outbound connections, causing intermittent connection failures; mitigated by NAT Gateway."
+    },
+    {
+      "term": "Default outbound access",
+      "definition": "Legacy implicit internet egress Azure gave VMs automatically; being retired for new deployments on September 30, 2025."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Dev docs — What is Azure NAT Gateway?",
+      "url": "https://learn.microsoft.com/en-us/azure/nat-gateway/nat-overview",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — Default outbound access in Azure (retirement)",
+      "url": "https://learn.microsoft.com/en-us/azure/virtual-network/ip-services/default-outbound-access",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — Public IP addresses (SKUs, allocation)",
+      "url": "https://learn.microsoft.com/en-us/azure/virtual-network/ip-services/public-ip-addresses",
+      "verified": true
+    },
+    {
+      "title": "Azure Updates — Basic public IP and Basic Load Balancer retirement",
+      "url": "https://azure.microsoft.com/en-us/updates/azure-basic-public-ip-addresses-and-basic-load-balancers-will-be-retired/",
+      "verified": false
+    }
+  ],
+  "related": [
+    "azn-vnet",
+    "azn-nsg",
+    "azn-load-balancing",
+    "azn-private-link"
+  ]
+}

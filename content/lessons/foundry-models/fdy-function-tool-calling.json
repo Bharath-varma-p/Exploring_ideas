@@ -1,0 +1,62 @@
+{
+  "id": "fdy-function-tool-calling",
+  "title": "Function Calling at the Inference Layer",
+  "lane": "foundry-models",
+  "type": "concept",
+  "order": 210,
+  "summary": "ChatCompletionsClient supports tools and tool choice. Tool definitions describe caller-defined functions. The model may return message.tool calls.",
+  "tags": [
+    "tools",
+    "function-calling",
+    "raw-inference"
+  ],
+  "analogy": "The model is a dispatcher, not a mechanic. It writes a work order: call get_weather with city Seattle. Your code is the mechanic that performs the work and returns the result ticket.",
+  "diagram": "sequenceDiagram\n  participant App as Python app\n  participant Model as Chat model\n  participant Func as Local function\n  App->>Model: messages plus tool definitions\n  Model-->>App: assistant message with tool calls\n  App->>Func: execute validated function\n  Func-->>App: tool result JSON\n  App->>Model: prior assistant tool call plus tool message\n  Model-->>App: final answer",
+  "body": "## First principles\n\nThe model cannot actually execute your Python function. It can only request a function call by returning structured arguments. Your code decides whether to run the function, runs it, then sends the result back as a tool message.\n\n## Definition\n\nChatCompletionsClient supports tools and tool_choice. Tool definitions describe caller-defined functions. The model may return message.tool_calls. The caller executes the requested function and sends ToolMessage results back in a second complete call. This is the raw inference mechanic; MCP standardizes how tools are exposed, but is a separate lane.\n\n## How it fits together\n\nTool calling is a two-step loop: ask with tool definitions, inspect tool_calls, execute only allowed functions, then continue with assistant message plus ToolMessage. Validate JSON arguments because they came from the model.\n\n## Worked example\n\n```python\nimport json\nimport os\nfrom azure.identity import DefaultAzureCredential\nfrom azure.ai.inference import ChatCompletionsClient\nfrom azure.ai.inference.models import (\n    AssistantMessage,\n    ChatCompletionsToolDefinition,\n    FunctionDefinition,\n    SystemMessage,\n    ToolMessage,\n    UserMessage,\n)\n\nclient = ChatCompletionsClient(\n    endpoint=os.environ[\"AZURE_AI_CHAT_ENDPOINT\"],\n    credential=DefaultAzureCredential(),\n)\n\ndef get_support_hours(product: str) -> dict:\n    allowed = {\"foundry sdk\": \"Monday to Friday, 9 AM to 5 PM Pacific\"}\n    return {\"product\": product, \"hours\": allowed.get(product.lower(), \"Unknown\")}\n\ntools = [\n    ChatCompletionsToolDefinition(\n        function=FunctionDefinition(\n            name=\"get_support_hours\",\n            description=\"Return support hours for a product.\",\n            parameters={\n                \"type\": \"object\",\n                \"properties\": {\"product\": {\"type\": \"string\"}},\n                \"required\": [\"product\"],\n            },\n        )\n    )\n]\n\nmessages = [\n    SystemMessage(\"Use tools when needed. Do not invent support hours.\"),\n    UserMessage(\"What are the support hours for Foundry SDK?\"),\n]\n\nfirst = client.complete(\n    model=os.getenv(\"AZURE_AI_MODEL_DEPLOYMENT_NAME\"),\n    messages=messages,\n    tools=tools,\n)\nassistant = first.choices[0].message\nmessages.append(AssistantMessage(content=assistant.content, tool_calls=assistant.tool_calls))\n\nfor call in assistant.tool_calls or []:\n    if call.function.name != \"get_support_hours\":\n        raise ValueError(f\"Unexpected tool: {call.function.name}\")\n    args = json.loads(call.function.arguments)\n    result = get_support_hours(product=args[\"product\"])\n    messages.append(ToolMessage(content=json.dumps(result), tool_call_id=call.id))\n\nfinal = client.complete(\n    model=os.getenv(\"AZURE_AI_MODEL_DEPLOYMENT_NAME\"),\n    messages=messages,\n)\nprint(final.choices[0].message.content)\n```\n\n*Minimal two-call function-calling loop with validation.*",
+  "drills": [
+    {
+      "q": "Does the model run your function directly?",
+      "a": "No. It returns a requested tool call; your code executes it."
+    },
+    {
+      "q": "What message sends tool output back?",
+      "a": "ToolMessage with the matching tool_call_id."
+    },
+    {
+      "q": "How is this related to MCP?",
+      "a": "It is the lower-level mechanism MCP can build on or expose through a standard protocol."
+    }
+  ],
+  "teachItBack": "Function calling is a controlled handshake. The model requests, your code validates and executes, then the model summarizes the result. Never execute arbitrary tool names or unvalidated arguments.",
+  "glossary": [
+    {
+      "term": "tool_call",
+      "definition": "Model-requested function invocation with name and arguments."
+    },
+    {
+      "term": "FunctionDefinition",
+      "definition": "Schema describing a callable function to the model."
+    },
+    {
+      "term": "tool_choice",
+      "definition": "Setting controlling whether and which tool the model may call."
+    }
+  ],
+  "sources": [
+    {
+      "title": "ChatCompletionsClient class",
+      "url": "https://learn.microsoft.com/en-us/python/api/azure-ai-inference/azure.ai.inference.chatcompletionsclient?view=azure-python-preview",
+      "verified": true
+    },
+    {
+      "title": "azure.ai.inference.models package",
+      "url": "https://learn.microsoft.com/en-us/python/api/azure-ai-inference/azure.ai.inference.models?view=azure-python-preview",
+      "verified": true
+    },
+    {
+      "title": "Azure SDK Python tool calling sample",
+      "url": "https://github.com/Azure/azure-sdk-for-python/blob/main/sdk/ai/azure-ai-inference/samples/sample_chat_completions_with_tools.py",
+      "verified": true
+    }
+  ]
+}

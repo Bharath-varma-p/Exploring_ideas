@@ -1,0 +1,83 @@
+{
+  "id": "azure-bootcamp-start",
+  "title": "Azure Bootcamp — Start Here (the whole map)",
+  "lane": "az-foundations",
+  "type": "concept",
+  "order": 1,
+  "summary": "Your first-principles tour of the entire Azure platform — no quizzes, no noise, pure signal. This page is the map: how to read every lesson, the one hierarchy that unlocks everything, a worked example from intent to deployed resource, and the 10 domains you'll master.",
+  "tags": [
+    "azure",
+    "bootcamp",
+    "overview",
+    "mental-model",
+    "start-here"
+  ],
+  "analogy": "Azure is a planet-sized office building you rent by the minute. This page is the lobby map: it shows the floors (the hierarchy), the security desk (identity), and the 10 departments you're about to walk through — so you never feel lost again.",
+  "diagram": "flowchart TD\n  T[Microsoft Entra Tenant - identity boundary] --> MG[Management Group - policy at scale]\n  MG --> S[Subscription - billing and limits boundary]\n  S --> RG[Resource Group - lifecycle bundle]\n  RG --> R[Resource - a VM app or database]\n  PIM[PIM - activate an eligible role just in time] -.grants RBAC at a scope.-> S\n  S -.role assignments inherit downward.-> R",
+  "body": "## The deal\n\nWelcome to your Azure Bootcamp. The goal is simple: walk away able to look at any Azure service and confidently say *what it is, why it exists, and when to reach for it.* We do that from **first principles** — starting from the real-world problem, not the marketing name — and we keep it **pure signal**: no quizzes, no busywork, just clear ideas, vivid analogies, and a mental model you can actually carry around.\n\nAzure has hundreds of services. You do **not** need to memorize them. You need a handful of mental models and the confidence to reason about the rest. That's what these 10 lanes give you.\n\n## How to read every page in this bootcamp\n\nEvery lesson is built the same way, so your brain knows where to look:\n\n1. **First principles** — the fundamental need or constraint underneath.\n2. **Why it exists** — what was painful *before* this thing, and what it fixed.\n3. **How it works** — the real mechanics and names.\n4. **Analogy** — one picture that makes it stick (look for the 💡 callout).\n5. **In practice** — a concrete example or snippet.\n6. **Gotchas** — what people get wrong, and when *not* to use it.\n\nRead in order if you're new; jump by lane if you're filling gaps. The sidebar groups everything; ⌘K / Ctrl+K searches all of it.\n\n## The one model that unlocks Azure: the scope hierarchy\n\nNearly everything in Azure lives inside a nested hierarchy. Learn this once and the whole platform stops feeling random:\n\n- **Microsoft Entra Tenant** — your organization's identity boundary (the directory of every user, group, and app). One company, one primary tenant. *Who you are* is decided here.\n- **Management Group** — a folder for subscriptions, so you can apply policy and access to many subscriptions at once (e.g. \"all production subscriptions\").\n- **Subscription** — the billing and limits boundary. Costs roll up here; quotas apply here. It's the unit you hand to a team or an environment.\n- **Resource Group** — a bag that holds resources sharing a lifecycle (deploy together, delete together). A region is stamped on it for metadata.\n- **Resource** — the actual thing: a virtual machine, a web app, a database, a storage account.\n\nThink of it as **Country -> State -> City -> Neighborhood -> House**. Rules set at the country level flow downhill unless a more specific rule overrides them. That downhill flow is exactly how **RBAC** (permissions) and **Azure Policy** (rules) work — assign once high up, inherit everywhere below.\n\n## Worked example: \"I want to create a resource\"\n\nHere's the part most tutorials skip. You rarely *just* click **Create**. In a real, governed tenant, creating a resource is a small dance with identity and scope — and walking through it ties the whole platform together:\n\n1. **Decide the scope.** *Where* should this live? Pick the subscription and resource group. That choice decides who pays, what limits apply, and which policies are enforced.\n2. **Make sure you're allowed — via PIM.** In a least-privilege tenant you don't hold powerful roles all day. You hold them as **eligible**. So you open **Privileged Identity Management (PIM)**, find your eligible role (say *Contributor* on that subscription/resource group), and **activate** it just-in-time — often with a reason and an expiry. Now you temporarily *have* the permission.\n3. **Confirm the RBAC role fits the scope.** That role is an **RBAC assignment** = *who* (you) + *what* (Contributor) + *where* (this scope). Because assignments inherit downward, Contributor on the resource group lets you create resources inside it.\n4. **Create the resource.** Now the portal/CLI/Bicep call succeeds, because the request is authenticated (Entra) and authorized (RBAC at scope). When your PIM window expires, the standing power quietly goes away again.\n\nThat single flow already touched **Foundations** (hierarchy/scope), **Identity** (Entra, RBAC, PIM), and the edges of **Governance** (policy) and **Security** (least privilege). Every other Azure task is a variation on this theme.\n\n## The 10 domains you'll master\n\n| # | Lane | The one-line hook |\n|---|------|-------------------|\n| 1 | 🧱 **Foundations & Mental Model** | The cloud, regions/zones, the scope hierarchy, ARM, and how you talk to Azure. |\n| 2 | 🪪 **Identity & Access (Entra ID)** | Identity is the new perimeter: users, apps, RBAC, PIM, Conditional Access, Zero Trust. |\n| 3 | 🏛️ **Governance, Cost & Well-Architected** | Keep it safe, tidy, affordable: management groups, Policy, locks, tags, cost, landing zones. |\n| 4 | 🌐 **Networking & Connectivity** | The backbone: VNets, NSGs, load balancing, DNS, peering, VPN/ExpressRoute, Private Link. |\n| 5 | ⚙️ **Compute — Run Your Code** | IaaS to PaaS to serverless: VMs, App Service, Functions, containers, AKS, Container Apps. |\n| 6 | 🗄️ **Storage & Databases** | Where state lives: blobs, disks, Azure SQL, Cosmos DB, Postgres, Redis — and how to choose. |\n| 7 | 🔗 **Messaging & Integration** | Loosely couple everything: Service Bus, Event Hubs, Event Grid, Logic Apps, API Management. |\n| 8 | 📈 **Observability & Operations** | See what's happening: Monitor, metrics, logs + KQL, App Insights, alerts, autoscale. |\n| 9 | 🛡️ **Security & Compliance** | Defense in depth: Defender for Cloud, Key Vault, encryption, Sentinel, shared responsibility. |\n| 10 | 🧰 **Delivery & Infrastructure as Code** | Ship repeatably: Bicep, Terraform, Azure DevOps, GitHub Actions (keyless), plus a capstone. |\n\n## A recommended path\n\nStart with **Foundations** and **Identity** — they're the grammar of Azure. Then **Governance** so nothing you build surprises you on cost or compliance. After that, follow your curiosity: **Compute + Storage + Networking** are the classic \"build an app\" trio; **Integration + Observability** make it production-grade; **Security** and **Delivery** make it real. Already keyless-curious? The existing 🔐 *Managed Identity* lane pairs perfectly with Identity and Delivery.\n\n## One note on freshness\n\nAzure renames things. \"Azure Active Directory\" is now **Microsoft Entra ID**; portals and docs move. These lessons use current (2025/2026) names and link to live docs, and call out anything still in preview. When in doubt, the linked Microsoft Learn page is the source of truth.\n\nThat's the map. Pick a lane and let's go.",
+  "teachItBack": "Azure is a nested hierarchy — Entra tenant, then management group, subscription, resource group, and finally the resource — and permissions and policy flow downhill through it. To create anything you operate at a scope, prove you're allowed (often by activating an eligible role just-in-time in PIM, which is an RBAC assignment of who plus what plus where), and only then deploy. Master that one flow and the ten domains of Azure become variations on a theme rather than hundreds of things to memorize.",
+  "glossary": [
+    {
+      "term": "Microsoft Entra tenant",
+      "definition": "An organization's identity boundary in Azure — the directory of users, groups, and apps. Formerly called Azure Active Directory."
+    },
+    {
+      "term": "Management group",
+      "definition": "A container for subscriptions used to apply governance (policy and access) to many subscriptions at once."
+    },
+    {
+      "term": "Subscription",
+      "definition": "The billing and limits boundary in Azure; costs and quotas roll up to it."
+    },
+    {
+      "term": "Resource group",
+      "definition": "A container for resources that share a lifecycle (deployed and deleted together)."
+    },
+    {
+      "term": "Scope",
+      "definition": "The level in the hierarchy (management group, subscription, resource group, or resource) at which a role or policy applies and from which it inherits downward."
+    },
+    {
+      "term": "RBAC assignment",
+      "definition": "Role-Based Access Control binding of a principal (who) to a role (what) at a scope (where)."
+    },
+    {
+      "term": "PIM (Privileged Identity Management)",
+      "definition": "Microsoft Entra feature for just-in-time, time-boxed, approval-gated activation of eligible privileged roles."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Dev docs — Azure management groups, subscriptions, and resource hierarchy",
+      "url": "https://learn.microsoft.com/en-us/azure/governance/management-groups/overview",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — What is Azure role-based access control (RBAC)?",
+      "url": "https://learn.microsoft.com/en-us/azure/role-based-access-control/overview",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — What is Privileged Identity Management (PIM)?",
+      "url": "https://learn.microsoft.com/en-us/entra/id-governance/privileged-identity-management/pim-configure",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — Azure Resource Manager (ARM) overview",
+      "url": "https://learn.microsoft.com/en-us/azure/azure-resource-manager/management/overview",
+      "verified": true
+    }
+  ],
+  "related": [
+    "azf-intro",
+    "azi-intro",
+    "azg-intro",
+    "azn-intro",
+    "azc-intro",
+    "azd-intro",
+    "azx-intro",
+    "azo-intro",
+    "azs-intro",
+    "azp-intro"
+  ]
+}

@@ -1,0 +1,66 @@
+{
+  "id": "azc-container-apps",
+  "title": "Azure Container Apps: Serverless Containers With Useful Rails",
+  "lane": "az-compute",
+  "type": "concept",
+  "order": 80,
+  "summary": "Azure Container Apps runs containers without exposing Kubernetes. It adds revisions, ingress, KEDA-based scaling, jobs, and optional Dapr for microservice patterns.",
+  "tags": [
+    "azure",
+    "compute",
+    "container-apps",
+    "serverless-containers",
+    "keda",
+    "dapr"
+  ],
+  "analogy": "Container Apps is a food truck park with automatic crowd control: bring trucks as containers, Azure handles parking, lines, signs, and opening hours.",
+  "diagram": "flowchart TD\n  Image[Container image] --> Revision[Immutable revision]\n  Revision --> App[Container App]\n  HTTP[HTTP traffic] --> Ingress[Ingress]\n  Queue[Queue or event source] --> KEDA[KEDA scaler]\n  CPU[CPU or memory] --> KEDA\n  KEDA --> Replicas[Replicas scale 0 to N]\n  Dapr[Dapr sidecar optional] --> App",
+  "body": "## First principles\n\nSometimes you want the packaging discipline of containers without the platform burden of Kubernetes. You need HTTPS ingress, environment variables, revisions, traffic splitting, scaling, and background workers. You do not necessarily need to manage nodes, clusters, or Kubernetes APIs.\n\n**Azure Container Apps** is built for that middle ground.\n\n## Why it exists\n\nBefore Container Apps, a team often had two unsatisfying choices: run a simple container in a too-simple host, or adopt Kubernetes for features that were real but operationally heavy. Container Apps gives containerized workloads serverless behavior: less infrastructure, event-driven scale, and a higher-level app model.\n\n## How it works\n\nA **container app** runs one or more containers from an image, usually stored in ACR. Deploying creates an immutable **revision**. You can route traffic between revisions for gradual releases or instant rollback.\n\nScaling is driven by rules. Container Apps can scale based on HTTP traffic, CPU, memory, and **KEDA-supported scalers** such as queues, event streams, and external systems. Many apps can scale to zero when idle, then wake when traffic or events arrive.\n\n**Dapr** support is optional. Dapr sidecars can provide service invocation, pub/sub, state access, and bindings through standard building blocks. Use it when those abstractions help; do not enable it because every diagram looks better with another box.\n\n## In practice\n\n```bash\naz containerapp up   --name <app>   --resource-group <rg>   --location <region>   --image <registry>.azurecr.io/api:1.0   --target-port 8080   --ingress external\n```\n\nA queue worker could instead have no public ingress and a scaler tied to queue length.\n\n## Gotchas\n\nContainer Apps is not Kubernetes with the doors unlocked. You do not get arbitrary Kubernetes API control, custom controllers, or deep cluster tuning. If you need those, AKS is the honest path. Also, scale-to-zero changes latency: the first request after idle can pay a startup cost. Design health probes, startup time, and concurrency deliberately.",
+  "teachItBack": "Container Apps runs containers with serverless platform features. Images become revisions; ingress and traffic splitting are built in; KEDA rules scale replicas from zero to many; Dapr is optional for microservice building blocks. Choose it when containers are right but full Kubernetes would be unnecessary platform weight.",
+  "glossary": [
+    {
+      "term": "Container app",
+      "definition": "An Azure Container Apps resource that runs one or more containers with managed ingress, revisions, and scaling."
+    },
+    {
+      "term": "Revision",
+      "definition": "An immutable deployed version of a container app configuration and image."
+    },
+    {
+      "term": "KEDA",
+      "definition": "Kubernetes Event-driven Autoscaling, used by Container Apps to scale based on events and metrics."
+    },
+    {
+      "term": "Dapr",
+      "definition": "Distributed Application Runtime, optional sidecar-based building blocks for service invocation, pub/sub, state, and bindings."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Dev docs — Azure Container Apps overview",
+      "url": "https://learn.microsoft.com/en-us/azure/container-apps/overview",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — Set scaling rules in Azure Container Apps",
+      "url": "https://learn.microsoft.com/en-us/azure/container-apps/scale-app",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — Dapr integration with Azure Container Apps",
+      "url": "https://learn.microsoft.com/en-us/azure/container-apps/dapr-overview",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — Compare AKS with other Azure container options",
+      "url": "https://learn.microsoft.com/en-us/azure/aks/compare-container-options-with-aks",
+      "verified": true
+    }
+  ],
+  "related": [
+    "azc-containers",
+    "azc-functions",
+    "azc-aks",
+    "azc-choosing-compute"
+  ]
+}

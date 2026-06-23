@@ -1,0 +1,71 @@
+{
+  "id": "azx-event-grid",
+  "title": "Event Grid: Reactive Pub/Sub",
+  "lane": "az-integration",
+  "type": "concept",
+  "order": 50,
+  "summary": "Event Grid routes discrete facts — blob created, resource changed, order submitted — to handlers so systems can react without tight coupling.",
+  "tags": [
+    "azure",
+    "event-grid",
+    "pub-sub",
+    "cloudevents",
+    "event-driven-architecture"
+  ],
+  "analogy": "Event Grid is the building announcement system: services publish happenings, and subscribed rooms receive only the announcements they care about.",
+  "diagram": "flowchart TD\n  Azure[Azure service] --> System[System topic]\n  App[Custom app] --> Custom[Custom topic]\n  System --> Sub[Event subscription]\n  Custom --> Sub\n  Sub --> Function[Azure Function]\n  Sub --> Logic[Logic App]\n  Sub --> Webhook[Webhook or service endpoint]",
+  "body": "## First principles\n\nA reactive system starts with a fact: something happened. A file landed, a VM was created, a payment cleared, a secret changed. The publisher should not have to know every future thing that might care.\n\n**Azure Event Grid** is Azure’s managed publish-subscribe eventing service for routing those discrete facts to subscribers.\n\n## Why it exists\n\nBefore event routing, teams embedded point-to-point calls everywhere. Storage would need to call thumbnailing, audit, indexing, and notification endpoints directly. Every new reaction meant editing the original system.\n\nEvent Grid flips that. The source publishes an event, subscribers declare interest, and Azure handles delivery. That enables event-driven architectures where adding a new reaction does not require redeploying the publisher.\n\n## How it works\n\nAn **event** is the smallest useful description of something that happened: source, time, type, ID, and event-specific data. Event Grid supports CloudEvents 1.0 for interoperable event shape.\n\nA **system topic** represents events published by Azure services such as Storage, Key Vault, App Service, Event Hubs, and many others. Only Azure services publish to system topics.\n\nA **custom topic** is for your application or third-party events. It gives your source an endpoint for a related category of events, such as `orders` or `accounts`.\n\nAn **event subscription** connects a topic to handlers: Azure Functions, Logic Apps, webhooks, Service Bus, Event Hubs, and other destinations depending on the scenario. Current Event Grid docs also describe HTTP push and pull delivery patterns, plus MQTT capabilities for IoT-style messaging.\n\n## Analogy\n\n💡 A system topic is like the official airport display board: only the airline system can post gate changes. A custom topic is like your team’s incident channel: your app posts domain events, and only subscribers who care join the channel.\n\n## In practice\n\n```bash\n# Route blob-created events from a storage account to a handler.\naz eventgrid event-subscription create \\\n  --name thumbnailer \\\n  --source-resource-id <storage-account-resource-id> \\\n  --endpoint <function-or-webhook-endpoint>\n```\n\nThe storage account does not know what a thumbnailer is. It publishes the fact; the subscription owns the reaction.\n\n## Gotchas\n\nEvent Grid is not a durable work queue for mandatory commands. If exactly one worker must own a business task and you need settlement or a DLQ workflow, think Service Bus.\n\nEvent Grid is also not a telemetry lake. If you need many consumers reading a time-ordered high-throughput stream with offsets, think Event Hubs.\n\nEvents should be facts, not remote procedure calls in disguise. `OrderPaid` ages better than `PleaseSendEmailToCustomer` because new subscribers can react without changing the event contract.",
+  "teachItBack": "Event Grid routes facts to interested subscribers. System topics are produced by Azure services, while custom topics are produced by your applications. Subscriptions connect those topics to handlers such as Functions, Logic Apps, webhooks, Service Bus, or Event Hubs. Use Event Grid for reactive event-driven architecture, not as a command queue or telemetry stream.",
+  "glossary": [
+    {
+      "term": "Event Grid topic",
+      "definition": "An Event Grid endpoint or resource representing a collection of related events."
+    },
+    {
+      "term": "System topic",
+      "definition": "An Event Grid topic for events emitted by Azure services."
+    },
+    {
+      "term": "Custom topic",
+      "definition": "An Event Grid topic created for application or third-party events."
+    },
+    {
+      "term": "CloudEvents",
+      "definition": "A CNCF standard format for describing event data across systems."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Dev docs — Introduction to Azure Event Grid",
+      "url": "https://learn.microsoft.com/en-us/azure/event-grid/overview",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — Event Grid concepts",
+      "url": "https://learn.microsoft.com/en-us/azure/event-grid/concepts",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — System topics in Azure Event Grid",
+      "url": "https://learn.microsoft.com/en-us/azure/event-grid/system-topics",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — Custom topics in Azure Event Grid explained",
+      "url": "https://learn.microsoft.com/en-us/azure/event-grid/custom-topics",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — Compare Azure messaging services",
+      "url": "https://learn.microsoft.com/en-us/azure/service-bus-messaging/compare-messaging-services",
+      "verified": true
+    }
+  ],
+  "related": [
+    "azx-intro",
+    "azx-event-hubs",
+    "azx-service-bus",
+    "azx-logic-apps",
+    "azx-choosing-integration"
+  ]
+}

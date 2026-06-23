@@ -1,0 +1,62 @@
+{
+  "id": "fdy-official-sdks",
+  "title": "Official SDKs",
+  "lane": "foundry-mcp",
+  "type": "concept",
+  "order": 115,
+  "summary": "Official MCP SDKs are available for multiple languages. The docs list TypeScript, Python, C Sharp, Go, Java, Rust, Swift, Ruby, PHP, and Kotlin with tier classifications.",
+  "tags": [
+    "sdk",
+    "ecosystem",
+    "languages"
+  ],
+  "analogy": "The spec is the military standard; SDKs are approved toolkits that help units implement the standard without machining every part by hand.",
+  "diagram": "graph TD\nSpec[MCP specification]\nSpec --> Python[Python SDK]\nSpec --> TypeScript[TypeScript SDK]\nSpec --> CSharp[C Sharp SDK]\nSpec --> Go[Go SDK]\nSpec --> Other[Java Rust Swift Ruby PHP Kotlin]\nPython --> Servers[Servers]\nPython --> Clients[Clients]",
+  "body": "## First principles\n\nFirst principles: a protocol becomes useful when many builders can implement it correctly without hand-writing every wire detail. SDKs package the schema, message routing, transports, and ergonomic language patterns.\n\n## Definition\n\nOfficial MCP SDKs are available for multiple languages. The docs list TypeScript, Python, C Sharp, Go, Java, Rust, Swift, Ruby, PHP, and Kotlin with tier classifications. The TypeScript and Python repositories are official implementations; their READMEs note stable v1 lines and in-development v2 work as of the current docs.\n\n## How it fits together\n\nPrefer official SDKs for production and learning. Read the spec for truth, use SDKs for implementation. Watch version notes carefully because SDK major versions may track new protocol releases at different speeds.\n\n## Worked example\n\n```python\n# Run inside your project environment after installing mcp.\n# This avoids global package installation.\nimport importlib.metadata\n\nprint(importlib.metadata.version(\"mcp\"))\n```\n\n*Check an installed Python SDK version*",
+  "drills": [
+    {
+      "q": "Should you hand-roll JSON-RPC before trying the SDK?",
+      "a": "Usually no. Use the official SDK, then inspect JSON-RPC to understand behavior."
+    },
+    {
+      "q": "Name two Tier 1 SDK languages listed by official docs.",
+      "a": "TypeScript and Python. C Sharp and Go are also listed as Tier 1."
+    },
+    {
+      "q": "Why watch SDK version notes?",
+      "a": "Because SDK stable and pre-release branches can differ while specs evolve."
+    }
+  ],
+  "teachItBack": "The spec defines MCP; SDKs make it practical. Python and TypeScript are official, widely used SDKs, with several other language SDKs listed by the docs. Use SDKs to build, and use the spec to verify protocol semantics.",
+  "glossary": [
+    {
+      "term": "SDK",
+      "definition": "Software development kit that implements MCP protocol details for a language."
+    },
+    {
+      "term": "Tier",
+      "definition": "Official classification for SDK feature completeness and maintenance commitment."
+    },
+    {
+      "term": "Version line",
+      "definition": "A stable or pre-release SDK branch that may target different protocol maturity."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Official MCP SDKs",
+      "url": "https://modelcontextprotocol.io/docs/sdk.md",
+      "verified": true
+    },
+    {
+      "title": "modelcontextprotocol Python SDK",
+      "url": "https://github.com/modelcontextprotocol/python-sdk",
+      "verified": true
+    },
+    {
+      "title": "modelcontextprotocol TypeScript SDK",
+      "url": "https://github.com/modelcontextprotocol/typescript-sdk",
+      "verified": true
+    }
+  ]
+}

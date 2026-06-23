@@ -1,0 +1,80 @@
+{
+  "id": "fdy-dependent-azure-resources",
+  "title": "Dependent Azure Resources",
+  "lane": "foundry-core",
+  "type": "concept",
+  "order": 108,
+  "summary": "Dependent Azure resources are supporting services used by Foundry or hub-based projects, including Azure Storage, Azure Key Vault, Azure Container Registry, Application Insights, Log Analytics, Azure AI Search, and the Foundry resource itself depending on project shape.",
+  "tags": [
+    "architecture",
+    "storage",
+    "key-vault",
+    "monitoring"
+  ],
+  "analogy": "A project is the classroom; dependent resources are the lockers, safe, workshop, camera system, and library index that make the classroom usable.",
+  "diagram": "graph TD\nFoundry[Foundry or hub project] --> Store[Storage account]\nFoundry --> Vault[Key Vault]\nFoundry --> Registry[Container Registry]\nFoundry --> Monitor[Application Insights]\nFoundry --> Logs[Log Analytics]\nFoundry --> Search[Azure AI Search]\nStore --> BoundaryA[Separate governance]\nVault --> BoundaryB[Separate governance]",
+  "body": "## First principles\n\nFirst principles: a platform feature often relies on ordinary infrastructure underneath. Files need storage, secrets need a vault, images may need a registry, logs need monitoring, and retrieval may need search. Foundry hides some wiring, but architects must still understand the dependent resources and their separate governance boundaries.\n\n## Definition\n\nDependent Azure resources are supporting services used by Foundry or hub-based projects, including Azure Storage, Azure Key Vault, Azure Container Registry, Application Insights, Log Analytics, Azure AI Search, and the Foundry resource itself depending on project shape.\n\n## How it fits together\n\nDo not assume connected or dependent resources inherit every setting automatically. The architecture docs state that connected resources such as Storage, Key Vault, and Azure AI Search are independent Azure resources with their own governance boundaries, networking, and access policies.\n\n## Worked example\n\n```bash\n# Shows resource types so you can spot storage, vault, registry, insights, logs, and search.\n# Requires Azure RBAC read access. No keys or secrets are displayed.\naz resource list   --resource-group <resource-group>   --query \"[].{name:name,type:type,location:location}\"   -o table\n```\n\n*Inventory supporting resources in a resource group*",
+  "drills": [
+    {
+      "q": "Why should a learner care about dependent resources?",
+      "a": "Because cost, networking, RBAC, and compliance can live on those resources separately from Foundry."
+    },
+    {
+      "q": "Name two typical dependent resources.",
+      "a": "Azure Storage and Azure Key Vault."
+    },
+    {
+      "q": "Are connected resources always governed by the Foundry resource?",
+      "a": "No. They are independent Azure resources with their own governance boundaries."
+    }
+  ],
+  "teachItBack": "Foundry feels unified, but it can depend on separate Azure resources. Storage, Key Vault, Container Registry, Application Insights, Log Analytics, and Search may all matter. Teach peers to inspect the whole resource group and govern each dependency deliberately.",
+  "glossary": [
+    {
+      "term": "Azure Storage",
+      "definition": "Cloud storage service often used for project artifacts and files."
+    },
+    {
+      "term": "Azure Key Vault",
+      "definition": "Azure service for securely storing secrets, keys, and certificates."
+    },
+    {
+      "term": "Azure Container Registry",
+      "definition": "Registry for container images used by some custom runtime scenarios."
+    },
+    {
+      "term": "Log Analytics",
+      "definition": "Azure Monitor log workspace for querying telemetry."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Microsoft Learn: Microsoft Foundry architecture",
+      "url": "https://learn.microsoft.com/en-us/azure/foundry/concepts/architecture",
+      "verified": true
+    },
+    {
+      "title": "Microsoft Learn: Hubs and hub-based project overview classic",
+      "url": "https://learn.microsoft.com/en-us/azure/foundry-classic/concepts/ai-resources",
+      "verified": true
+    },
+    {
+      "title": "Microsoft Learn: Add a new connection to your project",
+      "url": "https://learn.microsoft.com/en-us/azure/foundry/how-to/connections-add",
+      "verified": true
+    }
+  ],
+  "quiz": [
+    {
+      "q": "What is quota?",
+      "choices": [
+        "A capacity or rate limit allocated by dimensions such as region subscription model or deployment type",
+        "The display name of a project",
+        "A Mermaid diagram type",
+        "A portal theme"
+      ],
+      "answer": 0,
+      "explanation": "Quota controls how much capacity or rate your workload may consume."
+    }
+  ]
+}

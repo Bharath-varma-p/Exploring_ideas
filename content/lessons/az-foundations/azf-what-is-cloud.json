@@ -1,0 +1,54 @@
+{
+  "id": "azf-what-is-cloud",
+  "title": "What \"the cloud\" actually is (and why it exists)",
+  "lane": "az-foundations",
+  "type": "concept",
+  "order": 20,
+  "summary": "The cloud is renting someone else's computers over the internet and paying only for what you use. The real revolution isn't the hardware — it's the economic shift from capex to opex, plus elasticity, self-service, and economies of scale you could never reach alone.",
+  "tags": [
+    "azure",
+    "cloud-computing",
+    "capex-opex",
+    "elasticity",
+    "fundamentals"
+  ],
+  "analogy": "Owning servers is buying a diesel generator for your house; the cloud is the electric grid — you flip a switch, draw exactly what you need this second, and one meter bills you for it.",
+  "diagram": "flowchart LR\n  subgraph Before[On-premises: buy ahead, own forever]\n    G[Guess peak demand] --> B[Buy hardware - capex]\n    B --> I[Idle capacity most of the time]\n    B --> O[Overload on launch day]\n  end\n  subgraph Cloud[Cloud: rent on demand]\n    D[Demand rises] --> U[Scale up in minutes]\n    D2[Demand falls] --> Dn[Scale down - stop paying]\n    U --> M[Pay per use - opex]\n  end",
+  "body": "## First principles\n\nA computer is a finite pile of CPU, memory, disk, and network. Running software means having enough of that pile, in the right place, at the right moment. The hard part has never been the software — it's **matching capacity to demand**, which is wildly uneven (quiet at 3am, on fire during a sale) and impossible to predict precisely.\n\nFor decades you solved this by *owning* the pile: buy servers sized for your worst-case guess, and eat the cost the other 95% of the time. The cloud's core insight is that capacity doesn't have to be owned — it can be **rented by the minute from a shared pool so large that your spikes are statistical noise to the provider.**\n\n## Why it exists\n\nPicture launching a product in 2008. You forecast traffic, sign a purchase order for racks of servers, wait six weeks for delivery, hire someone to cable and cool them, and pray your forecast was right. Guess low and you crash on launch day. Guess high and you've sunk six figures into machines that idle. Every experiment carried this tax, so companies ran *fewer* experiments — innovation throttled by procurement.\n\n**Cloud computing** dissolved that. The painful upfront purchase (**capital expenditure / capex**) became a metered monthly bill (**operating expenditure / opex**). Capacity that took weeks now takes minutes, and a failed experiment costs whatever you used before you turned it off. The cloud didn't just make servers cheaper — it made *trying things* cheap, which is the actual revolution.\n\n## How it works\n\nFour properties define it, per the long-standing NIST definition and every cloud since:\n\n- **On-demand self-service** — you provision capacity yourself via an API or portal, no human in the loop, no purchase order.\n- **Elasticity** — capacity scales up and down with load, often automatically, so you track demand instead of guessing it.\n- **Pay-as-you-go** — you're metered on what you actually consume (compute-seconds, gigabytes, requests), turning a fixed cost into a variable one.\n- **Economies of scale** — the provider buys hardware, power, and bandwidth at planetary volume and runs datacenters at utilization no single company could, then passes a slice of that efficiency to you.\n\nYes, it's literally *\"someone else's computers\"* — but that flippant line undersells it. It's someone else's computers, plus a global network, plus a self-service control system, plus a 24/7 ops team, all rented at a fraction of what owning a worse version would cost.\n\n## In practice\n\nThe shift is easiest to feel in money. Suppose a service needs 100 servers for a 4-hour Black Friday spike and 5 servers the rest of the year:\n\n- **Owned:** buy 100 servers (capex), power and patch all 100 year-round, run 95 of them idle 363 days a year.\n- **Cloud:** run 5, then auto-scale to 100 for those 4 hours and back down. You pay for ~5 servers' worth of time plus a few hours of the rest. Same peak performance, a fraction of the cost — and zero hardware to dispose of next year.\n\nThis is also why the cloud pairs naturally with *experiments*: spin up a fleet, test an idea, delete it, pay for an afternoon.\n\n## Gotchas\n\n- **Cloud is not automatically cheaper.** Pay-per-use rewards workloads that scale down; a server pinned at 100% all year can be cheaper owned. The win is *elasticity and speed*, not a guaranteed lower bill — leave things running and the meter punishes you.\n- **\"Someone else's computers\" cuts both ways.** You inherit their reliability and security investment, but you also depend on it — which is exactly why the **shared responsibility model** exists (later in this lane).\n- **Opex needs new discipline.** Capex had a hard ceiling — the PO. Opex has no ceiling, so cost management becomes a skill, not an afterthought.",
+  "teachItBack": "The cloud is renting computing from a giant shared pool over the internet and paying only for what you consume. It exists because owning hardware forced you to guess demand months ahead and pay for idle capacity, so the real shift is economic: capex becomes opex, and capacity that took weeks now takes minutes. Its defining traits — self-service, elasticity, pay-per-use, and economies of scale — make experimenting cheap, but only save money when you actually scale down.",
+  "glossary": [
+    {
+      "term": "Capex (capital expenditure)",
+      "definition": "A large upfront purchase of assets you own, like buying servers, depreciated over years."
+    },
+    {
+      "term": "Opex (operating expenditure)",
+      "definition": "An ongoing metered cost for what you consume, like a monthly cloud bill."
+    },
+    {
+      "term": "Elasticity",
+      "definition": "The ability to add or remove capacity quickly to match changing demand, often automatically."
+    },
+    {
+      "term": "Economies of scale",
+      "definition": "Cost-per-unit savings a provider gets by operating at enormous volume and passing some efficiency to customers."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Azure — What is cloud computing?",
+      "url": "https://azure.microsoft.com/en-us/resources/cloud-computing-dictionary/what-is-cloud-computing",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — What is Azure? (Cloud Adoption Framework)",
+      "url": "https://learn.microsoft.com/en-us/azure/cloud-adoption-framework/get-started/what-is-azure",
+      "verified": true
+    }
+  ],
+  "related": [
+    "azf-intro",
+    "azf-what-is-azure",
+    "azf-shared-responsibility"
+  ]
+}

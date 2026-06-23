@@ -1,0 +1,79 @@
+{
+  "id": "fdy-oauth-oidc-token-exchange",
+  "title": "OAuth2, OIDC, Audiences, and Scopes",
+  "lane": "foundry-auth",
+  "type": "concept",
+  "order": 103,
+  "summary": "A scope is the requested permission surface for a token. In Azure SDK data-plane calls, the scope is often the resource identifier plus /.default, such as https://cognitiveservices.",
+  "tags": [
+    "oauth2",
+    "oidc",
+    "scopes",
+    "audience"
+  ],
+  "analogy": "A scope is like writing the destination and mission type on a convoy pass. The checkpoint validates the pass was issued for that checkpoint, not merely that it looks official.",
+  "diagram": "sequenceDiagram\n  participant App as App with managed identity\n  participant Host as Azure host identity endpoint\n  participant Entra as Microsoft Entra ID\n  participant API as Target Azure API\n  App->>Host: request token for target scope\n  Host->>Entra: prove managed identity\n  Entra-->>Host: access token for audience\n  Host-->>App: token no credential in code\n  App->>API: HTTPS request with bearer token\n  API-->>App: response after AuthN and AuthZ",
+  "body": "## First principles\n\nDistributed systems need delegated proof. Instead of sharing a long-lived credential with every service, the workload obtains a short-lived bearer token for exactly the API it will call. OAuth2 defines this delegation pattern; OIDC adds identity-layer sign-in concepts.\n\n## Definition\n\nA scope is the requested permission surface for a token. In Azure SDK data-plane calls, the scope is often the resource identifier plus /.default, such as https://cognitiveservices.azure.com/.default.\n\n## How it fits together\n\nFor managed identity, code asks the local Azure host for a token for a scope. The host proves the workload identity to Entra. Entra returns a token. The code sends it to the target resource.\n\n## Worked example\n\n```python\nimport os\nfrom azure.identity import DefaultAzureCredential\n\n# Use az login locally or managed identity in Azure. No application credential is stored in code.\nSCOPE = os.getenv(\"AZURE_TOKEN_SCOPE\", \"https://cognitiveservices.azure.com/.default\")\ncredential = DefaultAzureCredential(exclude_environment_credential=True)\naccess_token = credential.get_token(SCOPE)\n\nprint(\"Token acquired for\", SCOPE)\nprint(\"Expires at Unix time\", access_token.expires_on)\n```\n\n*Ask Azure Identity for an access token for one audience.*",
+  "drills": [
+    {
+      "q": "What scope is common for Azure OpenAI token auth?",
+      "a": "https://cognitiveservices.azure.com/.default"
+    },
+    {
+      "q": "Why not reuse a management token for inference?",
+      "a": "Its audience is wrong; the inference endpoint expects a data-plane audience."
+    },
+    {
+      "q": "Who issues the token?",
+      "a": "Microsoft Entra ID, reached through Azure Identity or the managed identity endpoint."
+    }
+  ],
+  "teachItBack": "OAuth2 is a token exchange system. The workload asks for a token scoped to a target audience, then presents that bearer token to the API. If the audience is wrong, the API should reject it even if the identity is real.",
+  "glossary": [
+    {
+      "term": "OAuth2",
+      "definition": "Authorization framework for delegated access tokens."
+    },
+    {
+      "term": "OIDC",
+      "definition": "Identity layer built on OAuth2 for sign-in claims."
+    },
+    {
+      "term": "Scope",
+      "definition": "Requested token permission or resource surface."
+    },
+    {
+      "term": "/.default",
+      "definition": "Azure convention requesting configured permissions for a resource audience."
+    },
+    {
+      "term": "Bearer token",
+      "definition": "Token usable by whoever presents it until expiry."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Azure Identity client library for Python",
+      "url": "https://learn.microsoft.com/en-us/python/api/overview/azure/identity-readme?view=azure-python",
+      "verified": true
+    },
+    {
+      "title": "Azure AI Inference client library for Python",
+      "url": "https://learn.microsoft.com/en-us/python/api/overview/azure/ai-inference-readme?view=azure-python-preview",
+      "verified": true
+    }
+  ],
+  "quiz": [
+    {
+      "q": "How do you select a user-assigned managed identity in Python?",
+      "choices": [
+        "Pass client_id to ManagedIdentityCredential or managed_identity_client_id to DefaultAzureCredential",
+        "Pass the principal display name as a password",
+        "Use the subscription ID as the token",
+        "Set the endpoint URL as the tenant"
+      ],
+      "answer": 0,
+      "explanation": "The client ID disambiguates which user-assigned managed identity should be used."
+    }
+  ]
+}

@@ -1,0 +1,73 @@
+{
+  "id": "azs-defender",
+  "title": "Microsoft Defender for Cloud: Posture & Protection",
+  "lane": "az-security",
+  "type": "concept",
+  "order": 30,
+  "summary": "Your security 'dashboard light' for the whole cloud. Defender for Cloud does two jobs: CSPM finds misconfigurations before attackers do and scores you (Secure Score), and workload protection (CWPP) watches running resources for active threats.",
+  "tags": [
+    "azure",
+    "security",
+    "defender-for-cloud",
+    "cspm",
+    "secure-score"
+  ],
+  "analogy": "Defender for Cloud is the combination of a home inspector and a burglar alarm. The inspector (CSPM) walks the house and lists every unlocked window and missing smoke detector, scoring how safe you are. The alarm (workload protection) watches in real time and screams when someone is actually climbing through a window right now.",
+  "diagram": "flowchart TD\n  DFC[Microsoft Defender for Cloud] --> CSPM[CSPM: posture]\n  DFC --> CWPP[Workload protection: threats]\n  CSPM --> SS[Secure Score]\n  CSPM --> REC[Recommendations / misconfigs]\n  CSPM --> COMP[Regulatory compliance]\n  CWPP --> AL[Threat alerts on VMs, storage, SQL, containers]\n  AL --> SENT[Send to Microsoft Sentinel / Defender XDR]",
+  "body": "## First principles\n\nYou cannot secure what you cannot see. In a real subscription, resources are created constantly — a VM here, a storage account there, a database spun up for a demo and forgotten. Each one is a potential open door. A human cannot continuously audit hundreds of resources against best practice, nor watch them all for live attacks. You need a service that *continuously* answers two different questions: **\"Where am I exposed?\"** (before anything bad happens) and **\"Is something bad happening right now?\"** (during an attack). **Microsoft Defender for Cloud** is that service.\n\n## Why it exists\n\nBefore tools like this, cloud security was periodic and manual — a consultant did an audit every quarter, produced a PDF, and the findings were stale the day after. Meanwhile resources drifted: someone opened port 22 to the world \"just to debug,\" a key was committed to a repo, MFA was never enabled on an admin. Attackers scan the entire internet continuously; your audit cadence of \"once a quarter\" is no match for their cadence of \"always.\" Defender for Cloud closes that gap by assessing your posture *continuously* and alerting on threats *in real time*.\n\n## How it works: two halves\n\nDefender for Cloud is really two capabilities under one roof.\n\n### 1. CSPM — Cloud Security Posture Management (the inspector)\n\nCSPM continuously scans your resources and compares them to security best practices, producing **recommendations** (\"this VM is missing endpoint protection,\" \"this storage account allows public access,\" \"MFA isn't enforced for these accounts\"). It rolls all of this into one number: the **Secure Score**.\n\nSecure Score turns the fuzzy question \"how secure are we?\" into a percentage you can track over time and argue about in a meeting. Each recommendation is worth points; fixing high-impact ones (often with one click) raises the score. It gamifies hygiene — and gives you a defensible metric for \"are we getting better or worse?\" The **free foundational CSPM is enabled on every Azure subscription** at no cost; a paid **Defender CSPM** tier adds deeper features like agentless scanning, attack-path analysis (\"these three low findings *chain* into a path to your crown-jewel database\"), and broader multicloud coverage.\n\nCSPM also powers the **regulatory compliance** dashboard, mapping your posture to standards like the Microsoft Cloud Security Benchmark, PCI-DSS, ISO 27001, and more.\n\n### 2. Workload protection — CWPP (the alarm)\n\nThe paid **Defender plans** (enabled per resource type: Defender for Servers, for Storage, for SQL, for Containers, for App Service, for Key Vault, and so on) add *threat detection* on running workloads. These watch behavior and raise **security alerts** when they see something attack-like: a VM suddenly running crypto-mining, a brute-force RDP/SSH attempt, anomalous access to a storage account, a SQL injection pattern, a suspicious download into a container.\n\nThese alerts don't just sit there — they flow into **Microsoft Sentinel** and **Defender XDR** for investigation and automated response, which is why Defender for Cloud and Sentinel are companions, not competitors.\n\n## In practice\n\nA realistic first hour with a subscription:\n\n1. Open **Defender for Cloud** in the portal. The free CSPM is already running — you'll see a **Secure Score** and a list of recommendations.\n2. Sort recommendations by impact. Knock out the cheap, high-value ones: enable MFA, close management ports with **just-in-time VM access**, turn on disk encryption.\n3. For sensitive workloads, enable the relevant **Defender plan** (e.g. Defender for Storage on the account holding customer data) so you get live threat alerts, not just posture advice.\n4. Wire alerts to **Sentinel** so detection becomes response.\n\nAt CLI scale you'd manage this with `az security` commands or Azure Policy, but the portal's Secure Score view is where the story clicks.\n\n## Gotchas\n\n- **Free CSPM ≠ threat protection.** The free tier tells you about *misconfigurations*; it does **not** detect live attacks. Real-time threat alerts require the paid per-resource Defender plans. Don't assume a green-ish Secure Score means you'd *notice* an intrusion.\n- **Secure Score is a guide, not gospel.** It weights generic best practices; a high score with one catastrophic exposed admin is still catastrophic. Read the recommendations, don't just chase the number.\n- **Recommendations need action.** Defender tells you the window is unlocked; it doesn't always lock it for you (some have one-click 'Fix', many don't). Posture management without remediation is just a nicer-looking audit PDF.\n- **It's multicloud now.** Defender for Cloud also assesses AWS and GCP — but you must connect those accounts; it won't see them automatically.\n- **Cost scales with what you protect.** Defender plans are billed per resource/hour. Turn them on deliberately for what matters rather than blanket-enabling and getting surprised by the bill.",
+  "teachItBack": "Microsoft Defender for Cloud answers two questions continuously so you don't have to audit by hand: 'where am I exposed?' via CSPM, which scans for misconfigurations and rolls them into a trackable Secure Score, and 'is something bad happening now?' via per-resource workload protection plans that raise live threat alerts. The free foundational CSPM runs on every subscription and is essentially a prioritized security to-do list, but detecting actual attacks requires the paid Defender plans, whose alerts flow into Sentinel for response. Treat Secure Score as a guide to fix real issues, not a vanity number to maximize.",
+  "glossary": [
+    {
+      "term": "Microsoft Defender for Cloud",
+      "definition": "Azure's cloud security platform combining posture management (CSPM) and workload threat protection (CWPP) across Azure, AWS, and GCP."
+    },
+    {
+      "term": "CSPM (Cloud Security Posture Management)",
+      "definition": "Continuous assessment of resources against best practices, producing recommendations and a Secure Score; free foundational tier on every subscription."
+    },
+    {
+      "term": "Secure Score",
+      "definition": "A percentage summarizing your security posture, where fixing recommendations earns points; used to track improvement over time."
+    },
+    {
+      "term": "Workload protection (CWPP)",
+      "definition": "Paid Defender plans that detect active threats on running resources (servers, storage, SQL, containers) and raise security alerts."
+    },
+    {
+      "term": "Attack path analysis",
+      "definition": "A Defender CSPM feature that chains individual findings into the actual routes an attacker could take to a critical asset."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Dev docs — What is Microsoft Defender for Cloud?",
+      "url": "https://learn.microsoft.com/en-us/azure/defender-for-cloud/defender-for-cloud-introduction",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — Cloud security posture management (CSPM)",
+      "url": "https://learn.microsoft.com/en-us/azure/defender-for-cloud/concept-cloud-security-posture-management",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — Secure Score in Defender for Cloud",
+      "url": "https://learn.microsoft.com/en-us/azure/defender-for-cloud/secure-score-security-controls",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — Workload protections dashboard",
+      "url": "https://learn.microsoft.com/en-us/azure/defender-for-cloud/workload-protections-dashboard",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — Regulatory compliance in Defender for Cloud",
+      "url": "https://learn.microsoft.com/en-us/azure/defender-for-cloud/regulatory-compliance-dashboard",
+      "verified": true
+    }
+  ],
+  "related": [
+    "azs-intro",
+    "azs-sentinel",
+    "azs-compliance"
+  ]
+}

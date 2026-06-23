@@ -1,0 +1,64 @@
+{
+  "id": "azf-regions-zones",
+  "title": "Regions, zones, geographies & region pairs",
+  "lane": "az-foundations",
+  "type": "concept",
+  "order": 40,
+  "summary": "Azure's global infrastructure is layered: geographies hold regions, regions hold availability zones, zones hold datacenters. Where you deploy decides latency, legal data residency, and how much failure you survive — so physical geography is an architectural decision, not a dropdown.",
+  "tags": [
+    "azure",
+    "regions",
+    "availability-zones",
+    "resilience",
+    "data-residency"
+  ],
+  "analogy": "Think of a bank: a geography is the country it operates in (its laws), a region is a city branch network, an availability zone is a separate vault building wired to its own power, and a region pair is a sister city you replicate the ledger to in case the whole city floods.",
+  "diagram": "flowchart TD\n  Geo[Geography - e.g. United States] --> R1[Region: East US]\n  Geo --> R2[Region: West US - paired]\n  R1 -.region pair.-> R2\n  R1 --> Z1[Availability Zone 1]\n  R1 --> Z2[Availability Zone 2]\n  R1 --> Z3[Availability Zone 3]\n  Z1 --> D1[Datacenter(s) - own power, cooling, network]",
+  "body": "## First principles\n\nSoftware feels abstract, but it runs on a physical machine in a physical building in a physical country. Three unavoidable realities flow from that: **light is slow** (distance to your users adds latency), **buildings fail** (power, cooling, fiber, floods, fire), and **countries have laws** (where data may legally live). Azure's global infrastructure is the layered answer to all three — and choosing where to deploy is how you trade them off.\n\n## Why it exists\n\nOne giant datacenter would be a disaster on every axis: far from most users, a single point of failure, and bound to one country's law. So Azure is deliberately carved into a hierarchy of locations, each layer solving one of those problems:\n\n- Put capacity **near users** → low latency.\n- Spread capacity across **independent buildings** → survive a building failure.\n- Group capacity by **country/legal boundary** → meet data-residency rules.\n\nBefore this, surviving a datacenter fire meant *you* building a second datacenter in another city and replicating to it by hand. Azure's geography layers turn that into a deployment choice.\n\n## How it works\n\nFour nested concepts, biggest to smallest:\n\n- **Geography** — a discrete market, usually a country or region of the world (e.g. United States, Europe, India), that defines a **data-residency and compliance boundary**. Data in a geography generally stays in that geography.\n- **Region** — a set of datacenters within a metro area, deployed within a latency-defined perimeter (e.g. *East US*, *West Europe*). This is the level you actually pick when you deploy. Azure has **60+ regions** worldwide and keeps adding more.\n- **Availability Zone (AZ)** — one or more datacenters *within a region* with **independent power, cooling, and networking**. Zone-enabled regions have at least **three** zones. Spreading replicas across zones means a single building failure doesn't take your app down.\n- **Region pair** — historically, each region was paired with another in the same geography (typically 300+ miles apart) for geo-redundancy: paired regions get staggered platform updates and are the target for some services' geo-replication. **Note the 2025 shift:** many newer regions are *non-paired*, and Microsoft now guides you to architect for **availability zones first** for high availability, using a second region only for true regional-disaster recovery.\n\n**Latency vs. residency vs. resilience** is the trade triangle: closer regions cut latency; staying in one geography satisfies law; spreading across zones (and sometimes a second region) buys resilience. You rarely max all three — you choose.\n\n## In practice\n\nThe location decision is made at the resource group and resource level:\n\n```bash\n# See which regions your subscription can use\naz account list-locations --query \"[].{name:name, display:displayName}\" -o table\n\n# Deploy near your users (latency) and in-country (residency)\naz group create --name <rg-name> --location <region>   # e.g. westeurope\n\n# For resilience, pick a zone-enabled region and spread instances\n# across zones 1, 2, 3 (service-specific flag, illustrative):\naz vm create --name <vm> --resource-group <rg-name> --zone 1 --image <image>\n```\n\nRule of thumb: **region for latency + law, zones for resilience, a second region for disaster recovery.**\n\n## Gotchas\n\n- **A region is not automatically highly available.** Deploying to one region in one zone means one building's failure can take you down. Resilience is something you *opt into* by spreading across zones.\n- **Not every region has zones, and not every service is zone-aware.** Check zone support for your region *and* your specific service before promising an SLA.\n- **Don't assume your region has a pair.** The classic region-pair model is being supplemented by zone-first guidance and non-paired regions — verify in the docs rather than relying on old AZ-900 lore.\n- **Geography is a legal boundary, not a performance one.** Picking a far-away region for compliance can cost you latency; that tension is the architecture, not a bug.",
+  "teachItBack": "Azure's infrastructure nests geographies, regions, availability zones, and datacenters, and you choose a location to trade off three physical realities: latency (deploy near users), data residency (stay within a geography's legal boundary), and resilience (spread across availability zones). A region is just a metro group of datacenters and is not highly available on its own — zones are how you survive a building failure, and a second region is for regional disaster recovery. The old region-pair model still matters for some services, but 2025 guidance leans on availability zones first.",
+  "glossary": [
+    {
+      "term": "Geography",
+      "definition": "A discrete market (often a country) that forms a data-residency and compliance boundary containing one or more regions."
+    },
+    {
+      "term": "Region",
+      "definition": "A set of datacenters within a metro-area latency perimeter; the location you select when deploying a resource."
+    },
+    {
+      "term": "Availability Zone",
+      "definition": "One or more datacenters within a region with independent power, cooling, and networking; zone-enabled regions have at least three."
+    },
+    {
+      "term": "Region pair",
+      "definition": "Two regions in the same geography linked for staggered updates and geo-redundancy; increasingly supplemented by zone-first designs and non-paired regions."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Dev docs — What are Azure regions and availability zones?",
+      "url": "https://learn.microsoft.com/en-us/azure/reliability/availability-zones-overview",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — Azure regions overview",
+      "url": "https://learn.microsoft.com/en-us/azure/reliability/regions-overview",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — Azure region pairs and nonpaired regions",
+      "url": "https://learn.microsoft.com/en-us/azure/reliability/cross-region-replication-azure",
+      "verified": true
+    },
+    {
+      "title": "Azure — Global infrastructure geographies",
+      "url": "https://azure.microsoft.com/en-us/explore/global-infrastructure/geographies/",
+      "verified": true
+    }
+  ],
+  "related": [
+    "azf-what-is-azure",
+    "azf-resource-groups",
+    "azf-shared-responsibility"
+  ]
+}

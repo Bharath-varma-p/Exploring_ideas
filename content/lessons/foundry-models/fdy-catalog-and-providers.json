@@ -1,0 +1,74 @@
+{
+  "id": "fdy-catalog-and-providers",
+  "title": "Model catalog, providers, and collections",
+  "lane": "foundry-models",
+  "type": "concept",
+  "order": 101,
+  "summary": "The Microsoft Foundry model catalog is the searchable inventory of foundation, reasoning, small language, multimodal, industry, and partner models.",
+  "tags": [
+    "catalog",
+    "providers",
+    "collections"
+  ],
+  "analogy": "The catalog is an airport departure board. A model card is the flight detail page: provider, destination capabilities, regions, terms, benchmark clues, and boarding options.",
+  "diagram": "flowchart LR\n  Learner[learner] --> Catalog[model catalog]\n  Catalog --> Filters[filters]\n  Filters --> Card[model card]\n  Card --> Options[deployment options]\n  Options --> Endpoint[endpoint]",
+  "body": "## First principles\n\nA model cannot be deployed safely until you know it exists, who provides it, what terms apply, where it can run, and which deployment types it supports.\n\n## Definition\n\nThe Microsoft Foundry model catalog is the searchable inventory of foundation, reasoning, small language, multimodal, industry, and partner models. It includes collections and providers such as Azure OpenAI, Microsoft Phi, Meta Llama, Mistral, Cohere, DeepSeek, NVIDIA, Hugging Face, and more. Models are broadly Foundry Models sold by Azure or Models from partners and community.\n\n## How it fits together\n\nBrowse Discover then Models, filter by collection, capability, inference task, deployment option, and region. Open the model card, then record provider, exact model name, model version, legal terms, supported regions, and deployment types before creating anything.\n\n## Worked example\n\n```bash\n# Open the Foundry portal and discover a deployable model.\nopen \"https://ai.azure.com\"\n\n# In the portal:\n# 1. Select Discover, then Models.\n# 2. Filter by collection, capability, inference task, deployment option, and region.\n# 3. Open the model card.\n# 4. Record provider, model name, model version, regions, deployment types, and terms.\n```\n\n*Portal discovery checklist; no secrets or keys.*",
+  "drills": [
+    {
+      "q": "What does the catalog answer before deployment?",
+      "a": "Which models exist, who provides them, where they run, and how they can be deployed."
+    },
+    {
+      "q": "Are all catalog models owned by Microsoft?",
+      "a": "No. Some are sold by Azure; many are partner or community models with their own terms."
+    },
+    {
+      "q": "Why inspect the model card?",
+      "a": "It contains deployment options, version data, license or terms, benchmarks, and region information."
+    }
+  ],
+  "teachItBack": "The catalog is the map from idea to deployable model. I use filters to narrow the model list and the model card to verify provider, terms, region, version, and deployment type. I do not deploy until those checks match my workload.",
+  "glossary": [
+    {
+      "term": "Provider",
+      "definition": "The organization or product family supplying the model."
+    },
+    {
+      "term": "Collection",
+      "definition": "A catalog grouping, often by provider or model family."
+    },
+    {
+      "term": "Model card",
+      "definition": "The catalog detail page for a model."
+    },
+    {
+      "term": "Partner model",
+      "definition": "A model supplied by an external provider or community source."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Microsoft Foundry Models overview",
+      "url": "https://learn.microsoft.com/en-us/azure/foundry-classic/concepts/foundry-models-overview",
+      "verified": true
+    },
+    {
+      "title": "Deploy Microsoft Foundry Models in the Foundry portal",
+      "url": "https://learn.microsoft.com/en-us/azure/foundry/foundry-models/how-to/deploy-foundry-models",
+      "verified": true
+    }
+  ],
+  "quiz": [
+    {
+      "q": "What should you verify first before deploying a catalog model?",
+      "choices": [
+        "Region and deployment type support",
+        "Prompt wording",
+        "Editor theme",
+        "Whether the endpoint name is short"
+      ],
+      "answer": 0,
+      "explanation": "Unsupported regions or deployment types block deployment or violate requirements."
+    }
+  ]
+}

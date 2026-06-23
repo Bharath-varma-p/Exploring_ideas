@@ -1,0 +1,102 @@
+{
+  "id": "fdy-managed-identity-best-practices",
+  "title": "Managed Identity Best Practices (latest)",
+  "lane": "foundry-auth",
+  "type": "concept",
+  "order": 118,
+  "summary": "The current best-practice playbook: prefer managed identity over secrets/service principals, default to user-assigned for most production workloads, grant least-privilege RBAC scoped to the resource, write DefaultAzureCredential code that runs dev-to-prod, use workload identity federation for anything outside Azure, and manage assignments as code with monitoring.",
+  "tags": [
+    "managed-identity",
+    "best-practices",
+    "least-privilege",
+    "workload-identity-federation",
+    "security"
+  ],
+  "analogy": "Good identity hygiene is like a well-run building: badge access not shared keys (managed identity), each badge opens only the rooms it needs (least privilege), one badge per role (per-workload identity), and a logged front desk (monitoring). The newest wing even lets trusted outside contractors in with their own employer's badge (federation) — still no copied keys.",
+  "diagram": "flowchart TD\n  A[Need to authenticate a workload] --> B{Runs in Azure?}\n  B -->|Yes| C[Managed identity]\n  B -->|No - GitHub Actions / other cloud / on-prem| D[Workload identity federation]\n  C --> E{Shared, pre-provisioned, or stable across redeploys?}\n  E -->|Yes| F[User-assigned]\n  E -->|No - single simple resource| G[System-assigned]\n  F --> H[Least-privilege RBAC at resource scope]\n  G --> H\n  D --> H\n  H --> I[DefaultAzureCredential in code]\n  I --> J[Monitor sign-ins + review assignments as code]",
+  "body": "## First principles\n\nEvery credential you create is a liability someone must rotate, store, and could leak. The best practice is therefore to **create as few secrets as possible — ideally zero** — and to make each identity able to do as little as possible. Managed identity plus least-privilege RBAC achieves both.\n\n## 1. Prefer managed identity over secrets and service principals\n\nFor anything running **in Azure**, use a managed identity. It removes secret storage, rotation, and leak risk because the platform manages the credential. This is the direction of Microsoft's **Secure Future Initiative**, and the community consensus (Reddit/Stack Overflow) is the same: managed identity by default, service principals only where managed identity is not supported (and then with strict secret governance).\n\n## 2. Default to user-assigned for most production scenarios\n\nMicrosoft's own best-practice guidance now states user-assigned managed identities are **more efficient in a broader range of scenarios**. Reasons:\n\n- **Decoupled lifecycle** — the identity (and its role assignments) can be created *before* the compute, so deployments don't fail on a missing principal.\n- **Separation of duties** — identity/RBAC admins pre-authorize; app teams just attach the identity.\n- **Avoids rate limits** — mass-creating system-assigned identities (e.g. ephemeral VMs) can hit Entra object-creation throttling (HTTP 429). One shared user-assigned identity sidesteps that.\n- Use **system-assigned** when one resource needs a unique identity that should die with it.\n\n## 3. Least privilege: scope tight, use built-in roles\n\n- Assign at the **narrowest scope** that works (resource > resource group > subscription).\n- Pick the **most specific built-in role** (e.g. `Storage Blob Data Reader`, `Key Vault Secrets User`), not `Contributor`/`Owner`.\n- Use **data-plane** roles for data access; control-plane roles don't grant data access and vice-versa.\n\n## 4. One identity per workload / trust boundary\n\nDon't share a single identity across unrelated apps — a compromise of one then exposes all. Give each workload (or trust boundary) its own identity so blast radius and auditing stay clean.\n\n## 5. Write DefaultAzureCredential code that runs dev-to-prod\n\n`DefaultAzureCredential` chains credentials so the same code uses your dev sign-in locally and the managed identity in production. In production, **disambiguate and tighten**:\n\n```python\nimport os\nfrom azure.identity import DefaultAzureCredential\n\n# In prod, point at the specific user-assigned identity and trim the chain\n# so a misconfig fails fast instead of silently falling back.\ncredential = DefaultAzureCredential(\n    managed_identity_client_id=os.environ.get(\"AZURE_CLIENT_ID\"),\n    exclude_shared_token_cache_credential=True,\n    exclude_visual_studio_code_credential=True,\n)\n```\n\nFor a single known host you can use `ManagedIdentityCredential(client_id=...)` directly. Either way: **no secrets in the chain.**\n\n## 6. Use workload identity federation for anything outside Azure\n\nFor GitHub Actions, Azure DevOps, AKS pods, or other clouds, use **workload identity federation**: a trust between the external IdP and a user-assigned managed identity (or app registration) so the external token is exchanged for an Entra token — **no client secret at all**. At scale, use **flexible federated identity credentials** (claims-matching expressions) instead of one credential per branch.\n\n## 7. Manage assignments as code and monitor\n\n- Define identities and role assignments in **Bicep/Terraform** so access is reviewable and reproducible (set `principalType: 'ServicePrincipal'` to avoid creation races).\n- **Monitor** sign-ins and review role assignments regularly; remove unused identities and over-broad roles.\n- Be deliberate about **cross-tenant** access and the **20 federated-credential** default limit per identity.\n\n## Quick checklist\n\nKeyless? Yes. User-assigned unless a unique throwaway identity is needed? Yes. Built-in role at resource scope? Yes. One identity per workload? Yes. DefaultAzureCredential, pinned in prod? Yes. Federation for outside-Azure? Yes. Assignments in IaC + monitored? Yes.\n\n*Fewest secrets, smallest privilege, one identity per job, federation at the edges, everything as code.*",
+  "examples": [
+    {
+      "product": "GitHub Actions -> Azure (OIDC)",
+      "what": "Federate the GitHub workflow to a user-assigned managed identity / app via OIDC so the pipeline deploys to Azure with no stored client secret.",
+      "source": "https://learn.microsoft.com/en-us/entra/workload-id/workload-identity-federation"
+    }
+  ],
+  "drills": [
+    {
+      "q": "Per current Microsoft guidance, which managed identity type is the broader default — and why?",
+      "a": "User-assigned: decoupled lifecycle (pre-create role assignments), separation of duties, and it avoids Entra object-creation rate limits."
+    },
+    {
+      "q": "What is the keyless option for a GitHub Actions pipeline that must deploy to Azure?",
+      "a": "Workload identity federation (OIDC) trusting a user-assigned managed identity or app registration — no client secret."
+    },
+    {
+      "q": "How do you keep DefaultAzureCredential predictable in production?",
+      "a": "Pass the user-assigned identity's client id and exclude unused credentials in the chain so misconfig fails fast."
+    },
+    {
+      "q": "Why one identity per workload instead of a shared one?",
+      "a": "It limits blast radius if one workload is compromised and keeps auditing/attribution clean."
+    }
+  ],
+  "teachItBack": "Default to managed identity for in-Azure workloads and workload identity federation for everything outside — both keyless. Prefer user-assigned identities because their lifecycle is decoupled and they avoid rate limits, grant the most specific built-in role at the tightest scope, give each workload its own identity, write DefaultAzureCredential code that's pinned in production, and manage every assignment as code with monitoring.",
+  "glossary": [
+    {
+      "term": "Least privilege",
+      "definition": "Granting only the minimum permissions, at the narrowest scope, needed to do the job."
+    },
+    {
+      "term": "Workload identity federation",
+      "definition": "A trust between an external identity provider and Entra so external tokens are exchanged for Entra tokens without a stored secret."
+    },
+    {
+      "term": "Flexible federated identity credentials",
+      "definition": "Federated credentials that match claims via expressions, so one credential covers many branches/refs instead of one-per-case."
+    },
+    {
+      "term": "Data-plane role",
+      "definition": "An RBAC role that grants access to a resource's data (e.g. blob contents), distinct from control-plane management roles."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Dev docs — Managed identity best practice recommendations (user-assigned default, rate limits)",
+      "url": "https://learn.microsoft.com/en-us/entra/identity/managed-identities-azure-resources/managed-identity-best-practice-recommendations",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — Credential chains & DefaultAzureCredential (Azure Identity)",
+      "url": "https://learn.microsoft.com/en-us/dotnet/azure/sdk/authentication/credential-chains",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — Workload identity federation (keyless for outside-Azure)",
+      "url": "https://learn.microsoft.com/en-us/entra/workload-id/workload-identity-federation",
+      "verified": true
+    },
+    {
+      "title": "Reddit — r/AZURE search: managed identity vs service principal (community consensus)",
+      "url": "https://www.reddit.com/r/AZURE/search/?q=managed%20identity%20vs%20service%20principal&restrict_sr=1&sort=relevance",
+      "verified": false
+    },
+    {
+      "title": "X — Microsoft Entra (@MicrosoftEntra) identity announcements",
+      "url": "https://x.com/MicrosoftEntra",
+      "verified": true
+    }
+  ],
+  "quiz": [
+    {
+      "q": "You are mass-deploying short-lived VMs that each need the same Storage access. What identity strategy avoids Entra throttling and pre-authorizes access?",
+      "choices": [
+        "One shared user-assigned managed identity with the role assigned in advance",
+        "A system-assigned identity per VM, created at boot",
+        "A single client secret embedded in the VM image",
+        "Owner on the subscription for every VM"
+      ],
+      "answer": 0,
+      "explanation": "User-assigned identities are created once and pre-authorized, avoiding the HTTP 429 object-creation throttling you hit when minting a system-assigned identity per ephemeral resource."
+    }
+  ]
+}

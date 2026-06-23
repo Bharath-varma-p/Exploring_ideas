@@ -2,6 +2,8 @@
 
 export const State = {
   data: null,
+  repo: null,
+  changeCatalog: { entries: [] },
   lessons: [],
   byId: new Map(),
   byLane: new Map(),
@@ -17,6 +19,8 @@ export async function loadData() {
   if (!res.ok) throw new Error("Could not load content/data.json — run `npm run build`.");
   const data = await res.json();
   State.data = data;
+  State.repo = data.repo || null;
+  State.changeCatalog = data.changeCatalog || { entries: [] };
   State.lessons = data.lessons || [];
   State.glossary = data.glossary || [];
   State.quiz = data.quiz || [];

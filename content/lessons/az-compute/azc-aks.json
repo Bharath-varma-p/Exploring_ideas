@@ -1,0 +1,70 @@
+{
+  "id": "azc-aks",
+  "title": "AKS: Kubernetes When the Platform Is the Point",
+  "lane": "az-compute",
+  "type": "concept",
+  "order": 70,
+  "summary": "Azure Kubernetes Service gives you managed Kubernetes. Choose it when you need the Kubernetes API, ecosystem, and control enough to justify the operational complexity.",
+  "tags": [
+    "azure",
+    "compute",
+    "aks",
+    "kubernetes",
+    "orchestration",
+    "containers"
+  ],
+  "analogy": "AKS is a managed airport: Azure runs the control tower, but you still design terminals, gates, routes, baggage rules, and emergency procedures.",
+  "diagram": "flowchart TD\n  Dev[Container images] --> ACR[ACR]\n  ACR --> Pods[Pods]\n  Pods --> Nodes[Node pools]\n  Control[Azure-managed control plane] --> API[Kubernetes API]\n  API --> Pods\n  API --> Services[Services ingress config maps secrets]\n  Nodes --> VNet[Azure networking]\n  Ops[Platform team] --> API",
+  "body": "## First principles\n\nContainers answer “how do I package a process?” Kubernetes answers “how do I run many containers as a platform?” It schedules workloads, restarts failed pods, rolls out versions, exposes services, stores desired state, and gives teams a common API for deployment.\n\n**Azure Kubernetes Service (AKS)** is Azure’s managed Kubernetes service.\n\n## Why it exists\n\nSelf-managing Kubernetes means operating an API server, scheduler, controller manager, etcd, upgrades, certificates, node pools, networking, security patches, and observability. AKS removes much of the control-plane burden and integrates Kubernetes with Azure identity, networking, monitoring, storage, policy, and registries.\n\nBut the Kubernetes model remains. You still own workload manifests, namespaces, ingress choices, resource requests, node pool strategy, upgrades, policies, and the human skill curve.\n\n## How it works\n\nAn AKS cluster has an Azure-managed **control plane** and your **node pools** where pods run. You submit desired state to the Kubernetes API: Deployments, Services, Ingress, ConfigMaps, Secrets, Jobs, and more. Kubernetes controllers continuously try to make reality match that desired state.\n\nCurrent AKS offers **Automatic** and **Standard** cluster modes. Automatic is designed with production-ready defaults and more Azure-managed operations. Standard gives deeper control over cluster configuration and node pool management. That choice is another version of the compute spectrum: convenience versus control.\n\n## In practice\n\n```bash\naz aks create   --resource-group <rg>   --name <cluster>   --node-count 3   --enable-managed-identity   --generate-ssh-keys\n\naz aks get-credentials --resource-group <rg> --name <cluster>\n```\n\nThe command creates a cluster. It does not create a platform operating model. That comes from standards for namespaces, ingress, secrets, policies, monitoring, upgrades, and ownership.\n\n## Gotchas\n\nAKS is overkill for “one container behind HTTPS.” Container Apps or App Service may deliver the same user value with less platform tax. Kubernetes YAML is not a business capability; orchestration is worth it when many services need shared scheduling, rollout, discovery, policy, or ecosystem extensions. Also remember that managed control plane does not mean managed applications: bad resource limits, noisy neighbors, and broken deployments are still yours.",
+  "teachItBack": "AKS gives you managed Kubernetes: Azure operates the control plane, while you operate workloads and platform conventions. Use it when the Kubernetes API and ecosystem are valuable enough to pay the complexity cost. For simpler container hosting, compare Container Apps, App Service, or ACI before defaulting to AKS.",
+  "glossary": [
+    {
+      "term": "AKS",
+      "definition": "Azure Kubernetes Service, Microsoft’s managed Kubernetes offering."
+    },
+    {
+      "term": "Control plane",
+      "definition": "The Kubernetes brain: API server, scheduler, and controllers that manage desired state."
+    },
+    {
+      "term": "Node pool",
+      "definition": "A group of worker nodes with similar VM configuration where Kubernetes pods run."
+    },
+    {
+      "term": "Pod",
+      "definition": "The smallest deployable Kubernetes unit, usually one app container plus optional sidecars."
+    },
+    {
+      "term": "AKS Automatic",
+      "definition": "AKS cluster mode with more Azure-managed production defaults and operations."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Dev docs — What is Azure Kubernetes Service (AKS)?",
+      "url": "https://learn.microsoft.com/en-us/azure/aks/what-is-aks",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — Compare AKS with other Azure container options",
+      "url": "https://learn.microsoft.com/en-us/azure/aks/compare-container-options-with-aks",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — Introduction to Azure Container Registry",
+      "url": "https://learn.microsoft.com/en-us/azure/container-registry/container-registry-intro",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — Choose an Azure compute service",
+      "url": "https://learn.microsoft.com/en-us/azure/architecture/guide/technology-choices/compute-decision-tree",
+      "verified": true
+    }
+  ],
+  "related": [
+    "azc-containers",
+    "azc-container-apps",
+    "azc-vmss",
+    "azc-choosing-compute"
+  ]
+}

@@ -1,0 +1,69 @@
+{
+  "id": "azx-queues",
+  "title": "Storage Queues vs Service Bus Queues",
+  "lane": "az-integration",
+  "type": "concept",
+  "order": 20,
+  "summary": "Azure has two common queue families: Storage Queues for simple massive backlogs, and Service Bus Queues for enterprise commands that need broker semantics.",
+  "tags": [
+    "azure",
+    "queues",
+    "storage-queues",
+    "service-bus",
+    "asynchronous"
+  ],
+  "analogy": "Storage Queues are a giant simple laundry hamper; Service Bus Queues are a dispatch desk with tickets, locks, retries, ordering tools, and an exception drawer.",
+  "diagram": "flowchart TD\n  Need[Need async work] --> Simple{Simple backlog?}\n  Simple -->|Yes cheap huge basic| Storage[Azure Queue Storage]\n  Simple -->|No command contract| ServiceBus[Service Bus Queue]\n  ServiceBus --> Features[Sessions DLQ transactions duplicate detection]\n  Storage --> Worker[Stateless workers pull messages]",
+  "body": "## First principles\n\nA **queue** protects a worker from being overwhelmed. Producers put work into a durable backlog; workers pull items when they have capacity. That turns traffic spikes into a controlled line instead of a stampede.\n\nAzure gives you two major queue choices because \"a line of work\" can mean two very different things: simple background backlog, or enterprise command processing.\n\n## Why Storage Queues exist\n\n**Azure Queue Storage** is part of Azure Storage. It is intentionally plain: a storage account contains queues; queues contain messages; clients access them over HTTP or HTTPS. A message can be up to 64 KB, and a queue can hold millions of messages up to the storage account capacity.\n\nUse it when the queue is just a shock absorber: image thumbnails, background cleanup, retry later, fan-out to stateless workers. You want low ceremony, storage-account scale, and simple operational semantics.\n\n## Why Service Bus Queues exist\n\n**Service Bus Queues** are a managed enterprise message broker. They are for business commands where the broker itself needs richer behavior: message locks, dead-letter queues, sessions for ordered related messages, duplicate detection, scheduled delivery, transactions, and richer protocols like AMQP.\n\nUse Service Bus when losing track of a command is expensive. \"Ship this order\" is not the same as \"resize this preview image.\" The former wants an audit trail and exception lane.\n\n## How it works\n\nStorage Queues are built around simple visibility. A worker retrieves a message, the message becomes temporarily invisible, and the worker deletes it when done. If the worker fails, the message becomes visible again after the timeout.\n\nService Bus uses brokered messaging. In the common peek-lock pattern, a receiver locks a message, completes it when processing succeeds, abandons/dead-letters/defers it when processing cannot proceed, and can participate in higher-level patterns like competing consumers or sessions.\n\n## Analogy\n\n💡 Storage Queue is a warehouse bin labeled \"tasks.\" Anyone with access can grab the next slip. Service Bus Queue is a professional dispatch counter: every ticket has status, lock ownership, routing rules, exception handling, and sometimes a requirement that one customer's tickets stay in order.\n\n## In practice\n\n```bash\n# Simple backlog in a storage account.\naz storage queue create --account-name <storage-account> --name image-jobs\n\n# Enterprise command queue in Service Bus.\naz servicebus queue create -g <rg> --namespace-name <ns> --name order-commands --enable-dead-lettering-on-message-expiration true\n```\n\nIf the worker can safely re-run work and the message is small, Storage Queues are often enough. If the business process needs broker features, start with Service Bus.\n\n## Gotchas\n\nStorage Queues are not Service Bus Lite. They do not give you Service Bus topics, sessions, transactions, or the same dead-letter model.\n\nService Bus is not automatically \"better\" because it has more knobs. More broker semantics mean more design responsibility: lock duration, retry policy, poison handling, tier choice, and monitoring all matter.\n\nFIFO is also not magic. In distributed systems, parallel workers and retries can reorder work unless you design for ordering explicitly, usually with Service Bus sessions.",
+  "teachItBack": "Both Storage Queues and Service Bus Queues decouple producers from workers. Storage Queues are ideal for simple, cheap, high-volume backlogs where workers can retry safely. Service Bus Queues are for business commands that need broker features such as locks, sessions, transactions, duplicate detection, and dead-letter handling. Choose the queue by the consequences of mishandling the work.",
+  "glossary": [
+    {
+      "term": "Azure Queue Storage",
+      "definition": "A storage-account queue service for simple asynchronous work backlogs."
+    },
+    {
+      "term": "Service Bus Queue",
+      "definition": "A brokered queue for enterprise messaging and reliable command processing."
+    },
+    {
+      "term": "Visibility timeout",
+      "definition": "The period when a retrieved Storage Queue message is hidden from other workers."
+    },
+    {
+      "term": "Peek-lock",
+      "definition": "A receive mode where a Service Bus message is locked while the consumer processes it, then completed or released."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Dev docs — Introduction to Azure Queue Storage",
+      "url": "https://learn.microsoft.com/en-us/azure/storage/queues/storage-queues-introduction",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — Introduction to Azure Service Bus Messaging",
+      "url": "https://learn.microsoft.com/en-us/azure/service-bus-messaging/service-bus-messaging-overview",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — Azure Service Bus queues, topics, and subscriptions",
+      "url": "https://learn.microsoft.com/en-us/azure/service-bus-messaging/service-bus-queues-topics-subscriptions",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — Service Bus dead-letter queues",
+      "url": "https://learn.microsoft.com/en-us/azure/service-bus-messaging/service-bus-dead-letter-queues",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — Microsoft Azure Service Bus quotas and limits",
+      "url": "https://learn.microsoft.com/en-us/azure/service-bus-messaging/service-bus-quotas",
+      "verified": true
+    }
+  ],
+  "related": [
+    "azx-intro",
+    "azx-service-bus",
+    "azx-choosing-integration"
+  ]
+}

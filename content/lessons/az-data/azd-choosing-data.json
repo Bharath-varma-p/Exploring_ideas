@@ -1,0 +1,32 @@
+{
+  "id": "azd-choosing-data",
+  "title": "Choosing a Data Store: A Decision Framework",
+  "lane": "az-data",
+  "type": "concept",
+  "order": 110,
+  "summary": "How to pick the right database in Azure. A mental framework to avoid using the wrong tool for the job based on data shape, scale, and access patterns.",
+  "tags": ["architecture", "decision-tree", "database"],
+  "analogy": "Choosing a database is like choosing a vehicle. You don't use a sports car (Redis) to move a house, and you don't use a dump truck (Data Lake) for a pizza delivery.",
+  "diagram": "flowchart TD\n  Start[What kind of data?] --> File[Files / Objects]\n  Start --> Relational[Strict Relational]\n  Start --> NoSQL[Flexible / Document]\n  Start --> Cache[In-Memory Cache]\n  \n  File --> Blob[Blob Storage]\n  Cache --> Redis[Azure Managed Redis]\n  \n  Relational --> Legacy{Legacy App?}\n  Legacy -- Yes --> MI[SQL Managed Instance]\n  Legacy -- No --> CloudSQL[Azure SQL / Postgres Flex]\n  \n  NoSQL --> Scale{Global Scale?}\n  Scale -- Yes --> Cosmos[Cosmos DB]\n  Scale -- No --> Table[Table Storage / Cosmos Mongo]",
+  "body": "## First principles\n\nThere is no \"best\" database, only the right database for the specific workload. Every data store makes engineering tradeoffs between consistency, availability, partition tolerance, and cost. If you pick the database you happen to know rather than the one the workload demands, you will fight the architecture for the life of the application.\n\n## Why it exists\n\nArchitects need a structured way to eliminate options. Instead of looking at 15 Azure data services and guessing, you use a decision tree to filter by shape, scale, and operational requirements.\n\n## The Decision Framework\n\nAsk yourself these questions in order:\n\n### 1. What is the shape of the data?\n- **Raw files, images, backups, huge logs?** Stop. Use **Azure Blob Storage**. \n- **Key-Value pairs that must be read in microseconds?** Stop. Use **Azure Managed Redis**.\n- **Highly relational data requiring ACID guarantees?** Move to Step 2.\n- **JSON documents or fast-evolving schemas?** Move to Step 3.\n\n### 2. If Relational: What is the app's history?\n- **Is it a brand new cloud-native app?** Use **Azure SQL Database** or **Azure Database for PostgreSQL Flexible Server**.\n- **Is it a massive legacy SQL Server app moving from an old datacenter?** Use **Azure SQL Managed Instance**.\n- **Does it require deep OS-level tweaks or unsupported third-party plugins?** Run **SQL Server on an Azure VM**.\n\n### 3. If NoSQL: What is the scale?\n- **Do you need single-digit millisecond latency replicated globally across multiple continents?** Use **Azure Cosmos DB**.\n- **Is it just simple, cheap logging data without complex querying needs?** Use **Azure Table Storage**.\n\n### 4. Is it for Analytics (OLAP)?\nIf the goal is to run massive analytical queries across petabytes of historical data for reporting:\n- Store the raw data in **Data Lake Gen2 (OneLake)**.\n- Process and visualize it using **Microsoft Fabric** (or Synapse Analytics).\n\n## In practice\n\nA modern microservices architecture utilizes \"Polyglot Persistence\"—using multiple data stores for different parts of the same app. An e-commerce site will use Cosmos DB for the product catalog, Azure SQL for the checkout transactions, Blob Storage for product photos, and Redis to cache the shopping cart.\n\n## Gotchas\n\n- **Cosmos DB for Relational Data:** Many teams pick Cosmos DB because \"NoSQL is web scale,\" but then try to build relational joins in their application code. This results in horrific performance and massive RU/s bills. If your data is highly relational, use a relational database.\n- **Premature Optimization:** Don't deploy a globally replicated Cosmos DB account and a Redis cache for an internal HR app used by 50 people. A basic Azure SQL Database will handle it perfectly for a fraction of the cost.",
+  "teachItBack": "Choose data stores by eliminating options. Use Blob for files, Redis for caching, Fabric/Data Lake for massive analytics. For databases, choose Azure SQL/Postgres for structured relational data, and Cosmos DB for flexible, globally distributed NoSQL data. Mix and match them as needed.",
+  "glossary": [
+    {
+      "term": "Polyglot Persistence",
+      "definition": "The architectural pattern of using different data storage technologies to handle different data storage needs within a single application."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Microsoft Learn: Data store decision tree",
+      "url": "https://learn.microsoft.com/en-us/azure/architecture/guide/technology-choices/data-store-decision-tree",
+      "verified": true
+    }
+  ],
+  "related": [
+    "azd-intro",
+    "azd-azure-sql",
+    "azd-cosmos",
+    "azd-analytics"
+  ]
+}

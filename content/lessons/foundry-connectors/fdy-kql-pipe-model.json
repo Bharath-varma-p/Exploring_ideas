@@ -1,0 +1,69 @@
+{
+  "id": "fdy-kql-pipe-model",
+  "title": "The KQL Pipe Model",
+  "lane": "foundry-connectors",
+  "type": "concept",
+  "order": 204,
+  "summary": "A KQL tabular expression usually starts with a table and then pipes rows through operators using |.",
+  "tags": [
+    "kql",
+    "query-basics"
+  ],
+  "analogy": "It is an assembly line. Raw rows enter on the left; each station filters, labels, groups, or packages them; the final result exits on the right.",
+  "diagram": "flowchart LR\n  Table[Table] --> Where[where filter rows]\n  Where --> Extend[extend add columns]\n  Extend --> Summarize[summarize group rows]\n  Summarize --> Project[project choose columns]\n  Project --> Take[take limit rows]",
+  "body": "## First principles\n\nAnalytical questions are transformations: start with rows, keep some, add facts, group them, shape the answer, and limit output. KQL makes each transformation explicit and ordered.\n\n## Definition\n\nA KQL tabular expression usually starts with a table and then pipes rows through operators using |. Common flow is Table | where filter | extend computed columns | summarize aggregates | project output columns | top or take a safe number of rows.\n\n## How it fits together\n\nRead KQL left to right. Every operator receives a table and returns a table, so the next operator has fewer, richer, or differently shaped rows.\n\n## Worked example\n\n```kql\nRequests\n| where Timestamp > ago(2h)\n| extend Slow = DurationMs > 1000\n| summarize Total = count(), SlowRequests = countif(Slow) by bin(Timestamp, 10m), OperationName\n| project Timestamp, OperationName, Total, SlowRequests\n| top 20 by SlowRequests desc\n```\n\n*A practical pipe for recent high-latency requests.*",
+  "drills": [
+    {
+      "q": "What does the pipe character do?",
+      "a": "It sends the table result from one operator into the next operator."
+    },
+    {
+      "q": "Why put where early?",
+      "a": "Filtering early reduces rows for later operators and often improves performance."
+    },
+    {
+      "q": "What does summarize return?",
+      "a": "Aggregated rows, often grouped by one or more columns."
+    }
+  ],
+  "teachItBack": "KQL is a left-to-right table pipeline. Each pipe step transforms rows into a new table. I should filter early, aggregate deliberately, and limit final output.",
+  "glossary": [
+    {
+      "term": "Tabular expression",
+      "definition": "A KQL expression whose input and output are tables."
+    },
+    {
+      "term": "Operator",
+      "definition": "A KQL step such as where, project, summarize, or join."
+    },
+    {
+      "term": "Pipe",
+      "definition": "The | symbol that passes tabular output to the next operator."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Kusto Query Language overview",
+      "url": "https://learn.microsoft.com/en-us/kusto/query/?view=azure-data-explorer&preserve-view=true",
+      "verified": true
+    },
+    {
+      "title": "where operator",
+      "url": "https://learn.microsoft.com/en-us/kusto/query/where-operator?view=azure-data-explorer&preserve-view=true",
+      "verified": true
+    }
+  ],
+  "quiz": [
+    {
+      "q": "Which Azure RBAC role lets the identity read cluster resource metadata without changing resources?",
+      "choices": [
+        "Reader",
+        "Owner",
+        "Contributor",
+        "User Access Administrator"
+      ],
+      "answer": 0,
+      "explanation": "Reader includes control-plane read actions and no write permissions."
+    }
+  ]
+}

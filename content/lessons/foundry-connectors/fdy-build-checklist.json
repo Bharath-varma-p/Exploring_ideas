@@ -1,0 +1,67 @@
+{
+  "id": "fdy-build-checklist",
+  "title": "Build Checklist for a Real Connector",
+  "lane": "foundry-connectors",
+  "type": "concept",
+  "order": 112,
+  "summary": "A real incident MCP connector should document its public endpoint, Entra audience, managed identity assignment, RBAC matrix, allowed tools, approval policy, audit log destination, networking boundary, retry behavior, and tested incident lifecycle transitions.",
+  "tags": [
+    "checklist",
+    "implementation",
+    "operations"
+  ],
+  "analogy": "Before attaching a rescue helicopter to command operations, you inspect fuel, pilot credentials, radio frequencies, mission rules, landing zones, and black box logging. The connector deserves the same discipline.",
+  "diagram": "graph TD\nDocs[Verify docs] --> Contract[Backend contract]\nContract --> Identity[Managed identity]\nIdentity --> Roles[RBAC roles]\nRoles --> Tools[Allowed tools]\nTools --> Approval[Approval policy]\nApproval --> Audit[Audit and drills]",
+  "body": "## First principles\n\nFirst principles: a connector is production integration code, not a demo script. It must validate identity, enforce authorization, constrain tools, handle failures, log actions, and degrade safely during the exact moments when systems are already stressed.\n\n## Definition\n\nA real incident MCP connector should document its public endpoint, Entra audience, managed identity assignment, RBAC matrix, allowed tools, approval policy, audit log destination, networking boundary, retry behavior, and tested incident lifecycle transitions.\n\n## How it fits together\n\nUse this order: verify public documentation, get the real internal API contract from the incident-system owner, register or identify the MCP server audience, grant managed identity roles, implement read tools first, add write tools with approval, then run tabletop drills before production use.\n\n## Worked example\n\n```python\n# Representative preflight checklist encoded as testable items.\nchecklist = {\n    \"official_or_internal_contract_reviewed\": False,\n    \"managed_identity_enabled\": True,\n    \"entra_audience_known\": False,\n    \"least_privilege_roles_assigned\": False,\n    \"write_tools_require_approval\": True,\n    \"audit_logging_enabled\": True,\n    \"tabletop_drill_passed\": False,\n}\n\nnot_ready = [name for name, ok in checklist.items() if not ok]\nif not_ready:\n    print(\"Do not go live. Missing:\", not_ready)\nelse:\n    print(\"Connector is ready for controlled rollout.\")\n```\n\n*Representative readiness checklist for an incident MCP connector*",
+  "drills": [
+    {
+      "q": "What should happen before using internal IcM details?",
+      "a": "Verify the real internal contract with the service owner instead of relying on representative examples."
+    },
+    {
+      "q": "Why start with read tools?",
+      "a": "They provide value with lower operational risk while identity, logging, and schemas mature."
+    },
+    {
+      "q": "What is a tabletop drill?",
+      "a": "A simulated incident exercise used to test people, process, and tooling before a real emergency."
+    }
+  ],
+  "teachItBack": "A production incident MCP connector needs more than tool names. It needs verified contracts, managed identity, least privilege, approval, auditing, network design, and drills. Because IcM specifics are internal, validate them with the system owner before going live.",
+  "glossary": [
+    {
+      "term": "Preflight",
+      "definition": "Readiness checks completed before rollout."
+    },
+    {
+      "term": "Allowed tools",
+      "definition": "A configured subset of MCP tools an agent is permitted to use."
+    },
+    {
+      "term": "Tabletop drill",
+      "definition": "A rehearsal of incident response scenarios without a real outage."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Microsoft Learn: Connect to MCP Server Endpoints for agents",
+      "url": "https://learn.microsoft.com/en-us/azure/foundry/agents/how-to/tools/model-context-protocol",
+      "verified": false
+    },
+    {
+      "title": "Microsoft Learn: Set Up MCP Server Authentication",
+      "url": "https://learn.microsoft.com/en-us/azure/foundry/agents/how-to/mcp-authentication",
+      "verified": false
+    },
+    {
+      "title": "Microsoft Service Assurance: Security incident management overview",
+      "url": "https://learn.microsoft.com/en-us/compliance/assurance/assurance-incident-management",
+      "verified": false
+    },
+    {
+      "title": "Microsoft Entra: Managed identities for Azure resources",
+      "url": "https://learn.microsoft.com/en-us/entra/identity/managed-identities-azure-resources/overview",
+      "verified": false
+    }
+  ]
+}

@@ -1,0 +1,69 @@
+{
+  "id": "fdy-foundry-ai-role-map",
+  "title": "Current Foundry and AI Role Map",
+  "lane": "foundry-auth",
+  "type": "concept",
+  "order": 111,
+  "summary": "Current Foundry docs say use Foundry User, Foundry Project Manager, Foundry Account Owner, or Foundry Owner for Foundry resources and projects. Foundry User was previously Azure AI User.",
+  "tags": [
+    "foundry",
+    "roles",
+    "current"
+  ],
+  "analogy": "Do not issue a flight-line badge to enter the cyber range just because both are on the same base. Match the badge to the resource's authorization system.",
+  "diagram": "flowchart TD\n  Workload[Managed identity] --> Target{Target}\n  Target --> Foundry[Foundry project]\n  Foundry --> FU[Foundry User]\n  Target --> AOAI[Direct Azure OpenAI]\n  AOAI --> CSOU[Cognitive Services OpenAI User]\n  Target --> AML[Azure ML workspace]\n  AML --> AID[Azure AI Developer]",
+  "body": "## First principles\n\nThe right role depends on the target. Foundry project access, direct Azure OpenAI access, and Azure Machine Learning workspace access are different authorization surfaces. Names that sound similar can be wrong.\n\n## Definition\n\nCurrent Foundry docs say use Foundry User, Foundry Project Manager, Foundry Account Owner, or Foundry Owner for Foundry resources and projects. Foundry User was previously Azure AI User. Docs explicitly say not to use Cognitive Services roles or Azure AI Developer for Foundry project work. For direct Azure AI Services or Azure OpenAI resources, roles such as Cognitive Services User and Cognitive Services OpenAI User remain relevant.\n\n## How it fits together\n\nFoundry agent or project: Foundry User for build/data-plane usage; Foundry Project Manager for project management and publishing agents; Foundry Owner for broad build and management. Direct Azure OpenAI: Cognitive Services OpenAI User for token-based usage. Azure ML workspace: Azure AI Developer is for Azure ML workspaces and Foundry hubs, not Foundry projects.\n\n## Worked example\n\n```bash\n# Foundry RBAC roles were renamed; role IDs stayed stable.\n# Foundry User role ID from Microsoft Foundry RBAC docs.\naz role assignment create   --assignee-object-id <managed-identity-principal-id>   --role 53ca6127-db72-4b80-b1b0-d745d6d5456d   --scope /subscriptions/<sub>/resourceGroups/<rg>/providers/Microsoft.CognitiveServices/accounts/<foundry-account>\n```\n\n*Assign least-privilege Foundry User by role ID to avoid rename drift.*",
+  "drills": [
+    {
+      "q": "What is the minimum Foundry build/data-plane role?",
+      "a": "Foundry User."
+    },
+    {
+      "q": "Should Azure AI Developer be used for Foundry projects?",
+      "a": "No. Current docs say use Foundry User or Foundry Owner for Foundry project access."
+    },
+    {
+      "q": "Why use role IDs in automation?",
+      "a": "Display names may change during role rename rollout."
+    }
+  ],
+  "teachItBack": "Role names are not interchangeable. Foundry project work uses Foundry roles, especially Foundry User for least privilege. Cognitive Services and Azure AI Developer roles are for other surfaces, so I match the role to the target service.",
+  "glossary": [
+    {
+      "term": "Foundry User",
+      "definition": "Least-privilege Foundry role for building in projects and data actions; formerly Azure AI User."
+    },
+    {
+      "term": "Foundry Project Manager",
+      "definition": "Foundry role for project management and publishing agents."
+    },
+    {
+      "term": "Foundry Owner",
+      "definition": "Broad Foundry management and build role."
+    },
+    {
+      "term": "Cognitive Services OpenAI User",
+      "definition": "Direct Azure OpenAI resource role for model usage scenarios."
+    },
+    {
+      "term": "Azure AI Developer",
+      "definition": "Role for Azure Machine Learning workspaces and Foundry hubs, not Foundry projects."
+    },
+    {
+      "term": "Reader",
+      "definition": "Azure role for read-only control-plane visibility."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Role-based access control for Microsoft Foundry",
+      "url": "https://learn.microsoft.com/en-us/azure/foundry/concepts/rbac-foundry",
+      "verified": true
+    },
+    {
+      "title": "Azure built-in roles for AI and machine learning",
+      "url": "https://learn.microsoft.com/en-us/azure/role-based-access-control/built-in-roles/ai-machine-learning",
+      "verified": true
+    }
+  ]
+}

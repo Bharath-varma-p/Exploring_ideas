@@ -1,0 +1,75 @@
+{
+  "id": "fdy-foundry-agent-wiring",
+  "title": "Wiring ADO MCP to a Foundry Agent",
+  "lane": "foundry-connectors",
+  "type": "concept",
+  "order": 307,
+  "summary": "Foundry Agent Service can connect agents to remote MCP endpoints with an MCP tool. The official docs show server label, server url, require approval, allowed tools, and project connections for authentication.",
+  "tags": [
+    "foundry",
+    "agent",
+    "wiring"
+  ],
+  "analogy": "Wiring is like attaching a radio to a command vehicle. The agent can request ADO actions, but the MCP server is the radio network and the project connection is the encrypted channel key.",
+  "diagram": "sequenceDiagram\n    participant User as Learner\n    participant Agent as Foundry agent\n    participant MCP as ADO MCP\n    participant ADO as Azure DevOps\n    User->>Agent: List active bugs\n    Agent->>MCP: wit work item query\n    MCP->>ADO: Authorized request\n    ADO-->>MCP: Work item results\n    MCP-->>Agent: Tool result\n    Agent-->>User: Summarized bugs",
+  "body": "## First principles\n\nFirst principles: the Foundry agent should not know Azure DevOps REST details. It needs a tool endpoint, an authentication path, an allow list, and an approval policy. Everything else is a runtime tool call.\n\n## Definition\n\nFoundry Agent Service can connect agents to remote MCP endpoints with an MCP tool. The official docs show server_label, server_url, require_approval, allowed tools, and project connections for authentication. For Azure DevOps, the remote endpoint is https://mcp.dev.azure.com/{organization}; Foundry docs mention adding the Azure DevOps MCP Server preview through the Add Tools catalog and storing auth as a project connection.\n\n## How it fits together\n\nUse an explicit allow list: start read only with core projects, work item reads, PR listing, and pipeline listing. Add write tools only behind approval. If project connection support does not yet accept managed identity bearer tokens in your environment, use direct REST with MI or wait for the connector path rather than recommending a PAT.\n\n## Worked example\n\n```python\n# pip install azure-identity azure-ai-projects\n# Illustrative target pattern. Verify SDK names for your installed version.\nfrom azure.identity import DefaultAzureCredential\nfrom azure.ai.projects import AIProjectClient\nfrom azure.ai.projects.models import PromptAgentDefinition, MCPTool\n\nPROJECT_ENDPOINT = 'https://<foundry-resource>.ai.azure.com/api/projects/<project>'\nADO_ORG = 'contoso'\nADO_SCOPE = '499b84ac-1321-427f-aa17-267ca6975798/.default'\n\ncredential = DefaultAzureCredential(exclude_interactive_browser_credential=True)\nado_token = credential.get_token(ADO_SCOPE).token\n\nproject = AIProjectClient(endpoint=PROJECT_ENDPOINT, credential=credential)\n\nado_tool = MCPTool(\n    server_label='ado',\n    server_url=f'https://mcp.dev.azure.com/{ADO_ORG}',\n    require_approval='always',\n    # Target pattern: pass a managed identity derived bearer token or use\n    # a Foundry project connection backed by Entra auth when available.\n    headers={'Authorization': f'Bearer {ado_token}', 'X-MCP-Toolsets': 'wit,repos,pipelines'},\n)\n\nagent = project.agents.create_version(\n    agent_name='AdoAssistant',\n    definition=PromptAgentDefinition(\n        model='gpt-5-mini',\n        instructions='Use ADO MCP tools. Ask for approval before write actions.',\n        tools=[ado_tool],\n    ),\n)\nprint(agent.name, agent.version)\n```\n\n*Illustrative Foundry MCP attachment with MI target auth*",
+  "drills": [
+    {
+      "q": "What Foundry object attaches a remote MCP endpoint?",
+      "a": "An MCP tool such as MCPTool."
+    },
+    {
+      "q": "Why require approval?",
+      "a": "ADO tools can write work items, PRs, wiki pages, branches, or queue pipelines."
+    },
+    {
+      "q": "What is the ADO remote MCP URL pattern?",
+      "a": "https://mcp.dev.azure.com/{organization}."
+    }
+  ],
+  "teachItBack": "A Foundry agent should see ADO as a constrained tool endpoint. The endpoint, auth, allow list, and approval policy are the important parts. Managed identity is the target auth pattern, while connector support is still preview and environment dependent.",
+  "glossary": [
+    {
+      "term": "MCPTool",
+      "definition": "Foundry agent tool configuration that points at an MCP server endpoint."
+    },
+    {
+      "term": "Project connection",
+      "definition": "Foundry project resource for storing auth details for external tools."
+    },
+    {
+      "term": "Approval",
+      "definition": "Human or policy gate before a tool call proceeds."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Microsoft Learn: Connect Foundry agents to MCP endpoints",
+      "url": "https://learn.microsoft.com/en-us/azure/foundry/agents/how-to/tools/model-context-protocol?view=azure-python-preview",
+      "verified": false
+    },
+    {
+      "title": "Microsoft Learn: Remote Azure DevOps MCP Server",
+      "url": "https://learn.microsoft.com/en-us/azure/devops/mcp-server/remote-mcp-server?view=azure-devops",
+      "verified": false
+    },
+    {
+      "title": "Microsoft Learn: Use service principals and managed identities",
+      "url": "https://learn.microsoft.com/en-us/azure/devops/integrate/get-started/authentication/service-principal-managed-identity?view=azure-devops",
+      "verified": false
+    }
+  ],
+  "quiz": [
+    {
+      "q": "Why are representative MCP tool names marked as changing or uncertain?",
+      "choices": [
+        "The official local and remote tools are evolving and can differ",
+        "Azure DevOps has no tools",
+        "MCP forbids tool discovery",
+        "Work items cannot be queried"
+      ],
+      "answer": 0,
+      "explanation": "Current docs show grouped remote dispatchers and local TOOLSET names, so clients should discover tools at runtime."
+    }
+  ]
+}

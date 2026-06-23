@@ -1,0 +1,70 @@
+{
+  "id": "fdy-mapping-icm-to-mcp",
+  "title": "Map Incident Concepts to MCP Primitives",
+  "lane": "foundry-connectors",
+  "type": "concept",
+  "order": 105,
+  "summary": "In a representative incident connector, incidents are resources or structured tool results, write operations are tools, and response playbooks are prompts.",
+  "tags": [
+    "resources",
+    "tools",
+    "mapping"
+  ],
+  "analogy": "A mechanic's shop has manuals, tools, and checklists. Manuals are resources, wrenches are tools, and checklists are prompts. Mixing them up causes unsafe work.",
+  "diagram": "graph TD\nIncidentRecord[Incident record] --> Resource[Resource or result]\nAcknowledge[Acknowledge action] --> Tool[Tool]\nPostmortemTemplate[Postmortem template] --> Prompt[Prompt]\nDiscussion[Discussion thread] --> Resource[Resource or result]",
+  "body": "## First principles\n\nFirst principles: not every piece of backend data should become a write action. Context should be read as resources or returned by tools; changes should be explicit tools; reusable workflows can be prompts.\n\n## Definition\n\nIn a representative incident connector, incidents are resources or structured tool results, write operations are tools, and response playbooks are prompts. For example, an incident detail page is context, acknowledge_incident is an action, and summarize_current_incident could be a prompt template.\n\n## How it fits together\n\nUse MCP resources for things the model reads, tools for things that call backend behavior, and prompts for repeatable incident workflows. In an incident domain, this distinction is a safety boundary.\n\n## Worked example\n\n```python\n# Representative mapping table for designing an incident MCP server.\n# This is a design aid, not an official IcM contract.\nmapping = {\n    \"incident details\": \"resource or get_incident tool result\",\n    \"incident search\": \"query_incidents tool\",\n    \"acknowledge\": \"acknowledge_incident tool requiring approval\",\n    \"discussion\": \"add_discussion tool plus discussion resource\",\n    \"postmortem outline\": \"prompt template\",\n}\nfor concept, primitive in mapping.items():\n    print(f\"{concept} -> {primitive}\")\n```\n\n*Representative mapping from incident domain to MCP*",
+  "drills": [
+    {
+      "q": "Which MCP primitive should change incident state?",
+      "a": "A tool, because state changes are explicit actions."
+    },
+    {
+      "q": "What primitive fits a postmortem checklist?",
+      "a": "A prompt, because it is a reusable workflow template."
+    },
+    {
+      "q": "Why not make every incident field a tool?",
+      "a": "Read-only context is safer as resources or structured results; tools should represent intentional operations."
+    }
+  ],
+  "teachItBack": "MCP design starts by sorting backend concepts into resources, tools, and prompts. Incident records are context, lifecycle changes are tools, and playbooks are prompts. This mapping is representative for IcM because the official public IcM MCP contract was not found.",
+  "glossary": [
+    {
+      "term": "Resource",
+      "definition": "Contextual data exposed by an MCP server."
+    },
+    {
+      "term": "Prompt",
+      "definition": "A reusable message or workflow template exposed by an MCP server."
+    },
+    {
+      "term": "Write tool",
+      "definition": "A tool that changes backend state and therefore needs stronger controls."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Model Context Protocol Specification",
+      "url": "https://modelcontextprotocol.io/specification/2025-06-18",
+      "verified": false
+    },
+    {
+      "title": "Model Context Protocol: Tools",
+      "url": "https://modelcontextprotocol.io/specification/2025-06-18/server/tools",
+      "verified": false
+    }
+  ],
+  "quiz": [
+    {
+      "q": "What should happen before an agent adds a discussion note to an incident?",
+      "choices": [
+        "A human should review and approve the exact tool name and arguments",
+        "The model should silently write the note",
+        "The MCP server should disable authentication",
+        "The agent should use a stored password"
+      ],
+      "answer": 0,
+      "explanation": "Adding discussion changes the operational record, so approval and audit are required."
+    }
+  ]
+}

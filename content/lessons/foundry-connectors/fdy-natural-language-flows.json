@@ -1,0 +1,62 @@
+{
+  "id": "fdy-natural-language-flows",
+  "title": "Natural Language to Tool Call Flows",
+  "lane": "foundry-connectors",
+  "type": "concept",
+  "order": 308,
+  "summary": "Common prompts map to ADO MCP tools: list my active bugs maps to work item query or my work items; create a task maps to work item write create; show recent pipeline runs maps to pipeline build or run list; open a PR maps to pull request create after branch and repository details are known.",
+  "tags": [
+    "flows",
+    "examples",
+    "tool-calls"
+  ],
+  "analogy": "Natural language is the commander's intent. Tool calls are the written orders with coordinates, units, and safety locks.",
+  "diagram": "graph LR\nPrompt[User prompt] --> Parse[Intent and slots]\nParse --> Risk[Read or write]\nRisk --> Tool[ADO MCP tool]\nTool --> Result[Result summary]\nRisk --> Approval[Approval gate]",
+  "body": "## First principles\n\nFirst principles: an agent is useful only when it maps intent to a safe operation. The same sentence contains action, resource type, filters, and risk level. The connector lane teaches that mapping.\n\n## Definition\n\nCommon prompts map to ADO MCP tools: list my active bugs maps to work item query or my work items; create a task maps to work item write create; show recent pipeline runs maps to pipeline build or run list; open a PR maps to pull request create after branch and repository details are known.\n\n## How it fits together\n\nClassify every prompt as read or write. Reads can usually run with logging. Writes require approval, argument review, and often a dry run or validate only path first.\n\n## Worked example\n\n```python\nprompts = {\n    'list my active bugs': {\n        'tool': 'wit_work_item',\n        'action': 'query or my',\n        'risk': 'read',\n        'args': {'workItemType': 'Bug', 'stateNot': 'Closed'},\n    },\n    'create a task': {\n        'tool': 'wit_work_item_write',\n        'action': 'create',\n        'risk': 'write approval required',\n        'args': {'type': 'Task', 'title': '<from user>'},\n    },\n    'show recent pipeline runs': {\n        'tool': 'pipelines_run',\n        'action': 'list',\n        'risk': 'read',\n        'args': {'project': '<project>', 'pipelineId': '<optional>'},\n    },\n    'open a PR': {\n        'tool': 'repo_pull_request_write',\n        'action': 'create',\n        'risk': 'write approval required',\n        'args': {'repository': '<repo>', 'sourceRefName': '<branch>', 'targetRefName': 'main'},\n    },\n}\nfor text, plan in prompts.items():\n    print(text, '=>', plan['tool'], plan['action'], plan['risk'])\n```\n\n*Representative prompt to tool call mapping*",
+  "drills": [
+    {
+      "q": "Which prompt is a write: list bugs or create a task?",
+      "a": "Create a task."
+    },
+    {
+      "q": "What extra slots are needed to open a PR?",
+      "a": "Repository, source branch, target branch, title, and often reviewers."
+    },
+    {
+      "q": "What should the agent do before write tools?",
+      "a": "Show the proposed tool call and get approval."
+    }
+  ],
+  "teachItBack": "Prompt routing turns intent into explicit tool calls. The agent must extract service, filters, project, and risk before calling ADO. Writes are not just another prompt; they are change requests with approval gates.",
+  "glossary": [
+    {
+      "term": "Intent",
+      "definition": "The action the user wants, such as list, create, update, or queue."
+    },
+    {
+      "term": "Slot",
+      "definition": "Required argument such as project, repository, title, or work item type."
+    },
+    {
+      "term": "Risk level",
+      "definition": "Classification of a tool call as read, write, or destructive."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Microsoft Learn: Remote Azure DevOps MCP Server",
+      "url": "https://learn.microsoft.com/en-us/azure/devops/mcp-server/remote-mcp-server?view=azure-devops",
+      "verified": true
+    },
+    {
+      "title": "Azure DevOps MCP TOOLSET",
+      "url": "https://raw.githubusercontent.com/microsoft/azure-devops-mcp/main/docs/TOOLSET.md",
+      "verified": true
+    },
+    {
+      "title": "Microsoft Learn: Connect Foundry agents to MCP endpoints",
+      "url": "https://learn.microsoft.com/en-us/azure/foundry/agents/how-to/tools/model-context-protocol?view=azure-python-preview",
+      "verified": true
+    }
+  ]
+}

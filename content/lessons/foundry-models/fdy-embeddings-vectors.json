@@ -1,0 +1,57 @@
+{
+  "id": "fdy-embeddings-vectors",
+  "title": "Embeddings and Vector Output",
+  "lane": "foundry-models",
+  "type": "concept",
+  "order": 211,
+  "summary": "EmbeddingsClient calls the embeddings route and returns EmbeddingsResult. The embed method accepts input as a list of strings and can take model, dimensions, encoding format, input type, and model extras.",
+  "tags": [
+    "embeddings",
+    "vectors",
+    "search"
+  ],
+  "analogy": "If text meaning were a city, an embedding is GPS coordinates. Similar sentences are nearby neighborhoods. A vector database is the map index that finds nearby coordinates quickly.",
+  "diagram": "flowchart LR\n  Text[Input text] --> Embed[EmbeddingsClient embed]\n  Embed --> Vector[Float vector]\n  Vector --> Store[Vector index]\n  Query[Query text] --> QueryVec[Query vector]\n  QueryVec --> Search[Nearest neighbor search]\n  Store --> Search\n  Search --> Matches[Relevant documents]",
+  "body": "## First principles\n\nAn embedding converts meaning into coordinates. Similar meanings land near each other in vector space, making search, clustering, recommendations, and retrieval possible.\n\n## Definition\n\nEmbeddingsClient calls the embeddings route and returns EmbeddingsResult. The embed method accepts input as a list of strings and can take model, dimensions, encoding_format, input_type, and model_extras. Each response item has an embedding vector and index.\n\n## How it fits together\n\nUse embeddings for comparison, not for generation. Store vectors with the original text and metadata. At query time, embed the query, retrieve nearest vectors, and pass matching text to chat only if you are building retrieval-augmented generation.\n\n## Worked example\n\n```python\nimport os\nfrom azure.identity import DefaultAzureCredential\nfrom azure.ai.inference import EmbeddingsClient\n\nclient = EmbeddingsClient(\n    endpoint=os.environ[\"AZURE_AI_EMBEDDINGS_ENDPOINT\"],\n    credential=DefaultAzureCredential(),\n)\n\nresponse = client.embed(\n    model=os.getenv(\"AZURE_AI_EMBEDDINGS_DEPLOYMENT_NAME\"),\n    input=[\n        \"Managed identity removes secrets from code.\",\n        \"API keys should not be hard-coded.\",\n        \"Bananas ripen on the counter.\",\n    ],\n    input_type=\"document\",\n)\n\nfor item in response.data:\n    print(f\"index={item.index} dimensions={len(item.embedding)} sample={item.embedding[:3]}\")\nif response.usage:\n    print(\"embedding token usage:\", response.usage)\n```\n\n*Call the embeddings client and inspect vector lengths.*",
+  "drills": [
+    {
+      "q": "What does an embedding represent?",
+      "a": "Text meaning as a numeric vector."
+    },
+    {
+      "q": "Are embeddings generated prose?",
+      "a": "No. They are numbers for similarity and retrieval."
+    },
+    {
+      "q": "Why keep the original text with the vector?",
+      "a": "Vectors are for search; users and models need the original content."
+    }
+  ],
+  "teachItBack": "Embeddings are meaning coordinates. EmbeddingsClient.embed returns vectors and usage. Use vectors to find related text, then use the original text for display or chat grounding.",
+  "glossary": [
+    {
+      "term": "embedding",
+      "definition": "Numeric vector representing semantic meaning."
+    },
+    {
+      "term": "vector",
+      "definition": "Ordered list of numbers."
+    },
+    {
+      "term": "nearest neighbor",
+      "definition": "Search for vectors closest to a query vector."
+    }
+  ],
+  "sources": [
+    {
+      "title": "EmbeddingsClient class",
+      "url": "https://learn.microsoft.com/en-us/python/api/azure-ai-inference/azure.ai.inference.embeddingsclient?view=azure-python-preview",
+      "verified": true
+    },
+    {
+      "title": "Azure AI Inference client library for Python",
+      "url": "https://learn.microsoft.com/en-us/python/api/overview/azure/ai-inference-readme?view=azure-python-preview",
+      "verified": true
+    }
+  ]
+}

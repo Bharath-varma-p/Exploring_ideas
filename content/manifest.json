@@ -1,12 +1,13 @@
 {
-  "generatedAt": "2026-06-18T07:06:50.996Z",
+  "generatedAt": "2026-06-23T05:57:44.013Z",
   "verifiedOn": "2026-06-18",
   "stats": {
-    "lessons": 54,
-    "glossaryTerms": 136,
-    "quizQuestions": 102,
-    "sources": 165,
-    "sourcesNeedingAttention": 91
+    "lessons": 291,
+    "glossaryTerms": 832,
+    "quizQuestions": 189,
+    "changeEntries": 7,
+    "sources": 880,
+    "sourcesNeedingAttention": 806
   },
   "lanes": [
     {
@@ -32,6 +33,86 @@
     {
       "id": "framework",
       "title": "System-Design Framework & Blueprint",
+      "count": 8
+    },
+    {
+      "id": "foundry-core",
+      "title": "Azure AI Foundry & SDK",
+      "count": 30
+    },
+    {
+      "id": "foundry-auth",
+      "title": "Managed Identity (Keyless Auth)",
+      "count": 19
+    },
+    {
+      "id": "foundry-models",
+      "title": "Model Deployment & Inference",
+      "count": 25
+    },
+    {
+      "id": "foundry-mcp",
+      "title": "MCP & Foundry Agents",
+      "count": 28
+    },
+    {
+      "id": "foundry-connectors",
+      "title": "MCP Connectors: ICM, Kusto, ADO",
+      "count": 37
+    },
+    {
+      "id": "foundry-capstone",
+      "title": "Reference Architecture & Teaching Kit",
+      "count": 3
+    },
+    {
+      "id": "az-foundations",
+      "title": "Azure Foundations & Mental Model",
+      "count": 11
+    },
+    {
+      "id": "az-identity",
+      "title": "Identity & Access (Entra ID)",
+      "count": 10
+    },
+    {
+      "id": "az-governance",
+      "title": "Governance, Cost & Well-Architected",
+      "count": 11
+    },
+    {
+      "id": "az-networking",
+      "title": "Networking & Connectivity",
+      "count": 10
+    },
+    {
+      "id": "az-compute",
+      "title": "Compute — Run Your Code",
+      "count": 10
+    },
+    {
+      "id": "az-data",
+      "title": "Storage & Databases",
+      "count": 11
+    },
+    {
+      "id": "az-integration",
+      "title": "Messaging & Integration",
+      "count": 8
+    },
+    {
+      "id": "az-observability",
+      "title": "Observability & Operations",
+      "count": 8
+    },
+    {
+      "id": "az-security",
+      "title": "Security & Compliance",
+      "count": 8
+    },
+    {
+      "id": "az-devops",
+      "title": "Delivery & Infrastructure as Code",
       "count": 8
     }
   ],
@@ -413,6 +494,1665 @@
       "lane": "framework",
       "type": "blueprint",
       "file": "content/lessons/framework/blueprint-sensing-and-privacy.json"
+    },
+    {
+      "id": "fdy-what-is-foundry",
+      "title": "What Foundry Is",
+      "lane": "foundry-core",
+      "type": "concept",
+      "file": "content/lessons/foundry-core/fdy-what-is-foundry.json"
+    },
+    {
+      "id": "fdy-foundry-resource-hierarchy",
+      "title": "Azure Resource Hierarchy",
+      "lane": "foundry-core",
+      "type": "concept",
+      "file": "content/lessons/foundry-core/fdy-foundry-resource-hierarchy.json"
+    },
+    {
+      "id": "fdy-foundry-vs-neighbor-services",
+      "title": "Foundry Versus Neighbor Services",
+      "lane": "foundry-core",
+      "type": "concept",
+      "file": "content/lessons/foundry-core/fdy-foundry-vs-neighbor-services.json"
+    },
+    {
+      "id": "fdy-project-shapes-modern-and-hub",
+      "title": "Two Project Shapes",
+      "lane": "foundry-core",
+      "type": "concept",
+      "file": "content/lessons/foundry-core/fdy-project-shapes-modern-and-hub.json"
+    },
+    {
+      "id": "fdy-hub-resource-concepts",
+      "title": "Hub Resource Concepts",
+      "lane": "foundry-core",
+      "type": "concept",
+      "file": "content/lessons/foundry-core/fdy-hub-resource-concepts.json"
+    },
+    {
+      "id": "fdy-project-workspace-boundary",
+      "title": "Project Workspace Boundary",
+      "lane": "foundry-core",
+      "type": "concept",
+      "file": "content/lessons/foundry-core/fdy-project-workspace-boundary.json"
+    },
+    {
+      "id": "fdy-connections-conceptual",
+      "title": "Connections As Supply Lines",
+      "lane": "foundry-core",
+      "type": "concept",
+      "file": "content/lessons/foundry-core/fdy-connections-conceptual.json"
+    },
+    {
+      "id": "fdy-dependent-azure-resources",
+      "title": "Dependent Azure Resources",
+      "lane": "foundry-core",
+      "type": "concept",
+      "file": "content/lessons/foundry-core/fdy-dependent-azure-resources.json"
+    },
+    {
+      "id": "fdy-regions-and-availability",
+      "title": "Regions And Availability",
+      "lane": "foundry-core",
+      "type": "concept",
+      "file": "content/lessons/foundry-core/fdy-regions-and-availability.json"
+    },
+    {
+      "id": "fdy-portal-sdk-cli-rest-and-planes",
+      "title": "Interfaces And Planes",
+      "lane": "foundry-core",
+      "type": "concept",
+      "file": "content/lessons/foundry-core/fdy-portal-sdk-cli-rest-and-planes.json"
+    },
+    {
+      "id": "fdy-capabilities-overview",
+      "title": "Core Capability Map",
+      "lane": "foundry-core",
+      "type": "concept",
+      "file": "content/lessons/foundry-core/fdy-capabilities-overview.json"
+    },
+    {
+      "id": "fdy-rbac-and-managed-identity-posture",
+      "title": "Managed Identity Posture",
+      "lane": "foundry-core",
+      "type": "concept",
+      "file": "content/lessons/foundry-core/fdy-rbac-and-managed-identity-posture.json"
+    },
+    {
+      "id": "fdy-quotas-and-pricing-basics",
+      "title": "Quotas And Pricing Basics",
+      "lane": "foundry-core",
+      "type": "concept",
+      "file": "content/lessons/foundry-core/fdy-quotas-and-pricing-basics.json"
+    },
+    {
+      "id": "fdy-sdk-map",
+      "title": "The SDK Map",
+      "lane": "foundry-core",
+      "type": "concept",
+      "file": "content/lessons/foundry-core/fdy-sdk-map.json"
+    },
+    {
+      "id": "fdy-venv-install-stack",
+      "title": "Install the SDK Stack",
+      "lane": "foundry-core",
+      "type": "concept",
+      "file": "content/lessons/foundry-core/fdy-venv-install-stack.json"
+    },
+    {
+      "id": "fdy-project-endpoint",
+      "title": "Project Endpoint as Address",
+      "lane": "foundry-core",
+      "type": "concept",
+      "file": "content/lessons/foundry-core/fdy-project-endpoint.json"
+    },
+    {
+      "id": "fdy-construct-client",
+      "title": "Construct AIProjectClient",
+      "lane": "foundry-core",
+      "type": "concept",
+      "file": "content/lessons/foundry-core/fdy-construct-client.json"
+    },
+    {
+      "id": "fdy-azure-core-pipeline",
+      "title": "Azure Core Plumbing",
+      "lane": "foundry-core",
+      "type": "concept",
+      "file": "content/lessons/foundry-core/fdy-azure-core-pipeline.json"
+    },
+    {
+      "id": "fdy-operation-groups-current",
+      "title": "Operation Groups Current Map",
+      "lane": "foundry-core",
+      "type": "concept",
+      "file": "content/lessons/foundry-core/fdy-operation-groups-current.json"
+    },
+    {
+      "id": "fdy-openai-client-from-project",
+      "title": "Get an OpenAI Client from the Project",
+      "lane": "foundry-core",
+      "type": "concept",
+      "file": "content/lessons/foundry-core/fdy-openai-client-from-project.json"
+    },
+    {
+      "id": "fdy-azure-ai-inference-boundary",
+      "title": "Azure AI Inference Boundary",
+      "lane": "foundry-core",
+      "type": "concept",
+      "file": "content/lessons/foundry-core/fdy-azure-ai-inference-boundary.json"
+    },
+    {
+      "id": "fdy-connections-sdk",
+      "title": "Connections via SDK",
+      "lane": "foundry-core",
+      "type": "concept",
+      "file": "content/lessons/foundry-core/fdy-connections-sdk.json"
+    },
+    {
+      "id": "fdy-paging-and-lro",
+      "title": "Paging and Long Running Operations",
+      "lane": "foundry-core",
+      "type": "concept",
+      "file": "content/lessons/foundry-core/fdy-paging-and-lro.json"
+    },
+    {
+      "id": "fdy-sync-vs-async",
+      "title": "Sync and Async Clients",
+      "lane": "foundry-core",
+      "type": "concept",
+      "file": "content/lessons/foundry-core/fdy-sync-vs-async.json"
+    },
+    {
+      "id": "fdy-config-versioning",
+      "title": "Configuration and Versioning Discipline",
+      "lane": "foundry-core",
+      "type": "concept",
+      "file": "content/lessons/foundry-core/fdy-config-versioning.json"
+    },
+    {
+      "id": "fdy-telemetry-wiring",
+      "title": "Tracing and Observability Wiring",
+      "lane": "foundry-core",
+      "type": "concept",
+      "file": "content/lessons/foundry-core/fdy-telemetry-wiring.json"
+    },
+    {
+      "id": "fdy-error-handling",
+      "title": "HttpResponseError Patterns",
+      "lane": "foundry-core",
+      "type": "concept",
+      "file": "content/lessons/foundry-core/fdy-error-handling.json"
+    },
+    {
+      "id": "fdy-create-foundry-resource-and-project",
+      "title": "Create a Foundry Resource and Project — Portal, CLI & Bicep",
+      "lane": "foundry-core",
+      "type": "concept",
+      "file": "content/lessons/foundry-core/fdy-create-foundry-resource-and-project.json"
+    },
+    {
+      "id": "fdy-deploy-a-model-in-foundry",
+      "title": "Deploy a Model in Foundry and Call It Keyless",
+      "lane": "foundry-core",
+      "type": "concept",
+      "file": "content/lessons/foundry-core/fdy-deploy-a-model-in-foundry.json"
+    },
+    {
+      "id": "fdy-foundry-connections-and-rbac",
+      "title": "Wire Connections and Assign RBAC to the Managed Identity",
+      "lane": "foundry-core",
+      "type": "concept",
+      "file": "content/lessons/foundry-core/fdy-foundry-connections-and-rbac.json"
+    },
+    {
+      "id": "fdy-authn-vs-authz",
+      "title": "Authentication vs Authorization",
+      "lane": "foundry-auth",
+      "type": "concept",
+      "file": "content/lessons/foundry-auth/fdy-authn-vs-authz.json"
+    },
+    {
+      "id": "fdy-entra-tenants-identities",
+      "title": "Microsoft Entra ID: Tenants, Identities, Tokens",
+      "lane": "foundry-auth",
+      "type": "concept",
+      "file": "content/lessons/foundry-auth/fdy-entra-tenants-identities.json"
+    },
+    {
+      "id": "fdy-oauth-oidc-token-exchange",
+      "title": "OAuth2, OIDC, Audiences, and Scopes",
+      "lane": "foundry-auth",
+      "type": "concept",
+      "file": "content/lessons/foundry-auth/fdy-oauth-oidc-token-exchange.json"
+    },
+    {
+      "id": "fdy-managed-identity-imds",
+      "title": "Managed Identity and IMDS",
+      "lane": "foundry-auth",
+      "type": "concept",
+      "file": "content/lessons/foundry-auth/fdy-managed-identity-imds.json"
+    },
+    {
+      "id": "fdy-system-vs-user-assigned",
+      "title": "System-assigned vs User-assigned Managed Identity",
+      "lane": "foundry-auth",
+      "type": "concept",
+      "file": "content/lessons/foundry-auth/fdy-system-vs-user-assigned.json"
+    },
+    {
+      "id": "fdy-azure-identity-managedidentitycredential",
+      "title": "ManagedIdentityCredential in azure-identity",
+      "lane": "foundry-auth",
+      "type": "concept",
+      "file": "content/lessons/foundry-auth/fdy-azure-identity-managedidentitycredential.json"
+    },
+    {
+      "id": "fdy-defaultazurecredential-local-to-prod",
+      "title": "DefaultAzureCredential: Local Dev to Production",
+      "lane": "foundry-auth",
+      "type": "concept",
+      "file": "content/lessons/foundry-auth/fdy-defaultazurecredential-local-to-prod.json"
+    },
+    {
+      "id": "fdy-workload-identity-aks",
+      "title": "Workload Identity for AKS and Kubernetes",
+      "lane": "foundry-auth",
+      "type": "concept",
+      "file": "content/lessons/foundry-auth/fdy-workload-identity-aks.json"
+    },
+    {
+      "id": "fdy-azure-rbac-scope-principal",
+      "title": "Azure RBAC: Roles, Assignments, Scopes, Principals",
+      "lane": "foundry-auth",
+      "type": "concept",
+      "file": "content/lessons/foundry-auth/fdy-azure-rbac-scope-principal.json"
+    },
+    {
+      "id": "fdy-grant-managed-identity-access",
+      "title": "Grant Access to a Managed Identity",
+      "lane": "foundry-auth",
+      "type": "concept",
+      "file": "content/lessons/foundry-auth/fdy-grant-managed-identity-access.json"
+    },
+    {
+      "id": "fdy-foundry-ai-role-map",
+      "title": "Current Foundry and AI Role Map",
+      "lane": "foundry-auth",
+      "type": "concept",
+      "file": "content/lessons/foundry-auth/fdy-foundry-ai-role-map.json"
+    },
+    {
+      "id": "fdy-mcp-target-access",
+      "title": "MCP Target Access: ADX, Azure DevOps, and ICM",
+      "lane": "foundry-auth",
+      "type": "concept",
+      "file": "content/lessons/foundry-auth/fdy-mcp-target-access.json"
+    },
+    {
+      "id": "fdy-end-to-end-keyless-foundry",
+      "title": "End-to-end Keyless Foundry and MCP Pattern",
+      "lane": "foundry-auth",
+      "type": "concept",
+      "file": "content/lessons/foundry-auth/fdy-end-to-end-keyless-foundry.json"
+    },
+    {
+      "id": "fdy-troubleshooting-authz",
+      "title": "Troubleshooting 401 and 403",
+      "lane": "foundry-auth",
+      "type": "concept",
+      "file": "content/lessons/foundry-auth/fdy-troubleshooting-authz.json"
+    },
+    {
+      "id": "fdy-why-not-secrets-or-sps",
+      "title": "Anti-pattern We Avoid: Secrets, Keys, and Service Principals",
+      "lane": "foundry-auth",
+      "type": "concept",
+      "file": "content/lessons/foundry-auth/fdy-why-not-secrets-or-sps.json"
+    },
+    {
+      "id": "fdy-create-managed-identity-step-by-step",
+      "title": "Create a Managed Identity — Portal, CLI & Bicep (step by step)",
+      "lane": "foundry-auth",
+      "type": "concept",
+      "file": "content/lessons/foundry-auth/fdy-create-managed-identity-step-by-step.json"
+    },
+    {
+      "id": "fdy-pme-account-managed-identity",
+      "title": "PME Accounts & Managed Identity (Microsoft corporate context)",
+      "lane": "foundry-auth",
+      "type": "concept",
+      "file": "content/lessons/foundry-auth/fdy-pme-account-managed-identity.json"
+    },
+    {
+      "id": "fdy-managed-identity-best-practices",
+      "title": "Managed Identity Best Practices (latest)",
+      "lane": "foundry-auth",
+      "type": "concept",
+      "file": "content/lessons/foundry-auth/fdy-managed-identity-best-practices.json"
+    },
+    {
+      "id": "fdy-managed-identity-resource-hub",
+      "title": "Managed Identity — Field Guide & Resource Hub (videos, docs, community)",
+      "lane": "foundry-auth",
+      "type": "concept",
+      "file": "content/lessons/foundry-auth/fdy-managed-identity-resource-hub.json"
+    },
+    {
+      "id": "fdy-catalog-and-providers",
+      "title": "Model catalog, providers, and collections",
+      "lane": "foundry-models",
+      "type": "concept",
+      "file": "content/lessons/foundry-models/fdy-catalog-and-providers.json"
+    },
+    {
+      "id": "fdy-deployment-types",
+      "title": "Standard, Global, Data Zone, and Provisioned choices",
+      "lane": "foundry-models",
+      "type": "concept",
+      "file": "content/lessons/foundry-models/fdy-deployment-types.json"
+    },
+    {
+      "id": "fdy-serverless-and-managed-compute",
+      "title": "Serverless API versus managed compute",
+      "lane": "foundry-models",
+      "type": "concept",
+      "file": "content/lessons/foundry-models/fdy-serverless-and-managed-compute.json"
+    },
+    {
+      "id": "fdy-deployment-object-alias",
+      "title": "Deployment name, model name, and model version",
+      "lane": "foundry-models",
+      "type": "concept",
+      "file": "content/lessons/foundry-models/fdy-deployment-object-alias.json"
+    },
+    {
+      "id": "fdy-create-deployment-cli-bicep",
+      "title": "Creating deployments with managed identity",
+      "lane": "foundry-models",
+      "type": "concept",
+      "file": "content/lessons/foundry-models/fdy-create-deployment-cli-bicep.json"
+    },
+    {
+      "id": "fdy-endpoints-and-uris",
+      "title": "Endpoints and target URIs",
+      "lane": "foundry-models",
+      "type": "concept",
+      "file": "content/lessons/foundry-models/fdy-endpoints-and-uris.json"
+    },
+    {
+      "id": "fdy-quota-tpm-ptu-rate-limits",
+      "title": "Capacity, quota, TPM, PTU, and rate limits",
+      "lane": "foundry-models",
+      "type": "concept",
+      "file": "content/lessons/foundry-models/fdy-quota-tpm-ptu-rate-limits.json"
+    },
+    {
+      "id": "fdy-versions-lifecycle-migration",
+      "title": "Version pinning, auto-update, and retirement",
+      "lane": "foundry-models",
+      "type": "concept",
+      "file": "content/lessons/foundry-models/fdy-versions-lifecycle-migration.json"
+    },
+    {
+      "id": "fdy-region-data-residency",
+      "title": "Region and data residency",
+      "lane": "foundry-models",
+      "type": "concept",
+      "file": "content/lessons/foundry-models/fdy-region-data-residency.json"
+    },
+    {
+      "id": "fdy-manage-deployments-sdk-cli",
+      "title": "List, inspect, and delete deployments",
+      "lane": "foundry-models",
+      "type": "concept",
+      "file": "content/lessons/foundry-models/fdy-manage-deployments-sdk-cli.json"
+    },
+    {
+      "id": "fdy-cost-mental-model",
+      "title": "Cost mental model",
+      "lane": "foundry-models",
+      "type": "concept",
+      "file": "content/lessons/foundry-models/fdy-cost-mental-model.json"
+    },
+    {
+      "id": "fdy-inference-client-map",
+      "title": "What the Inference SDK Is",
+      "lane": "foundry-models",
+      "type": "concept",
+      "file": "content/lessons/foundry-models/fdy-inference-client-map.json"
+    },
+    {
+      "id": "fdy-project-client-entrypoint",
+      "title": "Getting a Client from a Foundry Project",
+      "lane": "foundry-models",
+      "type": "concept",
+      "file": "content/lessons/foundry-models/fdy-project-client-entrypoint.json"
+    },
+    {
+      "id": "fdy-chat-message-roles",
+      "title": "Messages and Roles",
+      "lane": "foundry-models",
+      "type": "concept",
+      "file": "content/lessons/foundry-models/fdy-chat-message-roles.json"
+    },
+    {
+      "id": "fdy-basic-chat-completion",
+      "title": "Making a Chat Completion Request",
+      "lane": "foundry-models",
+      "type": "concept",
+      "file": "content/lessons/foundry-models/fdy-basic-chat-completion.json"
+    },
+    {
+      "id": "fdy-generation-parameters",
+      "title": "Controlling Output with Parameters",
+      "lane": "foundry-models",
+      "type": "concept",
+      "file": "content/lessons/foundry-models/fdy-generation-parameters.json"
+    },
+    {
+      "id": "fdy-json-response-format",
+      "title": "JSON Mode and Structured Output",
+      "lane": "foundry-models",
+      "type": "concept",
+      "file": "content/lessons/foundry-models/fdy-json-response-format.json"
+    },
+    {
+      "id": "fdy-response-object",
+      "title": "Reading the Response Object",
+      "lane": "foundry-models",
+      "type": "concept",
+      "file": "content/lessons/foundry-models/fdy-response-object.json"
+    },
+    {
+      "id": "fdy-streaming-deltas",
+      "title": "Streaming Responses",
+      "lane": "foundry-models",
+      "type": "concept",
+      "file": "content/lessons/foundry-models/fdy-streaming-deltas.json"
+    },
+    {
+      "id": "fdy-tokens-context-cost",
+      "title": "Tokens, Context Windows, Cost, and Limits",
+      "lane": "foundry-models",
+      "type": "concept",
+      "file": "content/lessons/foundry-models/fdy-tokens-context-cost.json"
+    },
+    {
+      "id": "fdy-function-tool-calling",
+      "title": "Function Calling at the Inference Layer",
+      "lane": "foundry-models",
+      "type": "concept",
+      "file": "content/lessons/foundry-models/fdy-function-tool-calling.json"
+    },
+    {
+      "id": "fdy-embeddings-vectors",
+      "title": "Embeddings and Vector Output",
+      "lane": "foundry-models",
+      "type": "concept",
+      "file": "content/lessons/foundry-models/fdy-embeddings-vectors.json"
+    },
+    {
+      "id": "fdy-errors-retries-filters-timeouts",
+      "title": "Errors, Rate Limits, Content Filters, and Timeouts",
+      "lane": "foundry-models",
+      "type": "concept",
+      "file": "content/lessons/foundry-models/fdy-errors-retries-filters-timeouts.json"
+    },
+    {
+      "id": "fdy-async-inference",
+      "title": "Async Inference",
+      "lane": "foundry-models",
+      "type": "concept",
+      "file": "content/lessons/foundry-models/fdy-async-inference.json"
+    },
+    {
+      "id": "fdy-model-extras-passthrough",
+      "title": "Model-Specific Extra Parameters",
+      "lane": "foundry-models",
+      "type": "concept",
+      "file": "content/lessons/foundry-models/fdy-model-extras-passthrough.json"
+    },
+    {
+      "id": "fdy-why-mcp-exists",
+      "title": "Why MCP Exists",
+      "lane": "foundry-mcp",
+      "type": "concept",
+      "file": "content/lessons/foundry-mcp/fdy-why-mcp-exists.json"
+    },
+    {
+      "id": "fdy-host-client-server",
+      "title": "Host Client Server Architecture",
+      "lane": "foundry-mcp",
+      "type": "concept",
+      "file": "content/lessons/foundry-mcp/fdy-host-client-server.json"
+    },
+    {
+      "id": "fdy-json-rpc-wire-protocol",
+      "title": "JSON RPC Wire Protocol",
+      "lane": "foundry-mcp",
+      "type": "concept",
+      "file": "content/lessons/foundry-mcp/fdy-json-rpc-wire-protocol.json"
+    },
+    {
+      "id": "fdy-connection-lifecycle",
+      "title": "Connection Lifecycle",
+      "lane": "foundry-mcp",
+      "type": "concept",
+      "file": "content/lessons/foundry-mcp/fdy-connection-lifecycle.json"
+    },
+    {
+      "id": "fdy-transports",
+      "title": "Transports",
+      "lane": "foundry-mcp",
+      "type": "concept",
+      "file": "content/lessons/foundry-mcp/fdy-transports.json"
+    },
+    {
+      "id": "fdy-server-primitives",
+      "title": "Server Primitives",
+      "lane": "foundry-mcp",
+      "type": "concept",
+      "file": "content/lessons/foundry-mcp/fdy-server-primitives.json"
+    },
+    {
+      "id": "fdy-tool-discovery-invocation",
+      "title": "Tool Discovery and Invocation",
+      "lane": "foundry-mcp",
+      "type": "concept",
+      "file": "content/lessons/foundry-mcp/fdy-tool-discovery-invocation.json"
+    },
+    {
+      "id": "fdy-resources-context",
+      "title": "Resources and Context",
+      "lane": "foundry-mcp",
+      "type": "concept",
+      "file": "content/lessons/foundry-mcp/fdy-resources-context.json"
+    },
+    {
+      "id": "fdy-prompts-templates",
+      "title": "Prompts as Templates",
+      "lane": "foundry-mcp",
+      "type": "concept",
+      "file": "content/lessons/foundry-mcp/fdy-prompts-templates.json"
+    },
+    {
+      "id": "fdy-client-primitives",
+      "title": "Client Primitives",
+      "lane": "foundry-mcp",
+      "type": "concept",
+      "file": "content/lessons/foundry-mcp/fdy-client-primitives.json"
+    },
+    {
+      "id": "fdy-function-calling-bridge",
+      "title": "Relationship to LLM Tool Calling",
+      "lane": "foundry-mcp",
+      "type": "concept",
+      "file": "content/lessons/foundry-mcp/fdy-function-calling-bridge.json"
+    },
+    {
+      "id": "fdy-security-trust",
+      "title": "Security and Trust",
+      "lane": "foundry-mcp",
+      "type": "concept",
+      "file": "content/lessons/foundry-mcp/fdy-security-trust.json"
+    },
+    {
+      "id": "fdy-minimal-python-server",
+      "title": "Minimal Python MCP Server",
+      "lane": "foundry-mcp",
+      "type": "concept",
+      "file": "content/lessons/foundry-mcp/fdy-minimal-python-server.json"
+    },
+    {
+      "id": "fdy-minimal-python-client",
+      "title": "Minimal Python MCP Client",
+      "lane": "foundry-mcp",
+      "type": "concept",
+      "file": "content/lessons/foundry-mcp/fdy-minimal-python-client.json"
+    },
+    {
+      "id": "fdy-official-sdks",
+      "title": "Official SDKs",
+      "lane": "foundry-mcp",
+      "type": "concept",
+      "file": "content/lessons/foundry-mcp/fdy-official-sdks.json"
+    },
+    {
+      "id": "fdy-agent-service-purpose",
+      "title": "What Foundry Agent Service Is",
+      "lane": "foundry-mcp",
+      "type": "concept",
+      "file": "content/lessons/foundry-mcp/fdy-agent-service-purpose.json"
+    },
+    {
+      "id": "fdy-api-surface-map",
+      "title": "Current Python SDK Surface",
+      "lane": "foundry-mcp",
+      "type": "concept",
+      "file": "content/lessons/foundry-mcp/fdy-api-surface-map.json"
+    },
+    {
+      "id": "fdy-conversation-state-objects",
+      "title": "Agent State Objects",
+      "lane": "foundry-mcp",
+      "type": "concept",
+      "file": "content/lessons/foundry-mcp/fdy-conversation-state-objects.json"
+    },
+    {
+      "id": "fdy-run-loop",
+      "title": "The Run Loop",
+      "lane": "foundry-mcp",
+      "type": "concept",
+      "file": "content/lessons/foundry-mcp/fdy-run-loop.json"
+    },
+    {
+      "id": "fdy-tool-catalog",
+      "title": "Agent Tool Types",
+      "lane": "foundry-mcp",
+      "type": "concept",
+      "file": "content/lessons/foundry-mcp/fdy-tool-catalog.json"
+    },
+    {
+      "id": "fdy-mcp-attachment-shape",
+      "title": "Attaching Any MCP Server",
+      "lane": "foundry-mcp",
+      "type": "concept",
+      "file": "content/lessons/foundry-mcp/fdy-mcp-attachment-shape.json"
+    },
+    {
+      "id": "fdy-mcp-approval-hitl",
+      "title": "Approval and Human Control",
+      "lane": "foundry-mcp",
+      "type": "concept",
+      "file": "content/lessons/foundry-mcp/fdy-mcp-approval-hitl.json"
+    },
+    {
+      "id": "fdy-managed-identity-chain",
+      "title": "Managed Identity End to End",
+      "lane": "foundry-mcp",
+      "type": "concept",
+      "file": "content/lessons/foundry-mcp/fdy-managed-identity-chain.json"
+    },
+    {
+      "id": "fdy-full-worked-example",
+      "title": "Full Worked Example",
+      "lane": "foundry-mcp",
+      "type": "concept",
+      "file": "content/lessons/foundry-mcp/fdy-full-worked-example.json"
+    },
+    {
+      "id": "fdy-persistent-ephemeral-agents",
+      "title": "Persistent vs Ephemeral Agents",
+      "lane": "foundry-mcp",
+      "type": "concept",
+      "file": "content/lessons/foundry-mcp/fdy-persistent-ephemeral-agents.json"
+    },
+    {
+      "id": "fdy-connected-multi-agent-patterns",
+      "title": "Connected and Multi Agent Patterns",
+      "lane": "foundry-mcp",
+      "type": "concept",
+      "file": "content/lessons/foundry-mcp/fdy-connected-multi-agent-patterns.json"
+    },
+    {
+      "id": "fdy-tracing-observability",
+      "title": "Tracing and Observability",
+      "lane": "foundry-mcp",
+      "type": "concept",
+      "file": "content/lessons/foundry-mcp/fdy-tracing-observability.json"
+    },
+    {
+      "id": "fdy-safe-production-checklist",
+      "title": "Production Checklist for MCP Agents",
+      "lane": "foundry-mcp",
+      "type": "concept",
+      "file": "content/lessons/foundry-mcp/fdy-safe-production-checklist.json"
+    },
+    {
+      "id": "fdy-what-is-icm",
+      "title": "What IcM Means in This Lane",
+      "lane": "foundry-connectors",
+      "type": "concept",
+      "file": "content/lessons/foundry-connectors/fdy-what-is-icm.json"
+    },
+    {
+      "id": "fdy-incident-vocabulary",
+      "title": "Incident Domain Vocabulary",
+      "lane": "foundry-connectors",
+      "type": "concept",
+      "file": "content/lessons/foundry-connectors/fdy-incident-vocabulary.json"
+    },
+    {
+      "id": "fdy-incident-lifecycle",
+      "title": "Incident Lifecycle Mental Model",
+      "lane": "foundry-connectors",
+      "type": "concept",
+      "file": "content/lessons/foundry-connectors/fdy-incident-lifecycle.json"
+    },
+    {
+      "id": "fdy-mcp-connector-pattern",
+      "title": "MCP Connector Pattern for Incidents",
+      "lane": "foundry-connectors",
+      "type": "concept",
+      "file": "content/lessons/foundry-connectors/fdy-mcp-connector-pattern.json"
+    },
+    {
+      "id": "fdy-mapping-icm-to-mcp",
+      "title": "Map Incident Concepts to MCP Primitives",
+      "lane": "foundry-connectors",
+      "type": "concept",
+      "file": "content/lessons/foundry-connectors/fdy-mapping-icm-to-mcp.json"
+    },
+    {
+      "id": "fdy-foundry-agent-attach",
+      "title": "Attach the MCP Server to a Foundry Agent",
+      "lane": "foundry-connectors",
+      "type": "concept",
+      "file": "content/lessons/foundry-connectors/fdy-foundry-agent-attach.json"
+    },
+    {
+      "id": "fdy-managed-identity-auth-flow",
+      "title": "Managed Identity Authentication Flow",
+      "lane": "foundry-connectors",
+      "type": "concept",
+      "file": "content/lessons/foundry-connectors/fdy-managed-identity-auth-flow.json"
+    },
+    {
+      "id": "fdy-least-privilege-rbac",
+      "title": "Least Privilege for Incident Tools",
+      "lane": "foundry-connectors",
+      "type": "concept",
+      "file": "content/lessons/foundry-connectors/fdy-least-privilege-rbac.json"
+    },
+    {
+      "id": "fdy-representative-tool-calls-mcp-icm",
+      "title": "Representative Tool Call Examples",
+      "lane": "foundry-connectors",
+      "type": "concept",
+      "file": "content/lessons/foundry-connectors/fdy-representative-tool-calls-mcp-icm.json"
+    },
+    {
+      "id": "fdy-write-safety-approval",
+      "title": "Human Approval for Incident Writes",
+      "lane": "foundry-connectors",
+      "type": "concept",
+      "file": "content/lessons/foundry-connectors/fdy-write-safety-approval.json"
+    },
+    {
+      "id": "fdy-agent-interaction-traces",
+      "title": "End-to-End Interaction Traces",
+      "lane": "foundry-connectors",
+      "type": "concept",
+      "file": "content/lessons/foundry-connectors/fdy-agent-interaction-traces.json"
+    },
+    {
+      "id": "fdy-build-checklist",
+      "title": "Build Checklist for a Real Connector",
+      "lane": "foundry-connectors",
+      "type": "concept",
+      "file": "content/lessons/foundry-connectors/fdy-build-checklist.json"
+    },
+    {
+      "id": "fdy-adx-purpose",
+      "title": "Kusto and Azure Data Explorer in One Breath",
+      "lane": "foundry-connectors",
+      "type": "concept",
+      "file": "content/lessons/foundry-connectors/fdy-adx-purpose.json"
+    },
+    {
+      "id": "fdy-where-kusto-shows-up",
+      "title": "Kusto Beyond ADX",
+      "lane": "foundry-connectors",
+      "type": "concept",
+      "file": "content/lessons/foundry-connectors/fdy-where-kusto-shows-up.json"
+    },
+    {
+      "id": "fdy-resource-hierarchy",
+      "title": "Clusters Databases Tables Columns",
+      "lane": "foundry-connectors",
+      "type": "concept",
+      "file": "content/lessons/foundry-connectors/fdy-resource-hierarchy.json"
+    },
+    {
+      "id": "fdy-kql-pipe-model",
+      "title": "The KQL Pipe Model",
+      "lane": "foundry-connectors",
+      "type": "concept",
+      "file": "content/lessons/foundry-connectors/fdy-kql-pipe-model.json"
+    },
+    {
+      "id": "fdy-essential-operators",
+      "title": "Essential KQL Operators",
+      "lane": "foundry-connectors",
+      "type": "concept",
+      "file": "content/lessons/foundry-connectors/fdy-essential-operators.json"
+    },
+    {
+      "id": "fdy-official-azure-mcp",
+      "title": "Official Azure MCP Server Kusto Tools",
+      "lane": "foundry-connectors",
+      "type": "concept",
+      "file": "content/lessons/foundry-connectors/fdy-official-azure-mcp.json"
+    },
+    {
+      "id": "fdy-community-options",
+      "title": "Community and Specialized MCP Servers",
+      "lane": "foundry-connectors",
+      "type": "concept",
+      "file": "content/lessons/foundry-connectors/fdy-community-options.json"
+    },
+    {
+      "id": "fdy-managed-identity-chain-mcp-kusto",
+      "title": "Managed Identity End to End",
+      "lane": "foundry-connectors",
+      "type": "concept",
+      "file": "content/lessons/foundry-connectors/fdy-managed-identity-chain-mcp-kusto.json"
+    },
+    {
+      "id": "fdy-grant-permissions",
+      "title": "Grant the Identity ADX Read Access",
+      "lane": "foundry-connectors",
+      "type": "concept",
+      "file": "content/lessons/foundry-connectors/fdy-grant-permissions.json"
+    },
+    {
+      "id": "fdy-wire-foundry-agent",
+      "title": "Wire a Foundry Agent to Kusto MCP",
+      "lane": "foundry-connectors",
+      "type": "concept",
+      "file": "content/lessons/foundry-connectors/fdy-wire-foundry-agent.json"
+    },
+    {
+      "id": "fdy-tool-call-example",
+      "title": "From Natural Language to KQL Tool Call",
+      "lane": "foundry-connectors",
+      "type": "concept",
+      "file": "content/lessons/foundry-connectors/fdy-tool-call-example.json"
+    },
+    {
+      "id": "fdy-read-only-safety",
+      "title": "Read Only Safety and Query Limits",
+      "lane": "foundry-connectors",
+      "type": "concept",
+      "file": "content/lessons/foundry-connectors/fdy-read-only-safety.json"
+    },
+    {
+      "id": "fdy-debugging-failures",
+      "title": "Troubleshooting the Kusto Connector",
+      "lane": "foundry-connectors",
+      "type": "concept",
+      "file": "content/lessons/foundry-connectors/fdy-debugging-failures.json"
+    },
+    {
+      "id": "fdy-azure-devops-map",
+      "title": "Azure DevOps Service Map",
+      "lane": "foundry-connectors",
+      "type": "concept",
+      "file": "content/lessons/foundry-connectors/fdy-azure-devops-map.json"
+    },
+    {
+      "id": "fdy-work-item-anatomy",
+      "title": "Work Item Anatomy",
+      "lane": "foundry-connectors",
+      "type": "concept",
+      "file": "content/lessons/foundry-connectors/fdy-work-item-anatomy.json"
+    },
+    {
+      "id": "fdy-work-item-states-wiql",
+      "title": "States and WIQL Queries",
+      "lane": "foundry-connectors",
+      "type": "concept",
+      "file": "content/lessons/foundry-connectors/fdy-work-item-states-wiql.json"
+    },
+    {
+      "id": "fdy-official-mcp-server-current",
+      "title": "Official ADO MCP Server Current Shape",
+      "lane": "foundry-connectors",
+      "type": "concept",
+      "file": "content/lessons/foundry-connectors/fdy-official-mcp-server-current.json"
+    },
+    {
+      "id": "fdy-managed-identity-auth-story",
+      "title": "Managed Identity Authentication Story",
+      "lane": "foundry-connectors",
+      "type": "concept",
+      "file": "content/lessons/foundry-connectors/fdy-managed-identity-auth-story.json"
+    },
+    {
+      "id": "fdy-granting-ado-access",
+      "title": "Granting Least Privilege Access",
+      "lane": "foundry-connectors",
+      "type": "concept",
+      "file": "content/lessons/foundry-connectors/fdy-granting-ado-access.json"
+    },
+    {
+      "id": "fdy-foundry-agent-wiring",
+      "title": "Wiring ADO MCP to a Foundry Agent",
+      "lane": "foundry-connectors",
+      "type": "concept",
+      "file": "content/lessons/foundry-connectors/fdy-foundry-agent-wiring.json"
+    },
+    {
+      "id": "fdy-natural-language-flows",
+      "title": "Natural Language to Tool Call Flows",
+      "lane": "foundry-connectors",
+      "type": "concept",
+      "file": "content/lessons/foundry-connectors/fdy-natural-language-flows.json"
+    },
+    {
+      "id": "fdy-representative-tool-calls",
+      "title": "Representative MCP Tool Calls",
+      "lane": "foundry-connectors",
+      "type": "concept",
+      "file": "content/lessons/foundry-connectors/fdy-representative-tool-calls.json"
+    },
+    {
+      "id": "fdy-direct-rest-fallback",
+      "title": "Direct REST Fallback with MI Tokens",
+      "lane": "foundry-connectors",
+      "type": "concept",
+      "file": "content/lessons/foundry-connectors/fdy-direct-rest-fallback.json"
+    },
+    {
+      "id": "fdy-write-safety-hitl",
+      "title": "Write Safety and Human in the Loop",
+      "lane": "foundry-connectors",
+      "type": "concept",
+      "file": "content/lessons/foundry-connectors/fdy-write-safety-hitl.json"
+    },
+    {
+      "id": "fdy-troubleshooting-and-teachback",
+      "title": "Troubleshooting the Connector",
+      "lane": "foundry-connectors",
+      "type": "concept",
+      "file": "content/lessons/foundry-connectors/fdy-troubleshooting-and-teachback.json"
+    },
+    {
+      "id": "fdy-reference-architecture",
+      "title": "Reference Architecture: End to End",
+      "lane": "foundry-capstone",
+      "type": "concept",
+      "file": "content/lessons/foundry-capstone/fdy-reference-architecture.json"
+    },
+    {
+      "id": "fdy-teaching-kit",
+      "title": "Teaching Kit: Present the Stack",
+      "lane": "foundry-capstone",
+      "type": "concept",
+      "file": "content/lessons/foundry-capstone/fdy-teaching-kit.json"
+    },
+    {
+      "id": "fdy-capstone-self-test",
+      "title": "Capstone Self-Test (Teach-It-Back)",
+      "lane": "foundry-capstone",
+      "type": "concept",
+      "file": "content/lessons/foundry-capstone/fdy-capstone-self-test.json"
+    },
+    {
+      "id": "azure-bootcamp-start",
+      "title": "Azure Bootcamp — Start Here (the whole map)",
+      "lane": "az-foundations",
+      "type": "concept",
+      "file": "content/lessons/az-foundations/azure-bootcamp-start.json"
+    },
+    {
+      "id": "azf-intro",
+      "title": "Foundations — the mental model that unlocks all of Azure",
+      "lane": "az-foundations",
+      "type": "concept",
+      "file": "content/lessons/az-foundations/azf-intro.json"
+    },
+    {
+      "id": "azf-what-is-cloud",
+      "title": "What \"the cloud\" actually is (and why it exists)",
+      "lane": "az-foundations",
+      "type": "concept",
+      "file": "content/lessons/az-foundations/azf-what-is-cloud.json"
+    },
+    {
+      "id": "azf-what-is-azure",
+      "title": "What Azure is: Microsoft's cloud platform",
+      "lane": "az-foundations",
+      "type": "concept",
+      "file": "content/lessons/az-foundations/azf-what-is-azure.json"
+    },
+    {
+      "id": "azf-regions-zones",
+      "title": "Regions, zones, geographies & region pairs",
+      "lane": "az-foundations",
+      "type": "concept",
+      "file": "content/lessons/az-foundations/azf-regions-zones.json"
+    },
+    {
+      "id": "azf-hierarchy",
+      "title": "The scope hierarchy: tenant → resource (deep dive)",
+      "lane": "az-foundations",
+      "type": "concept",
+      "file": "content/lessons/az-foundations/azf-hierarchy.json"
+    },
+    {
+      "id": "azf-resource-groups",
+      "title": "Resource groups, up close",
+      "lane": "az-foundations",
+      "type": "concept",
+      "file": "content/lessons/az-foundations/azf-resource-groups.json"
+    },
+    {
+      "id": "azf-subscriptions-tenants",
+      "title": "Subscriptions & tenants: billing vs identity",
+      "lane": "az-foundations",
+      "type": "concept",
+      "file": "content/lessons/az-foundations/azf-subscriptions-tenants.json"
+    },
+    {
+      "id": "azf-arm",
+      "title": "Azure Resource Manager: the one control plane",
+      "lane": "az-foundations",
+      "type": "concept",
+      "file": "content/lessons/az-foundations/azf-arm.json"
+    },
+    {
+      "id": "azf-interfaces",
+      "title": "How you actually talk to Azure",
+      "lane": "az-foundations",
+      "type": "concept",
+      "file": "content/lessons/az-foundations/azf-interfaces.json"
+    },
+    {
+      "id": "azf-shared-responsibility",
+      "title": "Shared responsibility, SLAs & the preview→GA lifecycle",
+      "lane": "az-foundations",
+      "type": "concept",
+      "file": "content/lessons/az-foundations/azf-shared-responsibility.json"
+    },
+    {
+      "id": "azi-intro",
+      "title": "Identity & Access — Start Here (the front door of Azure)",
+      "lane": "az-identity",
+      "type": "concept",
+      "file": "content/lessons/az-identity/azi-intro.json"
+    },
+    {
+      "id": "azi-why-identity",
+      "title": "Identity Is the New Perimeter (Zero Trust from scratch)",
+      "lane": "az-identity",
+      "type": "concept",
+      "file": "content/lessons/az-identity/azi-why-identity.json"
+    },
+    {
+      "id": "azi-entra-id",
+      "title": "Microsoft Entra ID: The Directory, Tenants, Users & Groups",
+      "lane": "az-identity",
+      "type": "concept",
+      "file": "content/lessons/az-identity/azi-entra-id.json"
+    },
+    {
+      "id": "azi-service-principals",
+      "title": "App Registrations & Service Principals (identities for software)",
+      "lane": "az-identity",
+      "type": "concept",
+      "file": "content/lessons/az-identity/azi-service-principals.json"
+    },
+    {
+      "id": "azi-managed-identities-bridge",
+      "title": "Managed Identities, in One Page (then go deeper)",
+      "lane": "az-identity",
+      "type": "concept",
+      "file": "content/lessons/az-identity/azi-managed-identities-bridge.json"
+    },
+    {
+      "id": "azi-rbac",
+      "title": "Azure RBAC Deep Dive (how permissions actually resolve)",
+      "lane": "az-identity",
+      "type": "concept",
+      "file": "content/lessons/az-identity/azi-rbac.json"
+    },
+    {
+      "id": "azi-builtin-roles",
+      "title": "Built-in Roles, Custom Roles & Least Privilege in Practice",
+      "lane": "az-identity",
+      "type": "concept",
+      "file": "content/lessons/az-identity/azi-builtin-roles.json"
+    },
+    {
+      "id": "azi-pim",
+      "title": "Privileged Identity Management: Power Without Standing Risk",
+      "lane": "az-identity",
+      "type": "concept",
+      "file": "content/lessons/az-identity/azi-pim.json"
+    },
+    {
+      "id": "azi-conditional-access",
+      "title": "Conditional Access & MFA: Judging the Sign-In Itself",
+      "lane": "az-identity",
+      "type": "concept",
+      "file": "content/lessons/az-identity/azi-conditional-access.json"
+    },
+    {
+      "id": "azi-hybrid-identity",
+      "title": "Hybrid Identity: Entra ID, On-Prem AD, B2B & B2C",
+      "lane": "az-identity",
+      "type": "concept",
+      "file": "content/lessons/az-identity/azi-hybrid-identity.json"
+    },
+    {
+      "id": "azg-intro",
+      "title": "Governance: Control Without Drag",
+      "lane": "az-governance",
+      "type": "concept",
+      "file": "content/lessons/az-governance/azg-intro.json"
+    },
+    {
+      "id": "azg-management-groups",
+      "title": "Management Groups: Governance Above Subscriptions",
+      "lane": "az-governance",
+      "type": "concept",
+      "file": "content/lessons/az-governance/azg-management-groups.json"
+    },
+    {
+      "id": "azg-policy",
+      "title": "Azure Policy: Guardrails, Not Guesswork",
+      "lane": "az-governance",
+      "type": "concept",
+      "file": "content/lessons/az-governance/azg-policy.json"
+    },
+    {
+      "id": "azg-locks",
+      "title": "Resource Locks: The Big Red Safety Cover",
+      "lane": "az-governance",
+      "type": "concept",
+      "file": "content/lessons/az-governance/azg-locks.json"
+    },
+    {
+      "id": "azg-tags",
+      "title": "Tags: Business Context for Cloud Resources",
+      "lane": "az-governance",
+      "type": "concept",
+      "file": "content/lessons/az-governance/azg-tags.json"
+    },
+    {
+      "id": "azg-cost-management",
+      "title": "Cost Management + Billing: Make Spend Visible Early",
+      "lane": "az-governance",
+      "type": "concept",
+      "file": "content/lessons/az-governance/azg-cost-management.json"
+    },
+    {
+      "id": "azg-pricing-models",
+      "title": "Pricing Models: Why Azure Has So Many Ways to Pay",
+      "lane": "az-governance",
+      "type": "concept",
+      "file": "content/lessons/az-governance/azg-pricing-models.json"
+    },
+    {
+      "id": "azg-landing-zones",
+      "title": "Azure Landing Zones: The Paved Road",
+      "lane": "az-governance",
+      "type": "concept",
+      "file": "content/lessons/az-governance/azg-landing-zones.json"
+    },
+    {
+      "id": "azg-advisor",
+      "title": "Azure Advisor: Your Built-In Cloud Coach",
+      "lane": "az-governance",
+      "type": "concept",
+      "file": "content/lessons/az-governance/azg-advisor.json"
+    },
+    {
+      "id": "azg-waf",
+      "title": "Azure Well-Architected Framework: Tradeoffs Made Explicit",
+      "lane": "az-governance",
+      "type": "concept",
+      "file": "content/lessons/az-governance/azg-waf.json"
+    },
+    {
+      "id": "azg-quotas",
+      "title": "Quotas and Limits: Cloud Capacity Has Guardrails Too",
+      "lane": "az-governance",
+      "type": "concept",
+      "file": "content/lessons/az-governance/azg-quotas.json"
+    },
+    {
+      "id": "azn-intro",
+      "title": "Why Cloud Networking Exists (the software-defined mental model)",
+      "lane": "az-networking",
+      "type": "concept",
+      "file": "content/lessons/az-networking/azn-intro.json"
+    },
+    {
+      "id": "azn-vnet",
+      "title": "Virtual Networks & Subnets: your private address space",
+      "lane": "az-networking",
+      "type": "concept",
+      "file": "content/lessons/az-networking/azn-vnet.json"
+    },
+    {
+      "id": "azn-nsg",
+      "title": "NSGs & ASGs: stateful firewall rules without the cables",
+      "lane": "az-networking",
+      "type": "concept",
+      "file": "content/lessons/az-networking/azn-nsg.json"
+    },
+    {
+      "id": "azn-ips-nat",
+      "title": "Public vs Private IPs, NAT Gateway & outbound connectivity",
+      "lane": "az-networking",
+      "type": "concept",
+      "file": "content/lessons/az-networking/azn-ips-nat.json"
+    },
+    {
+      "id": "azn-load-balancing",
+      "title": "The Four Load Balancers Compared: LB vs App Gateway vs Front Door vs Traffic Manager",
+      "lane": "az-networking",
+      "type": "framework",
+      "file": "content/lessons/az-networking/azn-load-balancing.json"
+    },
+    {
+      "id": "azn-dns",
+      "title": "Azure DNS: public zones, private zones & name resolution in a VNet",
+      "lane": "az-networking",
+      "type": "concept",
+      "file": "content/lessons/az-networking/azn-dns.json"
+    },
+    {
+      "id": "azn-peering",
+      "title": "VNet Peering & the Hub-and-Spoke Topology",
+      "lane": "az-networking",
+      "type": "concept",
+      "file": "content/lessons/az-networking/azn-peering.json"
+    },
+    {
+      "id": "azn-hybrid",
+      "title": "Connecting to On-Prem: VPN Gateway vs ExpressRoute (why each)",
+      "lane": "az-networking",
+      "type": "concept",
+      "file": "content/lessons/az-networking/azn-hybrid.json"
+    },
+    {
+      "id": "azn-private-link",
+      "title": "Private Link & Private Endpoints vs Service Endpoints",
+      "lane": "az-networking",
+      "type": "concept",
+      "file": "content/lessons/az-networking/azn-private-link.json"
+    },
+    {
+      "id": "azn-firewall-waf",
+      "title": "Defense in Depth: Azure Firewall, WAF & DDoS Protection",
+      "lane": "az-networking",
+      "type": "concept",
+      "file": "content/lessons/az-networking/azn-firewall-waf.json"
+    },
+    {
+      "id": "azc-intro",
+      "title": "Azure Compute: The Management Spectrum",
+      "lane": "az-compute",
+      "type": "concept",
+      "file": "content/lessons/az-compute/azc-intro.json"
+    },
+    {
+      "id": "azc-vms",
+      "title": "Virtual Machines: Control Has a Shape",
+      "lane": "az-compute",
+      "type": "concept",
+      "file": "content/lessons/az-compute/azc-vms.json"
+    },
+    {
+      "id": "azc-vmss",
+      "title": "VM Scale Sets: Herds, Not Pets",
+      "lane": "az-compute",
+      "type": "concept",
+      "file": "content/lessons/az-compute/azc-vmss.json"
+    },
+    {
+      "id": "azc-app-service",
+      "title": "App Service: Web Hosting Without the Server Chores",
+      "lane": "az-compute",
+      "type": "concept",
+      "file": "content/lessons/az-compute/azc-app-service.json"
+    },
+    {
+      "id": "azc-functions",
+      "title": "Azure Functions: Code That Wakes Up for Events",
+      "lane": "az-compute",
+      "type": "concept",
+      "file": "content/lessons/az-compute/azc-functions.json"
+    },
+    {
+      "id": "azc-containers",
+      "title": "Containers on Azure: Package Once, Run Deliberately",
+      "lane": "az-compute",
+      "type": "concept",
+      "file": "content/lessons/az-compute/azc-containers.json"
+    },
+    {
+      "id": "azc-aks",
+      "title": "AKS: Kubernetes When the Platform Is the Point",
+      "lane": "az-compute",
+      "type": "concept",
+      "file": "content/lessons/az-compute/azc-aks.json"
+    },
+    {
+      "id": "azc-container-apps",
+      "title": "Azure Container Apps: Serverless Containers With Useful Rails",
+      "lane": "az-compute",
+      "type": "concept",
+      "file": "content/lessons/az-compute/azc-container-apps.json"
+    },
+    {
+      "id": "azc-batch-hpc",
+      "title": "Azure Batch and HPC: Turn One Giant Job Into Many Small Ones",
+      "lane": "az-compute",
+      "type": "concept",
+      "file": "content/lessons/az-compute/azc-batch-hpc.json"
+    },
+    {
+      "id": "azc-choosing-compute",
+      "title": "Choosing Azure Compute: A Decision Framework",
+      "lane": "az-compute",
+      "type": "framework",
+      "file": "content/lessons/az-compute/azc-choosing-compute.json"
+    },
+    {
+      "id": "azd-intro",
+      "title": "The Azure Data Landscape: State & Storage",
+      "lane": "az-data",
+      "type": "concept",
+      "file": "content/lessons/az-data/azd-intro.json"
+    },
+    {
+      "id": "azd-storage-account",
+      "title": "Azure Storage Accounts: The Universal Bucket",
+      "lane": "az-data",
+      "type": "concept",
+      "file": "content/lessons/az-data/azd-storage-account.json"
+    },
+    {
+      "id": "azd-redundancy-tiers",
+      "title": "Redundancy & Access Tiers: Durability vs. Cost",
+      "lane": "az-data",
+      "type": "concept",
+      "file": "content/lessons/az-data/azd-redundancy-tiers.json"
+    },
+    {
+      "id": "azd-disks",
+      "title": "Managed Disks: The VM's Hard Drive",
+      "lane": "az-data",
+      "type": "concept",
+      "file": "content/lessons/az-data/azd-disks.json"
+    },
+    {
+      "id": "azd-azure-sql",
+      "title": "Azure SQL: The Relational Workhorse",
+      "lane": "az-data",
+      "type": "concept",
+      "file": "content/lessons/az-data/azd-azure-sql.json"
+    },
+    {
+      "id": "azd-cosmos",
+      "title": "Cosmos DB: Planet-Scale NoSQL",
+      "lane": "az-data",
+      "type": "concept",
+      "file": "content/lessons/az-data/azd-cosmos.json"
+    },
+    {
+      "id": "azd-oss-databases",
+      "title": "Azure Database for PostgreSQL & MySQL",
+      "lane": "az-data",
+      "type": "concept",
+      "file": "content/lessons/az-data/azd-oss-databases.json"
+    },
+    {
+      "id": "azd-redis",
+      "title": "Azure Managed Redis: The Memory Cache",
+      "lane": "az-data",
+      "type": "concept",
+      "file": "content/lessons/az-data/azd-redis.json"
+    },
+    {
+      "id": "azd-analytics",
+      "title": "Big Data: Data Lake, Synapse, and Fabric",
+      "lane": "az-data",
+      "type": "concept",
+      "file": "content/lessons/az-data/azd-analytics.json"
+    },
+    {
+      "id": "azd-backup-dr",
+      "title": "Azure Backup & Site Recovery (BCDR)",
+      "lane": "az-data",
+      "type": "concept",
+      "file": "content/lessons/az-data/azd-backup-dr.json"
+    },
+    {
+      "id": "azd-choosing-data",
+      "title": "Choosing a Data Store: A Decision Framework",
+      "lane": "az-data",
+      "type": "concept",
+      "file": "content/lessons/az-data/azd-choosing-data.json"
+    },
+    {
+      "id": "azx-intro",
+      "title": "Messaging vs Eventing",
+      "lane": "az-integration",
+      "type": "concept",
+      "file": "content/lessons/az-integration/azx-intro.json"
+    },
+    {
+      "id": "azx-queues",
+      "title": "Storage Queues vs Service Bus Queues",
+      "lane": "az-integration",
+      "type": "concept",
+      "file": "content/lessons/az-integration/azx-queues.json"
+    },
+    {
+      "id": "azx-service-bus",
+      "title": "Service Bus Deep-ish: Queues, Topics, Sessions, and DLQs",
+      "lane": "az-integration",
+      "type": "concept",
+      "file": "content/lessons/az-integration/azx-service-bus.json"
+    },
+    {
+      "id": "azx-event-hubs",
+      "title": "Event Hubs: The Telemetry Firehose",
+      "lane": "az-integration",
+      "type": "concept",
+      "file": "content/lessons/az-integration/azx-event-hubs.json"
+    },
+    {
+      "id": "azx-event-grid",
+      "title": "Event Grid: Reactive Pub/Sub",
+      "lane": "az-integration",
+      "type": "concept",
+      "file": "content/lessons/az-integration/azx-event-grid.json"
+    },
+    {
+      "id": "azx-logic-apps",
+      "title": "Logic Apps: Workflow Glue Without Hiding the Glue",
+      "lane": "az-integration",
+      "type": "concept",
+      "file": "content/lessons/az-integration/azx-logic-apps.json"
+    },
+    {
+      "id": "azx-apim",
+      "title": "API Management: The Gateway Pattern",
+      "lane": "az-integration",
+      "type": "concept",
+      "file": "content/lessons/az-integration/azx-apim.json"
+    },
+    {
+      "id": "azx-choosing-integration",
+      "title": "The Azure Integration Decision Map",
+      "lane": "az-integration",
+      "type": "concept",
+      "file": "content/lessons/az-integration/azx-choosing-integration.json"
+    },
+    {
+      "id": "azo-intro",
+      "title": "Observability Intro: The Three Pillars",
+      "lane": "az-observability",
+      "type": "concept",
+      "file": "content/lessons/az-observability/azo-intro.json"
+    },
+    {
+      "id": "azo-azure-monitor",
+      "title": "Azure Monitor: The Platform Mental Model",
+      "lane": "az-observability",
+      "type": "concept",
+      "file": "content/lessons/az-observability/azo-azure-monitor.json"
+    },
+    {
+      "id": "azo-metrics-alerts",
+      "title": "Metrics & Alerts",
+      "lane": "az-observability",
+      "type": "concept",
+      "file": "content/lessons/az-observability/azo-metrics-alerts.json"
+    },
+    {
+      "id": "azo-logs-kql",
+      "title": "Log Analytics & KQL basics",
+      "lane": "az-observability",
+      "type": "concept",
+      "file": "content/lessons/az-observability/azo-logs-kql.json"
+    },
+    {
+      "id": "azo-app-insights",
+      "title": "Application Insights: APM & Tracing",
+      "lane": "az-observability",
+      "type": "concept",
+      "file": "content/lessons/az-observability/azo-app-insights.json"
+    },
+    {
+      "id": "azo-dashboards-workbooks",
+      "title": "Dashboards & Workbooks",
+      "lane": "az-observability",
+      "type": "concept",
+      "file": "content/lessons/az-observability/azo-dashboards-workbooks.json"
+    },
+    {
+      "id": "azo-autoscale",
+      "title": "Autoscale: Rules-Based Elasticity",
+      "lane": "az-observability",
+      "type": "concept",
+      "file": "content/lessons/az-observability/azo-autoscale.json"
+    },
+    {
+      "id": "azo-health",
+      "title": "Azure Resource & Service Health",
+      "lane": "az-observability",
+      "type": "concept",
+      "file": "content/lessons/az-observability/azo-health.json"
+    },
+    {
+      "id": "azs-intro",
+      "title": "Security from First Principles: Defense in Depth & Zero Trust",
+      "lane": "az-security",
+      "type": "concept",
+      "file": "content/lessons/az-security/azs-intro.json"
+    },
+    {
+      "id": "azs-shared-responsibility",
+      "title": "Shared Responsibility: What's Always Yours",
+      "lane": "az-security",
+      "type": "concept",
+      "file": "content/lessons/az-security/azs-shared-responsibility.json"
+    },
+    {
+      "id": "azs-defender",
+      "title": "Microsoft Defender for Cloud: Posture & Protection",
+      "lane": "az-security",
+      "type": "concept",
+      "file": "content/lessons/az-security/azs-defender.json"
+    },
+    {
+      "id": "azs-key-vault",
+      "title": "Azure Key Vault: One Safe for Every Secret",
+      "lane": "az-security",
+      "type": "concept",
+      "file": "content/lessons/az-security/azs-key-vault.json"
+    },
+    {
+      "id": "azs-encryption",
+      "title": "Encryption at Rest & in Transit: PMK vs CMK",
+      "lane": "az-security",
+      "type": "concept",
+      "file": "content/lessons/az-security/azs-encryption.json"
+    },
+    {
+      "id": "azs-sentinel",
+      "title": "Microsoft Sentinel: Cloud-Native SIEM + SOAR",
+      "lane": "az-security",
+      "type": "concept",
+      "file": "content/lessons/az-security/azs-sentinel.json"
+    },
+    {
+      "id": "azs-network-security",
+      "title": "Network Security as a Defense Layer",
+      "lane": "az-security",
+      "type": "concept",
+      "file": "content/lessons/az-security/azs-network-security.json"
+    },
+    {
+      "id": "azs-compliance",
+      "title": "Compliance & Data Governance for Security",
+      "lane": "az-security",
+      "type": "concept",
+      "file": "content/lessons/az-security/azs-compliance.json"
+    },
+    {
+      "id": "azp-intro",
+      "title": "Delivery & IaC — Making Azure Repeatable",
+      "lane": "az-devops",
+      "type": "concept",
+      "file": "content/lessons/az-devops/azp-intro.json"
+    },
+    {
+      "id": "azp-arm-bicep",
+      "title": "ARM Templates to Bicep — Native Azure IaC",
+      "lane": "az-devops",
+      "type": "concept",
+      "file": "content/lessons/az-devops/azp-arm-bicep.json"
+    },
+    {
+      "id": "azp-terraform",
+      "title": "Terraform on Azure — State, Providers, and Team Boundaries",
+      "lane": "az-devops",
+      "type": "concept",
+      "file": "content/lessons/az-devops/azp-terraform.json"
+    },
+    {
+      "id": "azp-azure-devops",
+      "title": "Azure DevOps — The Suite Around the Work",
+      "lane": "az-devops",
+      "type": "concept",
+      "file": "content/lessons/az-devops/azp-azure-devops.json"
+    },
+    {
+      "id": "azp-github-actions",
+      "title": "GitHub Actions for Azure — Keyless Deploys with OIDC",
+      "lane": "az-devops",
+      "type": "concept",
+      "file": "content/lessons/az-devops/azp-github-actions.json"
+    },
+    {
+      "id": "azp-deployment-strategies",
+      "title": "Safe Rollouts — Blue-Green, Canary, Slots, and Rings",
+      "lane": "az-devops",
+      "type": "concept",
+      "file": "content/lessons/az-devops/azp-deployment-strategies.json"
+    },
+    {
+      "id": "azp-environments",
+      "title": "Environments, Stages, Approvals, and Gates",
+      "lane": "az-devops",
+      "type": "concept",
+      "file": "content/lessons/az-devops/azp-environments.json"
+    },
+    {
+      "id": "azp-capstone",
+      "title": "Azure Bootcamp Capstone — One Request Through the Whole Platform",
+      "lane": "az-devops",
+      "type": "concept",
+      "file": "content/lessons/az-devops/azp-capstone.json"
     }
   ]
 }

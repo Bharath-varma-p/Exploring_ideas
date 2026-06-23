@@ -1,0 +1,72 @@
+{
+  "id": "azf-interfaces",
+  "title": "How you actually talk to Azure",
+  "lane": "az-foundations",
+  "type": "concept",
+  "order": 90,
+  "summary": "Six ways to drive Azure — Portal, CLI, PowerShell, REST, SDKs, and Cloud Shell — plus the leap from clicking to code (ARM/Bicep). They all hit the same control plane, so the real question isn't 'which is best' but 'am I exploring, scripting, or building something repeatable?'",
+  "tags": [
+    "azure",
+    "cli",
+    "powershell",
+    "portal",
+    "rest",
+    "sdk",
+    "cloud-shell",
+    "bicep"
+  ],
+  "analogy": "Talking to Azure is like operating a factory: the Portal is the wall of dashboards and buttons, the CLI/PowerShell are walkie-talkies for quick orders, SDKs/REST wire it into your own machines, and Bicep is the blueprint you hand off so the exact same factory can be rebuilt anywhere.",
+  "diagram": "flowchart TD\n  Human[Human exploring] --> Portal[Portal - GUI]\n  Human --> Shell[Cloud Shell - browser terminal]\n  Scripter[Scripting / automation] --> CLI[Azure CLI - az]\n  Scripter --> PS[Azure PowerShell]\n  App[Apps / pipelines] --> SDK[Language SDKs]\n  App --> REST[REST API]\n  Repeatable[Repeatable infra] --> Bicep[Bicep / ARM templates]\n  Portal --> ARM[Azure Resource Manager]\n  CLI --> ARM\n  PS --> ARM\n  SDK --> ARM\n  REST --> ARM\n  Bicep --> ARM",
+  "body": "## First principles\n\nUnder every interface is the **same control plane (ARM)** and the same REST API. So the interfaces aren't different *powers* — they're different *ergonomics* over one engine. That means you can't pick \"the best\" one in the abstract; you pick the one that fits your **mode of work**: am I exploring, am I scripting a one-off, or am I building something I'll run a thousand times?\n\n## Why it exists\n\nDifferent jobs need different feedback loops. A human discovering a new service wants to *see* options and click. An operator fixing one thing wants to *type one command*. An application creating resources on the fly needs a *library in its own language*. A team that must rebuild identical environments on demand needs a *declarative file in source control*. One interface can't serve all four well, so Azure offers a spread — all funneling into ARM so they stay consistent.\n\n## How it works — the six (plus one) ways\n\n- **Azure Portal** — the web GUI (`portal.azure.com`). Best for **exploring, learning, and one-off visual tasks**: you can see every property and Azure fills in defaults. Worst for anything you'll repeat — clicks aren't reproducible or reviewable.\n- **Azure CLI (`az`)** — a cross-platform command-line tool with a clean `az <group> <command>` shape (e.g. `az vm create`). Great for **scripting, Bash pipelines, and CI/CD**. This is the default tool you'll see in docs.\n- **Azure PowerShell (`Az` module)** — cmdlets like `New-AzVM` that return rich .NET objects you can pipe. Natural for **Windows-centric teams** and object-pipeline scripting. Functionally overlaps the CLI; choose by team preference.\n- **REST API** — the raw HTTP interface ARM actually exposes. Everything else is built on it. You reach for it directly when **no SDK/CLI covers a brand-new feature** or you need maximum control.\n- **SDKs** — official client libraries for Python, .NET, Java, JavaScript, Go, and more. The right choice when **your application itself** provisions or calls Azure — idiomatic types, retries, and auth handled for you.\n- **Azure Cloud Shell** — a browser-based terminal (Bash or PowerShell) with the CLI, PowerShell, and tools **pre-authenticated and pre-installed**, backed by storage that persists your files. Perfect when you want to run a command **right now** with zero local setup.\n\n**Authentication is shared.** Whichever you use, you sign in once with a Microsoft Entra identity (or a managed identity / service principal for automation) and ARM enforces the same RBAC. The tool changes; the auth and permissions don't.\n\n## The leap: from clicking to Infrastructure as Code\n\nThe Portal and ad-hoc commands are **imperative** — you perform steps, and the result lives only in your memory and the live environment. The moment you need the *same* environment again (dev, staging, prod; or rebuild after disaster), you want **Infrastructure as Code (IaC)**: a file describing the desired resources that ARM converges to.\n\n- **Bicep** — Azure's clean, native IaC language that compiles to ARM JSON. You write `resource sa 'Microsoft.Storage/storageAccounts@...' = { ... }`, commit it, code-review it, and deploy it identically anywhere.\n- **ARM templates** — the underlying JSON Bicep generates; still valid, just more verbose.\n\nThis is only a *teaser* here — IaC, Terraform, and pipelines are a whole lane of their own (the Delivery / Infrastructure-as-Code lane). The mindset shift to carry forward: **explore in the Portal, then graduate anything you'll repeat into Bicep in source control.**\n\n## In practice\n\n```bash\n# Same task, three interfaces, one control plane:\n\n# Azure CLI\naz storage account create --name <name> --resource-group <rg> --location <region>\n\n# Azure PowerShell\nNew-AzStorageAccount -Name <name> -ResourceGroupName <rg> -Location <region> -SkuName Standard_LRS\n\n# Cloud Shell: open shell.azure.com (already logged in) and run either of the above\n\n# ...and the repeatable version (Bicep) you'd actually keep:\n#   az deployment group create -g <rg> --template-file storage.bicep\n```\n\n## Gotchas\n\n- **Portal clicks don't scale or review.** If you've done something twice by hand, script it; if you've scripted it for more than one environment, make it Bicep. Manual changes also cause **drift** from your IaC.\n- **CLI vs PowerShell isn't a capability gap.** Both reach the same API; pick by ecosystem and team habit, not by power. Don't agonize.\n- **SDK ≠ CLI.** The CLI is for *operating* Azure from a shell; SDKs are for your *application code* to call Azure. Using the wrong one (shelling out to `az` from an app) is fragile — use the SDK.\n- **Cloud Shell needs backing storage** and times out idle sessions; it's for convenience, not long-running jobs.",
+  "teachItBack": "Every way of driving Azure — Portal, CLI, PowerShell, REST, SDKs, and Cloud Shell — funnels into the same control plane with the same Entra authentication and RBAC, so you choose by your mode of work, not by power. Use the Portal to explore and learn, the CLI or PowerShell to script, SDKs when your own app provisions Azure, and Cloud Shell when you want a pre-authenticated terminal instantly. The key maturity step is moving anything you'll repeat out of clicks and into Infrastructure as Code with Bicep, kept in source control — which the Delivery lane covers in full.",
+  "glossary": [
+    {
+      "term": "Azure Portal",
+      "definition": "The web GUI for exploring and managing Azure visually; ideal for learning and one-off tasks, poor for repetition."
+    },
+    {
+      "term": "Azure CLI",
+      "definition": "A cross-platform command-line tool (`az`) for scripting and automating Azure from a shell."
+    },
+    {
+      "term": "Cloud Shell",
+      "definition": "A browser-based, pre-authenticated terminal (Bash or PowerShell) with Azure tools preinstalled and persistent storage."
+    },
+    {
+      "term": "Bicep",
+      "definition": "Azure's native Infrastructure-as-Code language that compiles to ARM templates for repeatable, reviewable deployments."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Dev docs — What is the Azure CLI?",
+      "url": "https://learn.microsoft.com/en-us/cli/azure/what-is-azure-cli",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — What is Azure PowerShell?",
+      "url": "https://learn.microsoft.com/en-us/powershell/azure/what-is-azure-powershell",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — Azure Cloud Shell overview",
+      "url": "https://learn.microsoft.com/en-us/azure/cloud-shell/overview",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — Bicep overview",
+      "url": "https://learn.microsoft.com/en-us/azure/azure-resource-manager/bicep/overview",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — Azure REST API reference",
+      "url": "https://learn.microsoft.com/en-us/rest/api/azure/",
+      "verified": true
+    }
+  ],
+  "related": [
+    "azf-arm",
+    "azf-subscriptions-tenants",
+    "azf-shared-responsibility"
+  ]
+}

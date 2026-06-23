@@ -1,0 +1,75 @@
+{
+  "id": "fdy-sdk-map",
+  "title": "The SDK Map",
+  "lane": "foundry-core",
+  "type": "concept",
+  "order": 201,
+  "summary": "The azure-ai-projects package is the Microsoft Foundry SDK package for Python. Its main entry point is azure.ai.projects.",
+  "tags": [
+    "package",
+    "client",
+    "first-principles"
+  ],
+  "analogy": "Think of Foundry as a well-guarded workshop. The project endpoint is the workshop address, the credential is your badge, and AIProjectClient is the organized tool chest that knows which drawer holds each project tool.",
+  "diagram": "flowchart LR\nPythonApp[Python app] --> Package[azure ai projects package]\nPackage --> Client[AIProjectClient]\nClient --> Project[Foundry project]\nProject --> Resources[Agents connections deployments datasets indexes]",
+  "body": "## First principles\n\nA remote Foundry project is just a set of service resources behind HTTPS. Python cannot touch those resources directly; it needs a library that knows the REST routes, shapes requests, authenticates each call, and turns responses into Python objects.\n\n## Definition\n\nThe azure-ai-projects package is the Microsoft Foundry SDK package for Python. Its main entry point is azure.ai.projects.AIProjectClient, which gives code-first access to project resources such as agents, connections, deployments, datasets, indexes, evaluation rules, telemetry, and an authenticated OpenAI client.\n\n## How it fits together\n\nStart with package then client then operation group. The package is installed once, the client is constructed per project endpoint, and operation groups are used for focused tasks.\n\n## Worked example\n\n```python\nimport os\nfrom azure.identity import DefaultAzureCredential\nfrom azure.ai.projects import AIProjectClient\n\nendpoint = os.environ[\"FOUNDRY_PROJECT_ENDPOINT\"]\n\nwith DefaultAzureCredential() as credential, AIProjectClient(\n    endpoint=endpoint,\n    credential=credential,\n) as project_client:\n    print(type(project_client).__name__)\n```\n\n*Print the project client type after constructing it from the endpoint.*",
+  "drills": [
+    {
+      "q": "What problem does azure-ai-projects solve?",
+      "a": "It hides the raw Foundry REST calls behind Python clients, models, paging, errors, and authentication integration."
+    },
+    {
+      "q": "What is the main class a beginner should look for first?",
+      "a": "AIProjectClient in the azure.ai.projects namespace."
+    },
+    {
+      "q": "Is the package only for inference prompts?",
+      "a": "No. It is project plumbing: connections, deployments, datasets, indexes, agents, evaluation-related operations, telemetry, and OpenAI client creation."
+    }
+  ],
+  "teachItBack": "Teach it back as: The SDK is not the model. It is the Python control panel for a Foundry project. I point AIProjectClient at one project endpoint and then use its operation groups to reach project resources.",
+  "glossary": [
+    {
+      "term": "Foundry project",
+      "definition": "A scoped workspace in Microsoft Foundry containing deployments, connections, datasets, indexes, agents, and related project assets."
+    },
+    {
+      "term": "AIProjectClient",
+      "definition": "The Python client class that targets one Foundry project endpoint with an Azure TokenCredential."
+    },
+    {
+      "term": "Operation group",
+      "definition": "A focused sub-client hanging off AIProjectClient, such as connections or deployments."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Azure AI Projects client library for Python",
+      "url": "https://learn.microsoft.com/en-us/python/api/overview/azure/ai-projects-readme?view=azure-python",
+      "verified": true
+    },
+    {
+      "title": "AIProjectClient class reference",
+      "url": "https://learn.microsoft.com/en-us/python/api/azure-ai-projects/azure.ai.projects.aiprojectclient?view=azure-python",
+      "verified": true
+    },
+    {
+      "title": "azure-ai-projects on PyPI",
+      "url": "https://pypi.org/project/azure-ai-projects/",
+      "verified": true
+    }
+  ],
+  "quiz": [
+    {
+      "q": "Which package provides AIProjectClient for Microsoft Foundry project plumbing?",
+      "choices": [
+        "azure-ai-projects",
+        "azure-ai-inference",
+        "azure-monitor-opentelemetry",
+        "azure-storage-blob"
+      ],
+      "answer": 0,
+      "explanation": "AIProjectClient is in azure.ai.projects from the azure-ai-projects package."
+    }
+  ]
+}

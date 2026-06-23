@@ -1,0 +1,66 @@
+{
+  "id": "azx-event-hubs",
+  "title": "Event Hubs: The Telemetry Firehose",
+  "lane": "az-integration",
+  "type": "concept",
+  "order": 40,
+  "summary": "Event Hubs is Azure’s high-throughput event streaming service: producers append events, partitions spread load, and consumer groups let multiple applications read the same stream independently.",
+  "tags": [
+    "azure",
+    "event-hubs",
+    "streaming",
+    "partitions",
+    "consumer-groups",
+    "telemetry"
+  ],
+  "analogy": "Event Hubs is a multi-lane conveyor belt with mile markers; consumers do not take boxes off the belt, they remember how far they have read.",
+  "diagram": "flowchart LR\n  Producers[Many producers] --> Hub[Event hub append only log]\n  Hub --> P0[Partition 0 ordered]\n  Hub --> P1[Partition 1 ordered]\n  Hub --> P2[Partition 2 ordered]\n  P0 --> CGA[Consumer group analytics]\n  P0 --> CGB[Consumer group archive]\n  P1 --> CGA\n  P2 --> CGA",
+  "body": "## First principles\n\nTelemetry is different from commands. A factory sensor, mobile app, game server, or payment terminal may emit thousands or millions of small facts. The goal is not \"make one worker own this command.\" The goal is **ingest the stream without melting**, then let downstream systems analyze it.\n\n**Azure Event Hubs** is built for that shape: high-throughput, low-latency event ingestion and streaming.\n\n## Why it exists\n\nIf every device or app server called your analytics database directly, ingestion would be chaos. Databases prefer structured writes and queries; telemetry arrives as a storm. Event Hubs absorbs the storm, keeps events for a retention window, and lets analytics consumers read at their own pace.\n\nMicrosoft’s current docs describe Event Hubs as a fully managed real-time data streaming platform that can ingest millions of events per second and supports AMQP, HTTPS, and native Apache Kafka compatibility.\n\n## How it works\n\nAn **event hub** is an append-only log. Producers append events. Events are distributed across **partitions**, and each partition is an ordered sequence. Ordering is therefore per partition, not across the entire hub.\n\nConsumers read from partitions using an **offset**: a position in the log. They save progress through **checkpointing** so they can resume after failure. A **consumer group** is an independent view of the stream, so analytics, fraud detection, and archival jobs can all read the same events without stealing from each other.\n\n## Scale knobs\n\nEvent Hubs scales through capacity units and partitions. In the Standard tier, throughput units provide capacity; Microsoft docs list one throughput unit as up to 1 MB/s or 1,000 events/s ingress, and up to 2 MB/s or 4,096 events/s egress. Premium uses processing units. Partitions enable parallelism but also define the ordering boundary.\n\nRetention is not a task queue. Current docs list Event Hubs retention as up to 7 days in Standard and 90 days in Premium/Dedicated.\n\n## Analogy\n\n💡 Imagine a huge airport baggage belt split into lanes. Bags stay on the belt for a while. Different teams can stand at their own checkpoints reading tags: security, lost luggage, analytics. One team reading a bag does not remove it for another team.\n\n## In practice\n\n```bash\naz eventhubs namespace create -g <rg> -n <namespace> --location <region>\naz eventhubs eventhub create -g <rg> --namespace-name <namespace> --name telemetry --partition-count 8\n```\n\nChoose partition keys carefully. A device ID key keeps one device’s events ordered, but a hot device can overload one partition.\n\n## Gotchas\n\nEvent Hubs is not Service Bus with more horsepower. It does not give each event a business workflow with complete/abandon/dead-letter semantics.\n\nDo not overpromise ordering. Event Hubs preserves order within a partition. If you need order for one entity, partition by that entity; if you need global order at massive scale, your requirement conflicts with parallelism.\n\nConsumer groups are powerful but not free. Every independent application that needs its own reading position should use its own consumer group; clones of the same scaled-out app usually share a group.",
+  "teachItBack": "Event Hubs is for streams: high-volume facts appended over time. Producers write events to an event hub, partitions provide parallel ordered lanes, and consumer groups let different applications read the same stream independently. Consumers track offsets rather than owning and deleting messages. Use it for telemetry and ingestion, not for command workflows that need settlement and DLQs.",
+  "glossary": [
+    {
+      "term": "Event hub",
+      "definition": "An append-only log-like entity that stores event streams in Azure Event Hubs."
+    },
+    {
+      "term": "Partition",
+      "definition": "An ordered lane within an event hub that enables parallel reads and writes."
+    },
+    {
+      "term": "Consumer group",
+      "definition": "An independent view of the event stream with its own reader progress."
+    },
+    {
+      "term": "Offset",
+      "definition": "A position in a partition used by consumers to track how far they have read."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Dev docs — What is Azure Event Hubs",
+      "url": "https://learn.microsoft.com/en-us/azure/event-hubs/event-hubs-about",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — Event Hubs features and terminology",
+      "url": "https://learn.microsoft.com/en-us/azure/event-hubs/event-hubs-features",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — Azure Event Hubs scalability guide",
+      "url": "https://learn.microsoft.com/en-us/azure/event-hubs/event-hubs-scalability",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — Compare Azure messaging services",
+      "url": "https://learn.microsoft.com/en-us/azure/service-bus-messaging/compare-messaging-services",
+      "verified": true
+    }
+  ],
+  "related": [
+    "azx-intro",
+    "azx-event-grid",
+    "azx-service-bus",
+    "azx-choosing-integration"
+  ]
+}

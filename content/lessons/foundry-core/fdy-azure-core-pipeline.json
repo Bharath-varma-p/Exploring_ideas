@@ -1,0 +1,76 @@
+{
+  "id": "fdy-azure-core-pipeline",
+  "title": "Azure Core Plumbing",
+  "lane": "foundry-core",
+  "type": "concept",
+  "order": 205,
+  "summary": "azure-core is the shared foundation used by Azure SDK client libraries.",
+  "tags": [
+    "azure-core",
+    "transport",
+    "pipeline",
+    "errors"
+  ],
+  "analogy": "azure-core is the road system under every Azure SDK vehicle. Each service client is a different vehicle, but they all use the same roads, traffic rules, retry lanes, and emergency signals.",
+  "diagram": "flowchart LR\nMethodCall[SDK method call] --> Policies[azure core policies]\nPolicies --> Transport[HTTP transport]\nTransport --> Service[Foundry service]\nService --> Response[model or HttpResponseError]",
+  "body": "## First principles\n\nEvery Azure SDK call becomes an HTTP request. Cross-cutting mechanics such as retries, logging, transport, tracing hooks, headers, and exceptions should be consistent across packages; otherwise each library would behave differently under failure.\n\n## Definition\n\nazure-core is the shared foundation used by Azure SDK client libraries. It supplies common pipeline behavior, transports, exceptions such as HttpResponseError, configuration kwargs such as logging_enable and retry settings, paging types, and tracing integration points.\n\n## How it fits together\n\nThink request pipeline: your method call enters policies, gains auth and headers, travels through a transport, and returns a response or an AzureError-derived exception.\n\n## Worked example\n\n```python\nimport logging\nimport os\nfrom azure.identity import DefaultAzureCredential\nfrom azure.ai.projects import AIProjectClient\n\nlogging.basicConfig(level=logging.INFO)\n\nwith DefaultAzureCredential() as credential, AIProjectClient(\n    endpoint=os.environ[\"FOUNDRY_PROJECT_ENDPOINT\"],\n    credential=credential,\n    logging_enable=True,\n) as project_client:\n    print(\"Client logging is wired. Avoid DEBUG logs in shared outputs.\")\n```\n\n*Enable Azure SDK logging at the client level without exposing secrets in code.*",
+  "drills": [
+    {
+      "q": "Why does azure-core matter if I only import azure.ai.projects?",
+      "a": "azure-ai-projects builds on azure-core for the pipeline, transport, paging, tracing, and exceptions."
+    },
+    {
+      "q": "What does transport mean?",
+      "a": "The component that actually sends HTTP requests and receives responses."
+    },
+    {
+      "q": "Why be careful with logging?",
+      "a": "Logs can contain request and response details, so avoid sharing verbose logs without review."
+    }
+  ],
+  "teachItBack": "Teach it back as: azure-core is the shared engine room beneath the Foundry SDK. It handles HTTP pipeline behavior like retries, logging, transport, tracing hooks, and standard exceptions. When I see HttpResponseError or ItemPaged, I am seeing azure-core concepts.",
+  "glossary": [
+    {
+      "term": "pipeline",
+      "definition": "The ordered chain of policies that prepares, sends, retries, logs, traces, and processes an SDK HTTP request."
+    },
+    {
+      "term": "transport",
+      "definition": "The HTTP implementation used by the pipeline to send requests."
+    },
+    {
+      "term": "AzureError",
+      "definition": "The base exception type for Azure SDK failures."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Azure Core shared client library for Python",
+      "url": "https://learn.microsoft.com/en-us/python/api/overview/azure/core-readme?view=azure-python",
+      "verified": true
+    },
+    {
+      "title": "HttpResponseError class reference",
+      "url": "https://learn.microsoft.com/en-us/python/api/azure-core/azure.core.exceptions.httpresponseerror?view=azure-python",
+      "verified": true
+    },
+    {
+      "title": "Usage patterns with the Azure libraries for Python",
+      "url": "https://learn.microsoft.com/en-us/azure/developer/python/sdk/azure-sdk-library-usage-patterns",
+      "verified": true
+    }
+  ],
+  "quiz": [
+    {
+      "q": "What type does connections.list return according to the reference?",
+      "choices": [
+        "ItemPaged of Connection",
+        "A single Connection",
+        "A raw JSON string",
+        "A poller"
+      ],
+      "answer": 0,
+      "explanation": "connections.list returns azure-core ItemPaged[Connection]."
+    }
+  ]
+}

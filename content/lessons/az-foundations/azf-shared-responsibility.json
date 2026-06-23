@@ -1,0 +1,66 @@
+{
+  "id": "azf-shared-responsibility",
+  "title": "Shared responsibility, SLAs & the preview→GA lifecycle",
+  "lane": "az-foundations",
+  "type": "concept",
+  "order": 100,
+  "summary": "Three truths that govern every Azure service. Shared responsibility: Microsoft secures the platform, you secure your workload — and the line moves across IaaS, PaaS, and SaaS. SLAs: the financially backed uptime promise (and what it doesn't cover). Lifecycle: preview vs GA, and why it changes what you can rely on.",
+  "tags": [
+    "azure",
+    "shared-responsibility",
+    "sla",
+    "preview",
+    "ga",
+    "security"
+  ],
+  "analogy": "Renting compute is like housing. A VM (IaaS) is an unfurnished apartment — landlord fixes the building, you lock your own door. PaaS is a serviced apartment — they handle more, you still guard your valuables. SaaS is a hotel — they run almost everything, but you're still responsible for what's in your bag.",
+  "diagram": "flowchart TD\n  subgraph Responsibility[Who secures what]\n    direction TB\n    OnPrem[On-prem: you own everything] --> IaaS[IaaS: you own OS up]\n    IaaS --> PaaS[PaaS: you own app + data]\n    PaaS --> SaaS[SaaS: you own data + access]\n  end\n  You[Always YOURS: data, identities, accounts, access] -.never outsourced.-> SaaS\n  MS[Always MICROSOFT: physical hosts, network, datacenter] -.never yours.-> IaaS",
+  "body": "## First principles\n\nWhen you run on someone else's computers, **responsibility for security and reliability has to be split** — and the split must be explicit, or each side assumes the other has it covered and nobody does. Two more truths follow: you need a **promise** about how reliable the rented thing is (an SLA), and you need to know whether a service is **finished and trustworthy or still experimental** (its lifecycle stage). These three ideas decide what you can safely build on.\n\n## Why it exists\n\nThe classic cloud breach isn't Microsoft's datacenter being hacked — it's a customer leaving a storage container public or mismanaging their own credentials. That happens when teams *assume* \"the cloud provider handles security.\" The **shared responsibility model** exists to kill that assumption by drawing the line precisely. Likewise, **SLAs** exist because \"trust me, it's reliable\" is worthless without a measurable, financially backed commitment. And the **preview→GA lifecycle** exists because shipping new capabilities early is valuable, but you must know which features carry production guarantees and which don't.\n\n## How it works\n\n### Shared responsibility — and why the line moves\n\nSplit the stack into layers: physical datacenter → host/network → OS → runtime/middleware → application → data, identities, and access. **Microsoft always owns the bottom** (physical security, host infrastructure, the global network). **You always own the top** — your **data, your identities and accounts, and who has access** — *no matter the service model.* What shifts is the **middle**, and it shifts by service model:\n\n- **IaaS (e.g. Virtual Machines):** you rent raw compute. You own the **OS and everything above** — patching, configuration, firewalling, the app, the data. Maximum control, maximum responsibility.\n- **PaaS (e.g. App Service, Azure SQL):** Microsoft runs the OS and runtime. You own the **application, its configuration, and the data**. Less to manage, less to break.\n- **SaaS (e.g. Microsoft 365):** Microsoft runs nearly everything. You still own **your data and who can access it** — accounts, permissions, sharing.\n\nThe line moves *up* as you go IaaS → PaaS → SaaS: the more managed the service, the more of the middle Microsoft absorbs — but **identity, data, and access never leave your hands.** That constant is the most important sentence in cloud security.\n\n### SLAs — the reliability promise\n\nAn **SLA (Service Level Agreement)** is Microsoft's financially backed commitment to a service's availability, usually expressed as a percentage (e.g. 99.9%, 99.99%) with **service credits** if it's missed. Two things to internalize:\n- **Higher availability often requires *you* to deploy for it** — e.g. spreading a VM workload across **availability zones** or using multiple instances. A single VM may carry a *lower* SLA than a zone-redundant deployment. The promise is conditional on your architecture.\n- **An SLA covers availability, not your bugs.** It says the service will be reachable, not that your code, your config, or your data are correct.\n\n### Lifecycle — preview vs GA\n\nAzure ships features in stages:\n- **Preview** (public or private) — early access for evaluation. **Not** covered by production SLAs, may change or be removed, and is governed by separate **preview supplemental terms**. Great for learning and prototyping; risky for production.\n- **GA (General Availability)** — fully released, SLA-backed, supported, and stable. This is what you build production on.\n\nAlways check a feature's stage before depending on it: a slick demo feature in preview can vanish or change shape before GA.\n\n## In practice\n\n```text\nChecklist before you trust a service in production:\n1) Service model? IaaS / PaaS / SaaS  -> tells you what YOU must still secure (OS? app? just data + access?).\n2) Identity, data, access            -> ALWAYS your job: least-privilege RBAC, encryption, no public-by-default.\n3) SLA target + conditions           -> e.g. 99.99% only if deployed across availability zones; architect for it.\n4) Lifecycle stage                   -> GA = safe to depend on; Preview = no SLA, terms differ, may change.\n```\n\n## Gotchas\n\n- **\"The cloud is secure\" is a trap.** Microsoft securing the platform doesn't secure *your* misconfiguration. Public storage, over-broad roles, and leaked secrets are squarely your side of the line.\n- **The SLA number is conditional.** Quoting \"99.99%\" without deploying across zones/instances is wishful thinking — you often must build the redundancy the SLA assumes.\n- **Preview ≠ production-ready.** No SLA, separate legal terms, and possible breaking changes. Prototype on it; don't bet revenue on it.\n- **More managed ≠ zero responsibility.** Even pure SaaS leaves you owning identities, access, and data governance — the part attackers target most.",
+  "teachItBack": "Shared responsibility splits cloud security so Microsoft always owns the physical platform and you always own your data, identities, and access — and the middle of the stack (OS, runtime, app) shifts to Microsoft as you move from IaaS to PaaS to SaaS. An SLA is the financially backed uptime promise, but it's conditional: hitting the headline number usually means you must architect for it, like spreading across availability zones. And a service's lifecycle stage matters — General Availability is SLA-backed and safe to build on, while preview features carry no SLA, have separate terms, and can change or disappear.",
+  "glossary": [
+    {
+      "term": "Shared responsibility model",
+      "definition": "The framework splitting security duties between Microsoft (the platform) and the customer (workload, data, identity, access)."
+    },
+    {
+      "term": "IaaS / PaaS / SaaS",
+      "definition": "Service models where the responsibility line moves up: you manage OS-and-up (IaaS), app-and-data (PaaS), or just data-and-access (SaaS)."
+    },
+    {
+      "term": "SLA (Service Level Agreement)",
+      "definition": "A financially backed commitment to a service's availability, often conditional on how you deploy it."
+    },
+    {
+      "term": "Preview vs GA",
+      "definition": "Preview is early-access without production SLAs and may change; General Availability is fully supported and SLA-backed."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Dev docs — Shared responsibility in the cloud",
+      "url": "https://learn.microsoft.com/en-us/azure/security/fundamentals/shared-responsibility",
+      "verified": true
+    },
+    {
+      "title": "Azure — Service Level Agreements (SLA)",
+      "url": "https://azure.microsoft.com/en-us/support/legal/sla/",
+      "verified": true
+    },
+    {
+      "title": "Azure — Preview supplemental terms of use",
+      "url": "https://azure.microsoft.com/en-us/support/legal/preview-supplemental-terms/",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — Availability zones overview (SLA-relevant resilience)",
+      "url": "https://learn.microsoft.com/en-us/azure/reliability/availability-zones-overview",
+      "verified": true
+    }
+  ],
+  "related": [
+    "azf-what-is-cloud",
+    "azf-regions-zones",
+    "azf-interfaces",
+    "azf-intro"
+  ]
+}

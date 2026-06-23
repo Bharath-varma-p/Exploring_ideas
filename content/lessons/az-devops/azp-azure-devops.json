@@ -1,0 +1,70 @@
+{
+  "id": "azp-azure-devops",
+  "title": "Azure DevOps — The Suite Around the Work",
+  "lane": "az-devops",
+  "type": "concept",
+  "order": 40,
+  "summary": "Azure DevOps is not just pipelines. It is a connected suite for planning, source control, CI/CD, packages, and traceability from idea to production.",
+  "tags": [
+    "azure",
+    "azure-devops",
+    "boards",
+    "repos",
+    "pipelines",
+    "artifacts"
+  ],
+  "analogy": "Azure DevOps is a workshop with labeled benches: Boards for the job tickets, Repos for the blueprints, Pipelines for the assembly line, and Artifacts for the parts shelf.",
+  "diagram": "flowchart TD\n  B[Boards: work items] --> R[Repos: code]\n  R --> P[Pipelines: build test deploy]\n  P --> A[Artifacts: packages]\n  P --> E[Environments: deployment history]\n  E --> B",
+  "body": "## First principles\n\nSoftware delivery is a coordination problem. Someone decides what to build, someone changes code, automation proves it works, a package is produced, and a deployment changes an environment. If those records live in separate places, the team loses the story of *why this production change exists*.\n\n**Azure DevOps** is Microsoft's integrated suite for that story. It connects work items, repositories, builds, releases, packages, test plans, environments, and permissions.\n\n## Why it exists\n\nA pipeline by itself can answer, \"Did the deployment run?\" It cannot answer, \"Which bug did this fix, which pull request changed it, which package version shipped, who approved production, and what environment received it?\" Azure DevOps exists to make delivery traceable from backlog to production.\n\nThat traceability matters in regulated teams, enterprise planning, long-lived products, and organizations that want one suite for planning and delivery rather than many loosely connected tools.\n\n## How it works\n\nThe main services are **Azure Boards** for work items and sprints, **Azure Repos** for Git repositories and pull requests, **Azure Pipelines** for CI/CD, **Azure Artifacts** for package feeds, and **Azure Test Plans** for manual and exploratory testing.\n\nPipelines can run against Azure Repos or external repositories. They can publish packages to Artifacts, deploy to Azure, and record deployment history against Environments. Permissions and approvals decide who can change what.\n\n## Analogy\n\nA good workshop does not put the job ticket, blueprint, assembly line, and finished parts in four random buildings. Azure DevOps puts them in one workshop so a foreman can trace a chair from customer request to shipped product.\n\n## In practice\n\n```yaml\ntrigger:\n- main\n\nstages:\n- stage: Build\n  jobs:\n  - job: build\n    steps:\n    - script: echo \"build <app> and publish artifact\"\n- stage: Deploy\n  jobs:\n  - deployment: deploy_web\n    environment: prod\n    strategy:\n      runOnce:\n        deploy:\n          steps:\n          - script: echo \"deploy artifact to Azure\"\n```\n\nThe important word is `environment`: it turns a generic job into a deployment record attached to a logical target.\n\n## Gotchas\n\nDo not reduce Azure DevOps to \"the old Microsoft CI tool.\" Many teams still choose it because Boards, approvals, environments, packages, and enterprise permissions are tightly integrated. Also do not use Boards as a dumping ground; bad work-item hygiene creates traceability theater. Azure DevOps and GitHub can coexist: GitHub may host code while Azure Pipelines handles enterprise release controls, or vice versa.",
+  "teachItBack": "Azure DevOps is a suite for coordinating the whole software delivery lifecycle. Boards track intent, Repos hold code, Pipelines automate validation and deployment, Artifacts store packages, and Environments record where changes landed. Its value is traceability, not just running YAML.",
+  "glossary": [
+    {
+      "term": "Azure Boards",
+      "definition": "Azure DevOps service for work items, backlogs, sprints, boards, and queries."
+    },
+    {
+      "term": "Azure Repos",
+      "definition": "Azure DevOps Git hosting and pull request service."
+    },
+    {
+      "term": "Azure Pipelines",
+      "definition": "Azure DevOps CI/CD automation service."
+    },
+    {
+      "term": "Azure Artifacts",
+      "definition": "Package feed service for sharing and versioning build outputs and dependencies."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Dev docs — What is Azure DevOps?",
+      "url": "https://learn.microsoft.com/en-us/azure/devops/user-guide/what-is-azure-devops?view=azure-devops",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — What is Azure Boards?",
+      "url": "https://learn.microsoft.com/en-us/azure/devops/boards/get-started/what-is-azure-boards?view=azure-devops",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — What is Azure Repos?",
+      "url": "https://learn.microsoft.com/en-us/azure/devops/repos/get-started/what-is-repos?view=azure-devops",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — What is Azure Pipelines?",
+      "url": "https://learn.microsoft.com/en-us/azure/devops/pipelines/get-started/what-is-azure-pipelines?view=azure-devops",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — What is Azure Artifacts?",
+      "url": "https://learn.microsoft.com/en-us/azure/devops/artifacts/start-using-azure-artifacts?view=azure-devops",
+      "verified": true
+    }
+  ],
+  "related": [
+    "azp-environments",
+    "azp-deployment-strategies",
+    "azp-github-actions"
+  ]
+}

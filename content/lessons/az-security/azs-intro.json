@@ -1,0 +1,77 @@
+{
+  "id": "azs-intro",
+  "title": "Security from First Principles: Defense in Depth & Zero Trust",
+  "lane": "az-security",
+  "type": "concept",
+  "order": 10,
+  "summary": "Why the old castle-and-moat model died, and what replaced it: defense in depth (many independent layers) plus Zero Trust's three rules — verify explicitly, use least privilege, assume breach. This is the lens for the whole security lane.",
+  "tags": [
+    "azure",
+    "security",
+    "zero-trust",
+    "defense-in-depth",
+    "least-privilege"
+  ],
+  "analogy": "Old security was a castle with one big wall and a moat — get over the wall and you own everything inside. Zero Trust is an airport: every door, every gate, every flight re-checks your identity and your boarding pass, every single time, no matter how far in you already are.",
+  "diagram": "flowchart TD\n  R[Any request] --> V{Verify explicitly}\n  V -->|identity + device + context| L{Least privilege?}\n  L -->|just enough, just in time| A[Allow scoped action]\n  V -->|fails| D[Deny]\n  L -->|too much| D\n  A --> M[Assume breach: log, monitor, segment, encrypt]\n  M --> R",
+  "body": "## First principles\n\nSecurity exists because you cannot trust a request just because it reached your server. A packet arriving at your database does not carry proof of good intent. So the only real question in security is: *for this specific action, right now, should I allow it?* Everything else — firewalls, identity, encryption, monitoring — is machinery for answering that question well, and for surviving the times you answer it wrong.\n\nTwo ideas organize the entire field, and the rest of this lane is just them applied to concrete Azure services.\n\n## Why it exists: the castle fell\n\nThe old model was **perimeter security**, a.k.a. *castle-and-moat*. You built one strong boundary — a corporate firewall — and declared everything inside it \"trusted\" and everything outside \"untrusted.\" It was simple, and it worked when all your apps, servers, and employees sat in one building on one network.\n\nThen reality broke it. Apps moved to the cloud. Employees worked from cafés and phones. SaaS tools lived on someone else's servers. Attackers learned that they only had to phish *one* laptop to be \"inside\" — and once inside, the flat trusted network let them roam freely to everything. The moat became useless the moment the threat was already swimming in the pool. There is no longer an \"inside.\"\n\n## How it works, part 1: defense in depth\n\n**Defense in depth** is the engineering answer to \"any single control will eventually fail.\" Instead of one perfect wall, you stack many *independent* layers, so a breach of one doesn't hand over everything. Picture concentric rings:\n\n- **Identity & access** — who/what is making the request (the new perimeter).\n- **Perimeter / network** — DDoS protection, firewalls, segmentation.\n- **Compute** — patched VMs, endpoint protection, hardened configs.\n- **Application** — secure code, secrets in a vault, input validation.\n- **Data** — encryption at rest and in transit, key management.\n\nThe magic word is *independent*. If layers fail the same way, stacking them buys nothing. An attacker who steals a password should still hit MFA; one who's on the network should still hit RBAC; one who reaches the disk should still hit encryption. Each layer assumes the one outside it has already failed.\n\n## How it works, part 2: Zero Trust\n\n**Zero Trust** is the modern doctrine that replaces \"trust the network\" with \"trust nothing implicitly, verify everything.\" It compresses to three rules — memorize these and you can reason about almost any security decision:\n\n1. **Verify explicitly.** Authenticate and authorize every request using *all* available signal — identity, device health, location, app, risk — not just \"you're on the VPN.\"\n2. **Use least-privilege access.** Grant the minimum permission, for the minimum time. Just-enough-access (scoped RBAC) plus just-in-time access (activate a role only when needed, like PIM) shrink the blast radius of any stolen credential.\n3. **Assume breach.** Operate as if an attacker is already inside. So you segment networks, encrypt everything, log relentlessly, and limit lateral movement — so a single compromise stays small.\n\nMicrosoft is so committed to this that in 2024 it launched the **Secure Future Initiative (SFI)** — its largest-ever security engineering effort, built on *secure by design, secure by default, secure operations*. By its November 2025 progress report, nearly all Microsoft employees were on phishing-resistant MFA and Azure had shipped more secure defaults. The point for you: Zero Trust isn't a slogan, it's now baked into how the platform ships.\n\n## In practice\n\nYou already met Zero Trust in the Foundations lane's \"create a resource\" walkthrough, even if it wasn't named. Activating an *eligible* role just-in-time via PIM instead of holding admin all day **is** least privilege. Conditional Access checking your device and location before granting a token **is** verify explicitly. Encrypting the disk and watching the logs **is** assume breach.\n\nA one-line mental test for any design: *\"If an attacker had this credential / was on this network / had this disk — what would still stop them?\"* If the answer is \"nothing,\" you have a single point of failure, not defense in depth.\n\n## Gotchas\n\n- **Zero Trust is not a product you buy.** No SKU called \"Zero Trust\" makes you done. It's a strategy realized through many services — Entra, Conditional Access, Defender, Key Vault, encryption, Sentinel — which is exactly why this lane has many lessons.\n- **Don't confuse authentication with authorization.** Verifying *who* you are (authN) is not deciding *what* you may do (authZ). Zero Trust needs both, every time.\n- **More layers ≠ more security if they're correlated.** Three firewalls from the same vendor with the same flaw is one layer wearing a costume. Independence is the whole game.\n- **Friction is a failure mode too.** Security so painful that people route around it (sharing passwords, disabling MFA) is *negative* security. Good Zero Trust is mostly invisible — passkeys, SSO, silent risk checks — not constant prompts.",
+  "teachItBack": "Old security trusted anything inside the network perimeter, but the perimeter dissolved once apps and people went to the cloud. So we use defense in depth — many independent layers (identity, network, compute, app, data) so one failure isn't fatal — guided by Zero Trust's three rules: verify explicitly, use least privilege, and assume breach. Zero Trust isn't a product; it's a strategy you assemble from Entra, Defender, Key Vault, encryption, and Sentinel, and it's now baked into how Azure ships under Microsoft's Secure Future Initiative.",
+  "glossary": [
+    {
+      "term": "Defense in depth",
+      "definition": "Stacking multiple independent security controls so that breaching one layer does not compromise the whole system."
+    },
+    {
+      "term": "Zero Trust",
+      "definition": "A security model that trusts no request implicitly and verifies every one; summarized as verify explicitly, use least privilege, assume breach."
+    },
+    {
+      "term": "Perimeter (castle-and-moat) security",
+      "definition": "The legacy model that treats everything inside a network boundary as trusted; obsolete once resources and users moved outside the boundary."
+    },
+    {
+      "term": "Least privilege",
+      "definition": "Granting only the minimum permissions needed, for the minimum time (just-enough and just-in-time access)."
+    },
+    {
+      "term": "Assume breach",
+      "definition": "Designing as if an attacker is already inside — using segmentation, encryption, and logging to limit the blast radius."
+    },
+    {
+      "term": "Secure Future Initiative (SFI)",
+      "definition": "Microsoft's company-wide security engineering program (launched 2024) built on secure by design, secure by default, and secure operations."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Dev docs — Zero Trust security overview",
+      "url": "https://learn.microsoft.com/en-us/security/zero-trust/zero-trust-overview",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — Zero Trust deployment overview",
+      "url": "https://learn.microsoft.com/en-us/security/zero-trust/deploy/overview",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — What's new in the Secure Future Initiative (SFI)",
+      "url": "https://learn.microsoft.com/en-us/security/zero-trust/sfi/secure-future-initiative-whats-new",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — Security in the Azure Well-Architected Framework",
+      "url": "https://learn.microsoft.com/en-us/azure/well-architected/security/",
+      "verified": true
+    },
+    {
+      "title": "John Savill — Identity & Zero Trust master class (verified via oembed)",
+      "url": "https://www.youtube.com/watch?v=megA6BPpYqo",
+      "verified": true
+    }
+  ],
+  "related": [
+    "azs-shared-responsibility",
+    "azs-defender",
+    "azs-network-security"
+  ]
+}

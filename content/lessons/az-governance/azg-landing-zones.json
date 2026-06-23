@@ -1,0 +1,65 @@
+{
+  "id": "azg-landing-zones",
+  "title": "Azure Landing Zones: The Paved Road",
+  "lane": "az-governance",
+  "type": "concept",
+  "order": 80,
+  "summary": "Azure Landing Zones are the recommended, repeatable foundation for Azure at scale: subscriptions, identity, networking, management, security, governance, and automation pre-wired for teams.",
+  "tags": [
+    "azure",
+    "landing-zones",
+    "cloud-adoption-framework",
+    "platform",
+    "governance"
+  ],
+  "analogy": "A landing zone is a serviced plot in a city: roads, power, zoning, utilities, and permits are ready before builders arrive.",
+  "diagram": "flowchart TD\n  ALZ[Azure Landing Zone] --> Platform[Platform landing zone]\n  ALZ --> Apps[Application landing zones]\n  Platform --> Identity[Identity]\n  Platform --> Connectivity[Connectivity]\n  Platform --> Management[Management]\n  Apps --> Online[Online workloads]\n  Apps --> Corp[Corp workloads]\n  Apps --> Local[Local workloads]\n  MG[Management groups] --> ALZ\n  Policy[Policy initiatives] --> ALZ",
+  "body": "## First principles\n\nA workload team should not have to invent the cloud foundation before deploying the workload. They need a place to land that already has identity integration, network connectivity, logging, policies, security expectations, and subscription structure. **Azure Landing Zones** are that prepared foundation.\n\nThe Cloud Adoption Framework describes Azure landing zones as the standardized and recommended approach for setting up and managing Azure environments at scale.\n\n## Why it exists\n\nWithout a landing zone, every new workload starts by asking the same platform questions: which subscription, what network, how do we connect to on-premises, where do logs go, which policies apply, how do we get DNS, who can deploy, and what tags are required? That repetition creates delay and inconsistency.\n\nA landing zone moves these decisions into a reusable architecture. Workload teams receive a subscription or set of subscriptions that already inherit the right controls. Platform teams focus on improving the road instead of hand-building roads for every project.\n\n## How it works\n\nAn Azure landing zone architecture is modular and scalable. It typically includes a management group hierarchy, subscription organization, identity and access management, network topology/connectivity, security, management/monitoring, governance, billing context, and platform automation/DevOps. Microsoft’s reference architecture distinguishes **platform landing zones** and **application landing zones**.\n\nA platform landing zone hosts shared services such as identity, connectivity, and management. Application landing zones host individual workloads and their environments. Application subscriptions usually sit under management groups like `Online`, `Corp`, or `Local` so they inherit the right Azure Policy assignments.\n\nSubscription vending is the paved-road mechanism: create application subscriptions through code, attach them to the hierarchy, apply policy, configure networking/logging, and hand them to teams with clear ownership.\n\n## Analogy\n\nA construction company can move fast when the city has already zoned the land, paved roads, connected water and power, and published building rules. The builder still chooses the house design. The city supplies the safe, connected plot.\n\n## In practice\n\nA platform team might vend a production application landing zone with:\n\n```text\nSubscription under Landing zones/Production\nRequired tags and allowed regions\nHub or Virtual WAN connectivity\nDiagnostic settings to central Log Analytics\nBudget and cost alerts\nRBAC groups for workload owners\n```\n\nThe team can deploy app resources immediately because the foundation is already trusted.\n\n## Gotchas\n\nLanding zones are not a single product you buy; they are an operating model plus architecture. Do not copy the reference architecture blindly if your organization is small, but do not skip the design areas either. A landing zone that only creates subscriptions is not a landing zone; it is a folder with a bill. The value is the repeatable controls around the subscription.",
+  "teachItBack": "An Azure landing zone is the repeatable, governed place where workloads land. Platform landing zones host shared services; application landing zones host workloads and inherit controls through management groups and policy. The point is a paved road: teams move faster because identity, network, monitoring, cost, governance, and automation are already wired.",
+  "glossary": [
+    {
+      "term": "Azure Landing Zone",
+      "definition": "A standardized Azure environment foundation for deploying and managing workloads at scale."
+    },
+    {
+      "term": "Platform landing zone",
+      "definition": "The shared-services foundation for identity, connectivity, management, and platform operations."
+    },
+    {
+      "term": "Application landing zone",
+      "definition": "A governed subscription or set of subscriptions where an application workload is deployed."
+    },
+    {
+      "term": "Subscription vending",
+      "definition": "An automated process that creates and configures workload subscriptions with required controls."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Dev docs — What is an Azure landing zone?",
+      "url": "https://learn.microsoft.com/en-us/azure/cloud-adoption-framework/ready/landing-zone/",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — Organize your resources with management groups",
+      "url": "https://learn.microsoft.com/en-us/azure/governance/management-groups/overview",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — Overview of Azure Policy",
+      "url": "https://learn.microsoft.com/en-us/azure/governance/policy/overview",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — Azure Well-Architected Framework",
+      "url": "https://learn.microsoft.com/en-us/azure/well-architected/what-is-well-architected-framework",
+      "verified": true
+    }
+  ],
+  "related": [
+    "azg-management-groups",
+    "azg-policy",
+    "azg-tags",
+    "azg-waf"
+  ]
+}

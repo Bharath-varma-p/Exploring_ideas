@@ -1,0 +1,66 @@
+{
+  "id": "azx-apim",
+  "title": "API Management: The Gateway Pattern",
+  "lane": "az-integration",
+  "type": "concept",
+  "order": 70,
+  "summary": "API Management puts a managed gateway in front of APIs so teams can secure, publish, transform, throttle, observe, and productize backend capabilities without rewriting every service.",
+  "tags": [
+    "azure",
+    "api-management",
+    "gateway",
+    "policies",
+    "products",
+    "apis"
+  ],
+  "analogy": "API Management is the airport terminal for your APIs: one front door, security checks, signs, lounges, rate limits, and controlled access to many gates behind it.",
+  "diagram": "flowchart LR\n  Consumer[App partner developer] --> Gateway[API Management gateway]\n  Gateway --> Policies[Policies auth rate limit transform cache]\n  Policies --> BackendA[Backend API A]\n  Policies --> BackendB[Legacy service]\n  Product[Product subscription developer portal] -.controls access.-> Gateway\n  Gateway --> Logs[Metrics logs tracing]",
+  "body": "## First principles\n\nAn API is a contract, not just a URL. Once other teams, mobile apps, partners, or customers depend on it, you need a front door that is stable even when backends move. You also need security, throttling, documentation, versioning, analytics, and a way to onboard consumers.\n\n**Azure API Management** is Azure’s managed API gateway and lifecycle platform.\n\n## Why it exists\n\nWithout a gateway, every backend service must solve the same edge problems: auth validation, rate limits, request transforms, CORS, caching, logging, versioning, and developer onboarding. That creates inconsistent security and copy-pasted infrastructure code.\n\nAPI Management centralizes those edge concerns. Backend teams can focus on domain behavior while the gateway enforces the public contract.\n\n## How it works\n\nThe core runtime is the **gateway**. Consumers call APIM; APIM applies policies; APIM forwards to the backend API. The backend might be an Azure Function, App Service, AKS service, Logic App, legacy endpoint, or service outside Azure.\n\n**Policies** are ordered XML statements that run on inbound requests, backend calls, outbound responses, or errors. Microsoft’s current docs describe more than 75 built-in policies for scenarios like authentication, rate limiting, caching, IP filtering, and request/response transformation.\n\n**Products** bundle one or more APIs with terms of use, quotas, and subscription rules. Published products can appear in a developer portal so consumers can discover and subscribe.\n\n## Analogy\n\n💡 Backends are individual offices. APIM is the lobby desk: check badges, print visitor passes, route people to the right elevator, translate confusing room numbers, and keep a log of who came through.\n\n## In practice\n\n```xml\n<policies>\n  <inbound>\n    <base />\n    <rate-limit calls=\"100\" renewal-period=\"60\" />\n    <set-header name=\"x-platform\" exists-action=\"override\">\n      <value>azure-bootcamp</value>\n    </set-header>\n  </inbound>\n  <backend><base /></backend>\n  <outbound><base /></outbound>\n  <on-error><base /></on-error>\n</policies>\n```\n\nThat policy protects a backend without changing backend code.\n\n## Gotchas\n\nAPIM is for synchronous API contracts. It does not replace queues, streams, or workflow engines; it can front APIs that publish to those systems.\n\nA gateway can hide backend complexity, but it should not become a junk drawer of business logic. Put edge concerns in policies; keep domain rules in services.\n\nProducts and subscriptions are governance tools. If every consumer gets the same all-access key forever, you bought a gateway and skipped the management part.",
+  "teachItBack": "API Management is a managed gateway in front of APIs. Consumers call APIM, policies enforce edge behavior such as authentication, throttling, caching, and transformation, and APIM routes to backends. Products package APIs for discovery, subscription, quotas, and terms of use. Use it to manage API contracts, not to replace asynchronous integration services.",
+  "glossary": [
+    {
+      "term": "Gateway",
+      "definition": "The API Management runtime component that receives API calls, applies policies, and forwards to backends."
+    },
+    {
+      "term": "Policy",
+      "definition": "A configurable rule that changes request, response, backend, or error behavior in API Management."
+    },
+    {
+      "term": "Product",
+      "definition": "A package of one or more APIs with access rules, quotas, and terms for consumers."
+    },
+    {
+      "term": "Developer portal",
+      "definition": "A self-service surface where API consumers can discover APIs and subscribe to products."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Dev docs — Azure API Management overview and key concepts",
+      "url": "https://learn.microsoft.com/en-us/azure/api-management/api-management-key-concepts",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — Policies in Azure API Management",
+      "url": "https://learn.microsoft.com/en-us/azure/api-management/api-management-howto-policies",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — Create and publish a product in API Management",
+      "url": "https://learn.microsoft.com/en-us/azure/api-management/api-management-howto-add-products",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — Workflow integration and automation with Azure Logic Apps",
+      "url": "https://learn.microsoft.com/en-us/azure/logic-apps/logic-apps-overview",
+      "verified": true
+    }
+  ],
+  "related": [
+    "azx-logic-apps",
+    "azx-service-bus",
+    "azx-event-grid",
+    "azx-choosing-integration"
+  ]
+}

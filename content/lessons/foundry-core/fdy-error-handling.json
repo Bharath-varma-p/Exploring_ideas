@@ -1,0 +1,62 @@
+{
+  "id": "fdy-error-handling",
+  "title": "HttpResponseError Patterns",
+  "lane": "foundry-core",
+  "type": "concept",
+  "order": 214,
+  "summary": "Azure SDK client methods that make service calls raise azure.core.exceptions.HttpResponseError for non-success HTTP responses. The exception exposes status code, reason, message, response, and sometimes structured error data.",
+  "tags": [
+    "errors",
+    "status-codes",
+    "resilience"
+  ],
+  "analogy": "HttpResponseError is the service returning a stamped rejection form rather than the mail truck crashing. The form has a status code and reason that tell you which counter rejected the request.",
+  "diagram": "flowchart TD\nSDKCall[SDK call] --> Success[Return model]\nSDKCall --> Failure[HttpResponseError]\nFailure --> Status[Inspect status code]\nStatus --> Recover[Recover or re raise]",
+  "body": "## First principles\n\nNetworked code fails in layers: configuration can be missing, credentials can fail, permissions can be insufficient, resources can be absent, and services can throttle. Robust SDK code separates expected service failures from programmer mistakes.\n\n## Definition\n\nAzure SDK client methods that make service calls raise azure.core.exceptions.HttpResponseError for non-success HTTP responses. The exception exposes status_code, reason, message, response, and sometimes structured error data. Handle it around the smallest operation that can fail usefully.\n\n## How it fits together\n\nCatch HttpResponseError, branch on status_code for known cases such as 401, 403, 404, or 429, log safe details, and re-raise when the program cannot recover.\n\n## Worked example\n\n```python\nimport os\nfrom azure.identity import DefaultAzureCredential\nfrom azure.ai.projects import AIProjectClient\nfrom azure.core.exceptions import HttpResponseError\n\nwith DefaultAzureCredential() as credential, AIProjectClient(\n    endpoint=os.environ[\"FOUNDRY_PROJECT_ENDPOINT\"],\n    credential=credential,\n) as project_client:\n    try:\n        for deployment in project_client.deployments.list():\n            print(deployment)\n    except HttpResponseError as error:\n        if error.status_code == 404:\n            print(\"Project or route was not found. Check the endpoint.\")\n        elif error.status_code in (401, 403):\n            print(\"The request was not authorized for this project.\")\n        elif error.status_code == 429:\n            print(\"The service is throttling requests. Retry later with backoff.\")\n        else:\n            raise\n```\n\n*Handle service errors when listing deployments.*",
+  "drills": [
+    {
+      "q": "Which exception should wrap non-success service responses?",
+      "a": "azure.core.exceptions.HttpResponseError."
+    },
+    {
+      "q": "What fields are useful on HttpResponseError?",
+      "a": "status_code, reason, message, response, and structured error when available."
+    },
+    {
+      "q": "Should you catch every exception and continue?",
+      "a": "No. Recover from known cases and re-raise unknown failures."
+    }
+  ],
+  "teachItBack": "Teach it back as: SDK service calls can fail with HttpResponseError when the HTTP response is not successful. I inspect status_code and reason to decide whether to recover, retry, or re-raise. I keep the try block tight so errors are handled near the operation that caused them.",
+  "glossary": [
+    {
+      "term": "HttpResponseError",
+      "definition": "Azure-core exception raised when a service returns a non-success HTTP status code."
+    },
+    {
+      "term": "status_code",
+      "definition": "The numeric HTTP status associated with a failed service response."
+    },
+    {
+      "term": "re-raise",
+      "definition": "Raising the caught exception again when code cannot safely recover."
+    }
+  ],
+  "sources": [
+    {
+      "title": "HttpResponseError class reference",
+      "url": "https://learn.microsoft.com/en-us/python/api/azure-core/azure.core.exceptions.httpresponseerror?view=azure-python",
+      "verified": true
+    },
+    {
+      "title": "Azure AI Projects client library for Python",
+      "url": "https://learn.microsoft.com/en-us/python/api/overview/azure/ai-projects-readme?view=azure-python",
+      "verified": true
+    },
+    {
+      "title": "Azure Core shared client library for Python",
+      "url": "https://learn.microsoft.com/en-us/python/api/overview/azure/core-readme?view=azure-python",
+      "verified": true
+    }
+  ]
+}

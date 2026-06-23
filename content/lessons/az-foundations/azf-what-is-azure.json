@@ -1,0 +1,64 @@
+{
+  "id": "azf-what-is-azure",
+  "title": "What Azure is: Microsoft's cloud platform",
+  "lane": "az-foundations",
+  "type": "concept",
+  "order": 30,
+  "summary": "Azure is Microsoft's public cloud: a single global platform of 200+ first-party services — compute, storage, networking, databases, identity, AI — all reachable through one consistent control plane, billing system, and identity layer.",
+  "tags": [
+    "azure",
+    "platform",
+    "microsoft",
+    "first-party-services"
+  ],
+  "analogy": "Azure is a single enormous hardware store where every aisle (compute, storage, networking, AI) shares one checkout, one membership card, and one returns desk — so once you learn the store, every aisle feels familiar.",
+  "diagram": "flowchart TD\n  You[You / your app] --> ARM[Azure Resource Manager - one control plane]\n  Entra[Microsoft Entra ID - one identity layer] -.authenticates.-> ARM\n  Bill[One subscription / billing] -.meters.-> ARM\n  ARM --> Compute[Compute: VMs, App Service, Functions, AKS]\n  ARM --> Storage[Storage + Databases: Blob, SQL, Cosmos DB]\n  ARM --> Net[Networking: VNet, Load Balancer, DNS]\n  ARM --> AI[AI + more: Foundry, Cognitive services]",
+  "body": "## First principles\n\nIf the cloud is renting computing from a shared pool, a **cloud platform** is the company that owns the pool plus the entire system you use to rent from it: the API, the identity layer, the billing, the global network, and the menu of services. **Azure is Microsoft's version of that** — a public cloud where Microsoft owns the datacenters and offers their capabilities as services you compose.\n\nThe word that matters is **platform**. Azure isn't one product; it's a coherent system where ~200 services share the same front door, the same login, and the same bill. That coherence is the whole point — learn the platform once and every service inherits it.\n\n## Why it exists\n\nMicrosoft already ran planetary-scale services (Bing, Office, Xbox) and had built the datacenters and operational muscle to do it. **Azure** (launched 2010, originally \"Windows Azure\") opened that same infrastructure to everyone else — first as a place to run Windows workloads, now as a cloud that runs Linux as heavily as Windows and reaches into AI, data, and IoT.\n\nThe pain it answers: without a platform, each capability you need (a database, a queue, a load balancer, an identity system) is a separate product with its own setup, its own credentials, its own bill, glued together by hand. A platform makes them **first-party** — built by one vendor to interoperate, secured by one identity system, governed by one set of rules, and billed on one invoice. You stop being a systems integrator and start being a builder.\n\n## How it works\n\nThree shared pillars make Azure one platform instead of a bag of products:\n\n- **One control plane — Azure Resource Manager (ARM).** Every service is created and managed through the same API, so `az ... create`, a portal click, and a Bicep file all speak the same language regardless of the service.\n- **One identity layer — Microsoft Entra ID** (formerly Azure Active Directory). The same directory authenticates a human in the portal, a CI pipeline, and one service calling another.\n- **One commercial + governance layer.** Subscriptions, management groups, role-based access control, Azure Policy, and tagging work *uniformly* across services — set a rule once, it applies everywhere.\n\nOn top of those pillars sit the **first-party services**, grouped into families: compute (VMs, App Service, Functions, AKS), storage and databases (Blob, Azure SQL, Cosmos DB), networking (Virtual Network, Load Balancer, DNS), plus identity, integration, observability, security, and AI (Microsoft Foundry). You'll meet each family in its own lane; they all plug into the same three pillars.\n\n## In practice\n\nThe platform-ness shows up the moment you list what you've got — every service, however different, answers to the same tool:\n\n```bash\n# One identity logs you into the whole platform\naz login\n\n# One control plane lists resources of ANY type in a scope\naz resource list --resource-group <rg-name> --output table\n# NAME            TYPE                                  LOCATION\n# myvm            Microsoft.Compute/virtualMachines     eastus\n# mystorage       Microsoft.Storage/storageAccounts     eastus\n# myvnet          Microsoft.Network/virtualNetworks     eastus\n```\n\nA VM, a storage account, and a network are radically different things — yet one login and one command enumerate them all. That uniformity *is* the platform.\n\n## Gotchas\n\n- **\"Azure\" the platform vs. an Azure service.** People say \"use Azure\" to mean both the whole cloud and a specific service. Train yourself to ask *which service* — the platform doesn't deploy your app, a service does.\n- **First-party ≠ only choice.** Azure hosts plenty of third-party and open-source software (via the Marketplace, AKS, VMs). First-party means Microsoft builds and runs it with deep platform integration, not that you're locked to it.\n- **The menu changes constantly.** New services launch and old ones get renamed (Azure AD → Entra ID; Azure AI Studio → Foundry). Treat the live docs as truth and don't over-index on any single service name.",
+  "teachItBack": "Azure is Microsoft's public cloud platform: the company owns the global datacenters and offers ~200 first-party services through one control plane (Azure Resource Manager), one identity layer (Microsoft Entra ID), and one billing and governance system. The value is coherence — every service, however different, shares the same front door, login, and bill, so learning the platform once carries across all of them. You compose services from families like compute, storage, networking, and AI rather than wiring separate products together yourself.",
+  "glossary": [
+    {
+      "term": "Cloud platform",
+      "definition": "A provider's complete system for renting computing: the datacenters plus the API, identity, billing, and service catalogue."
+    },
+    {
+      "term": "First-party service",
+      "definition": "A capability built and operated by Microsoft within Azure, deeply integrated with the platform's identity, control plane, and billing."
+    },
+    {
+      "term": "Microsoft Entra ID",
+      "definition": "Azure's cloud identity service (formerly Azure Active Directory) that authenticates users, apps, and services across the platform."
+    },
+    {
+      "term": "Resource provider",
+      "definition": "The Azure service component (e.g. Microsoft.Compute) that supplies a family of resource types to the control plane."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Dev docs — What is Azure? (Cloud Adoption Framework)",
+      "url": "https://learn.microsoft.com/en-us/azure/cloud-adoption-framework/get-started/what-is-azure",
+      "verified": true
+    },
+    {
+      "title": "Azure — Global infrastructure",
+      "url": "https://azure.microsoft.com/en-us/explore/global-infrastructure/",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — Azure Resource Manager overview",
+      "url": "https://learn.microsoft.com/en-us/azure/azure-resource-manager/management/overview",
+      "verified": true
+    },
+    {
+      "title": "John Savill — Azure 360 in 360",
+      "url": "https://www.youtube.com/watch?v=1NOZv2M3q2k",
+      "verified": true
+    }
+  ],
+  "related": [
+    "azf-intro",
+    "azf-what-is-cloud",
+    "azf-regions-zones",
+    "azf-arm"
+  ]
+}

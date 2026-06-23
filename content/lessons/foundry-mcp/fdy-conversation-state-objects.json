@@ -1,0 +1,70 @@
+{
+  "id": "fdy-conversation-state-objects",
+  "title": "Agent State Objects",
+  "lane": "foundry-mcp",
+  "type": "concept",
+  "order": 203,
+  "summary": "In the thread-run model, an Agent is the configured worker, a Thread is the conversation workspace, a Message is a user or assistant entry, a Run is one execution of an agent over a thread, and RunSteps are the detailed actions taken inside that run.",
+  "tags": [
+    "state",
+    "run-loop",
+    "classic-api"
+  ],
+  "analogy": "A thread is a case file, messages are pages added to the file, a run is assigning the case to the agent, and run steps are the timestamped actions in the case log.",
+  "diagram": "graph TD\nAgent[Agent config] --> Run[Run]\nThread[Thread state] --> Run\nMessage[User message] --> Thread\nRun --> StepA[Run step model call]\nRun --> StepB[Run step tool call]\nRun --> StepC[Run step final message]",
+  "body": "## First principles\n\nFirst principles: long work needs a ledger. The user request, the agent decisions, tool calls, results, and final answer must be represented as durable objects so clients can retry, inspect, and audit work.\n\n## Definition\n\nIn the thread-run model, an Agent is the configured worker, a Thread is the conversation workspace, a Message is a user or assistant entry, a Run is one execution of an agent over a thread, and RunSteps are the detailed actions taken inside that run.\n\n## How it fits together\n\nThe object model separates state from execution. You can add messages to a thread, start a run, poll until the run is complete or needs action, then list messages and run steps to understand the result.\n\n## Worked example\n\n```python\n# pip install azure-ai-projects azure-ai-agents>=1.2.0b3 azure-identity --pre\n# This shape mirrors Azure SDK samples that expose threads, messages, runs, and run steps.\nimport os, time\nfrom azure.identity import DefaultAzureCredential\nfrom azure.ai.projects import AIProjectClient\n\nproject_client = AIProjectClient(\n    endpoint=os.environ[\"PROJECT_ENDPOINT\"],\n    credential=DefaultAzureCredential(),\n)\n\nwith project_client:\n    agents = project_client.agents\n    agent = agents.create_agent(\n        model=os.environ[\"MODEL_DEPLOYMENT_NAME\"],\n        name=\"state-objects-demo\",\n        instructions=\"Answer in one paragraph and cite which tool you used if any.\",\n    )\n    thread = agents.threads.create()\n    agents.messages.create(thread_id=thread.id, role=\"user\", content=\"Explain what a run step is.\")\n    run = agents.runs.create(thread_id=thread.id, agent_id=agent.id)\n\n    while run.status in {\"queued\", \"in_progress\", \"requires_action\"}:\n        time.sleep(1)\n        run = agents.runs.get(thread_id=thread.id, run_id=run.id)\n\n    for step in agents.run_steps.list(thread_id=thread.id, run_id=run.id):\n        print(step.get(\"id\"), step.get(\"status\"), step.get(\"type\"))\n    for message in agents.messages.list(thread_id=thread.id):\n        print(message.role, message.text_messages[-1].text.value if message.text_messages else \"\")\n    agents.delete_agent(agent.id)\n```\n\n*Minimal thread run loop using the azure-ai-agents sample surface*",
+  "drills": [
+    {
+      "q": "What object stores conversation history?",
+      "a": "The thread."
+    },
+    {
+      "q": "What object represents one execution attempt?",
+      "a": "The run."
+    },
+    {
+      "q": "Where do you inspect tool calls after execution?",
+      "a": "Run steps."
+    }
+  ],
+  "teachItBack": "The state model is a ledger for agent work. Messages record conversation content, runs record execution, and run steps expose how the result was produced. This is why agents are easier to audit than a pile of raw model calls.",
+  "glossary": [
+    {
+      "term": "Thread",
+      "definition": "Conversation state container."
+    },
+    {
+      "term": "Run",
+      "definition": "One agent execution over a thread."
+    },
+    {
+      "term": "RunStep",
+      "definition": "A granular action inside a run, such as a model step or tool call."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Azure SDK for Python: MCP create and process sample",
+      "url": "https://github.com/Azure/azure-sdk-for-python/blob/main/sdk/ai/azure-ai-agents/samples/agents_tools/sample_agents_mcp_in_create_and_process.py",
+      "verified": false
+    },
+    {
+      "title": "Microsoft Learn: Foundry quickstart with Azure AI Projects 2.x",
+      "url": "https://learn.microsoft.com/en-us/azure/foundry/quickstarts/get-started-code",
+      "verified": false
+    }
+  ],
+  "quiz": [
+    {
+      "q": "Why should allowed_tools be set on an MCP attachment?",
+      "choices": [
+        "To enforce least privilege by limiting which MCP server tools the agent may call",
+        "To make the model larger",
+        "To bypass authentication",
+        "To disable tracing"
+      ],
+      "answer": 0,
+      "explanation": "allowed_tools narrows authority to approved tool names."
+    }
+  ]
+}

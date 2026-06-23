@@ -1,0 +1,75 @@
+{
+  "id": "fdy-connections-conceptual",
+  "title": "Connections As Supply Lines",
+  "lane": "foundry-core",
+  "type": "concept",
+  "order": 107,
+  "summary": "A connection is a Foundry configuration that lets a project authenticate to and consume Microsoft or external resources such as Azure AI Search, Azure Storage, Azure OpenAI, Application Insights, Key Vault, Foundry resources, and selected connector targets.",
+  "tags": [
+    "connections",
+    "resources",
+    "identity"
+  ],
+  "analogy": "A connection is a supply line on a battlefield map: it does not fight the battle, but it tells the mission how to reach fuel, maps, radios, and logistics safely.",
+  "diagram": "graph TD\nProject[Foundry project] --> Search[Azure AI Search]\nProject --> Storage[Azure Storage]\nProject --> Insights[Application Insights]\nProject --> Foundry[Other Foundry resource]\nProject --> Vault[Key Vault]",
+  "body": "## First principles\n\nFirst principles: AI applications rarely live alone. They need search indexes, storage, monitoring, model resources, databases, and external systems. A connection is the named relationship that lets a Foundry project know where another resource is and how access is governed.\n\n## Definition\n\nA connection is a Foundry configuration that lets a project authenticate to and consume Microsoft or external resources such as Azure AI Search, Azure Storage, Azure OpenAI, Application Insights, Key Vault, Foundry resources, and selected connector targets.\n\n## How it fits together\n\nKeep connections conceptual in this lane: they are links between a project and other resources. Prefer Microsoft Entra and managed identity based access patterns; do not design new learning paths around copying secrets. Some connection types and creation methods are preview or code-only, so always check the current docs before production use.\n\n## Worked example\n\n```bash\n# Before adding a connection in the portal or infrastructure code:\nprintf '%s\n'   '1 Identify the target Azure resource and its region.'   '2 Enable or confirm the project or app managed identity.'   '3 Grant only the required Azure RBAC role at the narrowest scope.'   '4 Add the Foundry connection and test from the project.'   '5 Document whether the connection type is generally available or preview.'\n```\n\n*Connection planning checklist*",
+  "drills": [
+    {
+      "q": "What problem does a connection solve?",
+      "a": "It gives a project a managed link to another resource or external capability."
+    },
+    {
+      "q": "Name three common Azure connection targets.",
+      "a": "Azure AI Search, Azure Storage, and Application Insights."
+    },
+    {
+      "q": "What auth posture should this academy teach?",
+      "a": "Managed identity and Microsoft Entra based access, not copied secrets."
+    }
+  ],
+  "teachItBack": "Connections are Foundry's named links to other resources. They let a project use things like search, storage, monitoring, and other Foundry or Azure resources. Teach them as supply lines, with managed identity and least privilege as the safety rules.",
+  "glossary": [
+    {
+      "term": "Connection",
+      "definition": "Project or resource configuration that links Foundry to another resource or service."
+    },
+    {
+      "term": "Azure AI Search",
+      "definition": "Azure search service commonly used for retrieval over text and vector indexes."
+    },
+    {
+      "term": "Application Insights",
+      "definition": "Azure monitoring service used for application telemetry and diagnostics."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Microsoft Learn: Add a new connection to your project",
+      "url": "https://learn.microsoft.com/en-us/azure/foundry/how-to/connections-add",
+      "verified": true
+    },
+    {
+      "title": "Microsoft Learn: Role-based access control for Microsoft Foundry",
+      "url": "https://learn.microsoft.com/en-us/azure/foundry/concepts/rbac-foundry",
+      "verified": true
+    },
+    {
+      "title": "Microsoft Learn: Authenticate Azure hosted Python apps with managed identity",
+      "url": "https://learn.microsoft.com/en-us/azure/developer/python/sdk/authentication/system-assigned-managed-identity",
+      "verified": true
+    }
+  ],
+  "quiz": [
+    {
+      "q": "What is the recommended authentication posture for this academy?",
+      "choices": [
+        "Managed identity with Azure RBAC",
+        "Hardcoded secrets in code",
+        "Shared personal credentials",
+        "Long lived copied tokens"
+      ],
+      "answer": 0,
+      "explanation": "Managed identities avoid application secrets and RBAC grants least privilege at a scope."
+    }
+  ]
+}

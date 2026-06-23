@@ -1,0 +1,70 @@
+{
+  "id": "fdy-connection-lifecycle",
+  "title": "Connection Lifecycle",
+  "lane": "foundry-mcp",
+  "type": "concept",
+  "order": 104,
+  "summary": "The MCP lifecycle has initialization, operation, and shutdown phases. The client sends initialize with protocolVersion, capabilities, and clientInfo.",
+  "tags": [
+    "lifecycle",
+    "capabilities",
+    "negotiation"
+  ],
+  "analogy": "It is like two radios performing a comms check before a mission: frequency, call signs, and supported procedures are confirmed before operational traffic begins.",
+  "diagram": "sequenceDiagram\nparticipant Client\nparticipant Server\nClient->>Server: initialize\nServer-->>Client: initialize result\nClient--)Server: notifications initialized\nClient->>Server: normal operations\nClient--)Server: transport shutdown",
+  "body": "## First principles\n\nFirst principles: before two systems cooperate, they must agree on language version, identity, and allowed moves. MCP makes that explicit: initialize first, operate only within negotiated capabilities, then shut down through the transport.\n\n## Definition\n\nThe MCP lifecycle has initialization, operation, and shutdown phases. The client sends initialize with protocolVersion, capabilities, and clientInfo. The server replies with its protocolVersion, capabilities, serverInfo, and optional instructions. Then the client sends notifications/initialized.\n\n## How it fits together\n\nTreat initialize as a contract, not a greeting. If the server did not declare tools, do not call tools/list. If the client did not declare roots, the server should not ask roots/list. Version negotiation prevents silent mismatches.\n\n## Worked example\n\n```json\n{\n  \"jsonrpc\": \"2.0\",\n  \"id\": 1,\n  \"method\": \"initialize\",\n  \"params\": {\n    \"protocolVersion\": \"2025-11-25\",\n    \"capabilities\": {\n      \"roots\": { \"listChanged\": true },\n      \"sampling\": {},\n      \"elicitation\": { \"form\": {}, \"url\": {} }\n    },\n    \"clientInfo\": { \"name\": \"academy-client\", \"version\": \"1.0.0\" }\n  }\n}\n```\n\n*Initialize handshake with capability negotiation*",
+  "drills": [
+    {
+      "q": "What must be the first interaction?",
+      "a": "The initialize request."
+    },
+    {
+      "q": "What does capability negotiation prevent?",
+      "a": "Using operations one side never said it supports."
+    },
+    {
+      "q": "What notification follows a successful initialize response?",
+      "a": "notifications/initialized."
+    }
+  ],
+  "teachItBack": "MCP starts with an initialize handshake. Client and server exchange protocol versions, identities, and capabilities before normal work. After initialization, both sides must stay inside what was negotiated.",
+  "glossary": [
+    {
+      "term": "initialize",
+      "definition": "First request in an MCP session that negotiates version and capabilities."
+    },
+    {
+      "term": "capability",
+      "definition": "A declared protocol feature such as tools, resources, prompts, roots, sampling, or elicitation."
+    },
+    {
+      "term": "protocolVersion",
+      "definition": "Date-stamped MCP specification version used for compatibility."
+    }
+  ],
+  "sources": [
+    {
+      "title": "MCP Lifecycle",
+      "url": "https://modelcontextprotocol.io/specification/2025-11-25/basic/lifecycle.md",
+      "verified": true
+    },
+    {
+      "title": "MCP Specification 2025-11-25",
+      "url": "https://modelcontextprotocol.io/specification/2025-11-25.md",
+      "verified": true
+    }
+  ],
+  "quiz": [
+    {
+      "q": "What is the current remote standard transport name?",
+      "choices": [
+        "Streamable HTTP",
+        "HTTP plus SSE",
+        "WebSocket only",
+        "gRPC stream"
+      ],
+      "answer": 0,
+      "explanation": "The current standard remote transport is Streamable HTTP; HTTP plus SSE is the older deprecated transport."
+    }
+  ]
+}

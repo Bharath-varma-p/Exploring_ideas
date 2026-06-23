@@ -1,0 +1,70 @@
+{
+  "id": "fdy-agent-service-purpose",
+  "title": "What Foundry Agent Service Is",
+  "lane": "foundry-mcp",
+  "type": "concept",
+  "order": 201,
+  "summary": "Microsoft Foundry Agent Service is the managed platform for building, deploying, scaling, and observing AI agents. An agent combines a Foundry model, instructions, tools, and state so it can reason, call tools, and complete multi-step work.",
+  "tags": [
+    "agents",
+    "foundations",
+    "foundry"
+  ],
+  "analogy": "Calling a model directly is like asking a smart officer one question over a radio. An agent is like assigning that officer a mission binder, approved equipment, a logbook, and a command channel that stays open until the mission is complete.",
+  "diagram": "graph TD\nUser[User] --> Agent[Foundry agent]\nAgent --> Model[Deployed model]\nAgent --> Instructions[Instructions]\nAgent --> Tools[Tools]\nAgent --> State[Conversation state]\nAgent --> Trace[Telemetry]",
+  "body": "## First principles\n\nFirst principles: a model predicts the next useful text, but a real assistant must remember a task, follow standing instructions, choose tools, authenticate safely, and continue across steps. Foundry Agent Service adds a managed runtime around a deployed model so the model can operate as an application component instead of a one-shot text function.\n\n## Definition\n\nMicrosoft Foundry Agent Service is the managed platform for building, deploying, scaling, and observing AI agents. An agent combines a Foundry model, instructions, tools, and state so it can reason, call tools, and complete multi-step work.\n\n## How it fits together\n\nThink model plus policy plus tools plus memory. The model decides; instructions constrain; tools act; state remembers; tracing explains what happened later.\n\n## Worked example\n\n```python\n# pip install azure-ai-projects>=2.0.0 azure-identity\n# Uses DefaultAzureCredential so local development can use az login and Azure hosts can use managed identity.\nimport os\nfrom azure.identity import DefaultAzureCredential\nfrom azure.ai.projects import AIProjectClient\nfrom azure.ai.projects.models import PromptAgentDefinition\n\nproject = AIProjectClient(\n    endpoint=os.environ[\"PROJECT_ENDPOINT\"],\n    credential=DefaultAzureCredential(),\n)\n\nagent = project.agents.create_version(\n    agent_name=os.environ.get(\"AGENT_NAME\", \"foundry-agent-basics\"),\n    definition=PromptAgentDefinition(\n        model=os.environ.get(\"MODEL_DEPLOYMENT_NAME\", \"gpt-5-mini\"),\n        instructions=\"Explain Azure AI concepts with short examples and ask one check question.\",\n    ),\n)\nprint(agent.name, agent.version, agent.id)\n```\n\n*Create a prompt agent using the current Azure AI Projects 2.x shape*",
+  "drills": [
+    {
+      "q": "What turns a model call into an agent?",
+      "a": "Persistent instructions, state, tools, identity, lifecycle, and observability around the model."
+    },
+    {
+      "q": "Why not call the model directly for everything?",
+      "a": "Direct calls are simpler, but they do not provide the same managed tool orchestration, state, publishing, identity, and tracing."
+    },
+    {
+      "q": "What are the three core components Microsoft lists for an agent?",
+      "a": "Model, instructions, and tools."
+    }
+  ],
+  "teachItBack": "An agent is a managed AI application shell around a deployed model. It remembers a conversation, follows standing instructions, and invokes approved tools. Use direct model calls for one-step text generation and agents for governed multi-step work.",
+  "glossary": [
+    {
+      "term": "Agent",
+      "definition": "A model-backed application unit with instructions, tools, and state."
+    },
+    {
+      "term": "Prompt agent",
+      "definition": "A configuration-defined agent that Foundry runs without your own runtime code."
+    },
+    {
+      "term": "Hosted agent",
+      "definition": "A preview code-based agent hosted by Foundry in managed compute."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Microsoft Learn: What is Microsoft Foundry Agent Service",
+      "url": "https://learn.microsoft.com/en-us/azure/foundry/agents/overview",
+      "verified": true
+    },
+    {
+      "title": "Microsoft Learn: Foundry quickstart with Azure AI Projects 2.x",
+      "url": "https://learn.microsoft.com/en-us/azure/foundry/quickstarts/get-started-code",
+      "verified": true
+    }
+  ],
+  "quiz": [
+    {
+      "q": "What is the best first-principles definition of a Foundry agent?",
+      "choices": [
+        "A model plus instructions, tools, state, identity, and runtime lifecycle",
+        "A static prompt saved in a text file",
+        "A personal access token for a model",
+        "Only a vector database"
+      ],
+      "answer": 0,
+      "explanation": "An agent wraps a model with instructions, tools, state, and managed runtime behavior."
+    }
+  ]
+}

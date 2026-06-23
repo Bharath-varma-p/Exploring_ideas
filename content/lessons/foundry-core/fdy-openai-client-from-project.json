@@ -1,0 +1,75 @@
+{
+  "id": "fdy-openai-client-from-project",
+  "title": "Get an OpenAI Client from the Project",
+  "lane": "foundry-core",
+  "type": "concept",
+  "order": 207,
+  "summary": "AIProjectClient.get openai client returns an authenticated OpenAI client from the openai package.",
+  "tags": [
+    "openai-client",
+    "inference-entry",
+    "project-auth"
+  ],
+  "analogy": "The project client is a secure hotel concierge. You do not ask for a second key at every room; the concierge creates the right room-specific pass for the OpenAI-compatible hallway.",
+  "diagram": "sequenceDiagram\nparticipant App\nparticipant ProjectClient\nparticipant OpenAIClient\nparticipant FoundryOpenAI\nApp->>ProjectClient: get openai client\nProjectClient->>OpenAIClient: base url and token provider\nApp->>OpenAIClient: responses create\nOpenAIClient->>FoundryOpenAI: authorized model call",
+  "body": "## First principles\n\nModel calls still need a network endpoint and authorization. If the project client already knows the project endpoint and credential, it can create a model-facing OpenAI client that inherits the same project context instead of making you rewire auth separately.\n\n## Definition\n\nAIProjectClient.get_openai_client returns an authenticated OpenAI client from the openai package. The reference says it appends /openai/v1 to the project endpoint and wires authentication to a bearer token provider using the AIProjectClient credential with scope https://ai.azure.com/.default. This is the current project-first path for Responses, Conversations, Evaluations, Files, and Fine-Tuning operations.\n\n## How it fits together\n\nConstruct project_client once, call get_openai_client inside the context, and pass the model deployment name from the environment. This lane shows plumbing only; prompt design and inference behavior belong elsewhere.\n\n## Worked example\n\n```python\nimport os\nfrom azure.identity import DefaultAzureCredential\nfrom azure.ai.projects import AIProjectClient\n\nwith DefaultAzureCredential() as credential, AIProjectClient(\n    endpoint=os.environ[\"FOUNDRY_PROJECT_ENDPOINT\"],\n    credential=credential,\n) as project_client:\n    with project_client.get_openai_client() as openai_client:\n        print(type(openai_client).__name__)\n        print(\"Ready to call Responses with FOUNDRY_MODEL_NAME when needed\")\n```\n\n*Get an OpenAI client and print its class without sending a prompt.*",
+  "drills": [
+    {
+      "q": "What method creates the OpenAI-compatible client from AIProjectClient?",
+      "a": "get_openai_client."
+    },
+    {
+      "q": "Why is this better than manually rebuilding auth?",
+      "a": "The project client passes its TokenCredential through a bearer token provider for the OpenAI client."
+    },
+    {
+      "q": "What environment variable commonly holds the deployment name in current samples?",
+      "a": "FOUNDRY_MODEL_NAME."
+    }
+  ],
+  "teachItBack": "Teach it back as: For model-facing calls from a Foundry project, I can ask AIProjectClient for an authenticated OpenAI client. The project endpoint becomes the OpenAI base URL with /openai/v1 appended. The same Azure credential flows through as a bearer token provider, so no secrets are placed in code.",
+  "glossary": [
+    {
+      "term": "OpenAI client",
+      "definition": "The client from the openai package returned by AIProjectClient for OpenAI-compatible operations against the Foundry project."
+    },
+    {
+      "term": "base_url",
+      "definition": "The root URL used by the OpenAI client, derived from the Foundry project endpoint."
+    },
+    {
+      "term": "bearer token provider",
+      "definition": "A callable that supplies access tokens to the OpenAI client instead of a static key."
+    }
+  ],
+  "sources": [
+    {
+      "title": "AIProjectClient class reference",
+      "url": "https://learn.microsoft.com/en-us/python/api/azure-ai-projects/azure.ai.projects.aiprojectclient?view=azure-python",
+      "verified": true
+    },
+    {
+      "title": "Azure AI Projects client library for Python",
+      "url": "https://learn.microsoft.com/en-us/python/api/overview/azure/ai-projects-readme?view=azure-python",
+      "verified": true
+    },
+    {
+      "title": "azure-ai-projects changelog",
+      "url": "https://github.com/Azure/azure-sdk-for-python/blob/main/sdk/ai/azure-ai-projects/CHANGELOG.md",
+      "verified": true
+    }
+  ],
+  "quiz": [
+    {
+      "q": "Which exception should you catch for non-success HTTP responses from service calls?",
+      "choices": [
+        "HttpResponseError",
+        "SyntaxError",
+        "KeyError",
+        "ImportWarning"
+      ],
+      "answer": 0,
+      "explanation": "Azure SDK service calls raise azure.core.exceptions.HttpResponseError for non-success responses."
+    }
+  ]
+}

@@ -1,0 +1,74 @@
+{
+  "id": "fdy-workload-identity-aks",
+  "title": "Workload Identity for AKS and Kubernetes",
+  "lane": "foundry-auth",
+  "type": "concept",
+  "order": 108,
+  "summary": "WorkloadIdentityCredential supports Microsoft Entra Workload ID. In AKS, a pod's Kubernetes service account is federated with an Entra identity, and Azure Identity can acquire Azure tokens from that federation.",
+  "tags": [
+    "aks",
+    "workload-identity",
+    "kubernetes"
+  ],
+  "analogy": "The pod carries a tamper-resistant deployment order signed by the cluster. Entra trusts that order because an administrator pre-registered the trust relationship.",
+  "diagram": "sequenceDiagram\n  participant Pod as AKS pod\n  participant KSA as Kubernetes service account\n  participant Entra as Microsoft Entra ID\n  participant API as Azure API\n  Pod->>KSA: reads projected federated token\n  Pod->>Entra: exchange token through WorkloadIdentityCredential\n  Entra-->>Pod: Azure access token\n  Pod->>API: bearer token call",
+  "body": "## First principles\n\nKubernetes pods are not Azure VMs, so they need a safe way to prove which pod identity is running without mounting a reusable credential. Workload identity federation lets a Kubernetes service account exchange its projected token for an Entra access token.\n\n## Definition\n\nWorkloadIdentityCredential supports Microsoft Entra Workload ID. In AKS, a pod's Kubernetes service account is federated with an Entra identity, and Azure Identity can acquire Azure tokens from that federation.\n\n## How it fits together\n\nUse managed identity for Azure-hosted resources with identity endpoints. Use workload identity for Kubernetes-style projected identity. DefaultAzureCredential can try WorkloadIdentityCredential before ManagedIdentityCredential.\n\n## Worked example\n\n```python\nfrom azure.identity import DefaultAzureCredential\n\n# In AKS with workload identity configured, this can use WorkloadIdentityCredential.\n# In Azure hosts with managed identity, it can use ManagedIdentityCredential.\ncredential = DefaultAzureCredential(exclude_environment_credential=True)\n\ntoken = credential.get_token(\"https://management.azure.com/.default\")\nprint(\"Token acquired through the best available secretless workload path\", token.expires_on)\n```\n\n*Let DefaultAzureCredential pick workload identity in AKS or MI in Azure hosts.*",
+  "drills": [
+    {
+      "q": "Which credential class is specific to Entra Workload ID?",
+      "a": "WorkloadIdentityCredential."
+    },
+    {
+      "q": "Why mention AKS in a managed identity lane?",
+      "a": "It is the Kubernetes-native secretless workload auth pattern and appears in DefaultAzureCredential before MI."
+    },
+    {
+      "q": "Is it a reason to put a credential into a pod?",
+      "a": "No. The pod exchanges federated identity proof for a short-lived token."
+    }
+  ],
+  "teachItBack": "AKS often uses workload identity rather than IMDS-style managed identity. The idea is the same: no stored application credential, just short-lived token exchange. DefaultAzureCredential understands both workload identity and managed identity paths.",
+  "glossary": [
+    {
+      "term": "AKS",
+      "definition": "Azure Kubernetes Service."
+    },
+    {
+      "term": "Workload identity",
+      "definition": "Federated identity pattern for Kubernetes and similar hosts."
+    },
+    {
+      "term": "Federated token",
+      "definition": "Token from one authority exchanged for another authority's token."
+    },
+    {
+      "term": "Service account",
+      "definition": "Kubernetes identity assigned to pods."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Azure Identity client library for Python",
+      "url": "https://learn.microsoft.com/en-us/python/api/overview/azure/identity-readme?view=azure-python",
+      "verified": true
+    },
+    {
+      "title": "Credential chains in Azure Identity for Python",
+      "url": "https://learn.microsoft.com/en-us/azure/developer/python/sdk/authentication/credential-chains",
+      "verified": true
+    }
+  ],
+  "quiz": [
+    {
+      "q": "Why can DefaultAzureCredential support local-to-prod without code changes?",
+      "choices": [
+        "It tries an ordered credential chain suitable to the runtime",
+        "It embeds a credential during build",
+        "It disables Entra ID",
+        "It automatically assigns RBAC roles"
+      ],
+      "answer": 0,
+      "explanation": "Locally it can use developer tooling such as Azure CLI; in Azure it can use managed identity."
+    }
+  ]
+}

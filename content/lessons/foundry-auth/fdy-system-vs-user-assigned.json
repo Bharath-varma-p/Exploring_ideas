@@ -1,0 +1,69 @@
+{
+  "id": "fdy-system-vs-user-assigned",
+  "title": "System-assigned vs User-assigned Managed Identity",
+  "lane": "foundry-auth",
+  "type": "concept",
+  "order": 105,
+  "summary": "A system-assigned managed identity is enabled directly on one Azure resource and is deleted when that resource is deleted. A user-assigned managed identity is a standalone Azure resource that can be attached to one or more workloads.",
+  "tags": [
+    "managed-identity",
+    "architecture",
+    "lifecycle"
+  ],
+  "analogy": "System-assigned is a badge printed on one soldier's uniform. User-assigned is a reusable mission badge issued to a squad that may rotate vehicles but keep the same access plan.",
+  "diagram": "flowchart TD\n  SA[System assigned] --> One[One Azure resource]\n  One --> SameLife[Deleted with resource]\n  UA[User assigned] --> Many[Many Azure resources]\n  UA --> OwnLife[Independent lifecycle]",
+  "body": "## First principles\n\nIdentity has lifecycle. If the identity exists only because one compute resource exists, bind its lifecycle to that resource. If many resources need the same preauthorized identity, give the identity its own lifecycle.\n\n## Definition\n\nA system-assigned managed identity is enabled directly on one Azure resource and is deleted when that resource is deleted. A user-assigned managed identity is a standalone Azure resource that can be attached to one or more workloads.\n\n## How it fits together\n\nUse system-assigned for a single workload with simple lifecycle. Use user-assigned for blue-green deployments, multiple replicas, preauthorization before compute exists, or stable identity across resource replacement.\n\n## Worked example\n\n```bash\n# Create a reusable managed identity resource.\naz identity create   --name <uami-name>   --resource-group <resource-group>\n\n# Capture IDs for later role assignment and app configuration.\naz identity show   --name <uami-name>   --resource-group <resource-group>   --query '{clientId:clientId, principalId:principalId, id:id}'   --output json\n\n# Example: attach the identity to a VM.\naz vm identity assign   --name <vm-name>   --resource-group <resource-group>   --identities <managed-identity-resource-id>\n```\n\n*Create and attach a user-assigned managed identity with Azure CLI placeholders.*",
+  "drills": [
+    {
+      "q": "Which type disappears with the compute resource?",
+      "a": "System-assigned managed identity."
+    },
+    {
+      "q": "Which type supports preauthorization before compute exists?",
+      "a": "User-assigned managed identity."
+    },
+    {
+      "q": "What value selects a user-assigned identity in code?",
+      "a": "The managed identity client ID."
+    }
+  ],
+  "teachItBack": "System-assigned identity is simplest when one resource owns one identity. User-assigned identity is better when identity must outlive, precede, or be shared across compute. The user-assigned client ID is how code selects the intended identity.",
+  "glossary": [
+    {
+      "term": "System-assigned MI",
+      "definition": "Managed identity tied to one Azure resource lifecycle."
+    },
+    {
+      "term": "User-assigned MI",
+      "definition": "Standalone managed identity resource attachable to multiple workloads."
+    },
+    {
+      "term": "Principal ID",
+      "definition": "Object ID used for role assignments."
+    },
+    {
+      "term": "Resource ID",
+      "definition": "Azure Resource Manager path of a resource."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Managed identities for Azure resources",
+      "url": "https://learn.microsoft.com/en-us/entra/identity/managed-identities-azure-resources/overview",
+      "verified": true
+    }
+  ],
+  "quiz": [
+    {
+      "q": "A call returns 403 after a valid token is accepted. What should you inspect first?",
+      "choices": [
+        "Role assignment, scope, principal ID, and propagation",
+        "Python indentation",
+        "Whether JSON is pretty printed",
+        "Whether the model name has uppercase letters"
+      ],
+      "answer": 0,
+      "explanation": "403 indicates authorization failure, commonly missing role or wrong scope/principal."
+    }
+  ]
+}

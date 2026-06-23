@@ -1,0 +1,97 @@
+{
+  "id": "fdy-create-foundry-resource-and-project",
+  "title": "Create a Foundry Resource and Project — Portal, CLI & Bicep",
+  "lane": "foundry-core",
+  "type": "concept",
+  "order": 215,
+  "summary": "A hands-on recipe for standing up the modern Foundry resource and a project three ways — Foundry portal, Azure CLI, and Bicep. The modern model is a Microsoft.CognitiveServices account of kind AIServices with allowProjectManagement enabled, and projects are child resources — no hub, no keys, managed identity from the first minute.",
+  "tags": [
+    "how-to",
+    "azure-cli",
+    "bicep",
+    "provisioning",
+    "managed-identity"
+  ],
+  "analogy": "Creating the Foundry resource is like erecting the secure command building, and creating a project is like assigning a locked mission room inside it. The portal builds both with one click; CLI and Bicep let you blueprint the building so any base can raise an identical one.",
+  "diagram": "flowchart TD\n  Start[Need an AI workspace] --> Choose{How to create}\n  Choose -->|click-through| Portal[Foundry portal auto-creates resource plus project]\n  Choose -->|scriptable| CLI[az cognitiveservices account create kind AIServices]\n  Choose -->|repeatable IaC| Bicep[az deployment group create main.bicep]\n  CLI --> Proj[az cognitiveservices account project create]\n  Bicep --> Proj\n  Portal --> Ready[Project endpoint plus system-assigned identity]\n  Proj --> Ready\n  Ready --> Build[Build agents evaluations files keyless]",
+  "body": "## First principles\n\nAn AI app needs a governed home before it needs a single line of model code. In the modern Foundry model that home is one Azure resource — a `Microsoft.CognitiveServices/accounts` of `kind: AIServices` with the property `allowProjectManagement` turned on — plus at least one **project** (a child resource) where you actually build. \"Creating Foundry\" means: bring the resource into existence, enable project management, give it a globally unique custom subdomain, then create a project. A system-assigned managed identity is attached so you never hand-roll keys.\n\n## Definition\n\nThe **Foundry resource** is the top-level governance, security, and deployment boundary. A **Foundry project** is a child resource inside it that organizes agents, evaluations, files, and connections, and exposes a project-scoped endpoint of the form `https://<resource-name>.services.ai.azure.com/api/projects/<project-name>`. This is the modern resource-centric model — distinct from the older **hub-based** projects backed by an Azure Machine Learning workspace, which you should avoid for new work.\n\n## Way 1 — Foundry portal (fastest to learn)\n\n- Sign in to https://ai.azure.com and make sure the **New Foundry** toggle is on (\"Foundry (new)\").\n- Select the project name in the upper-left, then **Create new project**.\n- Name it and select **Create project**. The portal **automatically creates the underlying Foundry resource** for you (use **Advanced options** to pick the resource group and region).\n- Tip: create a fresh resource group so the project and its resources share one lifecycle. To create the resource you need a role such as **Foundry Account Owner** or **Foundry Owner**.\n\n## Way 2 — Azure CLI (scriptable)\n\n```bash\n# 1) Resource group\naz group create --name my-foundry-rg --location eastus\n\n# 2) The Foundry resource: an AIServices account with project management enabled\naz cognitiveservices account create \\\n  --name my-foundry-resource \\\n  --resource-group my-foundry-rg \\\n  --kind AIServices \\\n  --sku s0 \\\n  --location eastus \\\n  --allow-project-management   # this flag is what makes it a Foundry resource\n\n# 3) Custom subdomain (must be globally unique) — needed for the token endpoint\naz cognitiveservices account update \\\n  --name my-foundry-resource \\\n  --resource-group my-foundry-rg \\\n  --custom-domain my-foundry-resource\n\n# 4) Create a project (a child resource of the account)\naz cognitiveservices account project create \\\n  --name my-foundry-resource \\\n  --resource-group my-foundry-rg \\\n  --project-name my-foundry-project \\\n  --location eastus\n\n# 5) Verify\naz cognitiveservices account project show \\\n  --name my-foundry-resource -g my-foundry-rg \\\n  --project-name my-foundry-project\n```\n\nThe resource's first project is the **default project** and is slightly more capable (for example, OpenAI Batch and fine-tuning live only on the default project). Add more projects on the same resource to share security, deployments, and connections across a team.\n\n## Way 3 — Bicep (infrastructure as code, the production default)\n\n```bicep\nparam location string = resourceGroup().location\nparam aiFoundryName string\nparam aiProjectName string\n\n// The Foundry resource: AIServices account, system-assigned identity, project mgmt on.\nresource foundry 'Microsoft.CognitiveServices/accounts@2025-04-01-preview' = {\n  name: aiFoundryName\n  location: location\n  kind: 'AIServices'\n  sku: { name: 'S0' }\n  identity: { type: 'SystemAssigned' }\n  properties: {\n    allowProjectManagement: true\n    customSubDomainName: aiFoundryName\n  }\n}\n\n// A project as a child resource, with its own system-assigned identity.\nresource project 'Microsoft.CognitiveServices/accounts/projects@2025-04-01-preview' = {\n  parent: foundry\n  name: aiProjectName\n  location: location\n  identity: { type: 'SystemAssigned' }\n  properties: {}\n}\n```\n\nDeploy it, or clone Microsoft's ready-made templates:\n\n```bash\ngit clone https://github.com/microsoft-foundry/foundry-samples\ncd foundry-samples/infrastructure/infrastructure-setup-bicep/00-basic\n\naz group create --name exampleRG --location eastus\naz deployment group create \\\n  --resource-group exampleRG \\\n  --template-file main.bicep \\\n  --parameters aiFoundryName=myai aiProjectName=myai-proj\n# Success shows \"provisioningState\": \"Succeeded\".\n```\n\n## Verify it actually works\n\n```python\n# pip install azure-identity azure-mgmt-cognitiveservices~=13.7.0\n# Run after `az login`, or on an Azure host with a managed identity.\nfrom azure.identity import DefaultAzureCredential\nfrom azure.mgmt.cognitiveservices import CognitiveServicesManagementClient\n\nsubscription_id = \"<subscription-id>\"\nresource_group = \"my-foundry-rg\"\nfoundry_resource = \"my-foundry-resource\"\n\nclient = CognitiveServicesManagementClient(DefaultAzureCredential(), subscription_id)\naccount = client.accounts.get(resource_group, foundry_resource)\nprint(\"Resource:\", account.name, account.kind, account.properties.allow_project_management)\nfor project in client.projects.list(resource_group, foundry_resource):\n    print(\"Project:\", project.name)\n```\n\n*Exist -> enable project management -> name the subdomain -> create project -> verify, all keyless.*",
+  "examples": [
+    {
+      "product": "Foundry portal default project",
+      "what": "Selecting Create new project in ai.azure.com silently provisions the AIServices account, enables project management, and lands you on a project endpoint with a system-assigned identity — zero ARM authoring required.",
+      "source": "https://learn.microsoft.com/en-us/azure/foundry/how-to/create-projects"
+    }
+  ],
+  "drills": [
+    {
+      "q": "What Azure resource type and kind is a modern Foundry resource?",
+      "a": "A Microsoft.CognitiveServices/accounts resource of kind AIServices, with allowProjectManagement set to true."
+    },
+    {
+      "q": "Which CLI flag turns an AIServices account into a Foundry resource that can host projects?",
+      "a": "--allow-project-management on az cognitiveservices account create."
+    },
+    {
+      "q": "Why must you set a custom subdomain on the resource?",
+      "a": "The globally-unique subdomain produces the services.ai.azure.com host used by the token and project endpoint."
+    },
+    {
+      "q": "How does the modern model differ from a hub-based project?",
+      "a": "The modern project is a child of an AIServices account; a hub-based project is backed by an Azure Machine Learning workspace (older pattern, avoid for new work)."
+    }
+  ],
+  "teachItBack": "To stand up Foundry the modern way, create one AIServices account with allowProjectManagement enabled and a unique custom subdomain, then create a project as a child resource. The portal does both in a click; CLI and Bicep make it scriptable and repeatable. Each layer gets a system-assigned managed identity, so you build keyless from the start — and you skip the older hub/workspace model entirely.",
+  "glossary": [
+    {
+      "term": "Foundry resource",
+      "definition": "A Microsoft.CognitiveServices/accounts resource of kind AIServices with allowProjectManagement enabled; the top-level Foundry boundary."
+    },
+    {
+      "term": "allowProjectManagement",
+      "definition": "The account property (CLI flag --allow-project-management) that lets a Foundry resource host child projects."
+    },
+    {
+      "term": "Default project",
+      "definition": "The first project on a resource; carries extra capabilities such as OpenAI Batch and fine-tuning, marked is_default in code."
+    },
+    {
+      "term": "Custom subdomain",
+      "definition": "A globally-unique name on the account that forms the services.ai.azure.com endpoint host."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Microsoft Learn: Create a project (portal, Python, Azure CLI)",
+      "url": "https://learn.microsoft.com/en-us/azure/foundry/how-to/create-projects",
+      "verified": true
+    },
+    {
+      "title": "Microsoft Learn: Deploy a Foundry resource by using Bicep",
+      "url": "https://learn.microsoft.com/en-us/azure/foundry/how-to/create-resource-template",
+      "verified": true
+    },
+    {
+      "title": "GitHub: microsoft-foundry/foundry-samples — infrastructure-setup-bicep",
+      "url": "https://github.com/microsoft-foundry/foundry-samples/tree/main/infrastructure/infrastructure-setup-bicep",
+      "verified": true
+    },
+    {
+      "title": "YouTube — Microsoft Mechanics: Introducing Azure AI Foundry",
+      "url": "https://www.youtube.com/watch?v=GD7MnIwAxYM",
+      "verified": true
+    }
+  ],
+  "quiz": [
+    {
+      "q": "Which command sequence correctly creates a modern Foundry resource and project with the CLI?",
+      "choices": [
+        "az cognitiveservices account create --kind AIServices --allow-project-management, then az cognitiveservices account project create",
+        "az ml workspace create, then az ml hub create",
+        "az keyvault create, then az storage account create",
+        "az webapp create, then az functionapp create"
+      ],
+      "answer": 0,
+      "explanation": "The modern resource is an AIServices account with project management enabled; projects are created as child resources via az cognitiveservices account project create. The hub/workspace path is the older model."
+    }
+  ]
+}

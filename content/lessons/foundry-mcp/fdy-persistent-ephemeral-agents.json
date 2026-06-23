@@ -1,0 +1,52 @@
+{
+  "id": "fdy-persistent-ephemeral-agents",
+  "title": "Persistent vs Ephemeral Agents",
+  "lane": "foundry-mcp",
+  "type": "concept",
+  "order": 210,
+  "summary": "A persistent agent is created, versioned, reused, published, and monitored over time. An ephemeral agent or in-process hosted pattern is created for a session or runtime flow and can be discarded after the task.",
+  "tags": [
+    "lifecycle",
+    "architecture"
+  ],
+  "analogy": "A persistent agent is a standing unit with a call sign. An ephemeral agent is a temporary patrol assembled for one mission.",
+  "diagram": "graph TD\nNeed[Agent need] --> Stable[Stable repeated workflow]\nNeed --> Temporary[One off workflow]\nStable --> Persistent[Persistent versioned agent]\nTemporary --> Ephemeral[Ephemeral runtime agent]\nPersistent --> Publish[Publish and monitor]\nEphemeral --> Cleanup[Discard after session]",
+  "body": "## First principles\n\nFirst principles: some agents are products and some agents are temporary workers. Products need versioning, endpoints, identity, monitoring, and governance. Temporary workers need fast startup and cleanup.\n\n## Definition\n\nA persistent agent is created, versioned, reused, published, and monitored over time. An ephemeral agent or in-process hosted pattern is created for a session or runtime flow and can be discarded after the task.\n\n## How it fits together\n\nUse persistent prompt agents for stable business assistants, repeatable tools, and audit trails. Use ephemeral patterns for experiments, dynamic one-off orchestration, or framework-hosted agents where the code owns most behavior.\n\n## Worked example\n\n```python\n# pip install azure-ai-projects>=2.0.0 azure-identity\nimport os\nfrom azure.identity import DefaultAzureCredential\nfrom azure.ai.projects import AIProjectClient\nfrom azure.ai.projects.models import PromptAgentDefinition\n\nproject = AIProjectClient(endpoint=os.environ[\"PROJECT_ENDPOINT\"], credential=DefaultAzureCredential())\nagent_name = os.environ.get(\"AGENT_NAME\", \"stable-support-agent\")\n\nagent = project.agents.create_version(\n    agent_name=agent_name,\n    definition=PromptAgentDefinition(\n        model=os.environ[\"MODEL_DEPLOYMENT_NAME\"],\n        instructions=\"Stable support agent. Prefer approved tools and answer with traceable reasoning.\",\n    ),\n)\nprint(\"Created reusable version\", agent.name, agent.version)\n# Keep persistent agents. Delete only scratch agents created for experiments.\n```\n\n*Create a reusable agent name that can be promoted later*",
+  "drills": [
+    {
+      "q": "When is persistent better?",
+      "a": "When the agent is reused, governed, published, monitored, or given stable permissions."
+    },
+    {
+      "q": "When is ephemeral better?",
+      "a": "For experiments or short-lived workflows where the runtime code owns orchestration."
+    },
+    {
+      "q": "What changes after publishing?",
+      "a": "A production agent can receive a distinct identity and stronger lifecycle governance."
+    }
+  ],
+  "teachItBack": "Agent lifetime is an architecture decision. Persistent agents are governed products; ephemeral agents are disposable workers. Pick the lifetime before assigning permissions, because identity and audit needs follow lifetime.",
+  "glossary": [
+    {
+      "term": "Persistent agent",
+      "definition": "Agent definition intended to be reused and governed over time."
+    },
+    {
+      "term": "Ephemeral agent",
+      "definition": "Short-lived agent instance or in-process flow created for a narrow task."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Microsoft Learn: What is Microsoft Foundry Agent Service",
+      "url": "https://learn.microsoft.com/en-us/azure/foundry/agents/overview",
+      "verified": true
+    },
+    {
+      "title": "Microsoft Learn: Agent identity concepts in Microsoft Foundry",
+      "url": "https://learn.microsoft.com/en-us/azure/foundry/agents/concepts/agent-identity",
+      "verified": true
+    }
+  ]
+}

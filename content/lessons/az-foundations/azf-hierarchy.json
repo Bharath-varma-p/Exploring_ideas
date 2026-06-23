@@ -1,0 +1,70 @@
+{
+  "id": "azf-hierarchy",
+  "title": "The scope hierarchy: tenant → resource (deep dive)",
+  "lane": "az-foundations",
+  "type": "concept",
+  "order": 50,
+  "summary": "The spine of Azure: every resource lives inside tenant → management group → subscription → resource group → resource. Each level is a different kind of boundary — identity, governance, billing, lifecycle — and permissions and policy inherit downward. Learn this once and the whole platform stops feeling random.",
+  "tags": [
+    "azure",
+    "hierarchy",
+    "scope",
+    "rbac",
+    "governance",
+    "management-groups"
+  ],
+  "analogy": "It's a set of nested folders with house rules: the tenant is the company, management groups are department folders, subscriptions are budgets, resource groups are project folders, and resources are the files — and a rule written on any folder applies to everything inside it.",
+  "diagram": "flowchart TD\n  T[Tenant - Microsoft Entra ID\\nidentity boundary] --> Root[Root Management Group]\n  Root --> MG1[Management Group: Production]\n  Root --> MG2[Management Group: Non-prod]\n  MG1 --> S1[Subscription: Prod-Payments\\nbilling + limits boundary]\n  MG1 --> S2[Subscription: Prod-Web]\n  S1 --> RG1[Resource Group: payments-api\\nlifecycle boundary]\n  RG1 --> R1[Resource: App Service]\n  RG1 --> R2[Resource: SQL Database]\n  MG1 -.policy + RBAC inherit downward.-> R1",
+  "body": "## First principles\n\nThe moment more than one team, one app, or one dollar is involved, you need answers to four separate questions: **Who is allowed?** (identity) **What rules apply?** (governance) **Who pays, and what are the limits?** (billing) **What gets deployed and deleted together?** (lifecycle). Cramming all four into one flat list collapses immediately. Azure's answer is a **nested hierarchy of scopes**, where each level cleanly owns *one* of those questions, and decisions made high up flow downhill.\n\nThis is the single most leveraged thing to understand in all of Azure. Get it and identity, governance, cost, and security all click into place.\n\n## Why it exists\n\nImagine a 5,000-person company with thousands of resources and no hierarchy: one giant bucket. You couldn't say \"all production must encrypt data\" without touching every resource by hand. You couldn't give the finance team a budget without giving them everything. You couldn't grant a contractor access to *one app* without risking the lot. Governance would be manual, per-resource, and impossible to keep consistent.\n\nThe hierarchy exists so you can **set a rule or grant access once, at the right altitude, and have it apply to everything beneath** — automatically, and as new resources appear. Inheritance is the whole trick.\n\n## How it works — the five levels, and what each is FOR\n\n**1. Tenant (Microsoft Entra ID) — the identity boundary.** A tenant is your organization's directory: every user, group, service principal, and app registration. It answers *who exists and who you are*. One organization typically has one primary tenant. Crucially, **identity lives here, not in subscriptions** — subscriptions *trust* a tenant for authentication. Cross-tenant work needs explicit guest/B2B invitations.\n\n**2. Management group — the governance-at-scale boundary.** A container for subscriptions (and other management groups), forming a tree up to a single **root management group**. Its job: apply **Azure Policy** and **RBAC role assignments** to *many subscriptions at once*. Want \"deny public IPs in all production\"? Assign the policy to the Production management group and every subscription under it inherits it. You can nest up to **6 levels** deep (excluding root and subscription levels).\n\n**3. Subscription — the billing + limits boundary.** This is where money and quotas live. Costs roll up to a subscription; **service limits and quotas** (e.g. cores per region) apply per subscription. It's also a unit of *isolation* — a natural blast-radius boundary you hand to a team, an environment (prod vs. dev), or a cost center. A subscription belongs to exactly one tenant at a time.\n\n**4. Resource group — the lifecycle boundary.** A container for resources that **share a fate**: deployed together, managed together, and deleted together (delete the group, delete everything in it). It's also a convenient scope for RBAC and a common deployment target. Every resource belongs to exactly one resource group.\n\n**5. Resource — the thing itself.** A VM, a database, a storage account, a load balancer. The leaf of the tree, created and governed through Azure Resource Manager.\n\n**Inheritance is the payoff.** An RBAC assignment or policy set at any level flows **downward** to everything beneath it. *Reader* granted at a subscription means Reader on every resource group and resource inside it. This is why you assign access and rules **as high as is appropriate and no higher** — high enough to be maintainable, low enough to respect least privilege.\n\n## When to add a management group\n\nYou don't need management groups for a single subscription. Reach for them when you have **multiple subscriptions that should share governance** — e.g. you want one policy or one access grant to span \"all production\" or \"everything the EU division owns.\" Common patterns group subscriptions by environment (prod/non-prod), business unit, or geography. If you find yourself copy-pasting the same policy or role assignment into several subscriptions, that's the signal to introduce a management group above them.\n\n## In practice\n\n```bash\n# Walk the tree from the top\naz account management-group list -o table          # management groups\naz account list -o table                            # subscriptions you can see\naz group list --subscription <sub> -o table         # resource groups\naz resource list --resource-group <rg> -o table     # resources\n\n# Inheritance in action: grant Reader once at the subscription scope\naz role assignment create \\\n  --assignee <user-or-app-id> \\\n  --role \"Reader\" \\\n  --scope \"/subscriptions/<subscription-id>\"\n# -> that principal can now read EVERY resource group and resource inside it\n```\n\n## Gotchas\n\n- **Identity ≠ subscription.** Users live in the *tenant*; subscriptions just trust it. Deleting a subscription doesn't delete users. This trips up beginners constantly.\n- **Inheritance only flows down, and can't be revoked lower.** You can't \"un-grant\" at a child an RBAC role given at a parent — design top-down deliberately. (Azure Policy *deny* and **locks** are the tools for hard restrictions.)\n- **Limits are per subscription.** Hit a quota (e.g. vCPUs in a region) and the fix is a quota increase or a second subscription — not a bigger resource group. Resource groups have no compute quota of their own.\n- **A resource lives in exactly one resource group and one region's metadata**, but it can talk to resources in other groups/subscriptions. Boundaries are for *management*, not network reachability.\n- **Don't over-build the tree.** Six nested management groups for ten resources is cosplay. Add levels when governance pain appears, not before.",
+  "teachItBack": "Every Azure resource lives in a nested hierarchy where each level owns one boundary: the tenant is identity (who you are, via Entra ID), management groups apply governance and access across many subscriptions, a subscription is the billing-and-limits boundary, a resource group bundles resources that share a lifecycle, and the resource is the leaf. The magic is downward inheritance — assign a role or policy once at the right altitude and everything beneath it inherits, so you grant access as high as appropriate but no higher. Add management groups only when multiple subscriptions need to share the same rules.",
+  "glossary": [
+    {
+      "term": "Tenant",
+      "definition": "A Microsoft Entra ID directory — the organization's identity boundary holding all users, groups, and apps."
+    },
+    {
+      "term": "Management group",
+      "definition": "A container for subscriptions (nestable up to 6 levels) used to apply policy and RBAC to many subscriptions at once."
+    },
+    {
+      "term": "Subscription",
+      "definition": "The billing and limits boundary; costs and quotas roll up to it, and it's a common isolation unit per team or environment."
+    },
+    {
+      "term": "Resource group",
+      "definition": "A container for resources that share a lifecycle — deployed, managed, and deleted together."
+    },
+    {
+      "term": "Inheritance",
+      "definition": "The downward flow of RBAC role assignments and Azure Policy from a higher scope to everything beneath it."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Dev docs — Azure management groups overview",
+      "url": "https://learn.microsoft.com/en-us/azure/governance/management-groups/overview",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — Organize your resources with management groups (CAF)",
+      "url": "https://learn.microsoft.com/en-us/azure/cloud-adoption-framework/ready/landing-zone/design-area/resource-org",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — What is Azure RBAC?",
+      "url": "https://learn.microsoft.com/en-us/azure/role-based-access-control/overview",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — Azure Resource Manager overview (scopes & resource groups)",
+      "url": "https://learn.microsoft.com/en-us/azure/azure-resource-manager/management/overview",
+      "verified": true
+    }
+  ],
+  "related": [
+    "azf-intro",
+    "azf-resource-groups",
+    "azf-subscriptions-tenants",
+    "azf-arm"
+  ]
+}

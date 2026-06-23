@@ -1,0 +1,62 @@
+{
+  "id": "fdy-write-safety-approval",
+  "title": "Human Approval for Incident Writes",
+  "lane": "foundry-connectors",
+  "type": "concept",
+  "order": 110,
+  "summary": "Human-in-the-loop approval means the agent may propose a create, acknowledge, update, resolve, or discussion action, but a human reviews the tool name and arguments before execution.",
+  "tags": [
+    "safety",
+    "approval",
+    "audit"
+  ],
+  "analogy": "The agent is a staff officer drafting an order. The commander still signs before troops move. The draft is useful; the signature is the safety boundary.",
+  "diagram": "graph TD\nProposed[Proposed write] --> Review[Human review]\nReview --> Approve[Approve]\nReview --> Deny[Deny]\nApprove --> Execute[Execute tool]\nExecute --> Audit[Audit log]\nDeny --> NoChange[No backend change]",
+  "body": "## First principles\n\nFirst principles: incident systems are command records during real operational events. A bad automated write can mislead responders, hide impact, page the wrong team, or prematurely close an emergency. Therefore authority must remain human-centered.\n\n## Definition\n\nHuman-in-the-loop approval means the agent may propose a create, acknowledge, update, resolve, or discussion action, but a human reviews the tool name and arguments before execution. MCP and Foundry documentation both emphasize approval and review for tools, especially risky operations.\n\n## How it fits together\n\nClassify tools into read, low-risk write, and high-risk write. Read tools can often run without approval. Any tool that mutates incident state should show the exact incident ID, old state, new state, message text, caller identity, and expected impact before approval.\n\n## Worked example\n\n```python\n# Representative approval gate around a write action.\ndef require_approval(tool_name: str) -> bool:\n    write_tools = {\"create_incident\", \"update_incident\", \"add_discussion\", \"acknowledge_incident\", \"resolve_incident\"}\n    return tool_name in write_tools\n\nproposed_call = {\n    \"tool\": \"acknowledge_incident\",\n    \"arguments\": {\"incident_id\": \"INC123456\"},\n    \"reason\": \"User asked me to acknowledge the active payments incident.\",\n}\n\nif require_approval(proposed_call[\"tool\"]):\n    print(\"Show this exact call to a human approver before execution:\")\n    print(proposed_call)\nelse:\n    print(\"Read-only call may proceed under policy.\")\n```\n\n*Representative write approval gate*",
+  "drills": [
+    {
+      "q": "Why do write tools need approval?",
+      "a": "They change operational records and can affect real response behavior."
+    },
+    {
+      "q": "What should the approver inspect?",
+      "a": "Tool name, incident ID, arguments, identity, old and new state, and reason."
+    },
+    {
+      "q": "What happens when approval is denied?",
+      "a": "No backend mutation should occur, and the denial should be logged if policy requires."
+    }
+  ],
+  "teachItBack": "Incident write safety keeps humans in command. Agents may draft actions, but create, acknowledge, update, resolve, and discussion writes should be reviewed before execution. The audit trail must show who approved what and why.",
+  "glossary": [
+    {
+      "term": "Human in the loop",
+      "definition": "A control where a person reviews and approves or denies an automated action."
+    },
+    {
+      "term": "Audit log",
+      "definition": "Tamper-resistant record of important actions and approvals."
+    },
+    {
+      "term": "High-risk operation",
+      "definition": "An action that can materially affect systems, users, responders, or records."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Microsoft Learn: Connect to MCP Server Endpoints for agents",
+      "url": "https://learn.microsoft.com/en-us/azure/foundry/agents/how-to/tools/model-context-protocol",
+      "verified": true
+    },
+    {
+      "title": "Model Context Protocol Specification",
+      "url": "https://modelcontextprotocol.io/specification/2025-06-18",
+      "verified": true
+    },
+    {
+      "title": "Model Context Protocol: Tools",
+      "url": "https://modelcontextprotocol.io/specification/2025-06-18/server/tools",
+      "verified": true
+    }
+  ]
+}

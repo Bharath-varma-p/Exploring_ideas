@@ -1,0 +1,70 @@
+{
+  "id": "fdy-managed-identity-chain",
+  "title": "Managed Identity End to End",
+  "lane": "foundry-mcp",
+  "type": "concept",
+  "order": 208,
+  "summary": "Foundry supports agent identities, project managed identity, and Microsoft Entra authentication for tools.",
+  "tags": [
+    "identity",
+    "managed-identity",
+    "rbac"
+  ],
+  "analogy": "Managed identity is a military ID badge minted by the base, not a password written on paper. The badge is checked at every gate, expires automatically, and only opens assigned doors.",
+  "diagram": "graph TD\nApp[Client app] --> DAC[DefaultAzureCredential]\nDAC --> Foundry[Foundry project endpoint]\nFoundry --> AgentIdentity[Agent identity]\nFoundry --> ProjectMI[Project managed identity]\nAgentIdentity --> MCP[MCP server]\nProjectMI --> MCP\nMCP --> AzureResource[Azure resource with RBAC]",
+  "body": "## First principles\n\nFirst principles: secrets are liabilities. A secure Azure agent should prove who it is to Entra ID, receive short-lived tokens, and be granted only the roles needed for the exact downstream resource.\n\n## Definition\n\nFoundry supports agent identities, project managed identity, and Microsoft Entra authentication for tools. Developers authenticate the app to Foundry with DefaultAzureCredential or ManagedIdentityCredential, and Agent Service can use an agent identity or project managed identity to authenticate tool calls to MCP servers and underlying Azure resources.\n\n## How it fits together\n\nThere are two identity hops. First, your client authenticates to Foundry. Second, the agent or project identity authenticates from Foundry to MCP or a backend service. RBAC must be assigned to the identity that actually reaches the resource, not merely to the developer.\n\n## Worked example\n\n```python\n# pip install azure-identity\n# Use this only when your MCP server expects a bearer token from this app or managed identity.\n# Prefer Foundry project connections or agent identity auth when the MCP tool configuration supports it.\nimport os\nfrom azure.identity import DefaultAzureCredential, ManagedIdentityCredential\n\naudience = os.environ[\"MCP_SERVER_AUDIENCE\"]  # Example: api://your-mcp-app-id or https://storage.azure.com\ncredential = (\n    ManagedIdentityCredential(client_id=os.environ[\"AZURE_CLIENT_ID\"])\n    if os.environ.get(\"AZURE_CLIENT_ID\")\n    else DefaultAzureCredential()\n)\n\ntoken = credential.get_token(f\"{audience}/.default\")\nheaders = {\"Authorization\": f\"Bearer {token.token}\"}\nprint(\"Prepared Authorization header for audience\", audience)\n# Pass headers through the MCP tool only if the documented SDK path you use supports runtime headers.\n```\n\n*Acquire a managed-identity token for a custom MCP server audience*",
+  "drills": [
+    {
+      "q": "Why are keys excluded in this lane?",
+      "a": "Managed identity avoids stored secrets, enables token rotation, and ties access to Azure RBAC."
+    },
+    {
+      "q": "Who needs RBAC on the backend resource?",
+      "a": "The agent identity or project managed identity that the tool call uses."
+    },
+    {
+      "q": "What happens if the audience is wrong?",
+      "a": "Token validation fails even if RBAC is correct."
+    }
+  ],
+  "teachItBack": "Managed identity replaces copied secrets with short-lived Entra tokens. Your app authenticates to Foundry, and the agent or project identity authenticates to tools. Always assign least-privilege RBAC to the runtime identity, not just the human developer.",
+  "glossary": [
+    {
+      "term": "DefaultAzureCredential",
+      "definition": "Azure Identity credential chain that uses managed identity on Azure and developer credentials locally."
+    },
+    {
+      "term": "Agent identity",
+      "definition": "Entra service principal representing an agent at runtime."
+    },
+    {
+      "term": "Audience",
+      "definition": "OAuth resource identifier the access token is issued for."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Microsoft Learn: Agent identity concepts in Microsoft Foundry",
+      "url": "https://learn.microsoft.com/en-us/azure/foundry/agents/concepts/agent-identity",
+      "verified": true
+    },
+    {
+      "title": "Microsoft Learn: Set up MCP server authentication",
+      "url": "https://learn.microsoft.com/en-us/azure/foundry/agents/how-to/mcp-authentication",
+      "verified": true
+    }
+  ],
+  "quiz": [
+    {
+      "q": "When is a persistent agent better than an ephemeral one?",
+      "choices": [
+        "When it needs stable reuse, publishing, identity, monitoring, and governance",
+        "When it should disappear after one function call",
+        "When no one needs audit logs",
+        "When it has no tools"
+      ],
+      "answer": 0,
+      "explanation": "Persistent agents fit stable governed workloads."
+    }
+  ]
+}

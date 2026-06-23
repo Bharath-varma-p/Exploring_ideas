@@ -1,0 +1,67 @@
+{
+  "id": "fdy-troubleshooting-and-teachback",
+  "title": "Troubleshooting the Connector",
+  "lane": "foundry-connectors",
+  "type": "concept",
+  "order": 312,
+  "summary": "For remote MCP, verify the server URL, organization, supported client environment, Entra sign in or project connection, toolset headers, and ADO project permissions. For local MCP, verify Node.",
+  "tags": [
+    "troubleshooting",
+    "operations",
+    "teach-back"
+  ],
+  "analogy": "Troubleshooting is clearing a supply route. Check the road, the badge, the gate list, the vehicle permissions, and only then the cargo.",
+  "diagram": "graph TD\nFail[Failure] --> Endpoint[Endpoint]\nFail --> Auth[Authentication]\nFail --> Perms[Authorization]\nFail --> Tools[Tool availability]\nFail --> Policy[Approval policy]",
+  "body": "## First principles\n\nFirst principles: failures happen at layers. A broken ADO connector is usually one of four things: wrong endpoint, failed authentication, missing Azure DevOps authorization, or unavailable tool support. Debug from outside inward.\n\n## Definition\n\nFor remote MCP, verify the server URL, organization, supported client environment, Entra sign in or project connection, toolset headers, and ADO project permissions. For local MCP, verify Node.js 20, npx package, organization argument, domain filters, and chosen authentication mode such as interactive or azcli. For MI, verify token acquisition and that the identity is explicitly added to ADO.\n\n## How it fits together\n\nUse a layered checklist: 1 endpoint reachable, 2 token acquired, 3 identity visible in ADO, 4 project permission allows operation, 5 toolset includes tool, 6 approval policy permits call, 7 result shape matches expectation.\n\n## Worked example\n\n```python\nchecks = [\n    'Is the MCP URL https://mcp.dev.azure.com/<org> or the local npx process running',\n    'Can DefaultAzureCredential get an ADO scoped token',\n    'Is the managed identity added to the ADO organization',\n    'Does the identity have project level permission for this operation',\n    'Does X-MCP-Toolsets include the needed tool family',\n    'Is a write call waiting for approval',\n]\nfor number, check in enumerate(checks, start=1):\n    print(f'{number}. {check}?')\n```\n\n*Connector diagnostic checklist*",
+  "drills": [
+    {
+      "q": "What are the four common failure layers?",
+      "a": "Endpoint, authentication, authorization, and tool support or policy."
+    },
+    {
+      "q": "If token acquisition works but ADO returns forbidden, what is likely wrong?",
+      "a": "Azure DevOps permissions or organization membership."
+    },
+    {
+      "q": "If a tool is missing, what should you inspect?",
+      "a": "The advertised MCP tools and any toolset or domain filters."
+    }
+  ],
+  "teachItBack": "Debug the connector layer by layer. A valid Entra token is not the same as ADO permission, and an available MCP server is not the same as an enabled tool. Teach it back as endpoint, token, membership, permission, tool, approval.",
+  "glossary": [
+    {
+      "term": "Diagnostics",
+      "definition": "Structured checks used to locate the layer causing failure."
+    },
+    {
+      "term": "Toolset header",
+      "definition": "Remote MCP header that narrows enabled tools."
+    },
+    {
+      "term": "Domain filter",
+      "definition": "Local MCP argument that loads selected groups of tools."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Microsoft Learn: Remote Azure DevOps MCP Server",
+      "url": "https://learn.microsoft.com/en-us/azure/devops/mcp-server/remote-mcp-server?view=azure-devops",
+      "verified": false
+    },
+    {
+      "title": "GitHub: microsoft azure-devops-mcp",
+      "url": "https://github.com/microsoft/azure-devops-mcp",
+      "verified": false
+    },
+    {
+      "title": "Microsoft Learn: Use service principals and managed identities",
+      "url": "https://learn.microsoft.com/en-us/azure/devops/integrate/get-started/authentication/service-principal-managed-identity?view=azure-devops",
+      "verified": false
+    },
+    {
+      "title": "Microsoft Learn: Connect Foundry agents to MCP endpoints",
+      "url": "https://learn.microsoft.com/en-us/azure/foundry/agents/how-to/tools/model-context-protocol?view=azure-python-preview",
+      "verified": false
+    }
+  ]
+}

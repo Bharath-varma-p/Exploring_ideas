@@ -1,0 +1,64 @@
+{
+  "id": "azn-vnet",
+  "title": "Virtual Networks & Subnets: your private address space",
+  "lane": "az-networking",
+  "type": "concept",
+  "order": 20,
+  "summary": "A VNet is a private slice of IP address space that's yours alone; subnets cut it into rooms. Get CIDR and isolation right here and every other networking topic becomes easy — get it wrong and you'll be re-IP-ing for years.",
+  "tags": [
+    "azure",
+    "vnet",
+    "subnet",
+    "cidr",
+    "ip-addressing"
+  ],
+  "analogy": "A VNet is a private office building with its own internal street numbering; subnets are the floors, and CIDR is the floor plan that decides how many rooms (addresses) each floor can hold.",
+  "diagram": "flowchart TD\n  VNet[VNet 10.0.0.0/16 = 65k addresses] --> S1[Subnet web 10.0.1.0/24]\n  VNet --> S2[Subnet app 10.0.2.0/24]\n  VNet --> S3[Subnet data 10.0.3.0/24]\n  S1 --> VM1[Web VMs]\n  S2 --> VM2[App VMs]\n  S3 --> DB[(Database)]\n  Note[Azure reserves 5 IPs per subnet] -.-> S1",
+  "body": "## First principles\n\nEvery machine that talks IP needs a unique address *within its network*. If you're going to hand out thousands of addresses, you need (a) a big enough pool and (b) a way to carve that pool into named groups. A **Virtual Network (VNet)** is the pool; **subnets** are the groups; **CIDR notation** is the math that defines their sizes. Three ideas, and they're the foundation of everything else.\n\n## Why it exists\n\nYou could put every resource on one giant flat network. People did, and it was a security nightmare: if everything can reach everything, one compromised web server can talk straight to your database. You also hit practical limits — you can't apply different routing or firewall rules to \"the web tier\" if there's no boundary defining the web tier.\n\nVNets and subnets give you **isolation** and **segmentation**. The VNet is a hard wall around *your* address space — by default nothing outside it can reach in, and your private IPs can overlap with another customer's private IPs because the SDN fabric keeps the two universes apart. Subnets then let you group resources so you can attach different security and routing rules per group. \"Web can be reached from the internet, app can only be reached from web, data can only be reached from app\" — that sentence only becomes enforceable once those three tiers are separate subnets.\n\n## How it works\n\nA VNet is defined by one or more **address spaces** in **CIDR** form, like `10.0.0.0/16`. The `/16` is a *prefix length*: it says \"the first 16 bits are the fixed network part; the remaining 16 bits are free for hosts.\" Fewer prefix bits = bigger network. The cheat sheet:\n\n- `/16` → 65,536 addresses (a whole VNet)\n- `/24` → 256 addresses (a comfortable subnet)\n- `/27` → 32 addresses (a small subnet)\n- Each step of **+1 to the prefix halves** the address count; each **−1 doubles** it.\n\nUse the **private ranges** reserved by RFC 1918 — `10.0.0.0/8`, `172.16.0.0/12`, `192.168.0.0/16` — because these are non-routable on the public internet, so they're safe to use internally.\n\nA subnet is a CIDR block *inside* the VNet's range. Crucially, **Azure reserves 5 addresses in every subnet**: the first three (network address, default gateway, and two for Azure DNS mapping) plus the network and broadcast addresses. So a `/29` (8 addresses) only gives you **3 usable** hosts. Always size up.\n\nResources don't go \"in the VNet\" directly — they go in a **subnet**. A VM gets a **NIC**, the NIC gets a private IP from its subnet, and that IP stays stable for the resource's life (it's allocated dynamically but sticky, or you can set it static).\n\n## In practice\n\n```bash\n# Plan the address space FIRST, then carve subnets that don't overlap.\naz network vnet create \\\n  --name <vnet> --resource-group <rg> \\\n  --address-prefix 10.20.0.0/16 \\\n  --subnet-name web --subnet-prefix 10.20.1.0/24\n\naz network vnet subnet create \\\n  --vnet-name <vnet> --resource-group <rg> \\\n  --name data --address-prefix 10.20.2.0/24\n```\n\nGolden rule when you'll ever connect networks together (peering, VPN, on-prem): **address spaces must not overlap.** Two VNets both using `10.0.0.0/16` can never be peered — routing would be ambiguous. Pick ranges as if you'll one day connect everything, because you will.\n\n## Gotchas\n\n- **Don't pick a tiny VNet.** Re-addressing a live network is brutal. Allocate generously (a `/16`) even if you only need a few VMs today; addresses are free.\n- **The 5 reserved IPs surprise everyone.** A `/29` is not 8 usable hosts; it's 3. For real subnets, `/26` or `/24` are sane defaults.\n- **Overlap is forever.** Once two networks you want to connect share a range, your options are painful (NAT or re-IP). Maintain an address plan from day one.\n- **Some services demand a dedicated subnet.** Azure Bastion, VPN/ExpressRoute gateways, Azure Firewall, and others require their own named subnet (e.g. `GatewaySubnet`, `AzureFirewallSubnet`) with minimum sizes. Leave room.\n- **A subnet is regional and VNet-bound.** You can't move a subnet to another VNet or stretch a VNet across regions; plan per region.",
+  "teachItBack": "A VNet is your private, isolated block of IP address space, and subnets cut that block into segments you can secure and route independently. CIDR notation sizes them — a smaller prefix like /16 means more addresses, and each extra prefix bit halves the count — and you should use RFC 1918 private ranges. Remember Azure steals 5 IPs from every subnet and that overlapping address spaces can never be connected, so plan a generous, non-overlapping address scheme up front because re-IP-ing later is the worst.",
+  "glossary": [
+    {
+      "term": "CIDR notation",
+      "definition": "Writing an address range as base/prefix (e.g. 10.0.0.0/16); the prefix says how many leading bits are fixed, which determines the block size."
+    },
+    {
+      "term": "Address space",
+      "definition": "The overall CIDR range(s) a VNet owns, from which subnets are carved."
+    },
+    {
+      "term": "Subnet",
+      "definition": "A CIDR sub-range inside a VNet that groups resources so they can share routing and security rules."
+    },
+    {
+      "term": "RFC 1918 private ranges",
+      "definition": "Address blocks (10/8, 172.16/12, 192.168/16) reserved for private use and never routed on the public internet."
+    },
+    {
+      "term": "NIC (network interface)",
+      "definition": "The virtual network card attached to a resource; it holds the private IP drawn from its subnet."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Dev docs — Azure Virtual Network overview",
+      "url": "https://learn.microsoft.com/en-us/azure/virtual-network/virtual-networks-overview",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — Add, change, or delete a virtual network subnet",
+      "url": "https://learn.microsoft.com/en-us/azure/virtual-network/virtual-network-manage-subnet",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — Private IP addresses (reserved addresses per subnet)",
+      "url": "https://learn.microsoft.com/en-us/azure/virtual-network/ip-services/private-ip-addresses",
+      "verified": true
+    }
+  ],
+  "related": [
+    "azn-intro",
+    "azn-nsg",
+    "azn-ips-nat",
+    "azn-peering"
+  ]
+}

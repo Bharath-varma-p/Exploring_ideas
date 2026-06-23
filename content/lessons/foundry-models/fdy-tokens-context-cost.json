@@ -1,0 +1,57 @@
+{
+  "id": "fdy-tokens-context-cost",
+  "title": "Tokens, Context Windows, Cost, and Limits",
+  "lane": "foundry-models",
+  "type": "concept",
+  "order": 209,
+  "summary": "A token is a chunk of text produced by the model's tokenizer. The context window is the maximum tokens the model can consider in one request, including messages, tool schemas, tool results, and generated output.",
+  "tags": [
+    "tokens",
+    "context-window",
+    "cost"
+  ],
+  "analogy": "Tokens are like luggage weight. You can pack words, code, JSON schemas, and history, but the plane has a fixed weight limit. The ticket price and boarding rules care about total weight, not how emotionally important each item is.",
+  "diagram": "flowchart LR\n  System[System tokens] --> Total[Total context tokens]\n  User[User tokens] --> Total\n  History[History tokens] --> Total\n  Tools[Tool schema tokens] --> Total\n  Output[Reserved output tokens] --> Total\n  Total --> Window[Context window limit]\n  Total --> Cost[Cost and rate limits]",
+  "body": "## First principles\n\nModels process tokens, not characters or words. Every input token occupies context capacity and every output token consumes generation budget. Limits and bills follow token counts.\n\n## Definition\n\nA token is a chunk of text produced by the model's tokenizer. The context window is the maximum tokens the model can consider in one request, including messages, tool schemas, tool results, and generated output. Usage fields report token counts when available.\n\n## How it fits together\n\nEstimate before calling, measure after calling. Keep prompts short, summarize history, cap max_tokens, and log usage. Token counting can vary by model tokenizer, so use provider-specific tokenizers when exact counts matter.\n\n## Worked example\n\n```python\nimport os\nfrom azure.identity import DefaultAzureCredential\nfrom azure.ai.inference import ChatCompletionsClient\nfrom azure.ai.inference.models import UserMessage\n\n# Rough estimate only. Use model-specific tokenizers for exact preflight counts.\ndef rough_token_estimate(text: str) -> int:\n    return max(1, len(text) // 4)\n\nprompt = \"Explain why context windows matter using a backpack analogy.\"\nprint(\"rough prompt token estimate:\", rough_token_estimate(prompt))\n\nclient = ChatCompletionsClient(\n    endpoint=os.environ[\"AZURE_AI_CHAT_ENDPOINT\"],\n    credential=DefaultAzureCredential(),\n)\n\nresponse = client.complete(\n    model=os.getenv(\"AZURE_AI_MODEL_DEPLOYMENT_NAME\"),\n    messages=[UserMessage(prompt)],\n    max_tokens=120,\n)\n\nprint(response.choices[0].message.content)\nif response.usage:\n    print(\"actual usage from service:\", response.usage)\n```\n\n*Crude estimation plus real usage measurement.*",
+  "drills": [
+    {
+      "q": "Do models count words directly?",
+      "a": "No. They count tokens produced by tokenization."
+    },
+    {
+      "q": "What consumes context window?",
+      "a": "Input messages, history, tool schemas, tool results, and output budget."
+    },
+    {
+      "q": "What field gives post-call token counts?",
+      "a": "response.usage when provided."
+    }
+  ],
+  "teachItBack": "Tokens are the accounting unit of model inference. Context windows are finite token workspaces. Cost, latency, and rate limits all become easier to manage once you log token usage.",
+  "glossary": [
+    {
+      "term": "token",
+      "definition": "A model-specific chunk of text processed by the model."
+    },
+    {
+      "term": "context window",
+      "definition": "Maximum tokens the model can consider in one request."
+    },
+    {
+      "term": "tokenizer",
+      "definition": "Algorithm that converts text to model tokens."
+    }
+  ],
+  "sources": [
+    {
+      "title": "azure.ai.inference.models package",
+      "url": "https://learn.microsoft.com/en-us/python/api/azure-ai-inference/azure.ai.inference.models?view=azure-python-preview",
+      "verified": true
+    },
+    {
+      "title": "Azure OpenAI quota and limits",
+      "url": "https://learn.microsoft.com/en-us/azure/ai-services/openai/quotas-limits",
+      "verified": true
+    }
+  ]
+}

@@ -1,0 +1,65 @@
+{
+  "id": "azf-arm",
+  "title": "Azure Resource Manager: the one control plane",
+  "lane": "az-foundations",
+  "type": "concept",
+  "order": 80,
+  "summary": "Azure Resource Manager (ARM) is the single API every request passes through to create or manage resources. It authenticates, authorizes (RBAC), checks policy, and routes to the right resource provider. Understanding it explains why the Portal, CLI, PowerShell, and Bicep all behave identically — and why Azure is declarative and idempotent.",
+  "tags": [
+    "azure",
+    "arm",
+    "control-plane",
+    "data-plane",
+    "resource-providers",
+    "idempotency"
+  ],
+  "analogy": "ARM is the front desk of a giant hotel: every request — book a room, change a towel, check the bill — goes through the same desk, which checks your ID, checks you're allowed, and dispatches the right department. The Portal, CLI, and Bicep are just different languages spoken to the same desk.",
+  "diagram": "flowchart TD\n  P[Portal] --> ARM\n  C[Azure CLI] --> ARM\n  PS[PowerShell] --> ARM\n  B[Bicep / ARM template] --> ARM\n  SDK[SDKs / REST] --> ARM\n  ARM[Azure Resource Manager\\nauthN + RBAC + Policy + routing] --> RP1[RP: Microsoft.Compute]\n  ARM --> RP2[RP: Microsoft.Storage]\n  ARM --> RP3[RP: Microsoft.Network]\n  RP1 --> R[Provisioned resource]\n  R -.runtime traffic.-> DP[Data plane: app/API of the resource]",
+  "body": "## First principles\n\nIf hundreds of services each had their own bespoke API, authentication, and permission model, the platform would be unlearnable and ungovernable. You need **one consistent door** that every management request passes through — so that authentication, authorization, policy, logging, and dependency handling are solved *once* and inherited by every service. That door is **Azure Resource Manager (ARM)**.\n\n## Why it exists\n\nEarly cloud (and Azure's own \"classic\" model) let you create resources through scattered, service-specific endpoints. The results were predictable: inconsistent permissions, no unified audit trail, no way to deploy a set of related resources as one atomic unit, and no common place to enforce org-wide rules. Operations were also **imperative** — you ran a sequence of steps, and if step 4 failed you were left in a half-built mess with no clean way to retry.\n\nARM (introduced with the \"Resource Manager\" model) fixed all of it by becoming the **single control plane**: one API, one auth model (Microsoft Entra), one authorization model (**RBAC**), one policy enforcement point (**Azure Policy**), one audit log (Activity Log), and a **declarative** way to describe whole sets of resources.\n\n## How it works — the request pipeline\n\nEvery management call — whether you clicked a button or ran a template — follows the same path:\n\n1. **Authenticate.** ARM verifies *who* you are via a Microsoft Entra token. No valid token, no entry.\n2. **Authorize (RBAC).** ARM checks you hold a role permitting this action at this **scope** (subscription/RG/resource). Missing role → `403`.\n3. **Validate + enforce policy.** ARM checks the request against **Azure Policy** (e.g. \"deny resources without a `costCenter` tag\") and validates the request shape.\n4. **Route to the resource provider.** ARM hands the work to the right **resource provider** — the service component that actually creates the resource. Providers are namespaced like `Microsoft.Compute`, `Microsoft.Storage`, `Microsoft.Network`, and each offers **resource types** (`Microsoft.Compute/virtualMachines`). A provider must be *registered* in a subscription before its types can be used.\n5. **Provision + report.** The provider does the work; ARM tracks the deployment and returns status.\n\n**Control plane vs. data plane.** ARM is the **control plane** — it *manages* resources (create/configure/delete a storage account). The **data plane** is the resource's *own* runtime API — reading and writing the blobs *inside* that storage account. Different endpoints, often different permissions: you might have rights to create a database (control plane) but not to query its rows (data plane), or vice versa. Keeping these straight resolves a huge class of \"why is this 403?\" confusion.\n\n**Declarative + idempotent.** ARM templates and **Bicep** let you describe the *desired end state* — \"these resources, with these settings\" — rather than the steps to get there. ARM figures out what to create, update, or leave alone. Because it converges to a target state, applying the same template twice is **idempotent**: the second run is a no-op if nothing changed, so deployments are safely repeatable instead of fragile one-shot scripts.\n\n## In practice\n\n```bash\n# Every tool hits the same control plane. Register a provider once per subscription:\naz provider register --namespace Microsoft.Storage\naz provider show --namespace Microsoft.Storage --query registrationState -o tsv\n\n# Declarative deploy: describe desired state, let ARM converge (idempotent)\naz deployment group create \\\n  --resource-group <rg-name> \\\n  --template-file main.bicep \\\n  --parameters name=<unique-name>\n# Run it again with no changes -> ARM reports no changes. Same input, same result.\n```\n\n## Gotchas\n\n- **Control plane ≠ data plane.** RBAC on a resource (control) doesn't automatically grant access to its contents (data). A 403 reading blobs may be a data-plane role gap, not a control-plane one.\n- **Unregistered resource providers fail deploys.** A brand-new subscription may not have a provider registered; `MissingSubscriptionRegistration` means run `az provider register`.\n- **Idempotent isn't the same as non-destructive.** Re-deploying a declarative template converges to the file's state — if the file omits a setting you changed by hand, the deploy can revert it. Treat the template as the source of truth.\n- **It's all ARM under the hood.** Portal, CLI, PowerShell, REST, Bicep, Terraform — every one ultimately calls ARM. If something's allowed in one tool but not another, the difference is the *request*, not the platform; the auth and policy checks are identical.",
+  "teachItBack": "Azure Resource Manager is the single control plane every management request flows through: it authenticates you with an Entra token, authorizes the action with RBAC at a scope, enforces Azure Policy, then routes the work to the right resource provider like Microsoft.Compute. That's why the Portal, CLI, PowerShell, and Bicep all behave identically — they're just different languages spoken to the same API. ARM is declarative and idempotent, so you describe desired end state and re-running a deployment safely converges instead of breaking, and you must keep the control plane (managing a resource) separate from the data plane (using what's inside it).",
+  "glossary": [
+    {
+      "term": "Azure Resource Manager (ARM)",
+      "definition": "The single control-plane API that receives, authenticates, authorizes, and routes every Azure management request."
+    },
+    {
+      "term": "Resource provider",
+      "definition": "A service component (e.g. Microsoft.Compute) that supplies resource types and does the actual provisioning, and must be registered per subscription."
+    },
+    {
+      "term": "Control plane vs data plane",
+      "definition": "Managing a resource via ARM (control plane) versus using the resource's own runtime API to read/write its contents (data plane)."
+    },
+    {
+      "term": "Idempotent / declarative",
+      "definition": "Describing desired end state so that applying the same definition repeatedly converges to the same result with no harmful repeats."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Dev docs — Azure Resource Manager overview",
+      "url": "https://learn.microsoft.com/en-us/azure/azure-resource-manager/management/overview",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — Resource providers and resource types",
+      "url": "https://learn.microsoft.com/en-us/azure/azure-resource-manager/management/resource-providers-and-types",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — Control plane and data plane operations",
+      "url": "https://learn.microsoft.com/en-us/azure/azure-resource-manager/management/control-plane-and-data-plane",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — Bicep overview (declarative IaC on ARM)",
+      "url": "https://learn.microsoft.com/en-us/azure/azure-resource-manager/bicep/overview",
+      "verified": true
+    }
+  ],
+  "related": [
+    "azf-hierarchy",
+    "azf-interfaces",
+    "azf-what-is-azure"
+  ]
+}

@@ -1,0 +1,65 @@
+{
+  "id": "fdy-hub-resource-concepts",
+  "title": "Hub Resource Concepts",
+  "lane": "foundry-core",
+  "type": "concept",
+  "order": 105,
+  "summary": "A hub resource groups one or more hub-based projects with common security, data access, connections, compute, quota allocation, policy, and dependent Azure resources.",
+  "tags": [
+    "hub",
+    "classic",
+    "shared-resources"
+  ],
+  "analogy": "A hub is a shared motor pool and armory: every project can use centrally approved vehicles, tools, and rules rather than buying its own unsafe equipment.",
+  "diagram": "graph TD\nHub[Azure AI Hub] --> Security[Shared security]\nHub --> Connections[Shared connections]\nHub --> Compute[Shared compute and quota]\nHub --> Storage[Dependent storage]\nHub --> Vault[Dependent key vault]\nHub --> ProjectOne[Hub project one]\nHub --> ProjectTwo[Hub project two]",
+  "body": "## First principles\n\nFirst principles: when many projects need the same locked-down network, storage, compute, connections, and policy, centralizing those settings prevents drift. The classic hub pattern gives projects shared infrastructure and security posture instead of forcing each project to reinvent them.\n\n## Definition\n\nA hub resource groups one or more hub-based projects with common security, data access, connections, compute, quota allocation, policy, and dependent Azure resources. It is legacy or selected-use-case territory, not the default modern Foundry project shape.\n\n## How it fits together\n\nRemember the hub as a sharing boundary. It can share security settings, managed virtual network behavior, connections, compute capacity, quota allocation, and dependent resources such as storage and key vault across hub-based projects.\n\n## Worked example\n\n```bash\n# Portal steps for the classic shape.\n# 1 Open https://ai.azure.com and switch to the classic experience if required.\n# 2 Create or select an Azure AI Hub only when your scenario needs hub based capabilities.\n# 3 Confirm shared security, connections, compute, storage, and key vault settings before adding projects.\n# 4 Prefer managed identities for automation and resource access.\n```\n\n*Portal checklist for hub based projects*",
+  "drills": [
+    {
+      "q": "What does a hub share across projects?",
+      "a": "Security configuration, connections, compute and quota allocation, policy, and dependent resources."
+    },
+    {
+      "q": "Is a hub the default for new Foundry projects?",
+      "a": "No. Modern Foundry projects on Foundry resources are the default starting point for most new work."
+    },
+    {
+      "q": "Why would a team still use a hub?",
+      "a": "For selected classic or Azure Machine Learning oriented capabilities such as certain open source model hosting or fine tuning scenarios."
+    }
+  ],
+  "teachItBack": "A hub is the classic shared foundation for hub-based projects. Its job is to centralize security, connections, compute, quota, and dependent resources. Teach it as a legacy but still important architecture pattern for selected scenarios, not the first choice for every new learner.",
+  "glossary": [
+    {
+      "term": "Shared connection",
+      "definition": "A connection configured at hub scope for reuse by multiple hub-based projects."
+    },
+    {
+      "term": "Compute instance",
+      "definition": "Managed cloud workstation capacity used in some hub-based development experiences."
+    },
+    {
+      "term": "Managed virtual network",
+      "definition": "Network isolation configuration shared by projects under a hub."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Microsoft Learn: Hubs and hub-based project overview classic",
+      "url": "https://learn.microsoft.com/en-us/azure/foundry-classic/concepts/ai-resources",
+      "verified": true
+    }
+  ],
+  "quiz": [
+    {
+      "q": "Why does region matter?",
+      "choices": [
+        "Feature, model, quota, compliance, and dependent service availability can vary by region",
+        "Only the portal language changes by region",
+        "Regions affect only UI color",
+        "Regions are irrelevant once a project exists"
+      ],
+      "answer": 0,
+      "explanation": "Microsoft documents regional differences and recommends checking model, quota, and dependent feature support."
+    }
+  ]
+}

@@ -1,0 +1,64 @@
+{
+  "id": "azf-intro",
+  "title": "Foundations — the mental model that unlocks all of Azure",
+  "lane": "az-foundations",
+  "type": "concept",
+  "order": 10,
+  "summary": "A 30,000-foot map of Azure before any detail: what this lane covers, the single nested hierarchy everything lives in, and the four ideas (global infrastructure, scope, the control plane, and shared responsibility) that turn hundreds of services into a handful of reusable patterns.",
+  "tags": [
+    "azure",
+    "foundations",
+    "mental-model",
+    "overview"
+  ],
+  "analogy": "Azure is a planet-sized utility company: you don't own the power plants, you just plug in, draw exactly what you need, and get one bill — and this lane hands you the wiring diagram of the whole grid.",
+  "diagram": "flowchart TD\n  subgraph Physical[Where it physically runs]\n    G[Geography] --> Rg[Region]\n    Rg --> AZ[Availability Zone]\n    AZ --> DC[Datacenter]\n  end\n  subgraph Logical[How you organize and govern it]\n    T[Entra Tenant - identity] --> MG[Management Group]\n    MG --> S[Subscription - billing/limits]\n    S --> RG[Resource Group - lifecycle]\n    RG --> R[Resource]\n  end\n  R -.actually lives in.-> Rg\n  CP[Azure Resource Manager - control plane] -.creates and governs.-> R",
+  "body": "## First principles\n\nStrip away every brand name and Azure is two things stacked together. There is **physical reality** — Microsoft's datacenters, full of machines, wired across the planet. And there is a **logical control system** — a way to ask for slices of those machines, pay for exactly what you use, and prove you're allowed to. Everything else in this bootcamp is detail hanging off those two pillars.\n\nMost people drown in Azure because they try to learn the *services* (there are hundreds, and Microsoft adds more every month). That's backwards. Learn the **frame** the services hang in, and a service you've never seen becomes guessable: where does it physically run, what scope does it live in, how do I talk to it, and who's responsible when it breaks.\n\n## Why it exists\n\nBefore the cloud, a company that wanted to run software bought servers, racked them in a room, cooled them, secured them, and prayed the hardware outlived the project. Capacity was a guess made months ahead: too little and you fell over on launch day, too much and you paid for idle metal forever. This lane — *Foundations* — exists because the cloud replaced that whole ritual with an API call, and you cannot reason about any higher-level Azure topic until you understand the substrate it stands on.\n\nThis is the grammar of Azure. Identity, networking, compute, storage, security — every other lane assumes you already know what a **subscription**, a **region**, and the **control plane** are. Get these right and the rest of the platform stops feeling like memorization.\n\n## How it works\n\nFour ideas carry almost everything:\n\n1. **Global infrastructure** — Azure is carved into **geographies**, **regions**, and **availability zones**. *Where* your resource sits decides its latency, its resilience, and which country's laws govern its data.\n2. **The scope hierarchy** — every resource lives inside a nested set of containers: **Entra tenant → management group → subscription → resource group → resource**. Permissions and rules set high up flow downhill.\n3. **The control plane (Azure Resource Manager)** — one consistent front door receives every create/read/update/delete request, authenticates it, authorizes it, and hands it to the right service. Portal, CLI, PowerShell, and Bicep are all just different mouths speaking to this one ear.\n4. **Shared responsibility** — Microsoft secures and runs the parts below your workload; you own the parts above. The exact line moves depending on whether you rent a raw VM or a finished SaaS app.\n\n## In practice\n\nHere's the whole lane in one breath — provisioning a thing:\n\n```bash\n# 1) Authenticate to your tenant (identity boundary)\naz login\n\n# 2) Point at a subscription (billing + limits boundary)\naz account set --subscription \"<subscription-name-or-id>\"\n\n# 3) Make a resource group in a region (lifecycle + location)\naz group create --name <rg-name> --location <region>\n\n# 4) Ask Azure Resource Manager to create a resource in that scope\naz storage account create --name <unique-name> --resource-group <rg-name>\n```\n\nFour commands, all four big ideas: identity, scope, region, and the control plane. Every other Azure task is a richer version of this.\n\n## Gotchas\n\n- **Don't memorize the service catalogue.** Learn the frame; look services up. The frame is what's on the exam of real life.\n- **\"Where it runs\" and \"how it's organized\" are different axes.** A resource group is a *logical* bag; the resource physically lives in a *region*. Beginners conflate them — the diagram above keeps them apart on purpose.\n- **Names drift.** \"Azure Active Directory\" is now **Microsoft Entra ID**; docs move and redirect. These lessons use 2025/2026 names and link the live source of truth.",
+  "teachItBack": "Azure is physical datacenters plus a logical control system layered on top. To use it you stand at a scope in the hierarchy — tenant, management group, subscription, resource group, resource — pick a region where the resource physically runs, and send a request through Azure Resource Manager, the one control plane every tool talks to. Master global infrastructure, scope, the control plane, and shared responsibility, and the hundreds of services become variations you can reason about instead of facts you must memorize.",
+  "glossary": [
+    {
+      "term": "Region",
+      "definition": "A set of Azure datacenters in one geographic area where your resources physically run."
+    },
+    {
+      "term": "Scope hierarchy",
+      "definition": "The nested containers (tenant, management group, subscription, resource group, resource) that organize Azure and through which permissions and policy inherit downward."
+    },
+    {
+      "term": "Control plane",
+      "definition": "Azure Resource Manager — the single API that receives, authenticates, and routes every request to create or manage resources."
+    },
+    {
+      "term": "Shared responsibility",
+      "definition": "The split of security and operational duties between Microsoft (the platform) and you (your workload and data)."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Dev docs — What is Azure? (Cloud Adoption Framework)",
+      "url": "https://learn.microsoft.com/en-us/azure/cloud-adoption-framework/get-started/what-is-azure",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — Azure Resource Manager overview",
+      "url": "https://learn.microsoft.com/en-us/azure/azure-resource-manager/management/overview",
+      "verified": true
+    },
+    {
+      "title": "Azure — Global infrastructure",
+      "url": "https://azure.microsoft.com/en-us/explore/global-infrastructure/",
+      "verified": true
+    },
+    {
+      "title": "John Savill — Azure 360 in 360 (whole-platform tour)",
+      "url": "https://www.youtube.com/watch?v=1NOZv2M3q2k",
+      "verified": true
+    }
+  ],
+  "related": [
+    "azf-what-is-cloud",
+    "azf-what-is-azure",
+    "azf-hierarchy",
+    "azf-arm"
+  ]
+}

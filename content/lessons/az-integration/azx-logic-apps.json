@@ -1,0 +1,66 @@
+{
+  "id": "azx-logic-apps",
+  "title": "Logic Apps: Workflow Glue Without Hiding the Glue",
+  "lane": "az-integration",
+  "type": "concept",
+  "order": 60,
+  "summary": "Logic Apps turns integration into workflows: triggers, actions, conditions, retries, and connectors that bridge Azure, SaaS, enterprise systems, and on-premises services.",
+  "tags": [
+    "azure",
+    "logic-apps",
+    "workflow",
+    "connectors",
+    "automation",
+    "functions"
+  ],
+  "analogy": "Logic Apps is a digital operations runbook: when the trigger page arrives, follow the boxes, call the right systems, and record every step.",
+  "diagram": "flowchart LR\n  Trigger[Trigger schedule HTTP event message] --> Workflow[Logic App workflow]\n  Workflow --> Control[Conditions loops retries]\n  Workflow --> BuiltIn[Built in connectors]\n  Workflow --> Managed[Managed connectors]\n  Managed --> SaaS[Office Salesforce SAP etc]\n  BuiltIn --> Azure[Service Bus Event Hubs SQL Blob etc]",
+  "body": "## First principles\n\nMany integrations are not algorithms; they are procedures. \"When a purchase order arrives, validate it, call SAP, create a ticket if approval is needed, send a Teams message, then archive the payload.\" Writing a custom service for every procedure creates code you must host, patch, monitor, and explain.\n\n**Azure Logic Apps** exists for workflow-shaped automation: triggers plus ordered actions plus connector calls.\n\n## Why it exists\n\nEnterprises run on seams: SaaS apps, on-premises databases, queues, files, APIs, emails, approvals, and legacy systems. The hard part is often not CPU; it is reliable choreography across systems owned by different teams.\n\nLogic Apps provides a visual and code-backed workflow platform so integration logic is explicit. The boxes are not magic; they compile into a workflow definition with triggers, actions, conditions, loops, retries, and connections.\n\n## How it works\n\nA workflow starts with a **trigger**: HTTP request, schedule, Event Grid event, Service Bus message, file arrival, or many other options. It then runs **actions**: call an API, transform data, branch on a condition, post a message, write a record, wait for approval.\n\nConnectors are the superpower. **Built-in connectors** run natively in the Logic Apps runtime and often provide better performance or networking behavior. **Managed connectors** are Microsoft-hosted connectors for services and systems such as Office 365, SharePoint, Azure Key Vault, Salesforce, SAP, and many others; they commonly require a connection resource and authentication.\n\nLogic Apps has Consumption and Standard hosting models. Standard runs in single-tenant Azure Logic Apps and has different built-in connector availability than Consumption. Connector choice affects networking, performance, deployment, and cost.\n\n## Logic Apps vs Functions\n\nUse **Logic Apps** when the problem is integration choreography, connector breadth, visual operations, and business-process readability. Use **Azure Functions** when the core is custom code, libraries, low-level control, or compute-heavy logic.\n\nThey pair well: a Logic App can orchestrate the flow and call a Function for a sharp piece of code.\n\n## Analogy\n\n💡 A Function is a skilled specialist who can write any custom move. A Logic App is the operations manager with the checklist, phonebook, retry rules, and audit trail.\n\n## In practice\n\n```bash\n# Create a workflow host; actual workflow design can be portal, VS Code, or IaC.\naz logicapp create -g <rg> -n <logic-app-name> --storage-account <storage-account> --plan <app-service-plan>\n```\n\nA common pattern: Event Grid says a blob arrived, Logic Apps fetches metadata, calls an approval system, and posts the result to Service Bus.\n\n## Gotchas\n\nLow-code is not no-architecture. Workflows still need idempotency, secret management, observability, retry policy, and ownership.\n\nConnector convenience has tradeoffs. Managed connectors can add separate connection resources, metering, authentication flows, and networking constraints. Built-in connectors differ by Logic App type.\n\nDo not bury complex domain logic in a giant visual spaghetti monster. If a step needs real code, call a Function or API and keep the workflow readable.",
+  "teachItBack": "Logic Apps is Azure’s workflow automation platform for connecting systems through triggers, actions, control flow, and connectors. Built-in connectors run with the Logic Apps runtime, while managed connectors are Microsoft-hosted integrations for many Azure, SaaS, and enterprise systems. Use Logic Apps for orchestration and integration visibility; use Functions for custom code-heavy logic. The best designs often combine both.",
+  "glossary": [
+    {
+      "term": "Trigger",
+      "definition": "The event, schedule, or request that starts a Logic Apps workflow."
+    },
+    {
+      "term": "Action",
+      "definition": "A workflow step that performs work, such as calling an API, transforming data, or sending a message."
+    },
+    {
+      "term": "Built-in connector",
+      "definition": "A connector that runs natively in the Azure Logic Apps runtime."
+    },
+    {
+      "term": "Managed connector",
+      "definition": "A Microsoft-hosted connector for accessing external services, systems, or SaaS applications."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Dev docs — Workflow integration and automation with Azure Logic Apps",
+      "url": "https://learn.microsoft.com/en-us/azure/logic-apps/logic-apps-overview",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — Managed connectors overview",
+      "url": "https://learn.microsoft.com/en-us/azure/connectors/managed",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — Built-in connectors overview",
+      "url": "https://learn.microsoft.com/en-us/azure/connectors/built-in",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — Integration and automation platform options in Azure",
+      "url": "https://learn.microsoft.com/en-us/azure/azure-functions/functions-compare-logic-apps-ms-flow-webjobs",
+      "verified": true
+    }
+  ],
+  "related": [
+    "azx-event-grid",
+    "azx-service-bus",
+    "azx-apim",
+    "azx-choosing-integration"
+  ]
+}

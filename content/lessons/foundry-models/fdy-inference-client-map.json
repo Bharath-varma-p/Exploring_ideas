@@ -1,0 +1,80 @@
+{
+  "id": "fdy-inference-client-map",
+  "title": "What the Inference SDK Is",
+  "lane": "foundry-models",
+  "type": "concept",
+  "order": 201,
+  "summary": "The azure-ai-inference package is the Azure SDK client library for model inference. ChatCompletionsClient calls chat models with messages. EmbeddingsClient calls embedding models and returns numeric vectors.",
+  "tags": [
+    "sdk",
+    "clients",
+    "first-principles"
+  ],
+  "analogy": "Think of Foundry inference like a restaurant pickup window. ChatCompletionsClient orders spoken answers. EmbeddingsClient orders coordinate maps. The deployed model is the kitchen; the endpoint is the pickup window; managed identity is your employee badge.",
+  "diagram": "flowchart LR\n  App[Python app] --> Client[Inference client]\n  Client --> Auth[Managed identity token]\n  Auth --> Endpoint[Foundry model endpoint]\n  Endpoint --> Model[Deployed model]\n  Model --> Result[Text or vector result]",
+  "body": "## First principles\n\nA deployed model is a remote function. Your code sends bytes over HTTPS, Azure authenticates the caller, the model computes tokens or vectors, and the service returns structured JSON.\n\n## Definition\n\nThe azure-ai-inference package is the Azure SDK client library for model inference. ChatCompletionsClient calls chat models with messages. EmbeddingsClient calls embedding models and returns numeric vectors. Both accept Azure TokenCredential objects, so managed identity can authenticate without keys.\n\n## How it fits together\n\nChoose the smallest client that matches the output shape: chat text from ChatCompletionsClient, semantic vectors from EmbeddingsClient. The SDK wraps REST routes such as chat completions and embeddings, but you still choose deployment names, messages, and generation settings.\n\n## Worked example\n\n```python\nimport os\nfrom azure.identity import DefaultAzureCredential, ManagedIdentityCredential\nfrom azure.ai.inference import ChatCompletionsClient, EmbeddingsClient\n\n# Required environment variables:\n# AZURE_AI_CHAT_ENDPOINT: model endpoint or Azure OpenAI deployment endpoint\n# AZURE_AI_EMBEDDINGS_ENDPOINT: embeddings endpoint\n# In Azure hosting, prefer ManagedIdentityCredential(client_id=...) for user-assigned MI.\ncredential = DefaultAzureCredential()\n\nchat_client = ChatCompletionsClient(\n    endpoint=os.environ[\"AZURE_AI_CHAT_ENDPOINT\"],\n    credential=credential,\n)\n\nembedding_client = EmbeddingsClient(\n    endpoint=os.environ[\"AZURE_AI_EMBEDDINGS_ENDPOINT\"],\n    credential=credential,\n)\n\nprint(type(chat_client).__name__, type(embedding_client).__name__)\n```\n\n*Create chat and embedding clients with managed identity only.*",
+  "drills": [
+    {
+      "q": "What is the model endpoint?",
+      "a": "The HTTPS address where your deployed model accepts inference requests."
+    },
+    {
+      "q": "Why use TokenCredential instead of a key?",
+      "a": "Managed identity gets short-lived Entra ID tokens and avoids storing secrets."
+    },
+    {
+      "q": "Which client returns vectors?",
+      "a": "EmbeddingsClient."
+    }
+  ],
+  "teachItBack": "Inference is a remote call to a deployed model. ChatCompletionsClient returns message-like text responses, while EmbeddingsClient returns numeric vectors. Managed identity gives the SDK a badge instead of a password.",
+  "glossary": [
+    {
+      "term": "Inference",
+      "definition": "Running an already deployed model to produce output."
+    },
+    {
+      "term": "TokenCredential",
+      "definition": "Azure SDK interface that supplies Entra ID access tokens."
+    },
+    {
+      "term": "Endpoint",
+      "definition": "The model service URL your client calls."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Azure AI Inference client library for Python",
+      "url": "https://learn.microsoft.com/en-us/python/api/overview/azure/ai-inference-readme?view=azure-python-preview",
+      "verified": true
+    },
+    {
+      "title": "ChatCompletionsClient class",
+      "url": "https://learn.microsoft.com/en-us/python/api/azure-ai-inference/azure.ai.inference.chatcompletionsclient?view=azure-python-preview",
+      "verified": true
+    },
+    {
+      "title": "EmbeddingsClient class",
+      "url": "https://learn.microsoft.com/en-us/python/api/azure-ai-inference/azure.ai.inference.embeddingsclient?view=azure-python-preview",
+      "verified": true
+    },
+    {
+      "title": "Azure Identity DefaultAzureCredential",
+      "url": "https://learn.microsoft.com/en-us/python/api/overview/azure/identity-readme?view=azure-python",
+      "verified": true
+    }
+  ],
+  "quiz": [
+    {
+      "q": "Which client is used for chat-style text generation in azure-ai-inference?",
+      "choices": [
+        "ChatCompletionsClient",
+        "EmbeddingsClient",
+        "AIProjectClient.deployments",
+        "ManagedIdentityCredential"
+      ],
+      "answer": 0,
+      "explanation": "ChatCompletionsClient calls chat completion models; EmbeddingsClient returns vectors."
+    }
+  ]
+}

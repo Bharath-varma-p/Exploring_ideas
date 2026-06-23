@@ -1,0 +1,58 @@
+{
+  "id": "fdy-connected-multi-agent-patterns",
+  "title": "Connected and Multi Agent Patterns",
+  "lane": "foundry-mcp",
+  "type": "concept",
+  "order": 211,
+  "summary": "Connected or multi-agent patterns let agents delegate to other agents or expose curated capabilities through agent-to-agent links, MCP endpoints, or Foundry Toolboxes.",
+  "tags": [
+    "multi-agent",
+    "a2a",
+    "architecture"
+  ],
+  "analogy": "It is a command structure: the operations officer coordinates, the medic handles medical tasks, the logistics officer handles supplies, and each has only the equipment needed for that role.",
+  "diagram": "graph TD\nOrchestrator[Coordinator agent] --> Research[Research agent]\nOrchestrator --> Action[Action agent]\nResearch --> Toolbox[Shared MCP toolbox]\nAction --> Service[Backend service]\nToolbox --> Server[MCP servers]",
+  "body": "## First principles\n\nFirst principles: complex work is often a team sport. Instead of one giant agent with every permission, split roles so each agent has a small mission, small toolset, and small identity blast radius.\n\n## Definition\n\nConnected or multi-agent patterns let agents delegate to other agents or expose curated capabilities through agent-to-agent links, MCP endpoints, or Foundry Toolboxes. This lane keeps it brief: MCP can act as the shared tool boundary, while dedicated agents own specialist reasoning.\n\n## How it fits together\n\nPrefer narrow specialist agents over one all-powerful agent when permissions, audit trails, or domain instructions differ. Use MCP or Toolbox to share common tools without copying configuration everywhere.\n\n## Worked example\n\n```python\n# This runnable planning helper prevents accidental all powerful agent designs.\nagents = {\n    \"coordinator\": {\"tools\": [], \"permission\": \"no direct writes\"},\n    \"researcher\": {\"tools\": [\"search_docs\", \"read_doc\"], \"permission\": \"read only\"},\n    \"operator\": {\"tools\": [\"create_ticket\"], \"permission\": \"write approved tickets only\"},\n}\n\nfor name, policy in agents.items():\n    print(f\"{name}: tools={policy['tools']} permission={policy['permission']}\")\n```\n\n*Represent a simple routing table before implementing multi-agent calls*",
+  "drills": [
+    {
+      "q": "Why split agents?",
+      "a": "To separate instructions, permissions, blast radius, and audit trails."
+    },
+    {
+      "q": "What can MCP provide in a multi-agent design?",
+      "a": "A shared standard endpoint for tools used by multiple agents or frameworks."
+    },
+    {
+      "q": "What is the danger of one mega-agent?",
+      "a": "It tends to accumulate too many tools, roles, and permissions."
+    }
+  ],
+  "teachItBack": "Multi-agent design is permission design. Split roles when authority differs. Use MCP or Toolbox as a shared tool plane, not as an excuse to give every agent every capability.",
+  "glossary": [
+    {
+      "term": "Orchestrator",
+      "definition": "Agent or code that routes work among specialists."
+    },
+    {
+      "term": "Toolbox",
+      "definition": "Preview Foundry bundle of tools exposed as an MCP-compatible endpoint."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Microsoft Learn: What is Microsoft Foundry Agent Service",
+      "url": "https://learn.microsoft.com/en-us/azure/foundry/agents/overview",
+      "verified": false
+    },
+    {
+      "title": "Microsoft Learn: Agent tools overview",
+      "url": "https://learn.microsoft.com/en-us/azure/foundry/agents/concepts/tool-catalog",
+      "verified": false
+    },
+    {
+      "title": "Microsoft Learn: Connect to MCP server endpoints for agents",
+      "url": "https://learn.microsoft.com/en-us/azure/foundry/agents/how-to/tools/model-context-protocol",
+      "verified": false
+    }
+  ]
+}

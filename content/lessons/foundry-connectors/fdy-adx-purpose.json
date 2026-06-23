@@ -1,0 +1,70 @@
+{
+  "id": "fdy-adx-purpose",
+  "title": "Kusto and Azure Data Explorer in One Breath",
+  "lane": "foundry-connectors",
+  "type": "concept",
+  "order": 201,
+  "summary": "Azure Data Explorer, often called Kusto or ADX, is a fully managed, high-performance analytics platform for structured, semi-structured, and unstructured data, especially logs, telemetry, IoT, and time series.",
+  "tags": [
+    "adx",
+    "kusto",
+    "telemetry"
+  ],
+  "analogy": "ADX is a security camera control room. Cameras stream events all day, ADX stores and indexes them, and KQL lets the investigator ask precise questions without replaying every tape by hand.",
+  "diagram": "flowchart TD\n  Cluster[ADX cluster] --> Database[Database]\n  Database --> Table[Table]\n  Table --> Columns[Typed columns]\n  Table --> Extents[Indexed data shards]\n  Agent[Foundry agent] --> KQL[KQL question]\n  KQL --> Database",
+  "body": "## First principles\n\nOperational data is usually append-heavy and time-stamped. You do not want an agent scanning raw files or an OLTP database for every question; you want a service indexed for fast analytical reads over huge event streams.\n\n## Definition\n\nAzure Data Explorer, often called Kusto or ADX, is a fully managed, high-performance analytics platform for structured, semi-structured, and unstructured data, especially logs, telemetry, IoT, and time series. It organizes data in clusters, databases, tables, and strongly typed columns, then queries it with KQL.\n\n## How it fits together\n\nUse ADX when the agent needs fast answers over high-volume historical events. Treat it as the read-optimized memory of systems and operations, not as a place where the agent casually changes business records.\n\n## Worked example\n\n```kql\nAppTraces\n| where Timestamp > ago(1h)\n| where SeverityLevel >= 3\n| summarize Errors = count() by bin(Timestamp, 5m)\n| order by Timestamp asc\n```\n\n*Count recent errors from a telemetry table.*",
+  "drills": [
+    {
+      "q": "What kind of data is ADX best at?",
+      "a": "High-volume analytical data such as logs, telemetry, metrics, time-series, and event streams."
+    },
+    {
+      "q": "Is ADX usually optimized for tiny transactional updates?",
+      "a": "No. It is read-optimized analytics storage, not a classic OLTP database."
+    },
+    {
+      "q": "What language does ADX use for queries?",
+      "a": "Kusto Query Language, or KQL."
+    }
+  ],
+  "teachItBack": "ADX is the agent's fast analytics warehouse for event data. It stores data as clusters, databases, tables, and columns. I use KQL to ask read-focused questions over logs and telemetry.",
+  "glossary": [
+    {
+      "term": "ADX",
+      "definition": "Azure Data Explorer, a managed analytics database service."
+    },
+    {
+      "term": "Kusto",
+      "definition": "The technology and query ecosystem behind ADX."
+    },
+    {
+      "term": "Telemetry",
+      "definition": "Data emitted by systems to describe behavior, health, and usage."
+    }
+  ],
+  "sources": [
+    {
+      "title": "What is Azure Data Explorer?",
+      "url": "https://learn.microsoft.com/en-us/azure/data-explorer/data-explorer-overview",
+      "verified": true
+    },
+    {
+      "title": "Kusto Query Language overview",
+      "url": "https://learn.microsoft.com/en-us/kusto/query/?view=azure-data-explorer&preserve-view=true",
+      "verified": true
+    }
+  ],
+  "quiz": [
+    {
+      "q": "What is the best one-sentence description of ADX for this lane?",
+      "choices": [
+        "A fast read-optimized analytics database for logs telemetry and time series",
+        "A secret store for connection strings",
+        "A transactional shopping-cart database",
+        "A model hosting endpoint"
+      ],
+      "answer": 0,
+      "explanation": "ADX is optimized for high-volume analytical reads over telemetry-like data."
+    }
+  ]
+}

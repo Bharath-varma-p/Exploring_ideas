@@ -1,0 +1,86 @@
+{
+  "id": "fdy-capabilities-overview",
+  "title": "Core Capability Map",
+  "lane": "foundry-core",
+  "type": "concept",
+  "order": 111,
+  "summary": "Foundry capabilities include model catalog, model deployments, Agent Service, evaluations, tracing and observability, and content safety controls.",
+  "tags": [
+    "models",
+    "agents",
+    "evaluations",
+    "observability",
+    "safety"
+  ],
+  "analogy": "Think of the capability map as a flight operations board: catalog chooses aircraft, deployments place aircraft on runways, agents plan missions, evaluations grade drills, tracing records the black box, and content safety is the rules of engagement.",
+  "diagram": "graph TD\nFoundry[Foundry] --> Catalog[Model catalog]\nFoundry --> Deployments[Deployments]\nFoundry --> Agents[Agent Service]\nFoundry --> Eval[Evaluations]\nFoundry --> Observe[Tracing and observability]\nFoundry --> Safety[Content Safety]",
+  "body": "## First principles\n\nFirst principles: a serious AI platform needs a supply of models, a way to host or call them, a way to build multi-step actors, a way to measure quality, a way to see what happened, and a way to reduce harm. Foundry groups these capabilities so teams can move from idea to operated system.\n\n## Definition\n\nFoundry capabilities include model catalog, model deployments, Agent Service, evaluations, tracing and observability, and content safety controls. This lane names each capability at a high level; later lanes can go deep on SDK usage, inference, deployment, or MCP.\n\n## How it fits together\n\nHigh level map: the model catalog helps you discover and compare models; deployments or project endpoints make models usable; Agent Service provides managed agent runtime and tools; evaluations measure behavior and quality; observability and tracing explain what happened; Content Safety detects harmful user or AI-generated content. Hosted agents and some tools are preview, so verify status before production.\n\n## Worked example\n\n```bash\nprintf '%s\n'   'Catalog: choose and compare models.'   'Deployments: make selected models available to projects or endpoints.'   'Agent Service: run agents with models, instructions, and tools.'   'Evaluations: measure quality and safety before trusting changes.'   'Tracing: inspect steps, latency, errors, and decisions.'   'Content Safety: detect harmful text or images and support safer apps.'\n```\n\n*Capability learning map*",
+  "drills": [
+    {
+      "q": "What does the model catalog solve?",
+      "a": "Discovery, comparison, and selection of models."
+    },
+    {
+      "q": "What does tracing solve?",
+      "a": "It helps explain runs, decisions, latency, errors, and behavior for debugging and operations."
+    },
+    {
+      "q": "Why are evaluations needed?",
+      "a": "They provide evidence about quality and safety instead of relying on vibes from a few prompts."
+    }
+  ],
+  "teachItBack": "Foundry's capability map covers the lifecycle around a model. Catalog, deployments, agents, evaluations, tracing, and safety each answer a different production question. Teach this as the minimum operations board for responsible AI apps.",
+  "glossary": [
+    {
+      "term": "Model catalog",
+      "definition": "Foundry experience for discovering, comparing, and selecting AI models."
+    },
+    {
+      "term": "Deployment",
+      "definition": "Configured availability of a model for use through Foundry or related endpoints."
+    },
+    {
+      "term": "Agent Service",
+      "definition": "Managed platform for building, deploying, and scaling AI agents."
+    },
+    {
+      "term": "Evaluation",
+      "definition": "Measurement process for assessing model or app quality and safety."
+    },
+    {
+      "term": "Tracing",
+      "definition": "Telemetry that records steps and behavior across model or agent runs."
+    },
+    {
+      "term": "Content Safety",
+      "definition": "Azure AI service for detecting harmful user generated and AI generated content."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Microsoft Learn: What is Microsoft Foundry?",
+      "url": "https://learn.microsoft.com/en-us/azure/foundry/what-is-foundry",
+      "verified": false
+    },
+    {
+      "title": "Microsoft Learn: Microsoft Foundry Models overview",
+      "url": "https://learn.microsoft.com/en-us/azure/foundry/concepts/foundry-models-overview",
+      "verified": false
+    },
+    {
+      "title": "Microsoft Learn: What is Microsoft Foundry Agent Service?",
+      "url": "https://learn.microsoft.com/en-us/azure/foundry/agents/overview",
+      "verified": false
+    },
+    {
+      "title": "Microsoft Learn: Microsoft Foundry architecture",
+      "url": "https://learn.microsoft.com/en-us/azure/foundry/concepts/architecture",
+      "verified": false
+    },
+    {
+      "title": "Microsoft Learn: What is Azure AI Content Safety?",
+      "url": "https://learn.microsoft.com/en-us/azure/ai-services/content-safety/overview",
+      "verified": false
+    }
+  ]
+}

@@ -1,0 +1,75 @@
+{
+  "id": "fdy-construct-client",
+  "title": "Construct AIProjectClient",
+  "lane": "foundry-core",
+  "type": "concept",
+  "order": 204,
+  "summary": "AIProjectClient is constructed as AIProjectClient(endpoint: str, credential: TokenCredential, , allow preview: bool = False, kwargs). Use it as a context manager so underlying transports close cleanly.",
+  "tags": [
+    "client",
+    "credential",
+    "context-manager"
+  ],
+  "analogy": "The client is a mission radio tuned to one frequency. The endpoint tunes the radio; the credential proves who is speaking; the context manager turns the radio off when done.",
+  "diagram": "sequenceDiagram\nparticipant App\nparticipant Credential\nparticipant Client\nparticipant Foundry\nApp->>Credential: request token\nApp->>Client: endpoint plus credential\nClient->>Foundry: authorized HTTPS calls\nFoundry-->>Client: project resources",
+  "body": "## First principles\n\nAn SDK client is a durable object that holds endpoint, credential, pipeline policies, and transport. Constructing it correctly is the difference between random HTTP calls and a reusable project gateway.\n\n## Definition\n\nAIProjectClient is constructed as AIProjectClient(endpoint: str, credential: TokenCredential, *, allow_preview: bool = False, **kwargs). Use it as a context manager so underlying transports close cleanly. Authentication is represented only as a TokenCredential object such as DefaultAzureCredential or ManagedIdentityCredential.\n\n## How it fits together\n\nCreate credential, create client, call operation groups, leave the with block. For preview features, opt in deliberately with allow_preview=True instead of accidentally relying on unstable behavior.\n\n## Worked example\n\n```python\nimport os\nfrom azure.identity import DefaultAzureCredential\nfrom azure.ai.projects import AIProjectClient\n\nendpoint = os.environ[\"FOUNDRY_PROJECT_ENDPOINT\"]\n\nwith DefaultAzureCredential() as credential:\n    with AIProjectClient(endpoint=endpoint, credential=credential) as project_client:\n        names = [\"agents\", \"connections\", \"datasets\", \"deployments\", \"indexes\", \"evaluation_rules\", \"beta\"]\n        for name in names:\n            print(name, hasattr(project_client, name))\n```\n\n*Construct the synchronous client and list available high-level attributes safely.*",
+  "drills": [
+    {
+      "q": "What two required constructor inputs does AIProjectClient need?",
+      "a": "endpoint and credential."
+    },
+    {
+      "q": "Why use with AIProjectClient as project_client?",
+      "a": "It ensures the client closes its underlying resources when the block exits."
+    },
+    {
+      "q": "What does allow_preview do?",
+      "a": "It deliberately enables certain preview features on the client; beta sub-client methods are preview by name."
+    }
+  ],
+  "teachItBack": "Teach it back as: I build AIProjectClient with one project endpoint and one TokenCredential. The client owns the HTTP pipeline and exposes project operation groups. I use a context manager and only set allow_preview when I intentionally need preview features.",
+  "glossary": [
+    {
+      "term": "TokenCredential",
+      "definition": "The azure-core credential protocol used by Azure SDK clients to obtain bearer tokens."
+    },
+    {
+      "term": "context manager",
+      "definition": "A Python with block pattern that opens and closes resources deterministically."
+    },
+    {
+      "term": "allow_preview",
+      "definition": "A constructor flag that opts in to selected preview Foundry features."
+    }
+  ],
+  "sources": [
+    {
+      "title": "AIProjectClient class reference",
+      "url": "https://learn.microsoft.com/en-us/python/api/azure-ai-projects/azure.ai.projects.aiprojectclient?view=azure-python",
+      "verified": true
+    },
+    {
+      "title": "Azure Identity client library for Python",
+      "url": "https://learn.microsoft.com/en-us/python/api/overview/azure/identity-readme?view=azure-python",
+      "verified": true
+    },
+    {
+      "title": "Azure AI Projects client library for Python",
+      "url": "https://learn.microsoft.com/en-us/python/api/overview/azure/ai-projects-readme?view=azure-python",
+      "verified": true
+    }
+  ],
+  "quiz": [
+    {
+      "q": "Which method returns an authenticated OpenAI client from AIProjectClient?",
+      "choices": [
+        "get_openai_client",
+        "get_inference_key",
+        "openai_from_secret",
+        "connect_model"
+      ],
+      "answer": 0,
+      "explanation": "Current docs describe AIProjectClient.get_openai_client for OpenAI-compatible operations."
+    }
+  ]
+}

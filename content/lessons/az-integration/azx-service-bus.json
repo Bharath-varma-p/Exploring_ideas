@@ -1,0 +1,71 @@
+{
+  "id": "azx-service-bus",
+  "title": "Service Bus Deep-ish: Queues, Topics, Sessions, and DLQs",
+  "lane": "az-integration",
+  "type": "concept",
+  "order": 30,
+  "summary": "Service Bus is Azure’s enterprise message broker: queues for one handler, topics for fan-out, sessions for ordered conversations, and dead-letter queues for messages that need human or automated repair.",
+  "tags": [
+    "azure",
+    "service-bus",
+    "topics",
+    "subscriptions",
+    "sessions",
+    "dead-letter"
+  ],
+  "analogy": "Service Bus is a postal sorting center with certified mail, mailboxes, distribution lists, numbered case folders, and a returns office.",
+  "diagram": "flowchart LR\n  Sender[Sender] --> Queue[Queue one message one consumer]\n  Sender --> Topic[Topic publish once]\n  Topic --> SubA[Subscription billing filter]\n  Topic --> SubB[Subscription shipping filter]\n  Queue --> DLQ[Dead letter subqueue]\n  SubA --> DLQA[Subscription DLQ]\n  Sender -.sessionId order-42.-> Session[Ordered session stream]",
+  "body": "## First principles\n\nSome messages are promises. If an order command disappears, duplicates unpredictably, or gets processed out of sequence, customers notice. **Azure Service Bus** exists for those promises: reliable asynchronous communication across application boundaries.\n\nIt is not just a queue. It is a broker with entities that model ownership, fan-out, ordering, and failure.\n\n## Why it exists\n\nDirect service calls make workflows brittle. A billing service might be down exactly when checkout needs it. A shipping service might be slow during a promotion. Service Bus lets checkout hand off a command durably, continue, and let specialized consumers process work with retries and observability.\n\nThe important shift: the broker becomes the place where unfinished work lives. That makes failure visible instead of hidden in a timeout stack trace.\n\n## How queues and topics work\n\nA **queue** is point-to-point. Many workers can compete, but each message is processed by one consumer. This is perfect for task distribution: one order command should not be charged by five workers.\n\nA **topic** is publish/subscribe. A sender publishes once; each **subscription** can receive its own copy, often filtered. Billing, fulfillment, loyalty, and analytics can all subscribe to the same order event without the publisher knowing their names.\n\n## Sessions, ordering, and FIFO\n\nService Bus can provide ordered handling for related messages with **sessions**. The sender assigns a session ID, such as `order-123`. A session-aware receiver locks that session and processes its messages in sequence.\n\nThat is the practical meaning of FIFO in Service Bus: ordered processing for a chosen conversation key, not a universal guarantee that every message in a busy distributed system is globally ordered forever.\n\n## Dead-letter queues\n\nEach queue and each topic subscription has a **dead-letter queue**. It is a secondary subqueue for messages that cannot be delivered or processed. Dead-lettered messages do not disappear automatically; they stay there until an application or operator inspects, fixes, resubmits, or completes them.\n\nA DLQ is not a trash can. It is an exception shelf with evidence.\n\n## In practice\n\n```bash\n# Fan-out: publish once, let each subscription own its copy.\naz servicebus topic create -g <rg> --namespace-name <ns> --name order-events\naz servicebus topic subscription create -g <rg> --namespace-name <ns> --topic-name order-events --name fulfillment\n\n# Ordered related commands: enable sessions on a queue.\naz servicebus queue create -g <rg> --namespace-name <ns> --name order-steps --enable-session true\n```\n\nUse queues for commands with one responsible handler. Use topics when independent consumers need their own durable copy.\n\n## Gotchas\n\nA topic is not the same as Event Grid. Service Bus topics carry brokered messages with subscriptions, settlement, filters, and DLQs. Event Grid routes event notifications to handlers.\n\nSessions preserve order only for messages with the same session ID and only when receivers use session-aware processing. If you randomly assign IDs or process outside sessions, you gave away the ordering guarantee.\n\nDLQs need an owner. If nobody monitors and drains them, they become a museum of failed business processes.",
+  "teachItBack": "Service Bus is Azure’s enterprise broker for high-value asynchronous work. Queues deliver each message to one consumer, while topics copy a published message to multiple subscriptions. Sessions let you process related messages in order by a session key, and dead-letter queues preserve messages that could not be delivered or processed. The broker is where reliability becomes explicit.",
+  "glossary": [
+    {
+      "term": "Topic",
+      "definition": "A Service Bus entity that accepts published messages and fans copies out to subscriptions."
+    },
+    {
+      "term": "Subscription",
+      "definition": "A durable view of a Service Bus topic, optionally filtered, with its own message lifecycle."
+    },
+    {
+      "term": "Session",
+      "definition": "A Service Bus grouping key used to process related messages together and in order."
+    },
+    {
+      "term": "Dead-letter queue",
+      "definition": "A secondary subqueue that holds messages that could not be delivered or processed successfully."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Dev docs — Introduction to Azure Service Bus Messaging",
+      "url": "https://learn.microsoft.com/en-us/azure/service-bus-messaging/service-bus-messaging-overview",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — Azure Service Bus queues, topics, and subscriptions",
+      "url": "https://learn.microsoft.com/en-us/azure/service-bus-messaging/service-bus-queues-topics-subscriptions",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — Azure Service Bus enable FIFO with sessions",
+      "url": "https://learn.microsoft.com/en-us/azure/service-bus-messaging/message-sessions",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — Service Bus dead-letter queues",
+      "url": "https://learn.microsoft.com/en-us/azure/service-bus-messaging/service-bus-dead-letter-queues",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — Compare Azure messaging services",
+      "url": "https://learn.microsoft.com/en-us/azure/service-bus-messaging/compare-messaging-services",
+      "verified": true
+    }
+  ],
+  "related": [
+    "azx-intro",
+    "azx-queues",
+    "azx-event-grid",
+    "azx-choosing-integration"
+  ]
+}

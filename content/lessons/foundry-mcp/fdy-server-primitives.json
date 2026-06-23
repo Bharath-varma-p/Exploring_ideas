@@ -1,0 +1,81 @@
+{
+  "id": "fdy-server-primitives",
+  "title": "Server Primitives",
+  "lane": "foundry-mcp",
+  "type": "concept",
+  "order": 106,
+  "summary": "MCP servers can expose tools, resources, and prompts. Tools are executable functions and are model-controlled. Resources are contextual data sources and are application-controlled.",
+  "tags": [
+    "tools",
+    "resources",
+    "prompts",
+    "control"
+  ],
+  "analogy": "A workshop has power tools, shelves of reference manuals, and laminated procedure cards. The model may choose a power tool, the app selects reference material, and the user chooses a procedure card.",
+  "diagram": "graph LR\nServer[MCP server]\nServer --> Tools[Tools model controlled actions]\nServer --> Resources[Resources app controlled data]\nServer --> Prompts[Prompts user controlled templates]\nTools --> Call[tools call]\nResources --> Read[resources read]\nPrompts --> Get[prompts get]",
+  "body": "## First principles\n\nFirst principles: context systems expose three different kinds of power. Some things are actions, some are data, and some are reusable instructions. Mixing them causes unsafe mental models, so MCP names and separates them.\n\n## Definition\n\nMCP servers can expose tools, resources, and prompts. Tools are executable functions and are model-controlled. Resources are contextual data sources and are application-controlled. Prompts are reusable templates and are user-controlled.\n\n## How it fits together\n\nAsk who controls it. Model-controlled means the LLM may decide to request a tool call. Application-controlled means the host decides when and how resource data enters context. User-controlled means the user explicitly selects a prompt template or command.\n\n## Worked example\n\n```json\n{\n  \"tool\": { \"name\": \"search_docs\", \"description\": \"Search documents\", \"inputSchema\": { \"type\": \"object\" } },\n  \"resource\": { \"uri\": \"docs://handbook\", \"name\": \"handbook\", \"mimeType\": \"text/markdown\" },\n  \"prompt\": { \"name\": \"summarize_incident\", \"description\": \"Template for incident summaries\" }\n}\n```\n\n*Three server primitive descriptors*",
+  "drills": [
+    {
+      "q": "Which primitive is model-controlled?",
+      "a": "Tools."
+    },
+    {
+      "q": "Which primitive is application-controlled?",
+      "a": "Resources."
+    },
+    {
+      "q": "Which primitive is user-controlled?",
+      "a": "Prompts."
+    }
+  ],
+  "teachItBack": "MCP server primitives are the heart of the protocol. Tools are actions, resources are data, and prompts are templates. Remember the control model: model controls tools, application controls resources, user controls prompts.",
+  "glossary": [
+    {
+      "term": "Tool",
+      "definition": "Model-controlled executable function exposed by an MCP server."
+    },
+    {
+      "term": "Resource",
+      "definition": "Application-controlled data or context identified by a URI."
+    },
+    {
+      "term": "Prompt",
+      "definition": "User-controlled reusable template or workflow exposed by a server."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Understanding MCP servers",
+      "url": "https://modelcontextprotocol.io/docs/learn/server-concepts.md",
+      "verified": true
+    },
+    {
+      "title": "MCP Tools",
+      "url": "https://modelcontextprotocol.io/specification/2025-11-25/server/tools.md",
+      "verified": true
+    },
+    {
+      "title": "MCP Resources",
+      "url": "https://modelcontextprotocol.io/specification/2025-11-25/server/resources.md",
+      "verified": true
+    },
+    {
+      "title": "MCP Prompts",
+      "url": "https://modelcontextprotocol.io/specification/2025-11-25/server/prompts.md",
+      "verified": true
+    }
+  ],
+  "quiz": [
+    {
+      "q": "Which methods are used for tool discovery and invocation?",
+      "choices": [
+        "tools/list and tools/call",
+        "resources/list and resources/read",
+        "prompts/list and prompts/get",
+        "roots/list and sampling/createMessage"
+      ],
+      "answer": 0,
+      "explanation": "Clients discover tools with tools/list and invoke them with tools/call."
+    }
+  ]
+}

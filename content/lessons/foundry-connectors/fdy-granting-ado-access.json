@@ -1,0 +1,75 @@
+{
+  "id": "fdy-granting-ado-access",
+  "title": "Granting Least Privilege Access",
+  "lane": "foundry-connectors",
+  "type": "concept",
+  "order": 306,
+  "summary": "To grant access, add the service principal or managed identity to the Azure DevOps organization through Organization Settings Users or the ServicePrincipalEntitlements REST API.",
+  "tags": [
+    "permissions",
+    "least-privilege",
+    "setup"
+  ],
+  "analogy": "The token is the badge; Azure DevOps groups are the door list. A badge without door access gets stopped at the checkpoint.",
+  "diagram": "graph TD\nMI[Managed identity] --> Org[ADO organization users]\nOrg --> Project[Project membership]\nProject --> Group[Security group]\nGroup --> Permission[Specific permissions]\nPermission --> Tool[Allowed MCP tools]",
+  "body": "## First principles\n\nFirst principles: authentication proves identity; authorization proves allowed action. A managed identity with a valid token is still useless until Azure DevOps grants it project and resource permissions.\n\n## Definition\n\nTo grant access, add the service principal or managed identity to the Azure DevOps organization through Organization Settings Users or the ServicePrincipalEntitlements REST API. Use the Enterprise applications object ID or display name, assign an access level such as Basic when needed, add it to the right project, then place it in the narrowest Azure DevOps group such as Readers, Contributors, or a custom group.\n\n## How it fits together\n\nBuild access from the use case backward. Reading bugs may need Boards read permissions. Creating tasks needs work item write. Listing pipelines needs pipeline read. Queueing pipelines needs explicit write and human approval.\n\n## Worked example\n\n```python\nrequired_permissions = {\n    'list_active_bugs': ['View work items'],\n    'create_task': ['View work items', 'Edit work items in this node'],\n    'list_pipeline_runs': ['View builds'],\n    'queue_pipeline': ['View builds', 'Queue builds'],\n}\n\nfor scenario, permissions in required_permissions.items():\n    print(scenario, 'needs', ', '.join(permissions))\n```\n\n*Least privilege checklist as code*",
+  "drills": [
+    {
+      "q": "Does adding an identity to Microsoft Entra automatically grant Azure DevOps access?",
+      "a": "No. Azure DevOps requires explicit organization and permission assignment."
+    },
+    {
+      "q": "Which principle should drive group membership?",
+      "a": "Least privilege."
+    },
+    {
+      "q": "Who normally adds identities to the organization?",
+      "a": "A Project Collection Administrator or authorized Project Administrator."
+    }
+  ],
+  "teachItBack": "Authorization is separate from token acquisition. Add the managed identity to the ADO organization, then scope it to the project and permissions it actually needs. Tool exposure should mirror those permissions.",
+  "glossary": [
+    {
+      "term": "Access level",
+      "definition": "Azure DevOps license tier such as Stakeholder, Basic, or Basic plus Test Plans."
+    },
+    {
+      "term": "Security group",
+      "definition": "ADO group that grants permissions to users or identities."
+    },
+    {
+      "term": "Least privilege",
+      "definition": "Grant only the minimum permissions required for the job."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Microsoft Learn: Use service principals and managed identities",
+      "url": "https://learn.microsoft.com/en-us/azure/devops/integrate/get-started/authentication/service-principal-managed-identity?view=azure-devops",
+      "verified": true
+    },
+    {
+      "title": "Microsoft Learn: Add users to organizations",
+      "url": "https://learn.microsoft.com/en-us/azure/devops/organizations/accounts/add-organization-users?view=azure-devops",
+      "verified": true
+    },
+    {
+      "title": "Microsoft Learn: Authentication methods for Azure DevOps",
+      "url": "https://learn.microsoft.com/en-us/azure/devops/integrate/get-started/authentication/authentication-guidance?view=azure-devops",
+      "verified": true
+    }
+  ],
+  "quiz": [
+    {
+      "q": "Which action should require human approval?",
+      "choices": [
+        "Queue a pipeline run",
+        "List projects",
+        "List active PRs",
+        "Read a wiki page"
+      ],
+      "answer": 0,
+      "explanation": "Queueing a pipeline can consume resources or deploy code, so it is a write style side effect."
+    }
+  ]
+}

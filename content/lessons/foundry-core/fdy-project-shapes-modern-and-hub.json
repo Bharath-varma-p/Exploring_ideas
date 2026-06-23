@@ -1,0 +1,75 @@
+{
+  "id": "fdy-project-shapes-modern-and-hub",
+  "title": "Two Project Shapes",
+  "lane": "foundry-core",
+  "type": "concept",
+  "order": 104,
+  "summary": "A Foundry project is the newer project type under a Foundry resource.",
+  "tags": [
+    "projects",
+    "classic",
+    "migration"
+  ],
+  "analogy": "A modern Foundry project is like a new standardized command room. A hub-based project is like an older specialized hangar attached to the base for missions needing ML workshop equipment.",
+  "diagram": "graph TD\nChoice[Project shape] --> Modern[Foundry project]\nChoice --> Classic[Hub based project]\nModern --> FR[Foundry resource]\nClassic --> Hub[Azure AI Hub]\nHub --> AML[Azure Machine Learning workspace type]\nHub --> LinkedFR[Associated Foundry resource]",
+  "body": "## First principles\n\nFirst principles: project shape determines which backend resource model owns your workspace. Microsoft is moving new investment to Foundry projects on Foundry resources, while hub-based projects remain for selected classic and Azure Machine Learning oriented scenarios. Mixing them up causes SDK, portal, and feature confusion.\n\n## Definition\n\nA Foundry project is the newer project type under a Foundry resource. A hub-based project is the classic project type under an Azure AI Hub, which is implemented with Azure Machine Learning workspace resources and associated with a Foundry resource.\n\n## How it fits together\n\nFor new learners, default to the modern Foundry resource plus Foundry project model unless a specific feature requires a hub-based project. Hub resources are accessible in the classic portal and Azure Machine Learning studio, and the official docs mark this as legacy support for selected use cases.\n\n## Worked example\n\n```bash\n# Management plane illustration for modern Foundry projects.\n# It creates no secrets. Use only after choosing names and region deliberately.\naz cognitiveservices account create   --name <foundry-resource-name>   --resource-group <resource-group>   --kind AIServices   --sku s0   --location eastus   --allow-project-management   --assign-identity\n\naz cognitiveservices account project create   --name <foundry-resource-name>   --resource-group <resource-group>   --project-name <project-name>   --location eastus\n```\n\n*CLI shape for a modern Foundry resource and project*",
+  "drills": [
+    {
+      "q": "Which project shape should most new learners start with?",
+      "a": "A modern Foundry project on a Foundry resource."
+    },
+    {
+      "q": "Where do hub-based projects fit?",
+      "a": "Classic or selected scenarios needing hub capabilities such as Azure Machine Learning related features."
+    },
+    {
+      "q": "Why is this distinction practical?",
+      "a": "Because portal experiences, supported features, and SDK compatibility can differ by project type."
+    }
+  ],
+  "teachItBack": "There are two shapes: modern Foundry projects and classic hub-based projects. New work generally starts with a Foundry project under a Foundry resource, while hub-based projects serve selected classic and ML-heavy cases. If a peer is lost, ask which resource owns the project: Foundry resource or AI Hub.",
+  "glossary": [
+    {
+      "term": "Foundry project",
+      "definition": "Newer project type under a Microsoft Foundry resource."
+    },
+    {
+      "term": "Hub-based project",
+      "definition": "Classic project type under an Azure AI Hub."
+    },
+    {
+      "term": "Azure AI Hub",
+      "definition": "Classic hub resource used for shared settings and selected Azure Machine Learning capabilities."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Microsoft Learn: What is Microsoft Foundry?",
+      "url": "https://learn.microsoft.com/en-us/azure/foundry/what-is-foundry",
+      "verified": true
+    },
+    {
+      "title": "Microsoft Learn: Create a project",
+      "url": "https://learn.microsoft.com/en-us/azure/foundry/how-to/create-projects",
+      "verified": true
+    },
+    {
+      "title": "Microsoft Learn: Hubs and hub-based project overview classic",
+      "url": "https://learn.microsoft.com/en-us/azure/foundry-classic/concepts/ai-resources",
+      "verified": true
+    }
+  ],
+  "quiz": [
+    {
+      "q": "What does a connection represent in Foundry?",
+      "choices": [
+        "A configured link from a project to another Azure or external resource",
+        "A replacement for Azure subscriptions",
+        "A model benchmark score",
+        "A billing invoice"
+      ],
+      "answer": 0,
+      "explanation": "Connections let projects authenticate to and consume resources such as Search, Storage, Foundry resources, and monitoring."
+    }
+  ]
+}

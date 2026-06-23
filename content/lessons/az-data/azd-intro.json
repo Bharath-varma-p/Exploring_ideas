@@ -1,0 +1,39 @@
+{
+  "id": "azd-intro",
+  "title": "The Azure Data Landscape: State & Storage",
+  "lane": "az-data",
+  "type": "concept",
+  "order": 10,
+  "summary": "Every application needs to remember things. This is the map of how Azure handles state: from structured relational data to unstructured blobs, and fast transactions to massive analytics.",
+  "tags": ["data", "overview", "state", "oltp", "olap"],
+  "analogy": "The data landscape is a business. OLTP is the cash register processing single sales fast. OLAP is the back-office manager running reports across 10 years of sales. Unstructured data is the pile of receipts.",
+  "diagram": "flowchart TD\n  State[Application State] --> Struct[Structured / Relational]\n  State --> NoSQL[NoSQL / Semi-structured]\n  State --> Unstruct[Unstructured / Object]\n  Struct --> OLTP[OLTP: Azure SQL, Postgres]\n  Struct --> OLAP[OLAP: Fabric, Synapse]\n  NoSQL --> Cosmos[Cosmos DB]\n  Unstruct --> Blob[Azure Blob Storage]",
+  "body": "## First principles\n\nCompute is fleeting. If you restart a virtual machine or a container, its memory is wiped clean. For an application to be useful, it has to remember things permanently. That memory is called **state**. Managing state safely, durably, and quickly is the hardest problem in computer science.\n\n## Why it exists\n\nYou cannot store everything on a local hard drive. Hard drives fill up, they fail, and if you have five web servers, they all need to read the same data. Cloud data services exist to abstract away the physical hard drives, backups, and network replication, letting you treat \"storage\" as an infinite, highly available utility.\n\n## How it works: The big dividing lines\n\nTo navigate Azure's data offerings, you only need to understand two major dividing lines:\n\n### 1. Structured vs. Unstructured\n- **Structured (Relational):** Data that fits neatly into rows and columns with strict rules (schemas). Example: A financial ledger. (Azure SQL, PostgreSQL).\n- **Semi-structured (NoSQL):** Data that has structure but no strict schema. Example: JSON documents where one user might have an `age` field and another doesn't. (Cosmos DB).\n- **Unstructured:** Raw files. Example: Images, videos, PDFs, backups. (Azure Blob Storage).\n\n### 2. Transactional (OLTP) vs. Analytical (OLAP)\n- **OLTP (Online Transaction Processing):** Fast, pinpoint operations. *\"Update user 4's balance from $10 to $5.\"* This requires high concurrency and low latency. \n- **OLAP (Online Analytical Processing):** Heavy, sweeping operations. *\"What is the average balance of all users in Europe over the last 5 years?\"* This requires scanning millions of records.\n\n## In practice\n\nWhen designing an application, you rarely pick just one. A modern e-commerce site will use:\n- **Blob Storage** for product images.\n- **Azure SQL** for the shopping cart and checkout (OLTP).\n- **Cosmos DB** for the product catalog (fast reads, flexible schema).\n- **Microsoft Fabric / Data Lake** for analyzing clickstreams to recommend products (OLAP).\n\n## Gotchas\n\n- **The Golden Hammer:** Developers often try to use the database they already know (like SQL) for everything, including storing massive images or analyzing big data. This leads to slow performance and massive bills.\n- **Compute vs. Storage:** In modern cloud data, you often pay for the storage (the bytes) and the compute (the CPU reading the bytes) separately. Keep this in mind when picking a service.",
+  "teachItBack": "Cloud data services exist to safely persist state. The landscape is divided by the shape of the data (structured, semi-structured, unstructured) and how it's queried (pinpoint OLTP transactions vs. sweeping OLAP analytics). You mix and match services based on the data's shape and purpose.",
+  "glossary": [
+    {
+      "term": "State",
+      "definition": "The data that an application needs to persist across restarts or transactions."
+    },
+    {
+      "term": "OLTP",
+      "definition": "Online Transaction Processing. Fast, single-record database operations (like a cash register)."
+    },
+    {
+      "term": "OLAP",
+      "definition": "Online Analytical Processing. Large-scale data analysis scanning many records (like a quarterly report)."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Microsoft Learn: Understand data store models",
+      "url": "https://learn.microsoft.com/en-us/azure/architecture/guide/technology-choices/data-store-overview",
+      "verified": true
+    }
+  ],
+  "related": [
+    "azd-storage-account",
+    "azd-azure-sql",
+    "azd-cosmos"
+  ]
+}

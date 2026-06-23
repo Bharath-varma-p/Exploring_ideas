@@ -1,0 +1,84 @@
+{
+  "id": "fdy-foundry-vs-neighbor-services",
+  "title": "Foundry Versus Neighbor Services",
+  "lane": "foundry-core",
+  "type": "concept",
+  "order": 103,
+  "summary": "Foundry is the unified AI application platform. Azure OpenAI focuses on OpenAI model access. Azure Machine Learning focuses on broader custom ML lifecycle, training, and ML operations.",
+  "tags": [
+    "comparison",
+    "decision",
+    "services"
+  ],
+  "analogy": "It is like transportation: a bicycle is Azure OpenAI for a short model trip, a factory is Azure Machine Learning for building engines, specialized trucks are AI Services, and Foundry is the logistics command center coordinating many vehicles for a mission.",
+  "diagram": "graph TD\nNeed[Workload need] --> ModelOnly[Model call only]\nNeed --> CustomML[Custom training and ML ops]\nNeed --> Prebuilt[Speech vision language safety]\nNeed --> AppPlatform[Governed AI app platform]\nModelOnly --> AOAI[Azure OpenAI]\nCustomML --> AML[Azure Machine Learning]\nPrebuilt --> Tools[Azure AI Services and Foundry Tools]\nAppPlatform --> Foundry[Microsoft Foundry]",
+  "body": "## First principles\n\nFirst principles: choose the smallest tool that fits the job, but not smaller. A raw model endpoint is enough for simple model calls; a machine learning workspace is right for custom training workflows; prebuilt AI services solve specialized perception or language tasks; Foundry is best when generative AI apps need models plus projects, agents, evaluations, governance, and operations.\n\n## Definition\n\nFoundry is the unified AI application platform. Azure OpenAI focuses on OpenAI model access. Azure Machine Learning focuses on broader custom ML lifecycle, training, and ML operations. Azure AI Services and Foundry Tools expose prebuilt capabilities such as Speech, Vision, Language, Content Safety, and related APIs.\n\n## How it fits together\n\nAsk: Am I only calling an OpenAI model, training custom ML, using a specific prebuilt AI capability, or building a governed AI app? Foundry becomes the default starting point for most new enterprise generative AI development because it combines app workspace, model access, agents, evaluations, and governance.\n\n## Worked example\n\n```bash\n# Use this as a lightweight architecture checklist.\nprintf '%s\n'   '1 If I only need direct OpenAI model calls, evaluate Azure OpenAI or Foundry Models.'   '2 If I need agents, evaluations, tracing, and projects, start with Foundry.'   '3 If I need custom ML training and ML workspaces, evaluate Azure Machine Learning or hub based projects.'   '4 If I need Speech Vision Language or Content Safety APIs, use Foundry Tools or Azure AI Services.'\n```\n\n*Decision checklist before creating resources*",
+  "drills": [
+    {
+      "q": "When might standalone Azure OpenAI be sufficient?",
+      "a": "When the workload only needs Azure OpenAI completions or responses without Foundry project, agent, or evaluation features."
+    },
+    {
+      "q": "When does Azure Machine Learning fit better?",
+      "a": "When the center of gravity is custom ML training, ML workspaces, or classic managed compute model hosting."
+    },
+    {
+      "q": "What is the Foundry default use case?",
+      "a": "Governed generative AI application development with projects, models, agents, evaluations, and operations."
+    }
+  ],
+  "teachItBack": "Foundry is not a replacement for every Azure AI service; it is the governed app platform around AI development. Azure OpenAI is narrower model access, Azure Machine Learning is deeper custom ML, and AI Services provide specialized APIs. Teach the decision by asking what job the learner is actually trying to do.",
+  "glossary": [
+    {
+      "term": "Azure OpenAI",
+      "definition": "Azure service and Foundry model capability for OpenAI models with Azure enterprise controls."
+    },
+    {
+      "term": "Azure Machine Learning",
+      "definition": "Azure platform for custom machine learning lifecycle and operations."
+    },
+    {
+      "term": "Azure AI Services",
+      "definition": "Prebuilt AI APIs such as Speech, Vision, Language, and Content Safety."
+    },
+    {
+      "term": "Foundry Tools",
+      "definition": "AI Services capabilities surfaced within the Foundry family."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Microsoft Learn: What is Microsoft Foundry?",
+      "url": "https://learn.microsoft.com/en-us/azure/foundry/what-is-foundry",
+      "verified": true
+    },
+    {
+      "title": "Microsoft Learn: Microsoft Foundry architecture",
+      "url": "https://learn.microsoft.com/en-us/azure/foundry/concepts/architecture",
+      "verified": true
+    },
+    {
+      "title": "Microsoft Learn: Hubs and hub-based project overview classic",
+      "url": "https://learn.microsoft.com/en-us/azure/foundry-classic/concepts/ai-resources",
+      "verified": true
+    },
+    {
+      "title": "Microsoft Learn: Microsoft Foundry Models overview",
+      "url": "https://learn.microsoft.com/en-us/azure/foundry/concepts/foundry-models-overview",
+      "verified": true
+    }
+  ],
+  "quiz": [
+    {
+      "q": "When is standalone Azure OpenAI potentially enough?",
+      "choices": [
+        "When you only need direct model calls without broader Foundry project features",
+        "When you need multiple projects and evaluations",
+        "When you need classic hub shared compute",
+        "When you need a resource group"
+      ],
+      "answer": 0,
+      "explanation": "The architecture docs note standalone Azure OpenAI can be sufficient for simple completions style workloads."
+    }
+  ]
+}

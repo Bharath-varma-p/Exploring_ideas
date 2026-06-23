@@ -1,0 +1,63 @@
+{
+  "id": "fdy-safe-production-checklist",
+  "title": "Production Checklist for MCP Agents",
+  "lane": "foundry-mcp",
+  "type": "concept",
+  "order": 213,
+  "summary": "A production MCP agent should use managed identity, least-privilege RBAC, allowed tools, approval for risky actions, trusted MCP servers, private networking when needed, tracing, evaluations, and versioned deployment.",
+  "tags": [
+    "production",
+    "security",
+    "checklist"
+  ],
+  "analogy": "It is like pre-flight inspection: fuel, controls, comms, weapons safety, route, weather, and abort plan must all be checked before takeoff.",
+  "diagram": "graph TD\nChecklist[Production MCP agent] --> Identity[Managed identity]\nChecklist --> RBAC[Least privilege RBAC]\nChecklist --> Allow[Allowed tools]\nChecklist --> Approval[Approval gates]\nChecklist --> Network[Public or private endpoint decision]\nChecklist --> Trace[Tracing and logs]\nChecklist --> Version[Version and rollback]",
+  "body": "## First principles\n\nFirst principles: an agent with tools is software with authority. Before production, reduce authority, prove identity, observe behavior, and make rollback possible.\n\n## Definition\n\nA production MCP agent should use managed identity, least-privilege RBAC, allowed_tools, approval for risky actions, trusted MCP servers, private networking when needed, tracing, evaluations, and versioned deployment.\n\n## How it fits together\n\nDo not ship an MCP agent just because the demo answered once. Ship only after the tool list, identities, RBAC, logging, failure handling, and user consent paths are reviewed.\n\n## Worked example\n\n```python\n# This check validates required environment decisions before running a deployment script.\nimport os, sys\n\nrequired = [\"PROJECT_ENDPOINT\", \"MODEL_DEPLOYMENT_NAME\", \"MCP_SERVER_URL\", \"MCP_ALLOWED_TOOLS\"]\nmissing = [name for name in required if not os.environ.get(name)]\nif missing:\n    sys.exit(f\"Missing required settings: {', '.join(missing)}\")\n\nallowed = [t.strip() for t in os.environ[\"MCP_ALLOWED_TOOLS\"].split(\",\") if t.strip()]\nif not allowed:\n    sys.exit(\"MCP_ALLOWED_TOOLS must name at least one tool.\")\nif any(t == \"*\" for t in allowed):\n    sys.exit(\"Wildcard MCP tools are not allowed for production.\")\n\nprint(\"Preflight passed for MCP agent deployment settings.\")\n```\n\n*Executable checklist you can run in CI or deployment review*",
+  "drills": [
+    {
+      "q": "What is the biggest MCP production smell?",
+      "a": "A broad or wildcard tool list combined with weak or no approval."
+    },
+    {
+      "q": "Why prefer trusted MCP servers?",
+      "a": "Tool calls may share prompt content or receive external data, so server trust and data handling matter."
+    },
+    {
+      "q": "When should private endpoints be considered?",
+      "a": "When the MCP server or data path must not be exposed to the public internet."
+    }
+  ],
+  "teachItBack": "Production MCP agents are governed systems. Identity, least privilege, approval, tracing, and trusted endpoints are mandatory design elements. A passing demo is not a production readiness signal.",
+  "glossary": [
+    {
+      "term": "Least privilege",
+      "definition": "Granting only the access required for the task."
+    },
+    {
+      "term": "Private MCP",
+      "definition": "MCP endpoint reachable through private networking instead of public internet."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Microsoft Learn: Connect to MCP server endpoints for agents",
+      "url": "https://learn.microsoft.com/en-us/azure/foundry/agents/how-to/tools/model-context-protocol",
+      "verified": true
+    },
+    {
+      "title": "Microsoft Learn: Set up MCP server authentication",
+      "url": "https://learn.microsoft.com/en-us/azure/foundry/agents/how-to/mcp-authentication",
+      "verified": true
+    },
+    {
+      "title": "Microsoft Learn: Agent identity concepts in Microsoft Foundry",
+      "url": "https://learn.microsoft.com/en-us/azure/foundry/agents/concepts/agent-identity",
+      "verified": true
+    },
+    {
+      "title": "Microsoft Learn: Agent tracing in Microsoft Foundry",
+      "url": "https://learn.microsoft.com/en-us/azure/foundry/observability/concepts/trace-agent-concept",
+      "verified": true
+    }
+  ]
+}

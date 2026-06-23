@@ -1,0 +1,75 @@
+{
+  "id": "azg-pricing-models",
+  "title": "Pricing Models: Why Azure Has So Many Ways to Pay",
+  "lane": "az-governance",
+  "type": "concept",
+  "order": 70,
+  "summary": "Azure pricing models trade flexibility, commitment, interruption tolerance, and existing licenses: pay-as-you-go, Reservations, Savings Plans, Spot, and Azure Hybrid Benefit each exist for a different workload shape.",
+  "tags": [
+    "azure",
+    "pricing",
+    "reservations",
+    "savings-plans",
+    "spot",
+    "hybrid-benefit"
+  ],
+  "analogy": "Azure pricing is transportation pricing: taxi, commuter pass, flexible travel card, standby seat, and using a license you already own.",
+  "diagram": "flowchart LR\n  Workload[Workload behavior] --> Variable[Unknown or bursty]\n  Workload --> Stable[Stable baseline]\n  Workload --> Flexible[Flexible compute spend]\n  Workload --> Interruptible[Interruptible]\n  Workload --> Licensed[Existing licenses]\n  Variable --> PAYG[Pay as you go]\n  Stable --> Reservations\n  Flexible --> Savings[Savings Plans]\n  Interruptible --> Spot\n  Licensed --> AHB[Azure Hybrid Benefit]",
+  "body": "## First principles\n\nCloud pricing is a risk trade. If you keep maximum flexibility, Azure charges standard on-demand rates. If you commit to predictable usage, Azure can offer a discount. If you accept interruption, Azure can sell spare capacity cheaply. If you already paid for eligible licenses, Azure can avoid charging you twice.\n\nThe pricing menu looks complicated because workloads behave differently. A prototype, a payroll database, a batch renderer, and a licensed Windows Server fleet should not all buy capacity the same way.\n\n## Why it exists\n\n**Pay-as-you-go** exists for uncertainty. You can start, stop, resize, and experiment without committing. It is the clean default, but expensive for always-on baselines.\n\n**Reservations** exist for predictable usage. You commit to one-year or three-year plans for matching resources and receive a billing discount. Microsoft docs describe reservation savings as up to 72% from pay-as-you-go prices for supported resources. Reservations work best when you know the resource family, region, and baseline demand.\n\n**Savings Plans** exist for flexible commitment. Instead of reserving a specific VM shape, you commit to a fixed dollar amount per hour for one or three years. Eligible usage consumes that commitment automatically each hour; unused hourly commitment does not roll over. Savings Plans are useful when compute demand is steady in dollars but fluid across services, regions, or SKUs.\n\n**Spot VMs** exist because Azure sometimes has unused capacity. You get significant discounts, but Azure can evict the VM when it needs capacity back or when price exceeds your max. Spot VMs have no SLA or high availability guarantee and can receive up to 30 seconds notice before eviction.\n\n**Azure Hybrid Benefit** exists to honor eligible existing licenses, such as Windows Server core licenses with active Software Assurance or qualifying subscriptions, reducing Azure VM software cost.\n\n## How it works\n\nCommitment discounts are billing constructs, not runtime magic. Reservations and Savings Plans do not make the VM faster or more reliable; they change how matching usage is charged. Spot is different: it changes runtime reliability because eviction is part of the deal. Azure Hybrid Benefit changes the licensing flag/cost treatment for eligible workloads; it does not restart a VM when toggled in supported scenarios.\n\n## Analogy\n\nNeed one ride across town? Take a taxi: pay-as-you-go. Commute the same route daily? Buy a monthly pass: reservation. Travel constantly but on different routes? Use a flexible transit card: savings plan. Willing to fly standby? Spot. Already own a valid pass from work? Hybrid Benefit.\n\n## In practice\n\nClassify every workload baseline:\n\n```text\nUnknown demand        -> Pay-as-you-go\nStable always-on base -> Reservation candidate\nSteady compute spend  -> Savings Plan candidate\nRetryable batch/dev   -> Spot candidate\nEligible licenses     -> Azure Hybrid Benefit candidate\n```\n\nThen use Cost Management and Advisor recommendations to avoid guessing at commitments.\n\n## Gotchas\n\nDo not buy commitments to hide waste. Rightsize first, then commit. Reservations can be exchanged or refunded within rules, but they still require governance. Savings Plans are not refundable. Spot is not for stateful production systems that cannot handle interruption. Hybrid Benefit requires licensing eligibility; product terms win over simplified docs.",
+  "teachItBack": "Azure pricing models map to workload behavior. Pay-as-you-go buys flexibility, Reservations buy discounted predictability, Savings Plans buy flexible hourly spend commitment, Spot buys cheap interruptible capacity, and Azure Hybrid Benefit applies eligible existing licenses. The governing question is not “which is cheapest,” but “which risk am I willing to trade for the discount?”",
+  "glossary": [
+    {
+      "term": "Pay-as-you-go",
+      "definition": "On-demand pricing with no long-term commitment, useful for variable or experimental usage."
+    },
+    {
+      "term": "Reservation",
+      "definition": "A one- or three-year commitment discount for matching supported resources."
+    },
+    {
+      "term": "Savings Plan",
+      "definition": "A commitment-based discount where you agree to spend a fixed amount per hour on eligible usage."
+    },
+    {
+      "term": "Spot VM",
+      "definition": "A discounted VM using spare Azure capacity that can be evicted when capacity is needed."
+    },
+    {
+      "term": "Azure Hybrid Benefit",
+      "definition": "A licensing benefit that lets eligible existing licenses reduce Azure workload costs."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Azure pricing — Pay as you go",
+      "url": "https://azure.microsoft.com/en-us/pricing/purchase-options/azure-account?icid=payg",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — What are Azure Reservations?",
+      "url": "https://learn.microsoft.com/en-us/azure/cost-management-billing/reservations/save-compute-costs-reservations",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — What are Azure savings plans?",
+      "url": "https://learn.microsoft.com/en-us/azure/cost-management-billing/savings-plan/savings-plan-overview",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — About Azure Spot Virtual Machines",
+      "url": "https://learn.microsoft.com/en-us/azure/virtual-machines/spot-vms",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — Explore Azure Hybrid Benefit for Windows VMs",
+      "url": "https://learn.microsoft.com/en-us/azure/virtual-machines/windows/hybrid-use-benefit-licensing",
+      "verified": true
+    }
+  ],
+  "related": [
+    "azg-cost-management",
+    "azg-advisor",
+    "azg-quotas",
+    "azg-tags"
+  ]
+}

@@ -1,0 +1,60 @@
+{
+  "id": "azg-policy",
+  "title": "Azure Policy: Guardrails, Not Guesswork",
+  "lane": "az-governance",
+  "type": "concept",
+  "order": 30,
+  "summary": "Azure Policy compares resource state to business rules, then audits, denies, changes, or remediates resources so standards are enforced consistently at scale.",
+  "tags": [
+    "azure",
+    "policy",
+    "initiatives",
+    "compliance",
+    "guardrails"
+  ],
+  "analogy": "Azure Policy is a spell-checker for infrastructure: it can underline mistakes, block them, auto-correct them, or insert missing punctuation.",
+  "diagram": "flowchart LR\n  Definition[Policy definition] --> Assignment[Assignment at scope]\n  Initiative[Initiative] --> Assignment\n  Resource[Create or update resource] --> Evaluate[Policy evaluation]\n  Assignment --> Evaluate\n  Evaluate --> Audit[Audit]\n  Evaluate --> Deny[Deny]\n  Evaluate --> Modify[Modify or append]\n  Evaluate --> Remediate[Deploy if not exists]",
+  "body": "## First principles\n\nA cloud resource is a JSON document with properties: region, SKU, network settings, tags, diagnostic settings, encryption flags. If your business rule can be expressed against those properties, a human should not have to inspect it by hand. **Azure Policy** is the rules engine that evaluates those resource properties against standards.\n\nPolicy is different from permission. RBAC asks, 'Are you allowed to try this action?' Policy asks, 'Even if you are allowed, would the resulting resource be compliant?'\n\n## Why it exists\n\nBefore policy, standards lived in wiki pages and code review comments. Teams learned the allowed regions only after deployment failed a manual review. Diagnostics were added after outages. Tags were fixed at month-end. Policy moves those standards into the platform so every create and update request is checked consistently.\n\nThe trick is choosing the right response. Not every rule should be a wall. Early in a rollout, **audit** shows you what would break. When the organization is ready, **deny** blocks bad changes. For missing default values, **append** or **modify** can fix the request. For supporting resources like diagnostic settings, **deployIfNotExists** can remediate drift.\n\n## How it works\n\nA **policy definition** describes a condition and one effect. An **initiative** groups multiple definitions so you can assign a whole control set together. An **assignment** attaches a definition or initiative to a scope: management group, subscription, resource group, or resource. Subscopes can be excluded when needed.\n\nCurrent Azure Policy effects include `audit`, `deny`, `append`, `modify`, `deployIfNotExists`, `auditIfNotExists`, `denyAction`, `disabled`, `manual`, `mutate`, and `addToNetworkGroup`. The effects are not interchangeable magic words; some require extra configuration. For example, `modify` and `deployIfNotExists` need a managed identity with permissions to change or create target resources.\n\nAzure Policy evaluates on create/update events, assignment changes, policy changes, and a regular compliance cycle. Microsoft docs describe the standard compliance evaluation cycle as occurring every 24 hours.\n\n## Analogy\n\nPolicy is like a spell-checker with modes. In learning mode it underlines errors. In strict mode it refuses to send the email. In auto-correct mode it changes `teh` to `the`. In template mode it inserts the missing signature block. Same rule family, different enforcement posture.\n\n## In practice\n\nStart with audit, inspect blast radius, then tighten:\n\n```bash\naz policy assignment list --scope /subscriptions/<subscription-id> -o table\naz policy state summarize --subscription <subscription-id>\n```\n\nA common initiative might require allowed regions, required tags, diagnostic settings, and approved SKUs. Put it on the management group that represents the environment, not on every resource group by hand.\n\n## Gotchas\n\nDo not use Policy to model human approval workflows. It is best at machine-checkable resource state. Be careful with overlapping deny policies: the net result is cumulative and most restrictive. Also distinguish guardrails from gates. A guardrail prevents a known bad outcome automatically; a gate asks a person to decide. Use gates sparingly.",
+  "teachItBack": "Azure Policy evaluates resource properties against business rules at a scope. Definitions hold the rule, initiatives bundle rules, assignments attach them to the hierarchy, and effects decide the response. Use audit to learn, deny for nonnegotiables, modify/append for safe defaults, and deployIfNotExists for supporting resources that should appear automatically.",
+  "glossary": [
+    {
+      "term": "Policy definition",
+      "definition": "A JSON rule that describes what resource condition to evaluate and what effect to apply."
+    },
+    {
+      "term": "Initiative",
+      "definition": "A group of policy definitions assigned as one control set."
+    },
+    {
+      "term": "Effect",
+      "definition": "The response Azure Policy applies when a rule matches, such as audit, deny, modify, append, or deployIfNotExists."
+    },
+    {
+      "term": "Remediation",
+      "definition": "The process of bringing existing noncompliant resources into compliance, often using a managed identity."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Dev docs — Overview of Azure Policy",
+      "url": "https://learn.microsoft.com/en-us/azure/governance/policy/overview",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — Azure Policy definitions effect basics",
+      "url": "https://learn.microsoft.com/en-us/azure/governance/policy/concepts/effect-basics",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — Organize your resources with management groups",
+      "url": "https://learn.microsoft.com/en-us/azure/governance/management-groups/overview",
+      "verified": true
+    }
+  ],
+  "related": [
+    "azg-management-groups",
+    "azg-tags",
+    "azg-landing-zones",
+    "azg-waf"
+  ]
+}

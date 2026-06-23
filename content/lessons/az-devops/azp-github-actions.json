@@ -1,0 +1,67 @@
+{
+  "id": "azp-github-actions",
+  "title": "GitHub Actions for Azure — Keyless Deploys with OIDC",
+  "lane": "az-devops",
+  "type": "concept",
+  "order": 50,
+  "summary": "GitHub Actions can deploy to Azure without storing a service-principal secret. OpenID Connect plus workload identity federation lets a trusted workflow exchange a short-lived token for Azure access.",
+  "tags": [
+    "azure",
+    "github-actions",
+    "oidc",
+    "workload-identity-federation",
+    "security",
+    "ci-cd"
+  ],
+  "analogy": "OIDC deployment is a hotel front desk checking today's conference badge instead of handing every attendee a permanent master key.",
+  "diagram": "sequenceDiagram\n  participant GH as GitHub Actions job\n  participant OIDC as GitHub OIDC issuer\n  participant Entra as Microsoft Entra ID\n  participant Azure as Azure Resource Manager\n  GH->>OIDC: request short-lived OIDC token\n  GH->>Entra: exchange token using federated credential\n  Entra-->>GH: Azure access token\n  GH->>Azure: deploy with RBAC-scoped token",
+  "body": "## First principles\n\nA deployment pipeline is a workload. Like any workload, it needs an identity before Azure should let it create, update, or delete resources. The old shortcut was to create a service principal, store a client secret in CI, and hope nobody leaked it.\n\n**OpenID Connect (OIDC)** plus **workload identity federation** removes that long-lived secret. GitHub proves the workflow's identity with a short-lived token. Microsoft Entra ID trusts only the configured repository, branch, tag, or environment subject, then issues an Azure access token for the mapped application or user-assigned managed identity.\n\n## Why it exists\n\nSecrets in CI are uncomfortable because CI is noisy: logs, forks, pull requests, many maintainers, many actions, many environments. A leaked client secret is a reusable key until it expires or is rotated. A federated OIDC token is minted for a specific run and expires quickly. There is no Azure password sitting in GitHub to steal.\n\nAs of current Microsoft and GitHub guidance, OIDC is the modern pattern for Azure deployments from GitHub Actions. You still store identifiers such as client ID, tenant ID, and subscription ID, but those are not credentials by themselves.\n\n## How it works\n\nCreate either an app registration/service principal or a user-assigned managed identity. Add a **federated identity credential** that trusts GitHub's OIDC issuer and a precise subject such as one repo and one environment. Assign Azure RBAC at the narrowest useful scope. In GitHub Actions, grant `id-token: write` and use `azure/login` with OIDC.\n\nThis is the same lifecycle idea as the 🔐 managed-identity lane's system-assigned vs user-assigned distinction: if a deployment identity must be stable, preauthorized, or reused across workflows, a user-assigned managed identity is often the cleaner badge.\n\n## Analogy\n\nA client secret is a permanent master key copied into a drawer. OIDC is the front desk: it checks today's conference badge, verifies the guest list, and issues a room key that stops working soon.\n\n## In practice\n\n```yaml\npermissions:\n  id-token: write\n  contents: read\n\nsteps:\n- uses: azure/login@v2\n  with:\n    client-id: ${{ secrets.AZURE_CLIENT_ID }}\n    tenant-id: ${{ secrets.AZURE_TENANT_ID }}\n    subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}\n- run: az deployment group create --resource-group <rg> --template-file main.bicep\n```\n\nThe secret-looking values here are identifiers. The credential is the short-lived token exchange, not a stored password.\n\n## Gotchas\n\nThe trust rule must be tight. If the federated credential trusts too broad a subject, you moved the risk from a leaked secret to an over-permissive token issuer. RBAC still matters: OIDC authenticates the workflow, but Azure authorization decides what it can do. Be careful with pull requests from forks; design workflows so untrusted code cannot mint deploy-capable tokens.",
+  "teachItBack": "GitHub Actions should authenticate to Azure as a workload, not by hiding a long-lived password. OIDC lets a workflow prove who it is for this run, Entra validates a federated credential, and Azure issues a short-lived token scoped by RBAC. The result is keyless CI/CD: no service-principal secret to leak or rotate.",
+  "glossary": [
+    {
+      "term": "OpenID Connect",
+      "definition": "Identity protocol used by GitHub Actions to request a short-lived token proving workflow identity."
+    },
+    {
+      "term": "Workload identity federation",
+      "definition": "A trust relationship that lets an external workload exchange its identity token for Microsoft Entra-protected access without a secret."
+    },
+    {
+      "term": "Federated identity credential",
+      "definition": "The Entra configuration that defines which external issuer and subject are trusted."
+    },
+    {
+      "term": "Service principal",
+      "definition": "An identity object used by applications or automation to access Azure resources."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Dev docs — Authenticate to Azure from GitHub Actions by OpenID Connect",
+      "url": "https://learn.microsoft.com/en-us/azure/developer/github/connect-from-azure-openid-connect",
+      "verified": true
+    },
+    {
+      "title": "Dev docs — Workload identity federation",
+      "url": "https://learn.microsoft.com/en-us/entra/workload-id/workload-identity-federation",
+      "verified": true
+    },
+    {
+      "title": "GitHub Docs — Configuring OpenID Connect in Azure",
+      "url": "https://docs.github.com/en/actions/how-tos/secure-your-work/security-harden-deployments/oidc-in-azure",
+      "verified": true
+    },
+    {
+      "title": "YouTube — John Savill Azure Master Class 360-in-360",
+      "url": "https://www.youtube.com/watch?v=1NOZv2M3q2k",
+      "verified": true
+    }
+  ],
+  "related": [
+    "azp-intro",
+    "azp-arm-bicep",
+    "azp-terraform",
+    "azp-environments",
+    "azp-deployment-strategies"
+  ]
+}

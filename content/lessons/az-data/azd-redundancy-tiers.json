@@ -1,0 +1,39 @@
+{
+  "id": "azd-redundancy-tiers",
+  "title": "Redundancy & Access Tiers: Durability vs. Cost",
+  "lane": "az-data",
+  "type": "concept",
+  "order": 30,
+  "summary": "How Azure guarantees you never lose a file, and how you tune the cost based on how often you need to read it.",
+  "tags": ["storage", "redundancy", "lrs", "grs", "archive"],
+  "analogy": "Redundancy is how many copies of your manuscript exist (LRS = 3 in one room, ZRS = 3 in different buildings). Access tiers are where you keep them (Hot = desk drawer, Archive = safe deposit box 500 miles away).",
+  "diagram": "flowchart TD\n  LRS[LRS: 3 copies\\n1 datacenter] --> ZRS[ZRS: 3 copies\\n3 datacenters]\n  LRS --> GRS[GRS: 6 copies\\n2 regions]\n  ZRS --> GZRS[GZRS: 6 copies\\nmulti-DC + 2 regions]",
+  "body": "## First principles\n\nHardware fails. Hard drives die, server racks lose power, and datacenters can be hit by natural disasters. To guarantee data survives, the cloud must quietly make multiple copies of your data across independent fault domains. But making copies costs money, and keeping data instantly accessible costs money.\n\n## Why it exists\n\nYou need a dial to control risk versus cost. You don't want to pay for planetary-scale replication for temporary log files, but you absolutely want it for your company's core financial database. Azure gives you two dials for Storage Accounts: **Redundancy** (how many copies) and **Access Tiers** (how fast you can get them).\n\n## How it works\n\n### The Redundancy Dial (Durability)\nEvery byte written to Azure Storage is replicated at least 3 times. You choose *where* those copies live:\n- **LRS (Locally Redundant Storage):** 3 copies on 3 different server racks inside *one* datacenter. Cheapest. If the datacenter burns down, the data is gone.\n- **ZRS (Zone-Redundant Storage):** 3 copies spread across 3 physically separate datacenters (Availability Zones) in the same region. Survives a datacenter fire.\n- **GRS (Geo-Redundant Storage):** 3 copies in the primary region (like LRS), plus 3 more copies asynchronously replicated to a secondary region hundreds of miles away. Survives a regional disaster.\n- **GZRS (Geo-Zone-Redundant Storage):** ZRS in the primary region, plus 3 copies in a secondary region. Maximum durability.\n\n### The Access Tier Dial (Temperature)\nData has a lifecycle. You tune costs by telling Azure how often you intend to read it:\n- **Hot:** Optimized for frequent access. Highest storage cost, lowest access (read) cost.\n- **Cool:** For data accessed less than once a month. Cheaper to store, but you pay a penalty fee if you read it frequently.\n- **Cold:** For data accessed less than once a year. Even cheaper storage, higher read penalties.\n- **Archive:** For long-term compliance (e.g., 7-year tax records). Dirt cheap storage, but the data is literally taken offline. It takes hours to \"rehydrate\" and read it, and it costs the most to retrieve.\n\n## In practice\n\nLifecycle management policies automate the tiering. You can tell Azure:\n\n```json\n// Mental model of a lifecycle rule:\nIF blob hasn't been modified in 30 days -> Move to Cool\nIF blob hasn't been modified in 90 days -> Move to Archive\n```\n\n## Gotchas\n\n- **Archive Rehydration:** Do not put data in the Archive tier if there's any chance you need it quickly. Rehydrating a blob from Archive can take up to 15 hours.\n- **Write once, pay twice:** Changing the redundancy of an existing storage account from LRS to GRS incurs a massive one-time network charge because Azure has to physically copy all your data to the new region.",
+  "teachItBack": "Azure Storage protects data through redundancy and controls cost through access tiers. LRS, ZRS, and GRS dictate physical placement (from one rack to multiple regions). Hot, Cool, Cold, and Archive dictate the pricing model, trading higher read costs for much cheaper at-rest storage costs.",
+  "glossary": [
+    {
+      "term": "LRS",
+      "definition": "Locally Redundant Storage. Three synchronous copies within a single physical datacenter."
+    },
+    {
+      "term": "Archive Tier",
+      "definition": "Offline storage tier with the lowest storage cost but high retrieval costs and latency."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Microsoft Learn: Data redundancy",
+      "url": "https://learn.microsoft.com/en-us/azure/storage/common/storage-redundancy",
+      "verified": true
+    },
+    {
+      "title": "Microsoft Learn: Access tiers for blob data",
+      "url": "https://learn.microsoft.com/en-us/azure/storage/blobs/access-tiers-overview",
+      "verified": true
+    }
+  ],
+  "related": [
+    "azd-storage-account",
+    "azd-backup-dr"
+  ]
+}

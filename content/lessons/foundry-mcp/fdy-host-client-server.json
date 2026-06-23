@@ -1,0 +1,76 @@
+{
+  "id": "fdy-host-client-server",
+  "title": "Host Client Server Architecture",
+  "lane": "foundry-mcp",
+  "type": "concept",
+  "order": 102,
+  "summary": "MCP uses a client-server architecture. The host is the AI application; it creates one MCP client for each MCP server connection. Each server exposes capabilities such as tools, resources, and prompts to its corresponding client.",
+  "tags": [
+    "architecture",
+    "host",
+    "client",
+    "server"
+  ],
+  "analogy": "Picture a commander, radio operators, and specialist units. The host is the commander, each client is one radio channel, and each server is a specialist unit like maps, weather, or logistics.",
+  "diagram": "graph TD\nHost[AI host application]\nHost --> ClientA[MCP client one]\nHost --> ClientB[MCP client two]\nHost --> ClientC[MCP client three]\nClientA --> ServerA[Filesystem server]\nClientB --> ServerB[Calendar server]\nClientC --> ServerC[Remote knowledge server]\nClientB --> UX[Host consent UI]\nUX --> User[User]",
+  "body": "## First principles\n\nFirst principles: a conversation app has two jobs that should not be mixed. The host owns user experience and LLM orchestration. A protocol client owns one connection. A server owns one slice of external capability. Separating them limits complexity and makes each connection independently negotiable and auditable.\n\n## Definition\n\nMCP uses a client-server architecture. The host is the AI application; it creates one MCP client for each MCP server connection. Each server exposes capabilities such as tools, resources, and prompts to its corresponding client.\n\n## How it fits together\n\nNever collapse host and client in your mental model. The user sees the host. The host embeds clients. Each client maintains a dedicated connection to exactly one server. A remote server may serve many clients, but each client-server relationship is still a distinct protocol session.\n\n## Worked example\n\n```python\n# Pseudocode: real hosts hide most of this behind their MCP manager.\nconfigured_servers = [\"filesystem\", \"calendar\", \"knowledge\"]\n\nfor server_name in configured_servers:\n    # One MCP client object per server connection.\n    client = create_mcp_client_for(server_name)\n    initialize_result = client.initialize()\n    print(server_name, initialize_result.capabilities)\n```\n\n*Host creates one client connection per server*",
+  "drills": [
+    {
+      "q": "Who owns the user experience?",
+      "a": "The host application."
+    },
+    {
+      "q": "How many server connections does one MCP client maintain?",
+      "a": "One dedicated connection to one MCP server."
+    },
+    {
+      "q": "Can one host connect to many servers?",
+      "a": "Yes. The host creates separate clients for separate server connections."
+    }
+  ],
+  "teachItBack": "An MCP host is the app, not the same thing as an MCP client. The host embeds clients, and each client talks to one server. Servers are capability providers, while the host decides how those capabilities enter the user experience.",
+  "glossary": [
+    {
+      "term": "MCP Host",
+      "definition": "AI application that coordinates users, LLMs, and one or more MCP clients."
+    },
+    {
+      "term": "MCP Client",
+      "definition": "Protocol component inside a host that maintains one server connection."
+    },
+    {
+      "term": "MCP Server",
+      "definition": "Program exposing context and capabilities through MCP."
+    }
+  ],
+  "sources": [
+    {
+      "title": "MCP Architecture overview",
+      "url": "https://modelcontextprotocol.io/docs/learn/architecture.md",
+      "verified": true
+    },
+    {
+      "title": "Understanding MCP clients",
+      "url": "https://modelcontextprotocol.io/docs/learn/client-concepts.md",
+      "verified": true
+    },
+    {
+      "title": "Understanding MCP servers",
+      "url": "https://modelcontextprotocol.io/docs/learn/server-concepts.md",
+      "verified": true
+    }
+  ],
+  "quiz": [
+    {
+      "q": "In MCP architecture, what does the host create for each server connection?",
+      "choices": [
+        "One MCP client",
+        "One model checkpoint",
+        "One Azure subscription",
+        "One prompt injection filter"
+      ],
+      "answer": 0,
+      "explanation": "The host embeds one MCP client per MCP server connection."
+    }
+  ]
+}

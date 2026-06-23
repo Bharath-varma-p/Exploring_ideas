@@ -1,0 +1,74 @@
+{
+  "id": "fdy-deployment-object-alias",
+  "title": "Deployment name, model name, and model version",
+  "lane": "foundry-models",
+  "type": "concept",
+  "order": 104,
+  "summary": "A deployment object contains a deployment name, underlying model name, model version, SKU or deployment type, capacity, state, and rate limits. The deployment name is the callable alias used to route requests.",
+  "tags": [
+    "alias",
+    "version",
+    "deployment"
+  ],
+  "analogy": "The deployment name is a restaurant menu item such as house burger. The kitchen can change the ingredient batch or recipe version, but customers order by the stable menu name.",
+  "diagram": "flowchart LR\n  App[application] --> Alias[deployment name]\n  Alias --> Model[model name]\n  Model --> Version[model version]\n  Alias --> SKU[deployment type]\n  Alias --> Limits[rate limits]",
+  "body": "## First principles\n\nApplications need a stable name to call, but operators need freedom to choose or migrate the backing model version. The deployment object separates those concerns.\n\n## Definition\n\nA deployment object contains a deployment name, underlying model name, model version, SKU or deployment type, capacity, state, and rate limits. The deployment name is the callable alias used to route requests. The model name identifies the provider-specific model family, while the version identifies a specific release.\n\n## How it fits together\n\nName deployments as contracts, such as prod-chat-gpt4o-mini or eval-llama32-vision. Keep a record of the model name, version, deployment type, capacity, owner, and consuming applications so migration is controlled.\n\n## Worked example\n\n```bash\naz login --identity\n\naz cognitiveservices account deployment show   --resource-group \"<resource-group>\"   --name \"<foundry-or-openai-account-name>\"   --deployment-name \"<deployment-alias>\"   --query \"{alias:name, sku:sku.name, model:properties.model.name, version:properties.model.version, state:properties.provisioningState}\"\n```\n\n*Inspect alias, backing model, version, and state.*",
+  "drills": [
+    {
+      "q": "Which value is the alias?",
+      "a": "The deployment name."
+    },
+    {
+      "q": "Can one model version have multiple deployments?",
+      "a": "Yes, subject to quota and resource limits."
+    },
+    {
+      "q": "Why not call the raw model version directly in app config?",
+      "a": "The deployment alias gives operators a stable routing and migration point."
+    }
+  ],
+  "teachItBack": "A deployment is the call target, not just the model. The deployment name is the alias my app uses. The model name and version are the backing implementation details I track for lifecycle control.",
+  "glossary": [
+    {
+      "term": "Deployment name",
+      "definition": "The callable alias for a deployed model."
+    },
+    {
+      "term": "Model name",
+      "definition": "The provider-specific model family identifier."
+    },
+    {
+      "term": "Model version",
+      "definition": "A specific model release."
+    },
+    {
+      "term": "Provisioning state",
+      "definition": "The deployment control-plane status."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Deploy Microsoft Foundry Models in the Foundry portal",
+      "url": "https://learn.microsoft.com/en-us/azure/foundry/foundry-models/how-to/deploy-foundry-models",
+      "verified": true
+    },
+    {
+      "title": "Working with Azure OpenAI model updates",
+      "url": "https://learn.microsoft.com/en-us/azure/foundry/openai/how-to/working-with-models",
+      "verified": true
+    }
+  ],
+  "quiz": [
+    {
+      "q": "Which authentication is allowed in examples here?",
+      "choices": [
+        "Managed identity through DefaultAzureCredential or az login --identity",
+        "Static API keys",
+        "Client secrets",
+        "Personal access tokens"
+      ],
+      "answer": 0,
+      "explanation": "The lane requires managed identity only."
+    }
+  ]
+}

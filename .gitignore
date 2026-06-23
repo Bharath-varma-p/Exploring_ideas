@@ -1,9 +1,17 @@
+# gstack skill local state
+.gstack/
+
 # OS / editor cruft
 .DS_Store
 Thumbs.db
 *.log
+*.swp
 .idea/
 .vscode/
+
+# Python
+__pycache__/
+*.pyc
 
 # Node (we use zero deps, but just in case)
 node_modules/

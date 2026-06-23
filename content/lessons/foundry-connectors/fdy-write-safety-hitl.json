@@ -1,0 +1,62 @@
+{
+  "id": "fdy-write-safety-hitl",
+  "title": "Write Safety and Human in the Loop",
+  "lane": "foundry-connectors",
+  "type": "concept",
+  "order": 311,
+  "summary": "Write actions include creating or updating work items, adding comments, linking artifacts, creating branches, opening or updating pull requests, creating wiki pages, creating test plans, and queueing or modifying pipeline runs.",
+  "tags": [
+    "safety",
+    "approval",
+    "writes"
+  ],
+  "analogy": "Read tools are reconnaissance. Write tools are live fire. A live fire command needs a range officer.",
+  "diagram": "graph TD\nToolRequest[Tool request] --> IsWrite[Is write]\nIsWrite -->|No| Execute[Execute and log]\nIsWrite -->|Yes| Review[Show arguments]\nReview --> Approve[Human approves]\nApprove --> Execute\nApprove --> Deny[Deny and explain]",
+  "body": "## First principles\n\nFirst principles: automation that can change planning, code review, or deployment state can create real operational damage. Approval is not ceremony; it is the control surface where humans verify intent before side effects.\n\n## Definition\n\nWrite actions include creating or updating work items, adding comments, linking artifacts, creating branches, opening or updating pull requests, creating wiki pages, creating test plans, and queueing or modifying pipeline runs. Foundry MCP guidance recommends requiring approval for high risk operations and reviewing tool names and arguments before approval.\n\n## How it fits together\n\nThe policy is simple: read only by default, allow list tools, require approval always for writes, log arguments and outcomes, and separate permissions so a read only agent cannot queue a deployment even if it tries.\n\n## Worked example\n\n```python\nwrite_tools = {'wit_work_item_write', 'repo_pull_request_write', 'pipelines_write', 'wiki_upsert_page'}\n\ndef approval_required(tool_name: str) -> bool:\n    return tool_name in write_tools or tool_name.endswith('_write')\n\nfor name in ['wit_work_item', 'wit_work_item_write', 'pipelines_run', 'pipelines_write']:\n    print(name, 'approval required:', approval_required(name))\n```\n\n*Approval policy evaluator*",
+  "drills": [
+    {
+      "q": "Should queue pipeline run require approval?",
+      "a": "Yes, it can start compute and deployments."
+    },
+    {
+      "q": "What should the user review?",
+      "a": "The tool name, target project or repo, arguments, and expected side effect."
+    },
+    {
+      "q": "What default mode is safest for discovery?",
+      "a": "Read only."
+    }
+  ],
+  "teachItBack": "Safety is architecture, not a warning banner. Start with read only tools and grant write tools intentionally. Human review of tool arguments is the last checkpoint before Azure DevOps state changes.",
+  "glossary": [
+    {
+      "term": "Human in the loop",
+      "definition": "A required human approval step before a tool call proceeds."
+    },
+    {
+      "term": "Read only",
+      "definition": "Mode that allows observation but blocks changes."
+    },
+    {
+      "term": "Side effect",
+      "definition": "A persistent change caused by a tool call."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Microsoft Learn: Connect Foundry agents to MCP endpoints",
+      "url": "https://learn.microsoft.com/en-us/azure/foundry/agents/how-to/tools/model-context-protocol?view=azure-python-preview",
+      "verified": true
+    },
+    {
+      "title": "Microsoft Learn: Remote Azure DevOps MCP Server",
+      "url": "https://learn.microsoft.com/en-us/azure/devops/mcp-server/remote-mcp-server?view=azure-devops",
+      "verified": true
+    },
+    {
+      "title": "Microsoft Learn: Authentication methods for Azure DevOps",
+      "url": "https://learn.microsoft.com/en-us/azure/devops/integrate/get-started/authentication/authentication-guidance?view=azure-devops",
+      "verified": true
+    }
+  ]
+}
