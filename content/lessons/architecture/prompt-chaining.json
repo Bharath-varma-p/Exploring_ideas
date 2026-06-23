@@ -33,8 +33,10 @@
   ],
   "teachItBack": "Prompt chaining splits a hard task into a fixed sequence of small LLM steps, where each step's output feeds the next. Because every step is focused and every intermediate result is visible, accuracy goes up and you can gate-check work before it moves on. The cost is more latency and LLM calls, and an early mistake will propagate unless a gate catches it.",
   "sources": [
-    { "title": "Anthropic — Building effective agents", "url": "https://www.anthropic.com/engineering/building-effective-agents", "verified": true },
-    { "title": "LangChain — LCEL (LangChain Expression Language)", "url": "https://python.langchain.com/docs/concepts/lcel/", "verified": true }
+    { "title": "Anthropic docs — Chain complex prompts for stronger performance", "url": "https://docs.anthropic.com/en/docs/build-with-claude/prompt-engineering/chain-prompts", "verified": true },
+    { "title": "OpenAI — Orchestrating agents & workflows (Agents guide)", "url": "https://platform.openai.com/docs/guides/agents", "verified": true },
+    { "title": "LangChain — LCEL (LangChain Expression Language)", "url": "https://python.langchain.com/docs/concepts/lcel/", "verified": true },
+    { "title": "Anthropic — Building effective agents", "url": "https://www.anthropic.com/engineering/building-effective-agents", "verified": true }
   ],
   "related": ["routing", "agentic-patterns-overview", "evaluator-optimizer", "tool-use"],
   "glossary": [

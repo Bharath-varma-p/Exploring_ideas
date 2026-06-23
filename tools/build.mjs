@@ -16,8 +16,66 @@ const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const LESSONS_DIR = join(ROOT, "content", "lessons");
 const OUT_DATA = join(ROOT, "content", "data.json");
 const OUT_MANIFEST = join(ROOT, "content", "manifest.json");
+const SOURCES_CATALOG = join(ROOT, "content", "sources.json");
 const CHANGE_CATALOG_LIMIT = 40;
 const execFileAsync = promisify(execFile);
+
+// ---- Citation freshness audit ----
+// Date the citations were last audited/verified. Bump this whenever you re-verify
+// sources, then re-run the build; freshness badges are computed relative to it.
+const VERIFIED_ON = "2026-06-18";
+// Fast-moving thresholds (months): 🟢 < 6 · 🟡 6–18 · 🔴 > 18.
+const FRESH_MONTHS = 6;
+const AGING_MONTHS = 18;
+const round1 = (n) => Math.round(n * 10) / 10;
+function monthsBetween(fromISO, toISO) {
+  const a = new Date(fromISO).getTime(), b = new Date(toISO).getTime();
+  if (Number.isNaN(a) || Number.isNaN(b)) return null;
+  return (b - a) / (1000 * 60 * 60 * 24 * 30.4375);
+}
+
+// Compute a freshness verdict for an (already merged) source's metadata.
+// foundational → exempt; living official docs → current by nature; dated → by age;
+// otherwise undated (⚠️) and deprioritized.
+function computeFreshness(meta, refDate) {
+  if (meta.foundational) return { status: "foundational", badge: "📘", label: "foundational" };
+  const date = meta.updated || meta.published;
+  if (date) {
+    const age = monthsBetween(date, refDate);
+    if (age == null) return { status: "undated", badge: "⚠️", label: "undated" };
+    const ageMonths = round1(age);
+    if (age < FRESH_MONTHS) return { status: "fresh", badge: "🟢", label: "fresh", ageMonths };
+    if (age <= AGING_MONTHS) return { status: "aging", badge: "🟡", label: "aging", ageMonths };
+    return { status: "stale", badge: "🔴", label: "stale", ageMonths };
+  }
+  if (meta.living) return { status: "living", badge: "🟢", label: "living" };
+  return { status: "undated", badge: "⚠️", label: "undated" };
+}
+
+// Rank a lesson's sources by recency × authority. Current (non-historical, dated or
+// living) sources rank first by tier then newest-first; historical/origin sources are
+// demoted; undated sources sink to the bottom. A `refMs` (the topic's last-verified
+// date) is used as the effective date for living docs so they rank as most-current.
+function sourceBucket(s) {
+  return s.historical ? 1 : (s.freshness?.status === "undated" ? 2 : 0);
+}
+function effectiveMs(s, refMs) {
+  const dated = s.updated || s.published;
+  if (dated) { const t = new Date(dated).getTime(); return Number.isNaN(t) ? 0 : t; }
+  if (s.living) return refMs;
+  return 0;
+}
+function makeSourceComparator(refMs) {
+  return (a, b) => {
+    const ba = sourceBucket(a), bb = sourceBucket(b);
+    if (ba !== bb) return ba - bb;
+    const ta = Number.isFinite(a.tier) ? a.tier : 5, tb = Number.isFinite(b.tier) ? b.tier : 5;
+    if (ta !== tb) return ta - tb;
+    const ea = effectiveMs(a, refMs), eb = effectiveMs(b, refMs);
+    if (ea !== eb) return eb - ea;
+    return String(a.title || a.url).localeCompare(String(b.title || b.url));
+  };
+}
 
 // ---- Lane registry: edit here to add a lane ----
 const LANES = [
@@ -263,6 +321,11 @@ async function main() {
   const ids = new Map();
   const repo = await readRepoInfo();
 
+  // Central source-metadata catalog (publication dates, publisher, type, tier, flags).
+  let catalog = {};
+  try { catalog = JSON.parse(await readFile(SOURCES_CATALOG, "utf8")); }
+  catch (e) { warnings.push(`content/sources.json: could not load source catalog — ${e.message}`); }
+
   for (const file of files) {
     let raw;
     try { raw = await readFile(file, "utf8"); }
@@ -288,6 +351,46 @@ async function main() {
     (laneOrder[a.lane] ?? 99) - (laneOrder[b.lane] ?? 99) ||
     (a.order ?? 100) - (b.order ?? 100) ||
     String(a.title).localeCompare(String(b.title)));
+
+  // ---- Citation freshness: enrich, rank, stamp, and report ----
+  const freshnessItems = [];
+  const freshnessCounts = { fresh: 0, living: 0, foundational: 0, aging: 0, stale: 0, undated: 0, total: 0 };
+  const ATTENTION = new Set(["aging", "stale", "undated"]);
+  for (const l of lessons) {
+    if (!Array.isArray(l.sources)) continue;
+    // every topic stamped with its last-verified date
+    l.lastVerified = l.lastVerified || VERIFIED_ON;
+    l.sources = l.sources.map((s) => {
+      const cat = catalog[s.url] || {};
+      // inline lesson fields win over the catalog; catalog supplies shared metadata
+      const merged = { ...cat, ...s };
+      merged.verifiedOn = merged.verifiedOn || l.lastVerified;
+      merged.freshness = computeFreshness(merged, l.lastVerified);
+      if (!catalog[s.url] && !merged.published && !merged.living && !merged.foundational)
+        warnings.push(`${l._file}: source not in catalog & undated — ${s.url}`);
+      return merged;
+    });
+    l.sources.sort(makeSourceComparator(new Date(l.lastVerified).getTime()));
+    for (const s of l.sources) {
+      const st = s.freshness.status;
+      freshnessCounts[st] = (freshnessCounts[st] || 0) + 1;
+      freshnessCounts.total++;
+      if (ATTENTION.has(st)) freshnessItems.push({
+        lessonId: l.id, lessonTitle: l.title, lane: l.lane,
+        title: s.title || s.url, url: s.url, publisher: s.publisher || null,
+        type: s.type || null, tier: s.tier ?? null,
+        status: st, badge: s.freshness.badge, ageMonths: s.freshness.ageMonths ?? null,
+        published: s.published || null, historical: !!s.historical,
+      });
+    }
+  }
+  // worst-first: stale → aging → undated, then oldest first
+  const STATUS_RANK = { stale: 0, aging: 1, undated: 2 };
+  freshnessItems.sort((a, b) =>
+    (STATUS_RANK[a.status] - STATUS_RANK[b.status]) ||
+    ((b.ageMonths ?? -1) - (a.ageMonths ?? -1)) ||
+    String(a.lessonTitle).localeCompare(String(b.lessonTitle)));
+  const freshnessReport = { verifiedOn: VERIFIED_ON, counts: freshnessCounts, items: freshnessItems };
 
   // glossary: central file + per-lesson
   const glossary = [];
@@ -324,6 +427,7 @@ async function main() {
   const laneCounts = Object.fromEntries(LANES.map((l) => [l.id, lessons.filter((x) => x.lane === l.id).length]));
   const data = {
     generatedAt: new Date().toISOString(),
+    verifiedOn: VERIFIED_ON,
     repo,
     changeCatalog,
     lanes: LANES.map((l) => ({ ...l, count: laneCounts[l.id] || 0 })),
@@ -331,15 +435,18 @@ async function main() {
     glossary,
     quiz,
     quizBanks,
+    freshnessReport,
     stats: {
       lessons: lessons.length,
       glossaryTerms: glossary.length,
       quizQuestions: quiz.length + bankQ,
       changeEntries: changeCatalog.entries.length,
+      sources: freshnessCounts.total, sourcesNeedingAttention: freshnessReport.items.length,
     },
   };
   const manifest = {
     generatedAt: data.generatedAt,
+    verifiedOn: VERIFIED_ON,
     stats: data.stats,
     lanes: data.lanes.map(({ id, title, count }) => ({ id, title, count })),
     files: lessons.map((l) => ({ id: l.id, title: l.title, lane: l.lane, type: l.type, file: l._file })),
@@ -357,6 +464,9 @@ async function main() {
   console.log(`\n✅ Built content/data.json`);
   console.log(`   lanes: ${data.lanes.map((l) => `${l.id}(${l.count})`).join(", ")}`);
   console.log(`   ${data.stats.lessons} lessons · ${data.stats.glossaryTerms} glossary terms · ${data.stats.quizQuestions} quiz questions`);
+  const fc = freshnessCounts;
+  console.log(`   citations: ${fc.total} · 🟢 ${fc.fresh + fc.living} · 📘 ${fc.foundational} · 🟡 ${fc.aging} · 🔴 ${fc.stale} · ⚠️ ${fc.undated} (verified ${VERIFIED_ON})`);
+  if (freshnessReport.items.length) console.log(`   ⚠️  ${freshnessReport.items.length} citation(s) need attention — see Freshness report.`);
 }
 
 main().catch((e) => { console.error(e); process.exit(1); });

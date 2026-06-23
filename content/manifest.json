@@ -1,10 +1,13 @@
 {
-  "generatedAt": "2026-06-19T07:24:07.648Z",
+  "generatedAt": "2026-06-23T05:58:59.648Z",
+  "verifiedOn": "2026-06-18",
   "stats": {
     "lessons": 291,
     "glossaryTerms": 832,
     "quizQuestions": 189,
-    "changeEntries": 10
+    "changeEntries": 21,
+    "sources": 880,
+    "sourcesNeedingAttention": 806
   },
   "lanes": [
     {
